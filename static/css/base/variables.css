@@ -1,0 +1,70 @@
+:root {
+    /* Tamaños de fuente de texto */
+    --fs-small: 1.15rem;
+    --fs-normal: 1.5rem;
+    --fs-medium: 2rem;
+    --fs-large: 2.5rem;
+    --fs-x-large: 3.0rem;
+    --fs-xx-large: 4.0rem;
+
+    /* Colores */
+    --color-primary: rgb(10, 10, 10);
+    --color-primary-variant: rgb(78, 78, 78);
+    --color-secondary: rgb(255, 255, 255);
+    --color-secondary-variant: rgb(241, 241, 241);
+    
+    --color-header: rgb(241, 241, 241);
+    --color-header-inventario: rgb(241, 241, 241);
+    --color-header-mantenimiento: rgb(241, 241, 241);
+    --color-header-medico: rgb(241, 241, 241);
+    --color-header-usuarios: rgb(241, 241, 241);
+    --color-header-voluntarios: rgb(241, 241, 241);
+    --color-header-border: rgb(199, 199, 199);
+
+    --color-sidebar: rgb(241, 241, 241);
+    --color-sidebar-border: rgb(199, 199, 199);
+    --color-sidebar-option: rgb(233, 233, 233);
+    --color-main: rgb(224, 224, 224);
+
+
+    --color-black: rgb(17, 17, 17);
+    --color-blue: rgb(47, 113, 255);
+    --color-green: rgb(59, 163, 59);
+    --color-gray: rgb(94, 94, 94);
+    --color-light-gray: rgb(180, 180, 180);
+    --color-orange: rgb(255, 165, 0);
+    --color-red: rgb(250, 33, 33);
+    --color-white: rgb(255, 255, 255);
+    --color-white-variant: rgb(241, 241, 241);
+    --color-white-translucent: rgba(255, 255, 255, 0.11);
+    --color-yellow: rgb(251, 201, 0);
+    --color-morado: rgb(156, 30, 154);
+
+
+    /* Dimensiones para estandarización */
+    --header-height: 80px;
+
+    --navbar-width: 325px;
+    --navbar-section-height: 60px;
+
+    --main-title-height:60px;
+
+    --input-height: 50px;
+    --card-border-radius: 50px;
+    --footer-height: 100px;
+
+    --portal-title: 100px;
+    --portal-menu-height: 500px;
+    --portal-menu-min-width: 400px;
+    --portal-menu-width: 1200px;
+    --portal-menu-max-width: 1600px;
+    --portal-menu-opcions-width: 35%;
+    --portal-menu-preview-width: 65%;
+    --portal-menu-opcion-height: 50px;
+
+    /* Z-index */
+    --background-z-index: 0;
+    --portal-menu-z-index: 10;
+    --header-z-index: 100;
+    --dropdown-user-menu-z-index: 101;
+}

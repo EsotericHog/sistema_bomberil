@@ -1,0 +1,90 @@
+/* Nav: Barra lateral de navegación principal */
+.barra_lateral {
+    grid-area: sidebar;
+    position: sticky;
+    top: var(--header-height);
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    width: 100%;
+    overflow: hidden;
+    border-right: 1.5px solid var(--color-sidebar-border);
+}
+
+/* Secciones de navegación: incluye módulo y funciones */
+.barra_lateral__seccion {
+    width: 100%;
+    height: var(--navbar-section-height);
+    transition: height 0.7s;
+    overflow: hidden;
+    border-bottom: 1px solid var(--color-sidebar-border);
+}
+
+.barra_lateral__modulo {
+    display: flex;
+    flex-direction: row;
+    width: 100%;
+    height: var(--navbar-section-height);
+    align-items: center;
+    justify-content: space-between;
+}
+
+.barra_lateral__modulo_nombre {
+    cursor: pointer;
+    display: flex;
+    justify-content: start;
+    align-items: center;
+    gap: 15px;
+    padding: 10px;
+}
+.barra_lateral__modulo_nombre span {
+    display: flex;
+    width: auto;
+    height: auto;
+}
+.barra_lateral__modulo_nombre i {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 20px;
+}
+
+.scale {
+    transition: all 60ms ease;
+}
+.scale:hover {
+    transform: scale(1.05);
+}
+
+.barra_lateral__flecha_modulo {
+    cursor: pointer;
+    padding: 15px;
+}
+
+/* Lista de opciones */
+.barra_lateral__lista_opciones {
+}
+
+.barra_lateral__lista_opciones li {
+    display: flex;
+    height: 40px;
+    align-items: center;
+}
+.barra_lateral__lista_opciones li a {
+    display: flex;
+    width: 100%;
+    height: 100%;
+    justify-content: start;
+    align-items: center;
+    padding: 0 15px;
+}
+
+/* Clases dinámicas - Nav section*/
+.scale_nav_options {
+    height: auto;
+}
+
+/* Clases dinámicas - Nav flecha abajo*/
+.rotate180 {
+    transform: rotate(180deg);
+}

@@ -1,0 +1,88 @@
+/* Cuadrícula principal para el Portal */
+#portal_root {
+    background-color: var(--color-base);
+    display: grid;
+    min-height: 100%;
+    grid-template-columns: var(--navbar-width) auto;
+    grid-template-rows: var(--header-height) 100% var(--footer-height);
+    grid-template-areas:
+        "header header header"
+        "main main main"
+        "main main main"
+    ;
+}
+
+.main-portal {
+    position: relative;
+    grid-area: main;
+    
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    grid-template-rows: auto auto auto;
+    grid-template-areas: 
+    ". . ."
+    ". menu_principal ."
+    ". . ."
+    ;
+}
+
+.main__title_page-portal {
+    position: absolute;
+    display: flex;
+    width: 100%;
+    padding: 50px;
+    height: var(--main-title-height);
+    justify-content: center;
+    align-items: center;
+    z-index: var(--portal-menu-z-index);
+}
+
+.portal__imagen_fondo {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: top;
+}
+
+.portal_menu__contenedor {
+    grid-area: menu_principal;
+    width: var(--portal-menu-width);
+    min-width: var(--portal-menu-min-width);
+    max-width: var(--portal-menu-max-width);
+    height: var(--portal-menu-height);
+    z-index: var(--portal-menu-z-index);
+
+    display: grid;
+    grid-template-columns: var(--portal-menu-opcions-width) var(--portal-menu-preview-width);
+    grid-template-rows: 1fr;
+    grid-template-areas:
+    "opciones previsualizacion";
+}
+
+.portal_menu__opciones {
+    grid-area: opciones;
+
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.portal_menu__opcion {
+    display: block;
+}
+.portal_menu__opcion a {
+    display: flex;
+    width: 100%;
+    height: var(--portal-menu-opcion-height);
+    justify-content: center;
+    align-items: center;
+    border-radius: 8px;
+    border: 1px solid white;
+}
+
+.portal_menu__previsualizacion {
+    grid-area: previsualizacion;
+    margin: 5px 20px 5px 20px;
+    border: 1px solid white;
+}

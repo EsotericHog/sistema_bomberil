@@ -1,0 +1,189 @@
+/* Colores de fondo */
+.fondo_primario {
+    background-color: var(--color-primary);
+}
+.fondo_primario:hover {
+    background-color: var(--color-primary-variant);
+}
+
+
+.fondo_secundario {
+    background-color: var(--color-secondary);
+}
+
+
+.fondo_secundario_variante {
+    background-color: var(--color-secondary-variant);
+}
+
+
+.fondo_header {
+    background-color: var(--color-header);
+}
+.fondo_header_inventario {
+    background-color: var(--color-header-inventario);
+}
+.fondo_header_mantenimiento {
+    background-color: var(--color-header-mantenimiento);
+}
+.fondo_header_medico {
+    background-color: var(--color-header-medico);
+}
+.fondo_header_usuarios {
+    background-color: var(--color-header-usuarios);
+}
+.fondo_header_voluntarios {
+    background-color: var(--color-header-voluntarios);
+}
+
+
+.fondo_barra_lateral {
+    background-color: var(--color-sidebar);
+}
+
+
+.fondo_opcion_nav {
+    background-color: var(--color-sidebar-option);
+}
+.fondo_opcion_nav:hover {
+    background-color: var(--color-blue);
+    color: var(--color-white);
+}
+
+
+.fondo_main {
+    background-color: var(--color-main);
+}
+
+
+.fondo_negro {
+    background-color: var(--color-black);
+}
+
+
+.fondo_transparente {
+    background-color: transparent;
+}
+.fondo_transparente:hover {
+    background-color: var(--color-white-translucent);
+}
+
+
+.fondo_blanco {
+    background-color: var(--color-white);
+}
+
+
+.fondo_blanco_variante {
+    background-color: var(--color-white-variant);
+}
+
+
+.fondo_blanco_blur {
+    background-color: rgba(73, 73, 73, 0.3);
+    backdrop-filter: blur(20px);
+}
+
+
+.fondo_gris {
+    background-color: var(--color-light-gray);
+}
+
+
+.fondo_azul {
+    background-color: var(--color-blue);
+}
+
+
+.fondo_morado {
+    background-color: var(--color-morado);
+}
+
+
+.fondo_naranjo {
+    background-color: var(--color-orange);
+}
+
+
+.fondo_verde {
+    background-color: var(--color-green);
+}
+
+
+
+/* Colores de fuente */
+.color_primario {
+    color: var(--color-primary);
+}
+
+
+.color_primario_variante {
+    color: var(--color-primary-variant);
+}
+
+
+.color_secundario {
+    color: var(--color-secondary);
+}
+
+
+.color_transparente {
+    color: transparent;
+}
+
+
+.color_gris {
+    color: var(--color-gray);
+}
+
+
+.color_blanco {
+    color: var(--color-white);
+}
+
+
+.color_azul {
+    color: var(--color-blue);
+}
+
+
+.color_rojo {
+    color: var(--color-red);
+}
+
+
+.color_verde {
+    color: var(--color-green);
+}
+
+
+.color_blanco {
+    color: var(--color-white);
+}
+
+
+.color_blanco_variante {
+    color: var(--color-white-variant);
+}
+
+
+.color_morado {
+    color: var(--color-morado)
+}
+
+
+
+/* ESPECIALES */
+
+/* Clase para resaltar el color de un elemento. Útil para botones*/
+.hover_color:hover {
+    filter: brightness(1.2);
+}
+
+/* Clase para escalar un elemento. Útil para botones */
+.hover_scale {
+    transition: all 30ms ease;
+}
+.hover_scale:hover {
+    transform: scale(1.1);
+}

@@ -1,0 +1,125 @@
+.header {
+    grid-area: header;
+
+    position: sticky;
+    top: 0;
+    z-index: var(--header-z-index);
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    height: 100%;
+    width: 100%;
+    padding: 0 15px;
+    border-bottom: 1.5px solid var(--color-header-border);
+}
+
+
+
+/* Header: Sección izquierda */
+.header__seccion_compania {
+    display: flex;
+    flex-direction: row;
+    width: auto;
+    max-width: 500px;
+    height: auto;
+    gap: 12px;
+}
+
+.header__logo {
+    width: 40px;
+    min-width: 40px;
+    max-width: 40px;
+}
+
+.header__titulo {
+    display: flex;
+    flex-direction: column;
+}
+
+.header__compania {
+    display: flex;
+    width: 100%;
+    height: 100%;
+    align-items: end;
+
+    font-family: 'Raleway';
+    font-weight: 300;
+}
+
+.header__modulo {
+    display: flex;
+    width: 100%;
+    height: 100%;
+    align-items: center;
+}
+
+
+
+/* Header: Sección derecha */
+.header__seccion_menu_usuario {
+    display: flex;
+    flex-direction: row;
+    width: auto;
+    max-width: 500px;
+    height: 100%;
+    align-items: center;
+    gap: 15px;
+}
+
+.menu_usuario__opciones {
+    display: flex;
+    flex-direction: row;
+    height: 70%;
+    width: auto;
+    justify-content: center;
+    align-items: center;
+    padding: 0 10px;
+    gap: 5px;
+    border-right: 1px solid var(--color-header-border);
+}
+
+.menu_usuario__opcion {
+    display: flex;
+    width: auto;
+    height: 100%;
+    padding: 0 15px;
+    justify-content: center;
+    align-items: center;
+}
+
+.menu_usuario__usuario {
+    cursor: pointer;
+    display: flex;
+    flex-direction: row;
+    height: 100%;
+    width: auto;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    padding: 0 5px;
+}
+
+.menu_usuario__nombre_usuario {
+    display: flex;
+    flex-direction: column;
+}
+.menu_usuario__nombre {
+    display: flex;
+    gap: 5px;
+}
+
+.menu_usuario__avatar_usuario {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    width: auto;
+    height: 100%;
+    gap: 8px;
+}
+
+.menu_usuario__avatar_usuario img {
+    width: 40px;
+    border-radius: 100%;
+}

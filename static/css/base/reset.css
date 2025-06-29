@@ -1,0 +1,76 @@
+/* RESET DE ESTILOS PERSONALIZADO (ACTUALIZADO - MAYO DE 2024) */
+/* Aquí se definen estilos los base que tendrán ciertos elementos en el proyecto. */
+
+* {
+    /* Ajustar tamaño de los elementos para incluir el contenido, los bordes y el relleno */
+    box-sizing: border-box;
+    /* Sin márgenes de elemento por defecto */
+    margin: 0;
+    /* Sin espacio alrededor del contenido por defecto */
+    padding: 0;
+    /* Sin bordes de elemento por defecto */
+    border: 0;
+
+    /* Ancho mínimo*/
+    min-width: 0;
+}
+
+
+/* Establecer altura mínima del body para que ocupe la totalidad del viewport dinámico (Útil para móviles) */
+body {
+    position: relative;
+    height: 100%;
+    /*min-height: 100dvh;*/
+}
+
+
+/* Equilibrar visualmente la distribución de palabras en lineas de texto. "balance" para los títulos */
+h1, h2, h3, h4 {
+    text-wrap: balance;
+}
+
+
+/* Desactivar estilos por defecto de las principales etiquetas de texto */
+h1, h2, h3, h4, h5, h6, p, span, a, strong, blockquote, i, b, u, em {
+    text-decoration: none;
+}
+
+
+/* Equilibrar visualmente la distribución de palabras en lineas de texto de párrafos. */
+p {
+    text-wrap: pretty;
+    max-width: 70ch;
+    margin-bottom: 2rem;
+}
+
+
+/* Para evitar problemas de desbordamiento de videos e imágenes en contenedor o ventana */
+img, picture, video, iframe, figure {
+    max-width: 100%;
+}
+
+
+/* Quitar puntos en etiquetas <li> */
+li {
+    list-style-type: none;
+}
+
+
+/* Reset tablas */
+table, tr, td {
+    border-collapse: collapse;
+    border-spacing: 0;
+}
+
+
+/* Ajuste de escala del font size por defecto del navegador a 10px */
+html {
+    height: 100%;
+    font-size: 62.5%;
+}
+
+
+/* Quitar línea de selección azul */
+input {
+    outline: none;
+}

@@ -1,0 +1,13 @@
+/* Cuerpo: Se usará para definir la cuadrícula principal */
+#root {
+    background-color: var(--color-base);
+    display: grid;
+    min-height: 100%;
+    grid-template-columns: var(--navbar-width) auto;
+    grid-template-rows: var(--header-height) 100% var(--footer-height);
+    grid-template-areas:
+        "header header header"
+        "sidebar main main"
+        "footer footer footer"
+    ;
+}

@@ -1,0 +1,82 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+
+    {# Importación de Estilos globales #}
+    {% include 'layouts/estilos.html' %}
+    {# Importación de Estilos de aplicación #}
+    <link rel="stylesheet" href="{% static 'portal/css/portal_estilos.css' %}">
+
+    {# Título de la página #}
+    <title>{% block titulo_ventana %}{% endblock %}</title>
+
+    {# Descripción #}
+    <meta name="description" content="Sistema de inventario diseñado para la Segunda Compañía de Bomberos de Iquique">
+
+    {# Fonts Awesome (Iconos) #}
+    <script src="https://kit.fontawesome.com/a82eeb5cab.js" crossorigin="anonymous"></script>
+
+</head>
+<body class="{% if request.session.dark_mode|default:False %}dark-mode{% endif %}">
+    {# Contenedor principal #}
+    <div id="portal_root">
+
+        {# Header/Encabezado #}
+        <header class="header fondo_header">
+
+            {# Sección para nombre del módulo, sistema y compañía #}
+            <section class="header__seccion_compania">
+                <img class="header__logo" src="{% static 'imagenes/bomberil_logo_circle_white(100x100).png' %}" alt="">
+                <div class="header__titulo">
+                    <h3 class="header__compania fs_pequena color_primario_variante">Segunda Compañía de Bomberos de Iquique</h3>
+                    <h2 class="header__modulo fs_mediana color_primario">{% block modulo %}{% endblock %}</h2>
+                </div>
+            </section>
+
+            {# Sección para opciones de usuario #}
+            <section class="header__seccion_menu_usuario">
+                <ul class="menu_usuario__opciones">
+                    <li class="menu_usuario__opcion fs_normal color_primario_variante">
+                        Gestión
+                    </li>
+                </ul>
+                <div id="MenuUsuarioPerfil" class="menu_usuario__usuario">
+                    <div class="menu_usuario__nombre_usuario fs_normal color_primario">
+                        <div class="menu_usuario__nombre">
+                            Mauricio Paredes
+                            <i class="fa-solid fa-chevron-down color_primario"></i>
+                        </div>
+                        <span class="menu_usuario__email fs_pequena color_primario_variante">
+                            admin@admin.cl
+                        </span>
+                    </div>
+                    <div class="menu_usuario__avatar_usuario">
+                        <img src="{% static 'imagenes/user_avatar.png' %}" alt="">
+                    </div>
+                </div>
+            </section>
+
+        </header>
+
+        {# Menú desplegable con más opciones de cuenta/usuario. Por defecto está oculto #}
+        {% include "layouts/menu_desplegable_usuario.html" %}
+
+        {# Contenido #}
+        <main class="main-portal fondo_main">
+            <h1 class="main__title_page-portal fs_grande color_primario">
+            {% block titulo_pagina %}{% endblock  %}
+            </h1>
+            {% block contenido %} {% endblock %}
+        </main>
+
+        {# Importación de Scripts #}
+        {% include 'layouts/scripts.html' %}
+
+    </div>
+</body>
+</html>

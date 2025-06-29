@@ -1,0 +1,23 @@
+{# Plantilla base #}{% extends 'portal/layouts/base.html' %}
+{# Cargar assets #}{% load static %}
+{# Título de la ventana #} {% block titulo_ventana %}Portal Bomberil{% endblock %}
+{# Módulo #} {% block modulo %}Bomberil{% endblock  %}
+{# Título de la ventana #} {% block titulo_pagina %}Portal{% endblock %}
+
+{% block contenido %}
+    <img class="portal__imagen_fondo" src="{% static 'portal/imagenes/bomberil_portal_background_v2.jpg' %}" alt="">
+    <section class="portal_menu__contenedor">
+        <ul class="portal_menu__opciones">
+            <li class="portal_menu__opcion"><a class="color_blanco fs_normal" href="{% url 'ruta_inventario_inicio' %}">Gestión Inventario</a></li>
+            <li class="portal_menu__opcion"><a class="color_blanco fs_normal" href="{% url 'ruta_mantenimiento_inicio' %}">Gestión Mantenimiento de Herramientas</a></li>
+            <li class="portal_menu__opcion"><a class="color_blanco fs_normal" href="{% url 'ruta_usuarios_inicio' %}">Gestión de Usuarios y Permisos</a></li>
+            <li class="portal_menu__opcion"><a class="color_blanco fs_normal" href="{% url 'ruta_medico_inicio' %}">Gestión Médica</a></li>
+            <li class="portal_menu__opcion"><a class="color_blanco fs_normal" href="{% url 'ruta_voluntarios_inicio' %}">Gestión de Voluntarios</a></li>
+        </ul>
+        <div class="portal_menu__previsualizacion"></div>
+    </section>
+    <section style="display:none;" class="fs_normal color_primario">
+        <h2>TEMPORAL</h2>
+        
+    </section>
+{% endblock  %}

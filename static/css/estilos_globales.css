@@ -1,0 +1,40 @@
+/* ---------- CONFIGURACIÓN BASE ---------- */
+
+/* Establecer estilos base */
+@import url("base/reset.css");
+
+/* Variables root */
+@import url("base/variables.css");
+
+
+
+/* Colores */
+@import url("base/colores.css");
+
+/* Propiedades de texto */
+@import url("base/texto.css");
+
+/* Fuentes */
+@import url("base/fuentes.css");
+
+/* Root (Componente principal para renderizar todo) */
+@import url("base/root.css");
+
+/* Tema oscuro */
+@import url("modo_oscuro.css");
+
+
+
+/* ---------- ESTILOS PARA LOS COMPONENTES DEL LAYOUT ---------- */
+
+/* Header */
+@import url("componentes/header.css");
+
+/* Barra lateral de navegación */
+@import url("componentes/navbar.css");
+
+/* Componentes Main */
+@import url("componentes/main.css");
+
+/* Menú desplegable de usuario */
+@import url("componentes/menu_desplegable_usuario.css");
