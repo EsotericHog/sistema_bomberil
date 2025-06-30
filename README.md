@@ -7,7 +7,7 @@ git clone https://github.com/EsotericHog/sistema_bomberil.git
 ```
 
 ## Instalación para ejecución local (desarrollo)
-Para ejecutar los siguientes comandos, **posiciónate en el directorio raíz del proyecto** usando tu terminal o CLI de preferencia
+Para ejecutar los siguientes comandos, **posiciónate en el directorio raíz del proyecto** usando la terminal de Powershell
 
 
 ### Crear entorno virtual
@@ -39,7 +39,9 @@ pip install -r requirements.txt
 ### Crear base de datos
 Durante la fase de desarrollo utilizaremos MYSQL.
 
-Debes crear la base de datos con el nombre indicado en `.env` en el valor de `DB_NAME`. Necesitas generar un entorno local de desarrollo. Para eso, utiliza algún software como Laragon o XAMPP. Esto te permitirá gestionar tus bases de datos locales.
+Debes crear la base de datos con el nombre indicado en el archivo `.env` en el valor de `DB_NAME`. Necesitas generar un entorno local de desarrollo. Para eso, utiliza algún software como Laragon o XAMPP. Esto te permitirá gestionar tus bases de datos locales.
+
+El archivo `.env` está en Teams, en `Planificación General/Recursos/datos/.env`. Descárgalo y muévelo a la raíz del proyecto en tu carpeta local
 
 Usa algún gestor de bases de datos como phpmyadmin o MySQL Workbench para crear la base de datos.
 
@@ -62,3 +64,9 @@ python manage.py migrate
 ```bash
 python manage.py runserver localhost:8000
 ```
+
+---
+## Material de apoyo para trabajar con GIT
+- [GIT - Configuración inicial](https://github.com/EsotericHog/curso_incapaces/blob/main/git/1.%20Configuracion_inicial.md)
+- [GIT - Comandos](https://github.com/EsotericHog/curso_incapaces/blob/main/git/2.%20Comandos.md)
+- [GIT - Github](https://github.com/EsotericHog/curso_incapaces/blob/main/git/3.%20Github.md)
