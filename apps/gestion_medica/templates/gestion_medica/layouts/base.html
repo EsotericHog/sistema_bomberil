@@ -13,7 +13,7 @@
     {# Importación de Estilos de aplicación #}
     <link rel="stylesheet" href="{% static 'gestion_medica/css/medica_estilos.css' %}">
 
-    {# Título de la página #}
+    {# Título de la ventana #}
     <title>{% block titulo_ventana %}{% endblock %}</title>
 
     {# Descripción #}
@@ -69,7 +69,7 @@
 
         {# Contenido #}
         <main class="main fondo_main">
-            <h1 class="main__title_page fs_grande color_primario">
+            <h1 class="main__titulo_pagina fs_grande color_primario">
             {% block titulo_pagina %}{% endblock  %}
             </h1>
             {% block contenido %} {% endblock %}

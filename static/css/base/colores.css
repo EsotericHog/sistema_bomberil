@@ -56,8 +56,13 @@
 }
 
 
+.fondo_menu_usuario {
+    background-color: var(--color-user-menu);
+}
+
+
 .fondo_negro {
-    background-color: var(--color-black);
+    background-color: var(--color-negro);
 }
 
 
@@ -65,17 +70,17 @@
     background-color: transparent;
 }
 .fondo_transparente:hover {
-    background-color: var(--color-white-translucent);
+    background-color: var(--color-blanco-transparente);
 }
 
 
 .fondo_blanco {
-    background-color: var(--color-white);
+    background-color: var(--color-blanco);
 }
 
 
 .fondo_blanco_variante {
-    background-color: var(--color-white-variant);
+    background-color: var(--color-blanco-variante);
 }
 
 
@@ -86,12 +91,12 @@
 
 
 .fondo_gris {
-    background-color: var(--color-light-gray);
+    background-color: var(--color-gris-claro);
 }
 
 
 .fondo_azul {
-    background-color: var(--color-blue);
+    background-color: var(--color-azul);
 }
 
 
@@ -101,12 +106,17 @@
 
 
 .fondo_naranjo {
-    background-color: var(--color-orange);
+    background-color: var(--color-naranjo);
 }
 
 
 .fondo_verde {
-    background-color: var(--color-green);
+    background-color: var(--color-verde);
+}
+
+
+.fondo_rojo {
+    background-color: var(--color-rojo);
 }
 
 
@@ -133,37 +143,37 @@
 
 
 .color_gris {
-    color: var(--color-gray);
+    color: var(--color-gris);
 }
 
 
 .color_blanco {
-    color: var(--color-white);
+    color: var(--color-blanco);
 }
 
 
 .color_azul {
-    color: var(--color-blue);
+    color: var(--color-azul);
 }
 
 
 .color_rojo {
-    color: var(--color-red);
+    color: var(--color-rojo);
 }
 
 
 .color_verde {
-    color: var(--color-green);
+    color: var(--color-verde);
 }
 
 
 .color_blanco {
-    color: var(--color-white);
+    color: var(--color-blanco);
 }
 
 
 .color_blanco_variante {
-    color: var(--color-white-variant);
+    color: var(--color-blanco-variante);
 }
 
 

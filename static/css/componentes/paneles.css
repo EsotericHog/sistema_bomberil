@@ -1,0 +1,104 @@
+/* Secciones que muestran información en la interfaz */
+
+/*-----PANEL SIMPLE DISEÑADO PARA USAR EN GRID (Título y Tabla)-----*/
+/* Contenedor principal */
+.panel_grid_simple {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: start;
+    width: 100%;
+    height: 100%;
+}
+
+/* Título */
+.panel_grid_simple__titulo {
+    display: flex;
+    width: 100%;
+    justify-content: start;
+    align-items: center;
+}
+
+/* Contenido */
+.panel_grid_simple__contenido {
+    width: 100%;
+    height: 100%;
+    max-height: calc(89% - .8rem);
+    margin: .8rem auto;
+    border-radius: .6rem;
+    overflow: auto;
+    padding: 0 5px;
+}
+.panel_grid_simple__contenido::-webkit-scrollbar {
+    width: 0.5rem;
+    height: 0.5rem;
+}
+.panel_grid_simple__contenido::-webkit-scrollbar-thumb {
+    border-radius: .5rem;
+    background-color: black;
+    visibility: hidden;
+}
+.panel_grid_simple__contenido:hover::-webkit-scrollbar-thumb {
+    visibility: visible;
+}
+
+/* Tabla */
+.panel_grid_simple__tabla {
+    position: relative;
+    width: 100%;
+    padding: 10px;
+}
+.panel_grid_simple__tabla thead, .panel_grid_simple__tabla_pequena thead {
+    position: sticky;
+    top: 0;
+}
+.panel_grid_simple__tabla tr, .panel_grid_simple__tabla_pequena tr {
+    height: 30px;
+}
+.panel_grid_simple__tabla th, .panel_grid_simple__tabla_pequena th {
+    text-align: start;
+}
+
+/* Tabla pequeña */
+.panel_grid_simple__tabla_pequena {
+    position: relative;
+    width: 60%;
+    padding: 10px;
+}
+
+/* Total de registros */
+.panel_grid_simple__circulo_total {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    width: 40%;
+    height: 100%;
+    border-radius: 50%;
+    max-width: 191px;
+    max-height: 191px;
+}
+
+
+
+/* Estilos base para paneles (esquinas redondeadas y sombra leve) */
+.panel_base {
+    border-radius: 10px;
+    box-shadow: 1px 1px 1px var(--color-header-border);
+    padding: 15px;
+}
+
+/* Otras clases para evitar repetir código */
+.flex_row_space_between {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+}
+
+.panel_borde_rojo {
+    border: 5px solid var(--color-rojo);
+}
+
+.panel_borde_naranja {
+    border: 5px solid var(--color-naranjo);
+}

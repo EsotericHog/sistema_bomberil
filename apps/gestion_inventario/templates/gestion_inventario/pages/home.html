@@ -1,10 +1,296 @@
 {# Plantilla base #}{% extends 'gestion_inventario/layouts/base.html' %}
 {# Cargar assets #}{% load static %}
 {# Título de la ventana #} {% block titulo_ventana %}Módulo{% endblock %}
-{# Título de la página #} {% block titulo_pagina %}Título de la Página{% endblock %}
+{# Título de la página #} {% block titulo_pagina %}Inicio{% endblock %}
 
 {% block contenido %}
+<div class="inventario_dashboard__cuadricula">
 
-    <div class="color_primario">INVENTARIO HOME</div>
+
+
+    {# Sección: Botones de colores en la parte superior que muestran algunos totales #}
+    <section class="inventario_dashboard__seccion_resultados panel_base fondo_secundario_variante">
+        <div class="seccion_resultados__resultado_colorido fondo_azul">
+            <div class="resultado_colorido__icono fondo_azul">
+                <i class="fa-solid fa-boxes-stacked color_blanco fs_xx_grande"></i>
+            </div>
+            <div class="resultado_colorido__informacion">
+                <span class="resultado_colorido__titulo fs_normal color_blanco">
+                    Existencias
+                </span>
+                <span class="resultado_colorido__cifra fs_grande color_blanco">
+                    341
+                </span>
+            </div>
+            
+        </div>
+
+        <div class="seccion_resultados__resultado_colorido fondo_morado">
+            <div class="resultado_colorido__icono fondo_morado">
+                <i class="fa-solid fa-book color_blanco fs_xx_grande"></i>
+            </div>
+            <div class="resultado_colorido__informacion">
+                <span class="resultado_colorido__titulo fs_normal color_blanco">
+                    Catálogo
+                </span>
+                <span class="resultado_colorido__cifra fs_grande color_blanco">
+                    50
+                </span>
+            </div>
+            
+        </div>
+
+        <div class="seccion_resultados__resultado_colorido fondo_naranjo">
+            <div class="resultado_colorido__icono fondo_naranjo">
+                <i class="fa-solid fa-address-book color_blanco fs_xx_grande"></i>
+            </div>
+            <div class="resultado_colorido__informacion">
+                <span class="resultado_colorido__titulo fs_normal color_blanco">
+                    Proveedores
+                </span>
+                <span class="resultado_colorido__cifra fs_grande color_blanco">
+                    25
+                </span>
+            </div>
+            
+        </div>
+
+        <div class="seccion_resultados__resultado_colorido fondo_rojo">
+            <div class="resultado_colorido__icono fondo_rojo">
+                <i class="fa-solid fa-sack-dollar color_blanco fs_xx_grande"></i>
+            </div>
+            <div class="resultado_colorido__informacion">
+                <span class="resultado_colorido__titulo fs_normal color_blanco">
+                    Valoración estimada
+                </span>
+                <span class="resultado_colorido__cifra fs_grande color_blanco">
+                    $999.999.999
+                </span>
+            </div>
+            
+        </div>
+    </section>
+    
+
+
+
+
+
+    {# Sección: Últimas existencias registradas en el sistema #}
+    <section class="inventario_dashboard__seccion_ultimos_insumos">
+        {# Panel de información simple #}
+        <div class="panel_grid_simple panel_base fondo_secundario_variante">
+            
+            {# Panel de información simple: Título #}
+            <div class="panel_grid_simple__titulo">
+                <h2 class="fs_mediana color_primario">Existencias recientes</h2>
+            </div>
+
+            {# Panel de información simple: Contenido #}
+            <div class="panel_grid_simple__contenido">
+                <table class="panel_grid_simple__tabla color_primario">
+                    <thead class="fs_pequena fondo_secundario_variante">
+                        <tr>
+                            <th>ID</th>
+                            <th>Nombre</th>
+                            <th>Categoría</th>
+                            <th>Ubicación</th>
+                            <th>Proveedor</th>
+                            <th>Fecha de Ingreso</th>
+                        </tr>
+                    </thead>
+                    <tbody class="fs_pequena">
+                        {% for i in existencias %}
+                        <tr>
+                            <td>{{ i }}</td>
+                            <td>Cortadora Hidráulica</td>
+                            <td>Herramientas de combate</td>
+                            <td>Bodega Principal, Sección 1</td>
+                            <td>Primera Compañía de Bomberos de Iquique</td>
+                            <td>31 de julio de 2025</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+
+
+
+
+
+
+    {# Sección: Gráfico de barras para las categorías #}
+    <section class="inventario_dashboard__seccion_categorias">
+        {# Panel de información simple #}
+        <div class="panel_grid_simple panel_base fondo_secundario_variante">
+
+            {# Panel de información simple: Título #}
+            <div class="panel_grid_simple__titulo">
+                <h2 class="fs_mediana color_primario">Categorías</h2>
+            </div>
+            
+            {# Panel de información simple: Contenido #}
+            <div class="panel_grid_simple__contenido">
+                <div id="GraficoCategorias" class="seccion_categorias__grafico"></div>
+            </div>
+        </div>
+    </section>
+
+
+
+
+
+
+    {# Sección: Proveedores #}
+    <section class="inventario_dashboard__seccion_proveedores">
+        {# Panel de información simple #}
+        <div class="panel_grid_simple panel_base fondo_secundario_variante">
+
+            {# Panel de información simple: Título #}
+            <div class="panel_grid_simple__titulo">
+                <h2 class="fs_mediana color_primario">Proveedores</h2>
+            </div>
+
+            {# Panel de información simple: Contenido #}
+            <div class="panel_grid_simple__contenido">
+                {# Cuadros informativos #}
+                <div class="seccion_proveedores__cuadros_informativos">
+                    <div class="seccion_proveedores__cuadro_informativo">
+                        <span class="color_primario_variante fs_pequena">Donaciones</span>
+                        <span class="color_primario fs_mediana">24</span>
+                    </div>
+                    <div class="seccion_proveedores__cuadro_informativo">
+                        <span class="color_primario_variante fs_pequena">Compras</span>
+                        <span class="color_primario fs_mediana">15</span>
+                    </div>
+                    <div class="seccion_proveedores__cuadro_informativo">
+                        <span class="color_primario_variante fs_pequena">Préstamos</span>
+                        <span class="color_primario fs_mediana">10</span>
+                    </div>
+                </div>
+                {# Tabla de proveedores recientes #}
+                <table class="panel_grid_simple__tabla color_primario">
+                    <thead class="fs_pequena fondo_secundario_variante">
+                        <tr>
+                            <th>ID</th>
+                            <th>Nombre</th>
+                            <th>RUT</th>
+                            <th>Dirección</th>
+                            <th>Teléfono</th>
+                            <th>Fecha</th>
+                        </tr>
+                    </thead>
+                    <tbody class="fs_pequena">
+                        {% for i in proveedores %}
+                        <tr>
+                            <td>{{ i }}</td>
+                            <td>RONALD CRISTIAN MORRIS COFRÉ</td>
+                            <td>14.845.567-K</td>
+                            <td>Limonares 830, Alto Hospicio</td>
+                            <td>9 78456629</td>
+                            <td>31 de julio de 2025</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+
+
+
+
+
+
+    {# Sección: Préstamos activos #}
+    <section class="inventario_dashboard__seccion_prestamos">
+        <div class="panel_grid_simple panel_base fondo_secundario_variante">
+            <div class="panel_grid_simple__titulo">
+                <h2 class="fs_mediana color_primario">Préstamos activos</h2>
+            </div>
+            <div class="panel_grid_simple__contenido flex_row_space_between">
+
+                {# Tabla de préstamos recientes #}
+                <table class="panel_grid_simple__tabla_pequena color_primario">
+                    <thead class="fs_pequena fondo_secundario_variante">
+                        <tr>
+                            <th>Prestatario</th>
+                            <th>Cantidad</th>
+                            <th>Fecha Devolución</th>
+                        </tr>
+                    </thead>
+                    <tbody class="fs_pequena">
+                        {% for i in proveedores %}
+                        <tr id="{{ i }}">
+                            <td>JOSE MIGUEL NEGRETE ZÚÑIGA</td>
+                            <td>3</td>
+                            <td>31 de julio de 2025</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+
+                {# Total préstamos #}
+                <div class="panel_grid_simple__circulo_total panel_borde_naranja">
+                    <span class="fs_mediana color_primario_variante">Total</span>
+                    <span class="fs_xx_grande color_primario">12</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+
+
+
+
+
+    {# Sección: Bajas recientes #}
+    <section class="inventario_dashboard__seccion_bajas">
+        <div class="panel_grid_simple panel_base fondo_secundario_variante">
+            <div class="panel_grid_simple__titulo">
+                <h2 class="fs_mediana color_primario">Bajas recientes</h2>
+            </div>
+            <div class="panel_grid_simple__contenido flex_row_space_between">
+
+                {# Tabla de productos de baja recientes #}
+                <table class="panel_grid_simple__tabla_pequena color_primario">
+                    <thead class="fs_pequena fondo_secundario_variante">
+                        <tr>
+                            <th>Nombre</th>
+                            <th>Fecha</th>
+                        </tr>
+                    </thead>
+                    <tbody class="fs_pequena">
+                        {% for i in proveedores %}
+                        <tr id="{{ i }}">
+                            <td>Manguera 75mm TITAN</td>
+                            <td>31 de julio de 2025</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+
+                {# Total bajas #}
+                <div class="panel_grid_simple__circulo_total panel_borde_rojo">
+                    <span class="fs_mediana color_primario_variante">Total</span>
+                    <span class="fs_xx_grande color_primario">5</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+
+
+
+
+
+</div>
+
+{# Scripts del Dashboard #}
+<script src="{% static 'gestion_inventario/js/dashboard.js' %}"></script>
+
+
     
 {% endblock  %}

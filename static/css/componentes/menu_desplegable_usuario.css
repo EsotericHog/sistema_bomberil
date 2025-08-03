@@ -1,5 +1,5 @@
 .menu_desplegable_usuario {
-    position: absolute;
+    position: fixed;
     display: flex;
     flex-direction: column;
     justify-content: start;

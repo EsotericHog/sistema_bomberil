@@ -12,7 +12,7 @@
     {# Importación de Estilos de aplicación #}
     <link rel="stylesheet" href="{% static 'portal/css/portal_estilos.css' %}">
 
-    {# Título de la página #}
+    {# Título de la ventana #}
     <title>{% block titulo_ventana %}{% endblock %}</title>
 
     {# Descripción #}
@@ -68,7 +68,7 @@
 
         {# Contenido #}
         <main class="main-portal fondo_main">
-            <h1 class="main__title_page-portal fs_grande color_primario">
+            <h1 class="main__titulo_pagina-portal fs_grande color_primario">
             {% block titulo_pagina %}{% endblock  %}
             </h1>
             {% block contenido %} {% endblock %}

@@ -2,8 +2,8 @@
     /* Tamaños de fuente de texto */
     --fs-small: 1.15rem;
     --fs-normal: 1.5rem;
-    --fs-medium: 2rem;
-    --fs-large: 2.5rem;
+    --fs-medium: 1.9rem;
+    --fs-large: 2.3rem;
     --fs-x-large: 3.0rem;
     --fs-xx-large: 4.0rem;
 
@@ -11,33 +11,34 @@
     --color-primary: rgb(10, 10, 10);
     --color-primary-variant: rgb(78, 78, 78);
     --color-secondary: rgb(255, 255, 255);
-    --color-secondary-variant: rgb(241, 241, 241);
+    --color-secondary-variant: rgb(245, 245, 245);
     
-    --color-header: rgb(241, 241, 241);
-    --color-header-inventario: rgb(241, 241, 241);
-    --color-header-mantenimiento: rgb(241, 241, 241);
-    --color-header-medico: rgb(241, 241, 241);
-    --color-header-usuarios: rgb(241, 241, 241);
-    --color-header-voluntarios: rgb(241, 241, 241);
+    --color-header: rgb(255, 255, 255);
+    --color-header-inventario: rgb(255, 255, 255);
+    --color-header-mantenimiento: rgb(255, 255, 255);
+    --color-header-medico: rgb(255, 255, 255);
+    --color-header-usuarios: rgb(255, 255, 255);
+    --color-header-voluntarios: rgb(255, 255, 255);
     --color-header-border: rgb(199, 199, 199);
+    --color-user-menu:rgb(223, 223, 223);
 
-    --color-sidebar: rgb(241, 241, 241);
+    --color-sidebar: rgb(255, 255, 255);
     --color-sidebar-border: rgb(199, 199, 199);
     --color-sidebar-option: rgb(233, 233, 233);
-    --color-main: rgb(224, 224, 224);
+    --color-main: rgb(230, 230, 230);
 
 
-    --color-black: rgb(17, 17, 17);
-    --color-blue: rgb(47, 113, 255);
-    --color-green: rgb(59, 163, 59);
-    --color-gray: rgb(94, 94, 94);
-    --color-light-gray: rgb(180, 180, 180);
-    --color-orange: rgb(255, 165, 0);
-    --color-red: rgb(250, 33, 33);
-    --color-white: rgb(255, 255, 255);
-    --color-white-variant: rgb(241, 241, 241);
-    --color-white-translucent: rgba(255, 255, 255, 0.11);
-    --color-yellow: rgb(251, 201, 0);
+    --color-negro: rgb(17, 17, 17);
+    --color-azul: rgb(47, 113, 255);
+    --color-verde: rgb(59, 163, 59);
+    --color-gris: rgb(94, 94, 94);
+    --color-gris-claro: rgb(180, 180, 180);
+    --color-naranjo: rgb(255, 144, 39);
+    --color-rojo: rgb(245, 60, 60);
+    --color-blanco: rgb(255, 255, 255);
+    --color-blanco-variante: rgb(245, 245, 245);
+    --color-blanco-transparente: rgba(255, 255, 255, 0.11);
+    --color-amarillo: rgb(251, 201, 0);
     --color-morado: rgb(156, 30, 154);
 
 
@@ -47,7 +48,7 @@
     --navbar-width: 325px;
     --navbar-section-height: 60px;
 
-    --main-title-height:60px;
+    --main-title-height:50px;
 
     --input-height: 50px;
     --card-border-radius: 50px;
@@ -66,5 +67,6 @@
     --background-z-index: 0;
     --portal-menu-z-index: 10;
     --header-z-index: 100;
+    --navbar-z-index: 99;
     --dropdown-user-menu-z-index: 101;
 }

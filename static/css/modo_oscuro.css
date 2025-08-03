@@ -5,10 +5,15 @@ body.dark-mode {
     --color-sidebar: rgb(31, 31, 31);
     --color-sidebar-border: rgb(104, 104, 104);
     --color-sidebar-option: rgb(49, 49, 49);
-    --color-main: rgb(44, 44, 44);
+    --color-main: rgb(22, 22, 22);
     
     --color-primary: rgb(241, 241, 241);
     --color-primary-variant: rgb(224, 224, 224);
     --color-secondary: rgb(54, 54, 54);
-    --color-secondary-variant: rgb(10, 10, 10);
+    --color-secondary-variant: rgb(34, 34, 34);
+
+    /* Quitar sombras a los paneles */
+    .panel_base {
+        box-shadow: none;
+    }
 }

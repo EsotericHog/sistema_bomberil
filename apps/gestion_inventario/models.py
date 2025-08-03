@@ -71,7 +71,6 @@ class Comuna(models.Model):
 class Estacion(models.Model):
     '''(Global) Modelo para registrar las Compañías de Bomberos que serán parte del sistema. Es necesario que exista una compañía para que existan usuarios'''
 
-    rut = models.CharField(verbose_name="Rol Único Tributario (RUT)", unique=True, max_length=15, help_text="Ingrese el rut de la compañía")
     nombre = models.CharField(verbose_name="Nombre", max_length=100, help_text="Ingrese el nombre de la compañía")
     descripcion = models.TextField(verbose_name="Descripción (opcional)", null=True, blank=True)
     direccion = models.CharField(verbose_name="Dirección", null=True, blank=True, max_length=100, help_text="Ingrese la dirección (calle y número) de la compañía")
@@ -216,6 +215,7 @@ class Catalogo(models.Model):
     descripcion = models.TextField(verbose_name="Descripción (opcional)", null=True, blank=True)
     marca = models.ForeignKey(Marca, on_delete=models.PROTECT, verbose_name="Marca (Opcional)", blank=True, null=True, help_text="(Opcional) Ingrese la marca del producto")
     modelo = models.CharField(verbose_name="Modelo (Opcional)", max_length=100, blank=True, null=True, help_text="(Opcional) Ingrese el modelo del producto")
+    precio=models.IntegerField(verbose_name="(Opcional) Ingrese el valor estimado del equipamento", null=True, blank=True)
     imagen = models.ImageField(verbose_name="Imagen (opcional)", upload_to="temporal/estaciones/productos/", blank=True, null=True)
     vida_util = models.IntegerField(verbose_name="Vida útil", blank=True, null=True, help_text="(Opcional) Ingrese un número entero correspondiente a la vida útil del producto")
     vida_util_unidad = models.CharField(max_length=3, choices=VidaUtilUnidad.choices, blank=True, null=True, help_text="(Opcional) Seleccionar el tipo de unidad de medida para la cifra de vida útil.")
@@ -223,6 +223,8 @@ class Catalogo(models.Model):
     imagen = models.ImageField(verbose_name="Imagen (opcional)", upload_to="temporal/estaciones/productos/", blank=True, null=True)
     categoria = models.ForeignKey(Categoria, on_delete=models.PROTECT, help_text="Seleccione la categoría a la que corresponde el producto")
     estacion_creadora = models.ForeignKey(Estacion, on_delete=models.PROTECT, verbose_name="Estación Origen")
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
         verbose_name = "Producto"
@@ -233,12 +235,19 @@ class Catalogo(models.Model):
 
 
 
+# Modelo intermedio para relacionar el catálogo con las estaciones. El catálogo es global, pero las estaciones eligen con qué productos quieren trabajar. De esa relación se encarga este modelo
+class CatalogoEstacion(models.Model):
+    catalogo = models.ForeignKey(Catalogo, on_delete=models.PROTECT)
+    estacion = models.ForeignKey(Estacion, on_delete=models.PROTECT)
+
+
+
 class Proveedor(models.Model):
     '''(Global) Modelo para registrar proveedores de existencias. Los proveedores son los que entregan/prestan/donan equipos para que las compañías los usen'''
 
     nombre = models.CharField(verbose_name="Nombre", max_length=50, help_text="Ingrese el nombre del proveedor")
     rut = models.CharField(verbose_name="Rol Único Tributario (RUT)", max_length=10, help_text="Ingrese el rut de la compañía")
-    giro_comercial = models.CharField(verbose_name="Giro", max_length=100, help_text="(Opcional) Ingrese el giro comercial del proveedor")
+    giro_comercial = models.CharField(verbose_name="Giro", max_length=100, null=True, blank=True, help_text="(Opcional) Ingrese el giro comercial del proveedor")
     direccion = models.CharField(verbose_name="Dirección", null=True, blank=True, max_length=100, help_text="Ingrese la dirección del proveedor")
     email = models.EmailField(max_length=50, null=True, blank=True, verbose_name="Email contacto")
     telefono = models.CharField(max_length=9, null=True, blank=True, verbose_name="Teléfono contacto")
@@ -254,6 +263,13 @@ class Proveedor(models.Model):
 
 
 
+# Modelo intermedio para relacionar los proveedores con las estaciones. Las estaciones eligen con qué proveedores quieren trabajar. De esa relación se encarga este modelo
+class ProveedorEstacion(models.Model):
+    proveedor = models.ForeignKey(Proveedor, on_delete=models.PROTECT)
+    estacion = models.ForeignKey(Estacion, on_delete=models.PROTECT)
+
+
+
 class Existencia(models.Model):
     '''(Local) Modelo para registrar las existencias dentro de la compañía.'''
 
@@ -264,7 +280,7 @@ class Existencia(models.Model):
     notas_adicionales = models.TextField(verbose_name="(opcional) Notas adicionales", blank=True, null=True)
     estado = models.ForeignKey(Estado, on_delete=models.PROTECT, verbose_name="Estado de la existencia/lote")
     catalogo = models.ForeignKey(Catalogo, on_delete=models.PROTECT, verbose_name="Producto")
-    compartimento = models.ForeignKey(Compartimento, on_delete=models.PROTECT, verbose_name="Compartimento/sub-sección")
+    compartimento = models.ForeignKey(Compartimento, on_delete=models.PROTECT, verbose_name="Compartimento/sub-sección", blank=True, null=True)
     proveedor = models.ForeignKey(Proveedor, on_delete=models.PROTECT, verbose_name="Proveedor")
     estacion = models.ForeignKey(Estacion, on_delete=models.PROTECT, verbose_name="Estación", help_text="Seleccionar estación propietaria de la existencia")
     created_at = models.DateTimeField(auto_now_add=True)

@@ -38,3 +38,6 @@
 
 /* Menú desplegable de usuario */
 @import url("componentes/menu_desplegable_usuario.css");
+
+/* Paneles de información */
+@import url("componentes/paneles.css");
