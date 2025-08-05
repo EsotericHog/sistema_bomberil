@@ -11,3 +11,29 @@
         "sidebar main main"
     ;
 }
+
+
+
+
+
+
+/*-------------------*/
+/* DISEÑO RESPONSIVO */
+/*-------------------*/
+
+/* Laptops pequeñas */
+@media (max-width: 1300px) {
+
+}
+
+
+/* Tablets grandes - Laptops pequeñas */
+@media (max-width: 1100px) {
+    #root {
+        grid-template-areas: 
+        "header header header"
+        "main main main"
+        "main main main"
+        ;
+    }
+}

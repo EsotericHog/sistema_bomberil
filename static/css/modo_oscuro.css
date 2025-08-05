@@ -2,9 +2,11 @@ body.dark-mode {
     /* Colores */
     --color-header: rgb(37, 37, 37);
     --color-header-border: rgb(102, 102, 102);
+    --color-user-menu:rgb(58, 58, 58);
     --color-sidebar: rgb(31, 31, 31);
     --color-sidebar-border: rgb(104, 104, 104);
     --color-sidebar-option: rgb(49, 49, 49);
+    --color-sidebar-option-border: rgb(92, 92, 92);
     --color-main: rgb(22, 22, 22);
     
     --color-primary: rgb(241, 241, 241);

@@ -1,0 +1,17 @@
+/* Clase para resaltar el color de un elemento. Útil para botones*/
+.hover_color:hover {
+    filter: brightness(1.2);
+}
+
+/* Clase para escalar un elemento. Útil para botones */
+.hover_scale {
+    transition: all 30ms ease;
+}
+.hover_scale:hover {
+    transform: scale(1.1);
+}
+
+/* rotar elemento 180 grados */
+.rotate180 {
+    transform: rotate(180deg);
+}

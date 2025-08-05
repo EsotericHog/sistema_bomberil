@@ -41,3 +41,10 @@
 
 /* Paneles de información */
 @import url("componentes/paneles.css");
+
+
+
+/* ---------- ESTILOS EXTRA ---------- */
+
+/* Utilidades */
+@import url("utilidades.css");

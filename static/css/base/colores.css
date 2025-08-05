@@ -46,8 +46,8 @@
     background-color: var(--color-sidebar-option);
 }
 .fondo_opcion_nav:hover {
-    background-color: var(--color-blue);
-    color: var(--color-white);
+    background-color: var(--color-azul);
+    color: var(--color-blanco);
 }
 
 
@@ -179,21 +179,4 @@
 
 .color_morado {
     color: var(--color-morado)
-}
-
-
-
-/* ESPECIALES */
-
-/* Clase para resaltar el color de un elemento. Útil para botones*/
-.hover_color:hover {
-    filter: brightness(1.2);
-}
-
-/* Clase para escalar un elemento. Útil para botones */
-.hover_scale {
-    transition: all 30ms ease;
-}
-.hover_scale:hover {
-    transform: scale(1.1);
 }

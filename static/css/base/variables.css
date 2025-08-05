@@ -24,7 +24,8 @@
 
     --color-sidebar: rgb(255, 255, 255);
     --color-sidebar-border: rgb(199, 199, 199);
-    --color-sidebar-option: rgb(233, 233, 233);
+    --color-sidebar-option: rgb(242, 242, 242);
+    --color-sidebar-option-border: rgb(200, 200, 200);
     --color-main: rgb(230, 230, 230);
 
 
@@ -63,10 +64,37 @@
     --portal-menu-preview-width: 65%;
     --portal-menu-opcion-height: 50px;
 
+    --laptop-width: 1000px;
+
     /* Z-index */
     --background-z-index: 0;
     --portal-menu-z-index: 10;
     --header-z-index: 100;
     --navbar-z-index: 99;
     --dropdown-user-menu-z-index: 101;
+}
+
+
+
+
+
+
+/*-------------------*/
+/* DISEÑO RESPONSIVO */
+/*-------------------*/
+
+/* Laptops pequeñas */
+@media (max-width: 1300px) {
+    :root {
+        /* Tamaños de fuente de texto */
+        --fs-small: 1.2rem;
+        --fs-normal: 1.4rem;
+        --fs-medium: 1.8rem;
+        --fs-large: 2.2rem;
+        --fs-x-large: 2.9rem;
+        --fs-xx-large: 3.9rem;
+
+        /* Dimensiones para estandarización */
+        --navbar-width: 250px;
+    }
 }
