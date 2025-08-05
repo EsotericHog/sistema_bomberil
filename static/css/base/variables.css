@@ -7,6 +7,11 @@
     --fs-x-large: 3.0rem;
     --fs-xx-large: 4.0rem;
 
+    --fs-layout-icon: 3.0rem;
+    --fs-header-title: 2.3rem;
+    --fs-nav-section: 1.5rem;
+    --fs-nav-option: 1.15rem;
+    
     /* Colores */
     --color-primary: rgb(10, 10, 10);
     --color-primary-variant: rgb(78, 78, 78);
@@ -21,14 +26,14 @@
     --color-header-voluntarios: rgb(255, 255, 255);
     --color-header-border: rgb(199, 199, 199);
     --color-user-menu:rgb(223, 223, 223);
-
+    
     --color-sidebar: rgb(255, 255, 255);
     --color-sidebar-border: rgb(199, 199, 199);
     --color-sidebar-option: rgb(242, 242, 242);
     --color-sidebar-option-border: rgb(200, 200, 200);
     --color-main: rgb(230, 230, 230);
-
-
+    
+    
     --color-negro: rgb(17, 17, 17);
     --color-azul: rgb(47, 113, 255);
     --color-verde: rgb(59, 163, 59);
@@ -41,20 +46,22 @@
     --color-blanco-transparente: rgba(255, 255, 255, 0.11);
     --color-amarillo: rgb(251, 201, 0);
     --color-morado: rgb(156, 30, 154);
-
-
+    
+    
     /* Dimensiones para estandarización */
     --header-height: 80px;
-
+    --user-avatar-width: 40px;
+    --company-logo-width: 20px;
+    
     --navbar-width: 325px;
     --navbar-section-height: 60px;
-
+    
     --main-title-height:50px;
-
+    
     --input-height: 50px;
     --card-border-radius: 50px;
     --footer-height: 100px;
-
+    
     --portal-title: 100px;
     --portal-menu-height: 500px;
     --portal-menu-min-width: 400px;
@@ -63,9 +70,9 @@
     --portal-menu-opcions-width: 35%;
     --portal-menu-preview-width: 65%;
     --portal-menu-opcion-height: 50px;
-
+    
     --laptop-width: 1000px;
-
+    
     /* Z-index */
     --background-z-index: 0;
     --portal-menu-z-index: 10;
@@ -87,14 +94,68 @@
 @media (max-width: 1300px) {
     :root {
         /* Tamaños de fuente de texto */
+        /*
         --fs-small: 1.2rem;
         --fs-normal: 1.4rem;
         --fs-medium: 1.8rem;
         --fs-large: 2.2rem;
         --fs-x-large: 2.9rem;
         --fs-xx-large: 3.9rem;
-
+        */
+        --fs-header-title: 2.0rem;
+        --fs-nav-section: 1.3rem;
+        
         /* Dimensiones para estandarización */
         --navbar-width: 250px;
+    }
+}
+
+/* Tablets grandes - Laptops pequeñas */
+@media (max-width: 1100px) {
+    :root {
+        /* Tamaños de fuente de texto */
+        --fs-nav-section: 1.4rem;
+        --fs-nav-option: 1.3rem;
+        /* Dimensiones para estandarización */
+        --navbar-width: 0;
+    }
+}
+
+/* Tablets pequeñas - Teléfonos grandes */
+@media (max-width: 600px) {
+    :root {
+        /* Tamaños de fuente de texto */
+        --fs-header-title: 1.7rem;
+        --fs-nav-section: 1.5rem;
+        --fs-nav-option: 1.3rem;
+        --fs-layout-icon: 2.4rem;
+        /* Dimensiones para estandarización */
+        --header-height: 65px;
+    }
+}
+
+/* Teléfonos grandes */
+@media (max-width: 500px) {
+    :root {
+        /* Tamaños de fuente de texto */
+        --fs-header-title: 2.5rem;
+        --fs-nav-section: 1.8rem;
+        --fs-nav-option: 1.7rem;
+        /* Dimensiones para estandarización */
+        --header-height: 70px;
+        --user-avatar-width: 35px;
+    }
+}
+
+/* Teléfonos medianos - pequeños */
+@media (max-width: 370px) {
+    :root {
+        /* Tamaños de fuente de texto */
+        --fs-header-title: 2.0rem;
+        --fs-nav-section: 1.4rem;
+        --fs-nav-option: 1.3rem;
+        /* Dimensiones para estandarización */
+        --header-height: 60px;
+        --user-avatar-width: 30px;
     }
 }

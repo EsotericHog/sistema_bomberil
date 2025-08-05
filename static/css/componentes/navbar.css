@@ -108,7 +108,6 @@
 /* Tablets grandes - Laptops pequeñas */
 @media (max-width: 1100px) {
     .barra_lateral {
-        width: 0;
         grid-area: none;
     }
 
@@ -143,4 +142,20 @@
         justify-content: center;
         align-items: center;
     }
+}
+
+/* Tablets pequeñas - Teléfonos grandes */
+@media (max-width: 600px) {
+    .barra_lateral-activada {
+        width: 85%;
+    }
+
+    .barra_lateral__boton_cerrar-activado {
+        right: 10px;
+    }
+}
+
+/* Teléfonos grandes */
+@media (max-width: 500px) {
+
 }

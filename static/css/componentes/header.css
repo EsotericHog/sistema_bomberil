@@ -129,14 +129,14 @@
     flex-direction: row;
     align-items: center;
     justify-content: center;
-    width: auto;
     height: 100%;
     gap: 8px;
 }
 
 .menu_usuario__avatar_usuario img {
-    width: 40px;
+    width: var(--user-avatar-width);
     border-radius: 100%;
+    object-fit: cover;
 }
 
 /* Ícono de menú hamburguesa para desplegar la barra lateral de navegación en vista móvil */
@@ -170,4 +170,54 @@
         border-right: 1px solid var(--color-header-border);
     }
 
+    /* Header: Sección derecha */
+    .header__seccion_menu_usuario {
+        padding: 30px;
+    }
+
+}
+
+/* Tablets grandes - medianas */
+@media (max-width: 900px) {
+    .menu_usuario__nombre_email {
+        display: none;
+    }
+}
+
+/* Tablets pequeñas - Teléfonos grandes */
+@media (max-width: 600px) {
+    .header__compania {
+        display: none;
+    }
+
+    .header__seccion_menu_usuario {
+        padding: 0 15px;
+    }
+
+    .header__boton_barra_lateral {
+        padding: 0 20px;
+    }
+}
+
+/* Teléfonos grandes - medianos */
+@media (max-width: 500px) {
+    .header__seccion_menu_usuario {
+        padding: 0 10px;
+    }
+
+    .menu_usuario__usuario {
+        gap: 5px;
+    }
+}
+
+/* Teléfonos medianos - pequeños */
+@media (max-width: 370px) {
+    .header__logo {
+        display: none;
+    }
+
+    /* Ícono de menú hamburguesa para desplegar la barra lateral de navegación en vista móvil */
+    .header__boton_barra_lateral {
+        padding: 0 20px;
+    }
 }
