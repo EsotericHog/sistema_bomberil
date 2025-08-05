@@ -153,7 +153,7 @@ JAZZMIN_SETTINGS = {
     "site_icon": None,  
 
     # Texto de bienvenida en la pantalla de inicio de sesión  
-    "welcome_sign": "Bienvenido a la biblioteca",  
+    "welcome_sign": "Bienvenido a la Administración de Bomberil",  
 
     # Copyright en el pie de página  
     "copyright": "Acme Library Ltd",  
