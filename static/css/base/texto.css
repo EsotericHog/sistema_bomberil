@@ -30,3 +30,22 @@
     font-size: var(--fs-xx-large);
     font-family: 'Roboto';
 }
+
+.fs_layout_icono {
+    font-size: var(--fs-layout-icon);
+}
+
+.fs_header_titulo {
+    font-size: var(--fs-header-title);
+    font-family: 'Roboto';
+}
+
+.fs_nav_seccion {
+    font-size: var(--fs-nav-section);
+    font-family: 'Roboto';
+}
+
+.fs_nav_opcion {
+    font-size: var(--fs-nav-option);
+    font-family: 'Roboto';
+}
