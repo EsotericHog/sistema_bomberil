@@ -34,6 +34,8 @@ _ Trasladar voluntario a otra compañía para ceder su gestión
 _ Exportar listado de voluntarios (excel, .csv, etc.)
 '''
 
+app_name = "gestion_voluntarios"
+
 urlpatterns = [
     # Página Inicial de la gestión de inventario
     path('', VoluntariosInicioView.as_view(), name="ruta_voluntarios_inicio"),

@@ -26,6 +26,8 @@ _ Generar ficha médica en formato PDF
 _ Exportar listado de pacientes (excel, .csv, etc.)
 '''
 
+app_name = "gestion_medica"
+
 urlpatterns = [
     # Página Inicial de la gestión médica
     path('', MedicoInicioView.as_view(), name="ruta_medico_inicio"),

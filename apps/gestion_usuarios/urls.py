@@ -1,6 +1,8 @@
 from django.urls import path
 from .views import *
 
+app_name = "gestion_usuarios"
+
 urlpatterns = [
     # Página Inicial de la gestión de usuarios
     path('', UsuarioInicioView.as_view(), name="ruta_usuarios_inicio"),
