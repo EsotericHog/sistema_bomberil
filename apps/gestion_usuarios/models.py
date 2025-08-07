@@ -6,6 +6,7 @@ from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin, Group
 
 from .manager import CustomUserManager
 from apps.utilidades.manejar_imagenes import generar_ruta_subida_local_avatar
+from apps.gestion_inventario.models import Estacion
 
 
 class Usuario(AbstractBaseUser, PermissionsMixin):
@@ -22,6 +23,7 @@ class Usuario(AbstractBaseUser, PermissionsMixin):
     birthdate = models.DateField(null=True, blank=True, verbose_name="Fecha Nacimiento")
     phone = models.CharField(max_length=9, null=True, blank=True, verbose_name="Teléfono")
     avatar = models.ImageField(upload_to=generar_ruta_subida_local_avatar, null=True, blank=True)
+    estacion = models.ForeignKey(Estacion, on_delete=models.CASCADE, blank=True, null=True, verbose_name="Estación correspondiente")
     
     # Campos automáticos de fecha
     created_at = models.DateTimeField(auto_now_add=True)
