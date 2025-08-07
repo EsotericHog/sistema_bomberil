@@ -11,7 +11,7 @@
         <li class="menu_desplegable_usuario__opcion">
             <a 
             class="fs_normal color_primario_variante" 
-            href="{% url 'ruta_usuarios_alternar_tema' %}"
+            href="{% url 'gestion_usuarios:ruta_alternar_tema' %}"
             >
                 <i class="fa-solid fa-circle-half-stroke"></i>
                 Tema: 
@@ -31,14 +31,14 @@
         </li>
 
         <li class="menu_desplegable_usuario__opcion">
-            <a class="fs_normal color_primario_variante" href="{% url 'ruta_portal_inicio' %}">
+            <a class="fs_normal color_primario_variante" href="{% url 'portal:ruta_inicio' %}">
                 <i class="fa-solid fa-chalkboard"></i>
                 Volver al Portal
             </a>
         </li>
 
         <li class="menu_desplegable_usuario__opcion">
-            <a class="fs_normal color_primario_variante" href="">
+            <a class="fs_normal color_primario_variante" href="{% url 'portal:ruta_logout' %}">
                 <i class="fa-solid fa-door-open"></i>
                 Cerrar sesión
             </a>

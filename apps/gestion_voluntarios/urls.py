@@ -38,34 +38,34 @@ app_name = "gestion_voluntarios"
 
 urlpatterns = [
     # Página Inicial de la gestión de inventario
-    path('', VoluntariosInicioView.as_view(), name="ruta_voluntarios_inicio"),
+    path('', VoluntariosInicioView.as_view(), name="ruta_inicio"),
 
     # Lista de voluntarios de la compañía
-    path('lista/', VoluntariosListaView.as_view(), name="ruta_voluntarios_lista"),
+    path('lista/', VoluntariosListaView.as_view(), name="ruta_lista"),
 
     # Ingresar voluntario al sistema
-    path('crear/', VoluntariosCrearView.as_view(), name="ruta_voluntarios_crear"),
+    path('crear/', VoluntariosCrearView.as_view(), name="ruta_crear"),
 
     # Ver información de un voluntario
-    path('voluntario/<int:id>/', VoluntariosVerView.as_view(), name="ruta_voluntarios_ver"),
+    path('voluntario/<int:id>/', VoluntariosVerView.as_view(), name="ruta_ver"),
 
     # Modificar información de un voluntario
-    path('voluntario/<int:id>/editar', VoluntariosModificarView.as_view(), name="ruta_voluntarios_modificar"),
+    path('voluntario/<int:id>/editar', VoluntariosModificarView.as_view(), name="ruta_modificar"),
 
     # Eliminar voluntario del sistema (A EVALUAR. PROBABLEMENTE TERMINE QUITANDO ESTE ENDPOINT)
-    path('voluntario/<int:id>/editar', VoluntariosEliminarView.as_view(), name="ruta_voluntarios_eliminar"),
+    path('voluntario/<int:id>/editar', VoluntariosEliminarView.as_view(), name="ruta_eliminar"),
 
 
 
     # Lista de cargos/rangos bomberiles
-    path('lista/', CargosListaView.as_view(), name="ruta_voluntarios_cargos_lista"),
+    path('lista/', CargosListaView.as_view(), name="ruta_cargos_lista"),
 
     # Ingresar cargo al sistema
-    path('crear/', CargosCrearView.as_view(), name="ruta_voluntarios_cargos_crear"),
+    path('crear/', CargosCrearView.as_view(), name="ruta_cargos_crear"),
 
     # Modificar cargo
-    path('voluntario/<int:id>/editar', CargosModificarView.as_view(), name="ruta_voluntarios_cargos_modificar"),
+    path('voluntario/<int:id>/editar', CargosModificarView.as_view(), name="ruta_cargos_modificar"),
 
     # Eliminar cargo (PROTEGIDO)
-    path('voluntario/<int:id>/eliminar', CargosEliminarView.as_view(), name="ruta_voluntarios_cargos_eliminar"),
+    path('voluntario/<int:id>/eliminar', CargosEliminarView.as_view(), name="ruta_cargos_eliminar"),
 ]

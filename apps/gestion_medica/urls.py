@@ -30,14 +30,14 @@ app_name = "gestion_medica"
 
 urlpatterns = [
     # Página Inicial de la gestión médica
-    path('', MedicoInicioView.as_view(), name="ruta_medico_inicio"),
+    path('', MedicoInicioView.as_view(), name="ruta_inicio"),
 
     # Lista de pacientes (información médica de los voluntarios)
-    path('lista/', MedicoListaView.as_view(), name="ruta_medico_lista"),
+    path('lista/', MedicoListaView.as_view(), name="ruta_lista"),
 
     # Ver información médica de un voluntario
-    path('<int:id>/', MedicoVerView.as_view(), name="ruta_medico_ver"),
+    path('<int:id>/', MedicoVerView.as_view(), name="ruta_ver_paciente"),
 
     # Modificar información médica de un voluntario
-    path('<int:id>/editar', MedicoModificarView.as_view(), name="ruta_medico_modificar"),
+    path('<int:id>/editar', MedicoModificarView.as_view(), name="ruta_modificar"),
 ]
