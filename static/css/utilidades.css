@@ -16,6 +16,7 @@
     transform: rotate(180deg);
 }
 
-.alerta {
-    z-index: var(--flash-message-z-index);
+.avatar_small {
+    width: 20px;
+    border-radius: 50%;
 }

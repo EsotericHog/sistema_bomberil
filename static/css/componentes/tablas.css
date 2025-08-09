@@ -1,0 +1,6 @@
+#myTable_wrapper {
+    width: 100%;
+    color: var(--color-primary);
+    font-size: var(--fs-normal);
+    font-family: 'Roboto', sans-serif;
+}

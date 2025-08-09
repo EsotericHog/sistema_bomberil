@@ -1,0 +1,18 @@
+.alerta {
+    z-index: var(--flash-message-z-index);
+}
+
+.alert-error {
+    background-color: var(--color-rojo);
+}
+
+.alert-success {
+    background-color: var(--color-verde);
+}
+
+.contenedor_alerta {
+    display: flex;
+    width: 100%;
+    justify-content: center;
+    align-items: center;
+}

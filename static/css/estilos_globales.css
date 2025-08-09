@@ -39,11 +39,24 @@
 /* Menú desplegable de usuario */
 @import url("componentes/menu_desplegable_usuario.css");
 
+
+
+/* ---------- ESTILOS COMPONENTES ---------- */
+
 /* Paneles de información */
 @import url("componentes/paneles.css");
 
 /* Botones */
-@import url("componentes/entrada.css");
+@import url("componentes/botones.css");
+
+/* Tablas */
+@import url("componentes/tablas.css");
+
+/* Formularios */
+@import url("componentes/formularios.css");
+
+/* Alertas Flash */
+@import url("componentes/alertas_flash.css");
 
 
 

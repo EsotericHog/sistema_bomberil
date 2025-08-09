@@ -45,10 +45,10 @@
 .fondo_opcion_nav {
     background-color: var(--color-sidebar-option);
 }
-.fondo_opcion_nav:hover {
+/*.fondo_opcion_nav:hover {
     background-color: var(--color-azul);
     color: var(--color-blanco);
-}
+}*/
 
 
 .fondo_main {
@@ -179,4 +179,11 @@
 
 .color_morado {
     color: var(--color-morado)
+}
+
+.color_naranjo {
+    color: var(--color-naranjo);
+}
+.color_naranjo_claro {
+    color: var(--color-naranjo-claro);
 }

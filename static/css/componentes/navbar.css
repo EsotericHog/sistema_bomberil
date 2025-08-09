@@ -56,12 +56,11 @@
     padding: 15px;
 }
 
-/* Lista de opciones
+/* Lista de opciones*/
 .barra_lateral__lista_opciones {
-    padding-top: 10px;
-    background-color: red;
-}*/
-
+    padding-left:0; /* Quita estilo de bootstrap */
+}
+/* Contenedor de la opción */
 .barra_lateral__lista_opciones li {
     display: flex;
     height: auto;
@@ -69,6 +68,7 @@
     align-items: center;
     border-bottom: 1px solid var(--color-sidebar-option-border);
 }
+/* Enlace de la opción */
 .barra_lateral__lista_opciones li a {
     display: flex;
     width: 100%;
@@ -76,6 +76,11 @@
     justify-content: start;
     align-items: center;
     padding: 10px 15px;
+    gap: 5px;
+}
+/* ícono de la opción */
+.barra_lateral__lista_opciones li a i {
+    width: 25px;
 }
 
 .barra_lateral__boton_cerrar {
