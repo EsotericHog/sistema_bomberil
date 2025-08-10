@@ -4,3 +4,8 @@
     font-size: var(--fs-normal);
     font-family: 'Roboto', sans-serif;
 }
+
+.tabla_1__nombre_usuario {
+    margin-left: 10px;
+    margin-right: 5px;
+}
