@@ -2,7 +2,7 @@
     z-index: var(--flash-message-z-index);
 }
 
-.alert-error {
+.alert-error, .alert-danger {
     background-color: var(--color-rojo);
 }
 
@@ -15,4 +15,9 @@
     width: 100%;
     justify-content: center;
     align-items: center;
+}
+
+.errorlist {
+    font-size: var(--fs-normal);
+    color: var(--color-blanco);
 }
