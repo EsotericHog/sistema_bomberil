@@ -36,12 +36,14 @@ PROJECT_APPS = [
 ]
 # Aplicaciones de terceros
 THIRD_PARTY_APPS = [
-    'jazzmin'
+    'jazzmin',
+    'storages'
 ]
 INSTALLED_APPS = THIRD_PARTY_APPS + DJANGO_APPS + PROJECT_APPS
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -117,6 +119,9 @@ STATIC_URL = 'static/'
 STATICFILES_DIRS = [
     BASE_DIR / "static",
 ]
+STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
+## Archivos multimedia cargados (configuración local)
+
 
 
 # Tipo de campo de clave primaria por defecto
@@ -181,3 +186,29 @@ JAZZMIN_SETTINGS = {
     # Nombre del campo en el modelo de usuario que contiene el avatar (ImageField/URLField/CharField) o un objeto llamable que recibe el usuario  
     "user_avatar": "avatar"  
 }
+
+STORAGES = {
+    "default": {
+        "BACKEND": "storages.backends.s3.S3Storage",
+        "OPTIONS": {
+          
+        },
+    },
+    "staticfiles": {
+        "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
+        "OPTIONS": {
+
+        }
+    }
+}
+
+
+# Configuración de AWS
+AWS_ACCESS_KEY_ID = env.str('AWS_ACCESS_KEY_ID')
+AWS_SECRET_ACCESS_KEY = env.str('AWS_SECRET_ACCESS_KEY')
+AWS_STORAGE_BUCKET_NAME = env.str('AWS_STORAGE_BUCKET_NAME')
+AWS_S3_REGION_NAME = env.str('AWS_S3_REGION_NAME')
+AWS_S3_CUSTOM_DOMAIN = f'{AWS_STORAGE_BUCKET_NAME}.s3.{AWS_S3_REGION_NAME}.amazonaws.com'
+
+# URL del bucket de S3
+MEDIA_URL = f'https://{AWS_S3_CUSTOM_DOMAIN}/media/'
