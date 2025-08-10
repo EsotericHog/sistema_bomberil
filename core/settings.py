@@ -187,21 +187,6 @@ JAZZMIN_SETTINGS = {
     "user_avatar": "avatar"  
 }
 
-STORAGES = {
-    "default": {
-        "BACKEND": "storages.backends.s3.S3Storage",
-        "OPTIONS": {
-          
-        },
-    },
-    "staticfiles": {
-        "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
-        "OPTIONS": {
-
-        }
-    }
-}
-
 
 # Configuración de AWS
 AWS_ACCESS_KEY_ID = env.str('AWS_ACCESS_KEY_ID')
@@ -210,5 +195,25 @@ AWS_STORAGE_BUCKET_NAME = env.str('AWS_STORAGE_BUCKET_NAME')
 AWS_S3_REGION_NAME = env.str('AWS_S3_REGION_NAME')
 AWS_S3_CUSTOM_DOMAIN = f'{AWS_STORAGE_BUCKET_NAME}.s3.{AWS_S3_REGION_NAME}.amazonaws.com'
 
+AWS_DEFAULT_ACL = None            # evita ACL heredadas
+AWS_QUERYSTRING_AUTH = False  
+
 # URL del bucket de S3
 MEDIA_URL = f'https://{AWS_S3_CUSTOM_DOMAIN}/media/'
+
+
+STORAGES = {
+    # MEDIA -> S3
+    "default": {
+        "BACKEND": "storages.backends.s3.S3Storage",
+        "OPTIONS": {
+            "bucket_name": AWS_STORAGE_BUCKET_NAME,
+            "location": "media",                # <— clave: prefijo dentro del bucket
+            "custom_domain": AWS_S3_CUSTOM_DOMAIN, 
+        },
+    },
+    # STATIC -> local con WhiteNoise
+    "staticfiles": {
+        "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
+    }
+}
