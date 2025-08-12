@@ -75,15 +75,22 @@
             <td>{{usuario.created_at}}</td>
             <td>
                 <div class="tabla_1__caja_botones">
+                {% if usuario.is_active %}
+                    {# Botón para ver #}
                     <span class="boton_icono fondo_morado hover_color">
                         <i class="fa-solid fa-eye color_blanco"></i>
                     </span>
+                    {# Botón para Modificar #}
                     <span class="boton_icono fondo_naranjo hover_color">
                         <i class="fa-solid fa-pen-to-square color_blanco"></i>
                     </span>
-                    <span class="boton_icono fondo_rojo hover_scale">
-                        <i class="fa-solid fa-trash color_blanco"></i>
-                    </span>
+                    {# Botón para Desactivar #}
+                    <button type=button data-form-action="{% url 'gestion_usuarios:ruta_desactivar_usuario' id=usuario.id %}" class="boton_icono fondo_rojo hover_scale boton-desactivar-usuario color_blanco">
+                        <i class="fa-solid fa-ban"></i>
+                    </button>
+                {% else %}
+                <!--Botón para activar-->
+                {% endif %}
                 </div>
             </td>
         </tr>

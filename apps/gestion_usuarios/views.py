@@ -1,8 +1,9 @@
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.views import View
 from django.contrib import messages
 from django.db import IntegrityError
-from django.urls import reverse
+from django.urls import reverse, reverse_lazy
+from django.http import HttpResponseNotAllowed
 
 from .models import Usuario
 from .forms import FormularioCrearUsuario
@@ -96,11 +97,26 @@ class UsuarioEditarView(View):
 class UsuarioDesactivarView(View):
     '''Vista para desactivar usuarios'''
 
-    def get(self, request):
-        pass
+    def get(self, request, *args, **kwargs):
+        return HttpResponseNotAllowed(['POST'])
 
-    def post(self, request):
-        pass
+    def post(self, request, id, *args, **kwargs):
+        usuario = get_object_or_404(Usuario, pk=id)
+        
+        try:
+            # Cambia el estado y guarda el objeto
+            usuario.is_active = False
+            usuario.save()
+
+            # Mensaje de éxito para el usuario
+            messages.success(request, f"El usuario '{usuario.get_full_name}' ha sido desactivado correctamente.")
+
+        except Exception as e:
+            # Captura cualquier otro error inesperado
+            messages.error(request, f"Ocurrió un error inesperado al desactivar el usuario: {e}")
+
+        # Redirige a la lista de usuarios (asegúrate que esta URL exista)
+        return redirect(reverse("gestion_usuarios:ruta_lista_usuarios"))
 
 
 

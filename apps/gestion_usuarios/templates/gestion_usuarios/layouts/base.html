@@ -10,6 +10,7 @@
 
     {# Importación de Estilos #}
     {% include 'layouts/estilos.html' %}
+    <link rel="stylesheet" href="{% static 'css/componentes/modal.css' %}">
 
     {# Título de la ventana #}
     <title>{% block titulo_ventana %}{% endblock %}</title>
@@ -43,8 +44,14 @@
             {% block contenido %} {% endblock %}
         </main>
 
+        {# Ventanas modales de la aplicación #}
+        {% include 'gestion_usuarios/layouts/modal_desactivar_usuario.html' %}
+
         {# Importación de Scripts #}
         {% include 'layouts/scripts.html' %}
+
+        {# Scripts de la aplicación #}
+        <script src="{% static 'gestion_usuarios/js/modal.js' %}"></script>
 
     </div>
 </body>

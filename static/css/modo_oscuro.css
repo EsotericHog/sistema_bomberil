@@ -18,4 +18,9 @@ body.dark-mode {
     .panel_base {
         box-shadow: none;
     }
+
+    /* Quitar bordes a ventanas modales de bootstrap */
+    .modal-footer {
+        border: 0;
+    }
 }
