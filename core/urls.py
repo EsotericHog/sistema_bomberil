@@ -4,6 +4,8 @@ from django.views.generic.base import RedirectView
 from django.conf.urls.static import static
 from django.conf import settings
 
+admin.site.site_url = "/"
+
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('gestion_usuarios/', include("apps.gestion_usuarios.urls")),
@@ -12,6 +14,7 @@ urlpatterns = [
     path('voluntarios/', include("apps.gestion_voluntarios.urls")),
     path('medico/', include("apps.gestion_medica.urls")),
     path('portal/', include("apps.portal.urls")),
+    path('acceso/', include("apps.acceso.urls")),
     path('', RedirectView.as_view(pattern_name='portal:ruta_inicio', permanent=False), name='ruta_redireccion_portal_inicio'),
 ]
 

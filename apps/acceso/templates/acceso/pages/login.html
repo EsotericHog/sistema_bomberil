@@ -10,7 +10,7 @@
         Iniciar sesión
     </h1>
 
-    <form class="portal_login__formulario" name="LoginForm" method="post" action="{% url 'portal:ruta_login' %}">
+    <form class="portal_login__formulario" name="LoginForm" method="post" action="{% url 'acceso:ruta_login' %}">
         {% csrf_token %}
 
         <div class="input_box">

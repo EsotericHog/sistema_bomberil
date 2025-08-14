@@ -32,7 +32,8 @@ PROJECT_APPS = [
     'apps.gestion_voluntarios',
     'apps.gestion_medica',
     'apps.gestion_usuarios',
-    'apps.portal'
+    'apps.portal',
+    'apps.acceso'
 ]
 # Aplicaciones de terceros
 THIRD_PARTY_APPS = [
@@ -139,7 +140,7 @@ AUTH_USER_MODEL = "gestion_usuarios.Usuario"
 
 
 # Ruta del login
-LOGIN_URL = 'portal:ruta_login'
+LOGIN_URL = 'acceso:ruta_login'
 
 
 # Mapeo de nombres de apps a nombres legibles para el usuario (Aparecerán en el Header)
@@ -150,6 +151,7 @@ MODULOS = {
     'gestion_usuarios': 'Usuarios y Permisos',
     'gestion_voluntarios': 'Gestión Voluntarios',
     'portal': 'Bomberil',
+    'acceso': 'Acceso',
 }
 
 
@@ -194,6 +196,17 @@ JAZZMIN_SETTINGS = {
 
     "hide_apps": ["auth"],
     "hide_models": ["auth.Group", "auth.User"],
+
+    "topmenu_links": [
+        # Url a la que quieres que te lleve el botón "Ver Sitio"
+        {"name": "Home", "url": "index", "permissions": ["auth.view_user"]},
+
+        # Agrega este diccionario para el enlace "Ver Sitio"
+        {"name": "Ver Sitio", "url": "/", "new_window": True},
+
+        # Puedes agregar otros enlaces si lo deseas
+        # {"model": "auth.User"},
+    ],
 }
 
 
