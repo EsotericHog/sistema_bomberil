@@ -39,6 +39,7 @@
     --color-verde: rgb(59, 163, 59);
     --color-gris: rgb(94, 94, 94);
     --color-gris-claro: rgb(180, 180, 180);
+    --color-gris-oscuro: rgb(139, 139, 139);
     --color-naranjo: rgb(255, 144, 39);
     --color-naranjo-claro: rgb(255, 193, 134);
     --color-rojo: rgb(245, 60, 60);
@@ -57,7 +58,7 @@
     --navbar-width: 325px;
     --navbar-section-height: 60px;
     
-    --main-title-height:50px;
+    --main-title-height:70px;
     
     --input-height: 50px;
     --card-border-radius: 50px;

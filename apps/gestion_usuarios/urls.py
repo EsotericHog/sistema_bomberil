@@ -13,6 +13,9 @@ urlpatterns = [
     # Ver detalle de usuario
     path('usuarios/<int:id>/', UsuarioObtenerView.as_view(), name="ruta_ver_usuario"),
 
+    # Agregar usuario (enlistarlo en la compañía)
+    path('usuarios/agregar/', UsuarioAgregarView.as_view(), name="ruta_agregar_usuario"),
+
     # Crear usuario
     path('usuarios/crear/', UsuarioCrearView.as_view(), name="ruta_crear_usuario"),
 
@@ -21,7 +24,4 @@ urlpatterns = [
     
     # Desactivar usuario (No puede acceder al sistema)
     path('usuarios/<int:id>/desactivar/', UsuarioDesactivarView.as_view(), name="ruta_desactivar_usuario"),
-
-    # Alternar tema oscuro
-    path('alternar-tema-oscuro/', alternar_tema_oscuro, name='ruta_alternar_tema'),
 ]

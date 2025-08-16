@@ -93,6 +93,10 @@
 .fondo_gris {
     background-color: var(--color-gris-claro);
 }
+.fondo_gris_oscuro {
+    background-color: var(--color-gris-oscuro);
+}
+
 
 
 .fondo_azul {

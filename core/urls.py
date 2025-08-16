@@ -15,6 +15,7 @@ urlpatterns = [
     path('medico/', include("apps.gestion_medica.urls")),
     path('portal/', include("apps.portal.urls")),
     path('acceso/', include("apps.acceso.urls")),
+    path('api/v1/', include("apps.api.urls")),
     path('', RedirectView.as_view(pattern_name='portal:ruta_inicio', permanent=False), name='ruta_redireccion_portal_inicio'),
 ]
 

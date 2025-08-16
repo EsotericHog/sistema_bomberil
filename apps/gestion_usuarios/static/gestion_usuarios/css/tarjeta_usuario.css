@@ -1,0 +1,58 @@
+.tarjeta_usuario {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    width: 600px;
+    padding: 15px 20px;
+}
+
+.tarjeta_usuario__avatar {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+    width: 80px;
+    height: 80px;
+}
+
+.tarjeta_usuario__avatar img {
+    object-fit: cover;
+    border-radius: 50%;
+}
+
+.simbolo_online {
+    position: absolute;
+    width: 1.5rem;
+    height: 1.5rem;
+    border-radius: 50%;
+    background-color: var(--color-verde);
+}
+
+.tarjeta_usuario__avatar .simbolo_online {
+    right: 5px;
+    bottom: 10px;
+}
+
+
+.tarjeta_usuario__informacion {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    width: 100%;
+    padding: 0 20px;
+    gap: 2px;
+}
+
+
+.tarjeta_usuario__acciones {
+    display: flex;
+    height: 100%;
+    width: 50px;
+    justify-content: center;
+    align-items: center;
+}
+
+.tarjeta_usuario__acciones button {
+    line-height: 0; /* Quitar wea de bootstrap */
+}

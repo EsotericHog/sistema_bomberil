@@ -9,9 +9,11 @@
 }
 
 .boton {
+    display: flex;
     cursor: pointer;
     padding: 10px 30px;
     border-radius: 5px;
+    gap: 10px;
 }
 .boton_s {
     cursor: pointer;

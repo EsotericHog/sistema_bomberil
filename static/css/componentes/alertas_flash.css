@@ -21,3 +21,11 @@
     font-size: var(--fs-normal);
     color: var(--color-blanco);
 }
+
+.alerta_especial_js {
+    display: flex;
+    justify-content: start;
+    align-items: center;
+    padding: 10px;
+    margin-bottom: 20px;
+}

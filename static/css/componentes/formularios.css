@@ -13,7 +13,7 @@
     width: 100%;
     height: auto;
     justify-content: start;
-    align-items: center;
+    align-items: start;
     padding: 0 5px;
     gap: 10px;
 }

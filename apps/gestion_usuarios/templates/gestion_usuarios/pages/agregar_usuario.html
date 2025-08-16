@@ -1,0 +1,166 @@
+{# Plantilla base #}{% extends 'gestion_usuarios/layouts/base.html' %}
+{# Cargar assets #}{% load static %}
+{# Título de la ventana #} {% block titulo_ventana %}Agregar Usuario{% endblock %}
+{# Título de la página #} {% block titulo_pagina %}Agregar usuario{% endblock %}
+
+{% block contenido %}
+<div class="caja_para_pagina_contenido_arriba">
+
+    <div class="contenedor_formulario_simple fondo_secundario">
+        <form 
+        id="formularioBuscarUsuario"
+        class=" formulario_simple color_primario fs_normal"
+        >
+        {% csrf_token %}
+
+            {# Correo #}
+            <div class="input_box">
+                <div class="input_box__label color_primario">
+                    <div class="caja_flex_column">
+                        <label class="fs_mediana" for="">Buscar usuario</label>
+                        <br>
+                        <span>Ingresa el correo electrónico del usuario que deseas agregar a la compañía</span>
+                    </div>
+                </div>
+                <input id="BuscarInputRUT" class="input_box__input fs_normal color_primario fondo_secundario" type="text">
+            </div>
+
+            <div class="formulario_simple__caja_botones">
+                <button 
+                type="submit" 
+                class="boton fs_normal color_blanco fondo_azul hover_color"
+                >
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                    Buscar
+                </button>
+                <button class="color_primario fondo_transparente">Cancelar</button>
+            </div>
+
+        </form>
+    </div>
+    
+
+    {# Lista de usuario resultados de la búsqueda #}
+    <div 
+    id="contenedorResultado" class="contenedor_formulario_simple hidden"></div>
+
+</div>
+
+
+
+<script>
+    const formularioBuscarUsuario = document.getElementById("formularioBuscarUsuario");
+
+    formularioBuscarUsuario.addEventListener('submit', async function(event) {
+        event.preventDefault();
+
+        const BuscarInputRUT = document.getElementById("BuscarInputRUT");
+        const contenedorResultado = document.getElementById("contenedorResultado");
+        const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+        const defaultAvatarUrl = "{% static 'imagenes/default_avatar.png' %}";
+        const crearUsuarioUrl = "{% url 'gestion_usuarios:ruta_crear_usuario' %}";
+
+        contenedorResultado.innerHTML = '<p class="color_primario">Buscando...</p>';
+
+
+        try {
+            const response = await fetch("{% url 'api:ruta_buscar_usuario' %}", {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': csrfToken
+                },
+                body: JSON.stringify({ rut: BuscarInputRUT.value })
+            });
+
+            if (!response.ok) {
+                throw new Error('Error en la respuesta del servidor.');
+            }
+            
+            const data = await response.json();
+            console.log(data);
+            let content = '';
+
+            // Limpiamos el contenedor
+            contenedorResultado.innerHTML = ''; 
+
+
+            if (data.status === 'EXISTE_DISPONIBLE') {
+                // Caso 1: Usuario encontrado y puede ser agregado
+                const usuario = data.usuario;
+
+                content += `
+
+                    <form action="{% url 'gestion_usuarios:ruta_agregar_usuario' %}" method="post">
+                        <input type="hidden" name="csrfmiddlewaretoken" value="${csrfToken}">
+                        <input type="hidden" name="usuario_id" value="${usuario.id}">
+                        
+                        <div class="tarjeta_usuario color_primario panel_base fondo_secundario">
+                            <div class="tarjeta_usuario__avatar">
+                                <img src="${defaultAvatarUrl}" alt="Avatar">
+                            </div>
+                        <div class="tarjeta_usuario__informacion">
+                            <div>
+                                <span class="fs_normal">${usuario.nombre_completo}</span>
+                                <span class="etiqueta color_blanco fondo_verde fs_pequena">Disponible</span>
+                            </div>
+                            <span class="fs_pequena color_primario_variante">${usuario.email}</span>
+                            <span class="fs_pequena color_primario_variante">Sin compañía asignada</span>
+                        </div>
+                        <div class="tarjeta_usuario__acciones fondo_transparente">
+                            <button type="submit" class="fs_xx_grande boton_icono fondo_transparente">
+                                <i class="fa-solid fa-square-plus color_verde"></i>
+                            </button>
+                        </div>
+                    </div>
+                    </form>
+                `;
+
+            } 
+
+            else if (data.status === 'EXISTE_ACTIVO') {
+                console.log("USUARIO YA ACTIVO");
+                // Caso 2: Usuario encontrado pero ya activo en otra compañía
+                const membresia = data.membresia;
+                content = `
+                    <div class="tarjeta_usuario color_primario panel_base fondo_secundario">
+                        <div class="tarjeta_usuario__avatar">
+                            <img src="${defaultAvatarUrl}" alt="Avatar">
+                        </div>
+                        <div class="tarjeta_usuario__informacion">
+                        <div>
+                            <span class="fs_normal">${membresia.nombre_completo}</span>
+                            <span class="etiqueta color_blanco fondo_gris_oscuro fs_pequena">No disponible</span>
+                        </div>
+                            <span class="fs_pequena color_primario_variante">${membresia.email}</span>
+                            <span class="fs_pequena color_primario_variante">
+                                Miembro de ${membresia.estacion} desde el ${membresia.fecha_inicio}
+                            </span>
+                        </div>
+                    </div>
+                `;
+            }
+
+            else if (data.status === 'NO_EXISTE') {
+            // Caso 3: Usuario no encontrado
+            content = `
+                <div class="alerta_especial_js color_blanco fondo_gris_oscuro fs_normal">${data.mensaje}</div>
+                <div class="panel_base fondo_secundario" style="text-align: center; padding: 20px;">
+                    <a href="${crearUsuarioUrl}" class="boton_flex fondo_verde color_blanco fs_mediana">
+                        Crear Usuario
+                    </a>
+                </div>
+            `;
+            }
+
+            contenedorResultado.innerHTML = content;
+            contenedorResultado.classList.remove("hidden");
+
+        } catch (error) {
+            console.error('Error en fetch:', error);
+            contenedorResultado.innerHTML = '<p class="error">Ocurrió un error al buscar. Inténtalo de nuevo.</p>';
+        }
+    })
+</script>
+
+{% endblock  %}

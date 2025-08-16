@@ -33,12 +33,14 @@ PROJECT_APPS = [
     'apps.gestion_medica',
     'apps.gestion_usuarios',
     'apps.portal',
-    'apps.acceso'
+    'apps.acceso',
+    'apps.api',
 ]
 # Aplicaciones de terceros
 THIRD_PARTY_APPS = [
-    'jazzmin',
-    'storages'
+    #'jazzmin',
+    'storages',
+    'rest_framework',
 ]
 INSTALLED_APPS = THIRD_PARTY_APPS + DJANGO_APPS + PROJECT_APPS
 
@@ -152,6 +154,7 @@ MODULOS = {
     'gestion_voluntarios': 'Gestión Voluntarios',
     'portal': 'Bomberil',
     'acceso': 'Acceso',
+    'api': 'api',
 }
 
 
@@ -238,4 +241,11 @@ STORAGES = {
     "staticfiles": {
         "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
     }
+}
+
+
+REST_FRAMEWORK = {
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.DjangoModelPermissionsOrAnonReadOnly'
+    ]
 }

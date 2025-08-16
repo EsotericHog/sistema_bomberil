@@ -31,3 +31,17 @@
 .etiqueta_icono {
     padding: 5px;
 }
+
+.subrayado {
+    border-bottom: 1px solid var(--color-primary-variant);
+}
+
+.caja_flex_column {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.hidden {
+    display: none;
+}
