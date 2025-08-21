@@ -8,6 +8,7 @@ from django.utils import timezone
 
 from .models import Usuario, Membresia
 from .forms import FormularioCrearUsuario
+from .mixins import UsuarioDeMiEstacionMixin
 from .funciones import generar_contraseña_segura
 from apps.gestion_inventario.models import Estacion
 
@@ -23,6 +24,8 @@ class UsuarioInicioView(View):
 
 class UsuarioListaView(View):
     '''Vista para listar usuarios'''
+
+    template_name = "gestion_usuarios/pages/lista_usuarios.html"
     
     def get(self, request):
         active_estacion_id = request.session.get('active_estacion_id')
@@ -32,15 +35,26 @@ class UsuarioListaView(View):
             estacion_id=active_estacion_id
         ).select_related('usuario')
         
-        return render(request, "gestion_usuarios/pages/lista_usuarios.html", context={'membresias': membresias})
+        return render(request, self.template_name, context={'membresias': membresias})
 
 
 
-class UsuarioObtenerView(View):
+class UsuarioObtenerView(UsuarioDeMiEstacionMixin, View):
     '''Vista para obtener el detalle de un usuario'''
 
+    template_name = "gestion_usuarios/pages/ver_usuario.html"
+
     def get(self, request, id):
-        return HttpResponse("VER USUARIO")
+        membresia = Membresia.objects.filter(
+            usuario_id=id,
+            estacion_id=request.session.get('active_estacion_id'),
+            estado__in=['ACTIVO', 'INACTIVO']
+        ).select_related('usuario', 'estacion').prefetch_related('roles').latest('fecha_inicio')
+
+        # Pasamos la membresía encontrada al contexto.
+        context = {'membresia': membresia}
+        
+        return render(request, self.template_name, context)
 
 
 
@@ -181,8 +195,20 @@ class UsuarioEditarView(View):
 
 
 
+#class UsuarioEditarAvatarView(View):
+#    '''Vista para modificar el avatar de un usuario'''
+#
+#    def get(self, request):
+#        return HttpResponseNotAllowed(['POST'])
+#
+#    def post(self, request, id):
+#        pass
+
+
+
+
 class UsuarioDesactivarView(View):
-    '''Vista para desactivar usuarios'''
+    '''Vista para desactivar usuarios. Desactivar un usuario consiste en no permitirle iniciar sesión en la compañía.'''
 
     def get(self, request, *args, **kwargs):
         return HttpResponseNotAllowed(['POST'])

@@ -1,2 +1,5 @@
 /* Tarjeta con datos de usuario */
 @import url("tarjeta_usuario.css");
+
+/* Página: Ver usuario */
+@import url("ver_usuario.css");
