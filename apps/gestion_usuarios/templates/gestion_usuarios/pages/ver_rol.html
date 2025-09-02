@@ -1,0 +1,97 @@
+{# Plantilla base #}{% extends 'gestion_usuarios/layouts/base.html' %}
+{# Cargar assets #}{% load static %}
+{# Cargar filtros #}{% load age_filters %}{% load humanize %}
+{# Título de la ventana #} {% block titulo_ventana %}{{rol.nombre|title}}{% endblock %}
+{# Título de la página #} {% block titulo_pagina %}Ver rol{% endblock %}
+
+{% block contenido %}
+
+<div class="caja_para_pagina_contenido_arriba">
+    <div class="usuarios_ver_rol__flexbox panel_base fondo_secundario_variante">
+
+        {# Nombre #}
+        <div class="usuarios_ver_rol__nombre">
+            <h1 class="fs_grande color_primario">
+                {{rol.nombre|title}}
+                {% if rol.estacion %}
+                <span class="etiqueta fondo_morado fs_normal color_blanco" title="Este rol pertenece a la {{rol.estacion.nombre|title}}">Personalizado</span>
+                {% else %}
+                <span class="etiqueta fondo_azul fs_normal color_blanco">Por defecto</span>
+                {% endif %}
+            </h1>
+        </div>
+
+        {# Información #}
+        <div class="informacion__seccion">
+
+            {# Estación #}
+        {% if rol.estacion %}
+            <div class="informacion__campo fs_normal">
+                <span class="informacion__label color_primario_variante">Compañía:</span>
+                <span class="color_primario">{{rol.estacion.nombre|title}}</span>
+            </div>
+        {% endif %}
+
+            {# Descripción #}
+            <div class="informacion__campo fs_normal">
+                    <span class="informacion__label color_primario_variante">Descripción:</span>
+                    <p class="informacion__dato color_primario">Lorem ipsum dolor sit amet consectetur adipisicing elit. Unde atque ipsum pariatur saepe autem perferendis, cupiditate nesciunt, esse in ea sint iure quam nam dolor. Nulla at optio ipsa dignissimos</p>
+            </div>
+        </div>
+
+
+
+        {# Permisos #}
+        <div class="usuarios_ver_rol__permisos">
+            <span class="usuarios_ver_rol__titulo_permisos fs_mediana color_primario">Permisos</span>
+            
+            <table id="myTable" class="display tabla_1">
+                <thead class="color_blanco fondo_negro">
+                    <tr>
+                        <th>Permisos</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody class="fondo_secundario_variante">
+                    {% if rol.permisos %}
+                    {% for permiso in permisos %}
+                    <tr>
+
+                        {# Nombre #}
+                        <td>
+                            {{rol.nombre|title}}
+                        {% if rol.estacion %}
+                            <span class="etiqueta fondo_morado color_blanco">Personalizado</span>
+                        {% endif %}
+                        </td>
+
+                        {# Permisos #}
+                        <td>
+                            <span>Permisos:</span>
+                            {% for permiso in rol.permisos.all %}
+                                {{ permiso.name }}{% if not forloop.last %}, {% endif %}
+                            {% empty %}
+                                Sin permisos asignados.
+                            {% endfor %}
+                        </td>
+                    
+                        {# Acciones #}
+                        <td>
+                            <button class="boton_s boton-menu-acciones fondo_transparente">
+                                <i class="fa-solid fa-ellipsis-vertical color_primario"></i>
+                            </button>
+                            {% include 'gestion_usuarios/partials/_menu_acciones_roles.html' with rol=rol %}
+                        </td>
+                    
+                    {% endfor %}
+                    {% endif %}
+                </tbody>
+</table>
+
+        </div>
+
+    </div>
+</div>
+
+
+{% endblock  %}

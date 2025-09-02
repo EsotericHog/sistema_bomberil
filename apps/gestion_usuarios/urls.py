@@ -28,6 +28,11 @@ urlpatterns = [
     # Activar usuario (Puede acceder al sistema)
     path('usuarios/<int:id>/activar/', UsuarioActivarView.as_view(), name="ruta_activar_usuario"),
 
+
+
     # Lista de roles
     path('roles/', RolListaView.as_view(), name="ruta_lista_roles"),
+
+    # Ver detalle de usuario
+    path('roles/<int:id>/', RolObtenerView.as_view(), name="ruta_ver_rol"),
 ]

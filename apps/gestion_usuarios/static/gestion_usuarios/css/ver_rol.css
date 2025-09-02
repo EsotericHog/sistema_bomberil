@@ -1,0 +1,21 @@
+.usuarios_ver_rol__flexbox {
+    display: flex;
+    flex-direction: column;
+    min-width: 320px;
+    width: 1000px;
+    max-width: 1000px;
+    justify-content: start;
+    align-items: start;
+    padding: 30px;
+    gap: 10px;
+}
+
+.usuarios_ver_rol__nombre, .usuarios_ver_rol__permisos {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+/*.usuarios_ver_rol__nombre, .usuarios_ver_rol__titulo_permisos {
+    border-bottom: 1px solid gray;
+}*/

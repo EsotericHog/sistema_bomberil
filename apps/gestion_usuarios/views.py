@@ -337,3 +337,18 @@ class RolListaView(View):
         }
 
         return render(request, self.template_name, context)
+
+
+
+
+class RolObtenerView(View):
+    '''Vista para obtener el detalle de un rol'''
+
+    template_name = "gestion_usuarios/pages/ver_rol.html"
+    
+    def get(self, request, id):
+        rol = Rol.objects.filter(id=id).get()
+
+        context = {'rol': rol}
+
+        return render(request, self.template_name, context)
