@@ -19,6 +19,12 @@
                 <span class="etiqueta fondo_azul fs_normal color_blanco">Por defecto</span>
                 {% endif %}
             </h1>
+
+            <div class="caja_botones">
+                <a class="boton color_blanco fondo_azul fs_normal" href="">Modificar</a>
+                <a class="boton color_blanco fondo_rojo fs_normal" href="">Eliminar</a>
+            </div>
+
         </div>
 
         {# Información #}
@@ -39,55 +45,30 @@
             </div>
         </div>
 
-
-
         {# Permisos #}
         <div class="usuarios_ver_rol__permisos">
-            <span class="usuarios_ver_rol__titulo_permisos fs_mediana color_primario">Permisos</span>
-            
-            <table id="myTable" class="display tabla_1">
-                <thead class="color_blanco fondo_negro">
-                    <tr>
-                        <th>Permisos</th>
-                        <th></th>
-                    </tr>
-                </thead>
-                <tbody class="fondo_secundario_variante">
-                    {% if rol.permisos %}
-                    {% for permiso in permisos %}
-                    <tr>
+            <div class="usuarios_ver_rol__titulo_permisos">
+                <h2 class="fs_mediana color_primario">Permisos Asignados</h2>
+                <div class="caja_botones">
+                    <a class="boton_s color_blanco fondo_azul fs_normal" href="">Asignar permisos</a>
+                    <a class="boton_s color_blanco fondo_rojo fs_normal" href="">Quitar todo</a>
+                </div>
+            </div>
 
-                        {# Nombre #}
-                        <td>
-                            {{rol.nombre|title}}
-                        {% if rol.estacion %}
-                            <span class="etiqueta fondo_morado color_blanco">Personalizado</span>
-                        {% endif %}
-                        </td>
-
-                        {# Permisos #}
-                        <td>
-                            <span>Permisos:</span>
-                            {% for permiso in rol.permisos.all %}
-                                {{ permiso.name }}{% if not forloop.last %}, {% endif %}
-                            {% empty %}
-                                Sin permisos asignados.
-                            {% endfor %}
-                        </td>
-                    
-                        {# Acciones #}
-                        <td>
-                            <button class="boton_s boton-menu-acciones fondo_transparente">
-                                <i class="fa-solid fa-ellipsis-vertical color_primario"></i>
-                            </button>
-                            {% include 'gestion_usuarios/partials/_menu_acciones_roles.html' with rol=rol %}
-                        </td>
-                    
-                    {% endfor %}
-                    {% endif %}
-                </tbody>
-</table>
-
+            {% for modulo, permisos in permisos_por_modulo.items %}
+                <div class="permisos_modulo">
+                    <h3 class="permisos_modulo__titulo fs_normal color_primario">{{ modulo }}</h3>
+                    <ul class="permisos_modulo__lista">
+                        {% for nombre_permiso in permisos %}
+                            <li class="fs_normal color_primario_variante">
+                                {{ nombre_permiso }}
+                            </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            {% empty %}
+                <p class="fs_normal color_primario">Este rol no tiene ningún permiso asignado.</p>
+            {% endfor %}
         </div>
 
     </div>

@@ -9,7 +9,6 @@
     <thead class="color_blanco fondo_negro">
         <tr>
             <th>Nombre</th>
-            <th>Permisos</th>
             <th></th>
         </tr>
     </thead>
@@ -26,15 +25,7 @@
             {% endif %}
             </td>
             
-            {# Permisos #}
-            <td>
-                <span>Permisos:</span>
-                {% for permiso in rol.permisos.all %}
-                    {{ permiso.name }}{% if not forloop.last %}, {% endif %}
-                {% empty %}
-                    Sin permisos asignados.
-                {% endfor %}
-            </td>
+            
 
             {# Acciones #}
             <td>

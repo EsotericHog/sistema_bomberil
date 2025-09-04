@@ -33,6 +33,6 @@ urlpatterns = [
     # Lista de roles
     path('roles/', RolListaView.as_view(), name="ruta_lista_roles"),
 
-    # Ver detalle de usuario
+    # Ver detalle de rol
     path('roles/<int:id>/', RolObtenerView.as_view(), name="ruta_ver_rol"),
 ]

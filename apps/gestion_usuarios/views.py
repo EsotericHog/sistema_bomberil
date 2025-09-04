@@ -6,6 +6,7 @@ from django.urls import reverse, reverse_lazy
 from django.http import HttpResponseNotAllowed, HttpResponse
 from django.utils import timezone
 from django.db.models import Q
+from collections import defaultdict
 
 from .models import Usuario, Membresia, Rol
 from .forms import FormularioCrearUsuario, FormularioEditarUsuario
@@ -347,8 +348,32 @@ class RolObtenerView(View):
     template_name = "gestion_usuarios/pages/ver_rol.html"
     
     def get(self, request, id):
-        rol = Rol.objects.filter(id=id).get()
+        # Usamos get_object_or_404 para manejar automáticamente el error si el rol no existe.
+        # prefetch_related('permisos__content_type') optimiza la consulta.
+        rol = get_object_or_404(
+            Rol.objects.prefetch_related('permisos__content_type'), 
+            id=id
+        )
 
-        context = {'rol': rol}
+        # Usamos defaultdict para agrupar los permisos del rol por módulo.
+        permisos_por_modulo = defaultdict(list)
+
+        # Obtenemos los permisos del rol, EXCLUYENDO los de las apps nativas de Django
+        permisos_del_rol = rol.permisos.exclude(
+            content_type__app_label__in=['admin', 'auth', 'contenttypes', 'sessions']
+        ).select_related('content_type').exclude(
+            codename__startswith='sys_'
+        ).select_related('content_type')
+
+        for permiso in permisos_del_rol:
+            # Obtenemos el nombre legible del módulo (app_config.verbose_name)
+            nombre_modulo = permiso.content_type.model_class()._meta.app_config.verbose_name
+            permisos_por_modulo[nombre_modulo].append(permiso.name)
+
+        context = {
+            'rol': rol,
+            # Pasamos el diccionario ordenado al contexto.
+            'permisos_por_modulo': dict(sorted(permisos_por_modulo.items()))
+        }
 
         return render(request, self.template_name, context)
