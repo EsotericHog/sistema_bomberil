@@ -9,7 +9,7 @@ from django.db.models import Q
 from collections import defaultdict
 
 from .models import Usuario, Membresia, Rol
-from .forms import FormularioCrearUsuario, FormularioEditarUsuario
+from .forms import FormularioCrearUsuario, FormularioEditarUsuario, FormularioEditarRol
 from .mixins import UsuarioDeMiEstacionMixin
 from .funciones import generar_contraseña_segura
 from apps.gestion_inventario.models import Estacion
@@ -377,3 +377,38 @@ class RolObtenerView(View):
         }
 
         return render(request, self.template_name, context)
+
+
+
+
+class RolEditarView(View):
+    '''Vista para editar roles. Sólo el nombre y la descripción'''
+
+    template_name = "gestion_usuarios/pages/editar_rol.html"
+
+
+    def get(self, request, id):
+        # Obtiene el usuario o retorna un 404 si no existe
+        rol = get_object_or_404(Rol, id=id)
+        
+        # Instancia el formulario con los datos del usuario
+        formulario = FormularioEditarRol(instance=rol)
+        
+        return render(request, self.template_name, {'formulario': formulario, 'rol': rol})
+
+
+    def post(self, request, id):
+        rol = get_object_or_404(Rol, id=id)
+        
+        # Instancia el formulario con los datos de la petición y los datos del usuario
+        formulario = FormularioEditarRol(request.POST, request.FILES, instance=rol)
+
+        if formulario.is_valid():
+            # El formulario se encarga de guardar los cambios en el objeto 'rol'
+            formulario.save()
+            messages.success(request, f"Rol {rol.nombre.title()} actualizado exitosamente.")
+            return redirect(reverse('gestion_usuarios:ruta_lista_roles'))
+        else:
+            print("FORMULARIO NO VALIDO")
+            messages.error(request, "Formulario no válido. Por favor, revisa los datos.")
+            return render(request, self.template_name, {'formulario': formulario, 'rol': rol})

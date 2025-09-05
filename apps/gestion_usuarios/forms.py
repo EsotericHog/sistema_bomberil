@@ -1,7 +1,7 @@
 from django import forms
 from django.contrib.auth.forms import UserCreationForm, UserChangeForm
 
-from .models import Usuario
+from .models import Usuario, Rol
 
 
 
@@ -119,6 +119,22 @@ class FormularioEditarUsuario(forms.ModelForm):
         self.fields['last_name'].widget.attrs.update({'class':'input_box__input fs_normal color_primario fondo_secundario'})
         self.fields['birthdate'].widget.attrs.update({'class':'input_box__input fs_normal color_primario fondo_secundario'})
         self.fields['phone'].widget.attrs.update({'class':'input_box__input fs_normal color_primario fondo_secundario'})
+
+
+
+class FormularioEditarRol(forms.ModelForm):
+    '''Formulario para editar roles personalizados'''
+    class Meta:
+        model = Rol
+        # Campos editables
+        fields = ['nombre', 'descripcion']
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        # Personaliza otros campos si es necesario
+        self.fields['nombre'].widget.attrs.update({'class':'input_box__input fs_normal color_primario fondo_secundario'})
+        self.fields['descripcion'].widget.attrs.update({'class':'input_box__input fs_normal color_primario fondo_secundario'})
 
 
 

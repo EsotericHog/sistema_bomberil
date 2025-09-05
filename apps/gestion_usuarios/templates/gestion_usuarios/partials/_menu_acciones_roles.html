@@ -13,7 +13,7 @@
     {% if rol.estacion %}
     <a 
     class="menu-acciones-usuarios__accion acciones-usuarios-editar color_negro" 
-    href=""
+    href="{% url 'gestion_usuarios:ruta_editar_rol' id=rol.id %}"
     >
         <i class="fa-solid fa-pen-to-square"></i> 
         Modificar

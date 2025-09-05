@@ -18,7 +18,11 @@
         <tr>
             
             {# Nombre #}
-            <td>
+            <td
+            {% if rol.descripcion %}
+            title={{rol.descripcion}}
+            {% endif %}
+            >
                 {{rol.nombre|title}}
             {% if rol.estacion %}
                 <span class="etiqueta fondo_morado color_blanco">Personalizado</span>
