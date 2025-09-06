@@ -122,21 +122,6 @@ class FormularioEditarUsuario(forms.ModelForm):
 
 
 
-class FormularioEditarRol(forms.ModelForm):
-    '''Formulario para editar roles personalizados'''
-    class Meta:
-        model = Rol
-        # Campos editables
-        fields = ['nombre', 'descripcion']
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-
-        # Personaliza otros campos si es necesario
-        self.fields['nombre'].widget.attrs.update({'class':'input_box__input fs_normal color_primario fondo_secundario'})
-        self.fields['descripcion'].widget.attrs.update({'class':'input_box__input fs_normal color_primario fondo_secundario'})
-
-
 
 class CustomUserCreationForm(UserCreationForm):
     """
@@ -189,3 +174,41 @@ class CustomUserChangeForm(UserChangeForm):
         model = Usuario
         # __all__ es una opción, pero es mejor ser explícito con los campos.
         fields = ('email', 'first_name', 'last_name', 'is_active', 'is_staff', 'is_superuser', 'groups', 'user_permissions')
+
+
+
+
+class FormularioRol(forms.ModelForm):
+    '''Formulario para roles personalizados'''
+
+    class Meta:
+        model = Rol
+        # Campos editables
+        fields = ['nombre', 'descripcion']
+
+
+    def __init__(self, *args, **kwargs):
+        # 1. Obtener la 'estacion' que viene desde la vista.
+        self.estacion = kwargs.pop('estacion', None)
+        super().__init__(*args, **kwargs)
+
+        # Personaliza otros campos si es necesario
+        self.fields['nombre'].widget.attrs.update({'class':'input_box__input fs_normal color_primario fondo_secundario'})
+        self.fields['descripcion'].widget.attrs.update({'class':'input_box__input fs_normal color_primario fondo_secundario'})
+
+
+    def save(self, commit=True):
+        # Sobrescribir el método save. Obtener la instancia del rol antes de guardarla en la BD.
+        instance = super().save(commit=False)
+
+        # 4. Asignar la estación si el rol es nuevo
+        if self.estacion and not self.instance.pk:
+            instance.estacion = self.estacion
+
+        if commit:
+            instance.save()
+            # self.save_m2m() # Necesario si el form manejara campos ManyToMany
+        return instance
+
+
+

@@ -9,7 +9,7 @@ from django.db.models import Q
 from collections import defaultdict
 
 from .models import Usuario, Membresia, Rol
-from .forms import FormularioCrearUsuario, FormularioEditarUsuario, FormularioEditarRol
+from .forms import FormularioCrearUsuario, FormularioEditarUsuario, FormularioRol
 from .mixins import UsuarioDeMiEstacionMixin
 from .funciones import generar_contraseña_segura
 from apps.gestion_inventario.models import Estacion
@@ -382,33 +382,114 @@ class RolObtenerView(View):
 
 
 class RolEditarView(View):
-    '''Vista para editar roles. Sólo el nombre y la descripción'''
+    '''Vista para editar roles. Sólo el nombre y la descripción. El usuario sólo puede editar roles asociados a su estación'''
 
+    form_class = FormularioRol
     template_name = "gestion_usuarios/pages/editar_rol.html"
+    success_url = reverse_lazy('gestion_usuarios:ruta_lista_roles')
+    # permission_required = 'gestion_usuarios.manage_custom_roles'
 
 
-    def get(self, request, id):
-        # Obtiene el usuario o retorna un 404 si no existe
-        rol = get_object_or_404(Rol, id=id)
+    def dispatch(self, request, *args, **kwargs):
+        """
+        Se ejecuta antes que get() o post()
+        """
+        # Obtener la estación activa de la sesión.
+        estacion_id = request.session.get('active_estacion_id')
+        if not estacion_id:
+            # Si no hay estación, no se puede continuar.
+            messages.error(request, f"No se encontró una estación asociada a tu sesión")
+            return redirect(self.success_url) 
+
+        # Obtener ID del rol de la URL.
+        rol_id = kwargs.get('id')
         
-        # Instancia el formulario con los datos del usuario
-        formulario = FormularioEditarRol(instance=rol)
+        # La consulta de seguridad: Busca un Rol que tenga el 'id' de la URL Y cuyo 'estacion_id' coincida con el de la sesión. Si no lo encuentra, lanza un error 404. Esto previene editar roles universales (estacion=None) o de otras estaciones.
+        self.rol = get_object_or_404(Rol, id=rol_id, estacion__id=estacion_id)
         
-        return render(request, self.template_name, {'formulario': formulario, 'rol': rol})
+        return super().dispatch(request, *args, **kwargs)
 
 
-    def post(self, request, id):
-        rol = get_object_or_404(Rol, id=id)
-        
-        # Instancia el formulario con los datos de la petición y los datos del usuario
-        formulario = FormularioEditarRol(request.POST, request.FILES, instance=rol)
+    def get(self, request, *args, **kwargs):
+        """
+        Maneja GET. Muestra el formulario con los datos del rol.
+        El rol ya fue obtenido y validado en dispatch().
+        """
+        formulario = self.form_class(instance=self.rol)
+        context = {
+            'formulario': formulario, 
+            'rol': self.rol
+        }
+        return render(request, self.template_name, context)
+
+
+    def post(self, request, *args, **kwargs):
+        """
+        Maneja POST. Procesa y guarda los datos del formulario.
+        """
+        formulario = self.form_class(request.POST, instance=self.rol)
 
         if formulario.is_valid():
-            # El formulario se encarga de guardar los cambios en el objeto 'rol'
             formulario.save()
-            messages.success(request, f"Rol {rol.nombre.title()} actualizado exitosamente.")
-            return redirect(reverse('gestion_usuarios:ruta_lista_roles'))
+            messages.success(request, f"Rol '{self.rol.nombre}' actualizado exitosamente.")
+            return redirect(self.success_url)
         else:
-            print("FORMULARIO NO VALIDO")
             messages.error(request, "Formulario no válido. Por favor, revisa los datos.")
-            return render(request, self.template_name, {'formulario': formulario, 'rol': rol})
+            context = {
+                'formulario': formulario, 
+                'rol': self.rol
+            }
+            return render(request, self.template_name, context)
+
+
+
+
+class RolCrearView(View):
+    '''Vista para crear roles personalizados. Los roles se asocian a la estación del usuario'''
+
+    form_class = FormularioRol
+    template_name = 'gestion_usuarios/pages/crear_rol.html'
+    success_url = reverse_lazy('gestion_usuarios:ruta_lista_roles')
+    # permission_required = 'gestion_usuarios.manage_custom_roles'
+
+
+    def get(self, request, *args, **kwargs):
+        # 1. Obtiene la estación activa de la sesión para pasarla al contexto.
+        estacion_id = request.session.get('active_estacion_id')
+        estacion = get_object_or_404(Estacion, id=estacion_id)
+
+        # 2. Pasa la estación al formulario para que la use en su lógica interna.
+        form = self.form_class(estacion=estacion)
+        
+        # 3. Renderiza la plantilla con el formulario y la estación.
+        context = {
+            'formulario': form,
+            'estacion': estacion
+        }
+        return render(request, self.template_name, context)
+
+
+    def post(self, request, *args, **kwargs):
+        # 1. Obtiene la estación activa de la sesión.
+        estacion_id = request.session.get('active_estacion_id')
+        estacion = get_object_or_404(Estacion, id=estacion_id)
+
+        # 2. Crea una instancia del formulario con los datos de la petición (request.POST)
+        #    y la estación para la lógica de guardado.
+        form = self.form_class(request.POST, estacion=estacion)
+
+        # 3. Valida el formulario.
+        if form.is_valid():
+            # El método .save() personalizado de nuestro form se encargará
+            # de asignar la estación al nuevo rol.
+            form.save()
+            messages.success(request, f"Rol creado correctamente.")
+            return redirect(self.success_url)
+        
+        # 4. Si el formulario no es válido, vuelve a mostrar la página
+        #    con el formulario que incluye los errores de validación.
+        context = {
+            'form': form,
+            'estacion': estacion
+        }
+        return render(request, self.template_name, context)

@@ -38,4 +38,7 @@ urlpatterns = [
 
     # Editar rol (nombre, descripción)
     path('roles/<int:id>/editar/', RolEditarView.as_view(), name="ruta_editar_rol"),
+
+    # Crear rol
+    path('roles/crear/', RolCrearView.as_view(), name="ruta_crear_rol"),
 ]
