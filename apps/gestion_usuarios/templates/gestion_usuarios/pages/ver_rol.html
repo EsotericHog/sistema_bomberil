@@ -75,6 +75,8 @@
             <a class="boton_s color_blanco fondo_azul fs_normal" href="{% url 'gestion_usuarios:ruta_asignar_permisos' id=rol.id %}">Asignar permisos</a>
             {# Eliminar rol #}
             <a class="boton_s color_blanco fondo_rojo fs_normal" href="{% url 'gestion_usuarios:ruta_eliminar_rol' id=rol.id %}">Eliminar</a>
+            {# Volver #}
+            <a class="boton_s color_primario_variante fs_normal" href="{% url 'gestion_usuarios:ruta_lista_roles' %}">Volver</a>
         </div>
 
     </div>
