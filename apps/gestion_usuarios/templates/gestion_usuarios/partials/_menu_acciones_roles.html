@@ -31,4 +31,15 @@
     </a>
     {% endif %}
 
+    {# Eliminar rol #}
+    {% if rol.estacion %}
+    <a 
+    class="menu-acciones-usuarios__accion acciones-usuarios-editar color_rojo" 
+    href="{% url 'gestion_usuarios:ruta_eliminar_rol' id=rol.id %}"
+    >
+        <i class="fa-solid fa-trash"></i>
+        Eliminar
+    </a>
+    {% endif %}
+
 </div>

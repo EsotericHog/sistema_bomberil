@@ -588,3 +588,67 @@ class RolEliminarView(View):
         
         messages.success(request, f"El rol '{rol_nombre.title()}' ha sido eliminado exitosamente.")
         return redirect(self.success_url)
+
+
+
+
+class UsuarioAsignarRolesView(View):
+    # permission_required = 'gestion_usuarios.assign_user_roles'
+    template_name = 'gestion_usuarios/pages/asignar_roles.html'
+
+    def dispatch(self, request, *args, **kwargs):
+        """
+        Valida que el usuario a editar tenga una membresía activa en la estación actual.
+        """
+        estacion_id = request.session.get('active_estacion_id')
+        usuario_id = kwargs.get('usuario_id')
+
+        # Buscamos al usuario y la estación para el contexto.
+        self.usuario = get_object_or_404(Usuario, id=usuario_id)
+        self.estacion = get_object_or_404(Estacion, id=estacion_id)
+        
+        # La validación clave: el usuario debe tener una membresía activa en esta estación.
+        # Si no la tiene, no se pueden asignar roles, por lo que lanzamos un 404.
+        self.membresia = get_object_or_404(
+            Membresia, 
+            usuario=self.usuario, 
+            estacion=self.estacion,
+            estado='ACTIVO'
+        )
+        
+        return super().dispatch(request, *args, **kwargs)
+
+    def get(self, request, *args, **kwargs):
+        """
+        Muestra los checkboxes con los roles disponibles agrupados.
+        """
+        # Obtenemos todos los roles que están disponibles para esta estación:
+        # Aquellos donde la estación es nula (universales) O cuya estación es la activa.
+        roles_disponibles = Rol.objects.filter(
+            Q(estacion__isnull=True) | Q(estacion=self.estacion)
+        ).order_by('nombre')
+        
+        # Separamos los roles en dos grupos para mostrarlos en la plantilla.
+        roles_universales = roles_disponibles.filter(estacion__isnull=True)
+        roles_de_estacion = roles_disponibles.filter(estacion=self.estacion)
+
+        context = {
+            'usuario': self.usuario,
+            'estacion': self.estacion,
+            'roles_universales': roles_universales,
+            'roles_de_estacion': roles_de_estacion,
+            'usuario_roles_ids': set(self.membresia.roles.values_list('id', flat=True))
+        }
+        return render(request, self.template_name, context)
+
+    def post(self, request, *args, **kwargs):
+        """
+        Guarda los roles seleccionados en la membresía del usuario.
+        """
+        selected_roles_ids = request.POST.getlist('roles')
+        
+        # Usamos set() para actualizar la relación ManyToMany de forma eficiente.
+        self.membresia.roles.set(selected_roles_ids)
+        
+        messages.success(request, f"Roles de '{self.usuario.get_full_name.title()}' actualizados correctamente.")
+        return redirect('gestion_usuarios:ruta_ver_usuario', id=self.usuario.id) # Ajusta la URL de redirección
