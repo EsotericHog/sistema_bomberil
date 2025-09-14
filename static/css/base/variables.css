@@ -1,6 +1,6 @@
 :root {
     /* Tamaños de fuente de texto */
-    --fs-small: 1.15rem;
+    --fs-small: 1.2rem;
     --fs-normal: 1.5rem;
     --fs-medium: 1.9rem;
     --fs-large: 2.3rem;
@@ -10,7 +10,7 @@
     --fs-layout-icon: 3.0rem;
     --fs-header-title: 2.3rem;
     --fs-nav-section: 1.5rem;
-    --fs-nav-option: 1.15rem;
+    --fs-nav-option: 1.3rem;
     
     /* Colores */
     --color-primary: rgb(10, 10, 10);

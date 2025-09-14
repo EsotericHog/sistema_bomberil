@@ -4,11 +4,10 @@
     display: grid;
     min-height: 100%;
     grid-template-columns: var(--navbar-width) auto;
-    grid-template-rows: var(--header-height) 100% var(--footer-height);
+    grid-template-rows: var(--header-height) 1fr;
     grid-template-areas:
-        "header header header"
-        "sidebar main main"
-        "sidebar main main"
+        "header header"
+        "sidebar main"
     ;
 }
 

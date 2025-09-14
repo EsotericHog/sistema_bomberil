@@ -7,7 +7,7 @@ class FormularioLogin(forms.Form):
         widget=forms.TextInput(
             attrs={
                 'name':'LoginInputCorreo',
-                'class':'fs_normal color_primario fondo_secundario_variante',
+                'class':'input_box__input fs_normal color_primario fondo_secundario_variante',
                 'autocomplete':'off',
             }
         )
@@ -18,7 +18,7 @@ class FormularioLogin(forms.Form):
         widget=forms.PasswordInput(
             attrs={
                 'name':'LoginInputPassword',
-                'class':'fs_normal color_primario fondo_secundario_variante',
+                'class':'input_box__input fs_normal color_primario fondo_secundario_variante',
                 'autocomplete':'off'
             }
         )
