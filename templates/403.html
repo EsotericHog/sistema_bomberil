@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Acceso Denegado</title>
+    <style>
+        /* --- Reset y Estilos Base --- */
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background-color: #f8f9fa;
+            color: #6c757d;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* --- Contenedor Principal --- */
+        .container {
+            text-align: center;
+            background-color: #ffffff;
+            padding: 40px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            max-width: 450px;
+            width: 90%;
+        }
+
+        /* --- Icono de Error --- */
+        .error-icon {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background-color: #dc3545;
+            margin: 0 auto 25px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* --- ¡CORRECCIÓN! Estilo para la 'X' para centrarla perfectamente --- */
+        .error-icon span {
+            color: white;
+            font-size: 50px;
+            font-weight: bold;
+            line-height: 1; /* Ajuste clave para el centrado vertical */
+            padding-bottom: 5px; /* Pequeño ajuste visual */
+        }
+
+        /* --- Tipografía --- */
+        h1 {
+            font-size: 2.5rem;
+            color: #343a40;
+            margin: 0 0 10px;
+        }
+
+        p {
+            font-size: 1.1rem;
+            line-height: 1.6;
+        }
+        
+        .error-code {
+            font-size: 0.9rem;
+            color: #adb5bd;
+            margin-top: 25px;
+        }
+        
+        /* --- ¡NUEVO! Estilo para el botón de regreso --- */
+        .btn-home {
+            display: inline-block;
+            margin-top: 30px;
+            padding: 12px 25px;
+            background-color: #007bff; /* Azul primario de Bootstrap */
+            color: #ffffff;
+            text-decoration: none;
+            border-radius: 5px;
+            font-weight: bold;
+            font-size: 1rem;
+            transition: background-color 0.2s ease-in-out;
+        }
+
+        .btn-home:hover {
+            background-color: #0056b3; /* Un azul más oscuro al pasar el mouse */
+        }
+
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="error-icon">
+            <span>&times;</span>
+        </div>
+        <h1>Acceso Denegado</h1>
+        <p>
+            No tienes los permisos necesarios para ver esta página.
+            Por favor, verifica tus credenciales e inténtalo de nuevo.
+        </p>
+        <p class="error-code">Error Code: 403</p>
+
+        <a href="/" class="btn-home">Volver al Inicio</a>
+    </div>
+</body>
+</html>
