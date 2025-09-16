@@ -54,6 +54,9 @@
         {# Scripts de la aplicación #}
         <script src="{% static 'gestion_usuarios/js/modal.js' %}"></script>
         <script src="{% static 'gestion_usuarios/js/agregarUsuario.js' %}"></script>
+        
+        {# Scripts de página #}
+        {% block scripts %}{% endblock %}
 
     </div>
 </body>

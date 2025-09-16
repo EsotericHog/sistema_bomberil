@@ -1,13 +1,17 @@
+import traceback
 from django.shortcuts import redirect
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404
+from PIL import Image
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
-from PIL import Image
+from rest_framework.parsers import MultiPartParser, FormParser
 
 from apps.gestion_usuarios.models import Usuario, Membresia
+from apps.common.permissions import CanUpdateUserProfile
+from apps.gestion_usuarios.funciones import generar_avatar_thumbnail, recortar_y_redimensionar_avatar
 
 
 
@@ -88,22 +92,59 @@ def alternar_tema_oscuro(request):
 
 
 
-def editar_avatar_usuario(request, id):
-    # Solo aceptamos peticiones POST para esta vista de API
-    if request.method == 'POST':
+class ActualizarAvatarUsuarioView(APIView):
+    permission_classes = [IsAuthenticated, CanUpdateUserProfile]
+    parser_classes = [MultiPartParser, FormParser]
+
+    def post(self, request, id, format=None):
         usuario = get_object_or_404(Usuario, pk=id)
-        nuevo_avatar = request.FILES.get('nuevo_avatar')
+        self.check_object_permissions(request, usuario)
 
-        if nuevo_avatar:
-            # Intenta abrir la imagen para validarla
-            try:
-                img = Image.open(nuevo_avatar)
-                img.verify()  # Verifica que no sea un archivo corrupto
-            except (IOError, SyntaxError) as e:
-                return JsonResponse({'success': False, 'error': 'El archivo de imagen no es válido.'}, status=400)
-            
-            usuario.avatar = nuevo_avatar
+        nuevo_avatar_file = request.FILES.get('nuevo_avatar')
+
+        if not nuevo_avatar_file:
+            return Response(
+                {'error': 'No se proporcionó ningún archivo.'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        try:
+            # Guardar referencias a los archivos antiguos para su posterior eliminación
+            old_avatar = usuario.avatar
+            old_thumb_small = usuario.avatar_thumb_small
+            old_thumb_medium = usuario.avatar_thumb_medium
+
+            # Procesar la nueva imagen y sus thumbnails en memoria
+            with Image.open(nuevo_avatar_file) as img:
+                processed_avatar_content = recortar_y_redimensionar_avatar(nuevo_avatar_file)
+                thumb_40_content = generar_avatar_thumbnail(img.copy(), (40, 40), "_thumb_40")
+                thumb_100_content = generar_avatar_thumbnail(img.copy(), (100, 100), "_thumb_100")
+
+            # 1. BORRAR PRIMERO: Eliminar los archivos antiguos del almacenamiento (S3)
+            if old_avatar and old_avatar.name:
+                old_avatar.delete(save=False)
+            if old_thumb_small and old_thumb_small.name:
+                old_thumb_small.delete(save=False)
+            if old_thumb_medium and old_thumb_medium.name:
+                old_thumb_medium.delete(save=False)
+
+            # 2. GUARDAR DESPUÉS: Asignar y guardar los nuevos archivos
+            usuario.avatar = processed_avatar_content
+            usuario.avatar_thumb_small = thumb_40_content
+            usuario.avatar_thumb_medium = thumb_100_content
             usuario.save()
-            return JsonResponse({'success': True, 'new_avatar_url': usuario.avatar.url})
 
-    return JsonResponse({'success': False, 'error': 'Petición inválida'})
+            # Refrescar la instancia para asegurar que los campos de archivo están actualizados
+            usuario.refresh_from_db()
+
+            # Devolver la respuesta exitosa con la nueva URL
+            return Response(
+                {'success': True, 'new_avatar_url': usuario.avatar.url},
+                status=status.HTTP_200_OK
+            )
+        except Exception as e:
+            # Capturar cualquier error inesperado durante el proceso
+            return Response(
+                {'error': f'Ocurrió un error inesperado: {str(e)}'},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
