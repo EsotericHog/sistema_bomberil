@@ -37,6 +37,7 @@ PROJECT_APPS = [
     'apps.portal',
     'apps.acceso',
     'apps.api',
+    'apps.perfil',
 ]
 # Aplicaciones de terceros
 THIRD_PARTY_APPS = [
