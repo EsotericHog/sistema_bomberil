@@ -1,8 +1,8 @@
 from django.shortcuts import render, redirect
 from django.views import View
 from django.contrib import messages
-from django.contrib.auth import authenticate, login, logout
-from django.urls import reverse
+from django.contrib.auth import authenticate, login, logout, views as auth_views
+from django.urls import reverse, reverse_lazy
 from django.contrib.auth.mixins import LoginRequiredMixin
 
 from .forms import FormularioLogin
@@ -71,4 +71,28 @@ class LogoutView(LoginRequiredMixin, View):
         logout(request)
         messages.add_message(request, messages.SUCCESS, "Se cerró la sesión correctamente")
         return redirect(reverse('acceso:ruta_login'))
+
+
+
+
+
+
+class CustomPasswordResetView(auth_views.PasswordResetView):
+    """
+    Vista personalizada para sobreescribir las plantillas y URLs
+    del flujo de restablecimiento de contraseña.
+    """
+    # Plantilla del formulario donde se ingresa el email
+    template_name = 'acceso/pages/password_reset_form.html'
     
+    # Plantilla del asunto del correo
+    subject_template_name = 'acceso/emails/password_reset_subject.txt'
+    
+    # Plantilla del cuerpo del correo en TEXTO PLANO (el fallback)
+    email_template_name = 'acceso/emails/password_reset_email.txt'
+    
+    # Plantilla del cuerpo del correo en HTML (el diseño principal)
+    html_email_template_name = 'acceso/emails/password_reset_email.html'
+    
+    # URL a la que se redirige tras enviar el correo
+    success_url = reverse_lazy('acceso:password_reset_done')
