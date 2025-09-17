@@ -12,21 +12,23 @@
 
 
 
-        {# Avatar de usuario #}
-        <section class="usuarios_ver_usuario__avatar">
+        {# --- SECCIÓN DEL AVATAR MODIFICADA PARA REUTILIZAR EL SCRIPT --- #}
+        <section id="avatar-container-admin" 
+                 class="usuarios_ver_usuario__avatar position-relative"
+                 data-api-url="{% url 'api:ruta_editar_avatar_usuario' id=membresia.usuario.id %}">
 
-            {# Avatar #}
-            {% if membresia.usuario.avatar %}
-            <img id="avatarUsuario" src="{{membresia.usuario.avatar.url|default:'static/imagenes/default_avatar.png'}}" alt="">
-            {% else %}
-            <img id="avatarUsuario" src="{% static 'imagenes/default_avatar.png' %}" alt="">
-            {% endif %}
-
-            {# Cambiar avatar #}
-            <span id="botonSubirAvatarUsuario" class="usuarios_ver_usuario__edit_avatar_icon fondo_secundario color_primario fs_grande">
+            <img class="js-avatar-image" 
+                 src="{% if membresia.usuario.avatar %}{{ membresia.usuario.avatar.url }}{% else %}{% static 'imagenes/default_avatar.png' %}{% endif %}" 
+                 alt="Avatar de {{ membresia.usuario.get_full_name }}">
+            
+            {# Solo mostramos el botón de editar si el admin tiene permiso #}
+            {% if perms.gestion_usuarios.change_user_personal_info %}
+            <span class="js-avatar-upload-button usuarios_ver_usuario__edit_avatar_icon fondo_secundario color_primario fs_grande position-absolute" 
+                  style="cursor: pointer;">
                 <i class="fa-solid fa-pen-to-square"></i>
             </span>
-            <input type="file" id="inputSubirAvatarUsuario" hidden accept="image/*">
+            <input type="file" class="js-avatar-upload-input" hidden accept="image/*">
+            {% endif %}
         </section>
 
 
@@ -86,7 +88,7 @@
         {# Acciones #}
         <section class="usuarios_ver_usuario__acciones">
             <a class="boton_flex fondo_azul color_blanco fs_normal" href="{% url 'gestion_usuarios:ruta_editar_usuario' id=membresia.usuario.id %}">Modificar información</a>
-            <a class="boton_flex fondo_azul color_blanco fs_normal" href="{% url 'gestion_usuarios:ruta_asignar_roles_usuario' usuario_id=membresia.usuario.id %}">Asignar roles</a>
+            <a class="boton_flex fondo_azul color_blanco fs_normal" href="{% url 'gestion_usuarios:ruta_asignar_roles_usuario' id=membresia.usuario.id %}">Asignar roles</a>
             {% if membresia.estado == 'ACTIVO' %}
             <a class="boton_flex fondo_rojo color_blanco fs_normal" href="{% url 'gestion_usuarios:ruta_desactivar_usuario' id=membresia.usuario.id %}">
                 <i class="fa-solid fa-ban"></i>
@@ -108,19 +110,20 @@
         {# Información del usuario #}
         <section class="usuarios_ver_usuario__informacion">
         <div class="informacion__seccion">
-            <div class="informacion__campo fs_normal">
-                <span class="informacion__label color_primario_variante">Correo electrónico:</span>
-                {% if membresia.usuario.email %}
-                <span class="color_primario">{{membresia.usuario.email}}</span>
-                {% else %}
-                <span class="color_primario">No especificado</span>
-                {% endif %}
-            </div>
-            
+
             <div class="informacion__campo fs_normal">
                 <span class="informacion__label color_primario_variante">RUT:</span>
                 {% if membresia.usuario.rut %}
                 <span class="color_primario">{{membresia.usuario.rut}}</span>
+                {% else %}
+                <span class="color_primario">No especificado</span>
+                {% endif %}
+            </div>
+
+            <div class="informacion__campo fs_normal">
+                <span class="informacion__label color_primario_variante">Correo electrónico:</span>
+                {% if membresia.usuario.email %}
+                <span class="color_primario">{{membresia.usuario.email}}</span>
                 {% else %}
                 <span class="color_primario">No especificado</span>
                 {% endif %}
@@ -152,13 +155,13 @@
             </div>
             
             <div class="informacion__campo fs_normal">
-                <span class="informacion__label color_primario_variante">Actualizado:</span>
-                <span class="color_primario">{{membresia.usuario.updated_at|naturalday }}</span>
-            </div>
-            
-            <div class="informacion__campo fs_normal">
                 <span class="informacion__label color_primario_variante">Ingreso a la compañía:</span>
                 <span class="color_primario">{{membresia.fecha_inicio|naturalday}}</span>
+            </div>
+
+            <div class="informacion__campo fs_normal">
+                <span class="informacion__label color_primario_variante">Actualizado:</span>
+                <span class="color_primario">{{membresia.usuario.updated_at|naturalday }}</span>
             </div>
         </div>
         </section>
@@ -167,58 +170,20 @@
 </div>
 
 
+{# Token CSRF, necesario para el script #}
+{% csrf_token %} 
+{% endblock %}
 
 
-
-
-<script>
-document.addEventListener('DOMContentLoaded', () => {
-    const botonSubirAvatarUsuario = document.getElementById('botonSubirAvatarUsuario');
-    const inputSubirAvatarUsuario = document.getElementById('inputSubirAvatarUsuario');
-    const avatarUsuario = document.getElementById('avatarUsuario');
-    
-    // 1. Cuando se hace clic en el ícono de editar...
-    botonSubirAvatarUsuario.addEventListener('click', () => {
-        // ...hacemos clic programáticamente en el input oculto.
-        inputSubirAvatarUsuario.click();
-    });
-
-    // 2. Cuando el usuario selecciona un archivo en el input...
-    inputSubirAvatarUsuario.addEventListener('change', () => {
-        const file = inputSubirAvatarUsuario.files[0];
-        if (!file) {
-            return; // No se seleccionó archivo
-        }
-
-        // 3. Preparamos los datos para enviarlos con AJAX
-        const formData = new FormData();
-        formData.append('nuevo_avatar', file);
-
-        // Obtenemos el token CSRF para la seguridad de Django
-        const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
-
-        // 4. Enviamos el archivo al servidor
-        fetch("{% url 'api:ruta_editar_avatar_usuario' id=membresia.usuario.id %}", {
-            method: 'POST',
-            headers: {
-                'X-CSRFToken': csrfToken
-            },
-            body: formData
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                // 5. Si todo fue bien, actualizamos la imagen en la página
-                // Añadimos un timestamp para evitar problemas de caché del navegador
-                avatarUsuario.src = data.new_avatar_url + '?' + new Date().getTime();
-            } else {
-                alert('Hubo un error al subir la imagen.');
-                console.error(data.error);
-            }
-        })
-        .catch(error => console.error('Error:', error));
-    });
-});
-</script>
-
-{% endblock  %}
+{# --- BLOQUE DE SCRIPTS MODIFICADO --- #}
+{% block scripts %}
+    {# 1. Incluimos el script genérico que creamos #}
+    <script src="{% static 'js/avatar_uploader.js' %}"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // 2. Inicializamos el script para el contenedor de esta página
+            //    con su ID único 'avatar-container-admin'.
+            inicializarCargadorAvatar('avatar-container-admin');
+        });
+    </script>
+{% endblock %}

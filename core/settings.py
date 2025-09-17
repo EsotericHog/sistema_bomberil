@@ -27,6 +27,7 @@ DJANGO_APPS = [
 ]
 # Aplicaciones del proyecto
 PROJECT_APPS = [
+    'apps.common',
     'apps.utilidades',
     'apps.gestion_inventario',
     'apps.gestion_mantenimiento',
@@ -36,6 +37,7 @@ PROJECT_APPS = [
     'apps.portal',
     'apps.acceso',
     'apps.api',
+    'apps.perfil',
 ]
 # Aplicaciones de terceros
 THIRD_PARTY_APPS = [
@@ -54,6 +56,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'simple_history.middleware.HistoryRequestMiddleware',
 ]
 
 ROOT_URLCONF = 'core.urls'
@@ -220,14 +223,25 @@ AWS_SECRET_ACCESS_KEY = env.str('AWS_SECRET_ACCESS_KEY')
 AWS_STORAGE_BUCKET_NAME = env.str('AWS_STORAGE_BUCKET_NAME')
 AWS_S3_REGION_NAME = env.str('AWS_S3_REGION_NAME')
 AWS_S3_CUSTOM_DOMAIN = f'{AWS_STORAGE_BUCKET_NAME}.s3.{AWS_S3_REGION_NAME}.amazonaws.com'
-
 AWS_DEFAULT_ACL = None            # evita ACL heredadas
 AWS_QUERYSTRING_AUTH = False  
+
+
+# Configuración para envío de correos
+EMAIL_BACKEND = env.str('EMAIL_BACKEND')
+DEFAULT_FROM_EMAIL = env.str('DEFAULT_FROM_EMAIL')
+EMAIL_HOST = env.str('EMAIL_HOST')
+EMAIL_HOST_USER = env.str('EMAIL_HOST_USER')
+EMAIL_HOST_PASSWORD = env.str('EMAIL_HOST_PASSWORD')
+EMAIL_PORT = env.str('EMAIL_PORT')
+EMAIL_USE_TLS = env.bool('EMAIL_USE_TLS')
+
 
 # URL del bucket de S3
 MEDIA_URL = f'https://{AWS_S3_CUSTOM_DOMAIN}/media/'
 
 
+# Configuración de Storages para almacenamiento de archivos estáticos en AWS S3
 STORAGES = {
     # MEDIA -> S3
     "default": {

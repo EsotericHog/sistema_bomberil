@@ -39,7 +39,7 @@ h1, h2, h3, h4, h5, h6, p, span, a, strong, blockquote, i, b, u, em {
 /* Equilibrar visualmente la distribución de palabras en lineas de texto de párrafos. */
 p {
     text-wrap: pretty;
-    max-width: 70ch;
+    max-width: 80ch; /* Estaba en 70ch */
     margin-bottom: 2rem;
 }
 

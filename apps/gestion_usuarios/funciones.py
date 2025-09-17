@@ -25,12 +25,18 @@ def generar_ruta_subida_avatar(instance, filename):
 
 
 
-def generar_avatar_thumbnail(image_obj : str, dimensions : tuple, suffix : str):
-    '''Función que genera thumbnail en memoria. Retorna un ContentFile'''
-    image_obj = image_obj.convert('RGB')
-    image_obj.thumbnail(dimensions, Image.Resampling.LANCZOS)
+def generar_avatar_thumbnail(image_obj: Image.Image, dimensions: tuple, suffix: str):
+    """Función que genera thumbnail en memoria. Retorna un ContentFile"""
+    # TRABAJAR SOBRE UNA COPIA PARA NO MODIFICAR EL ORIGINAL
+    img_copy = image_obj.copy() 
+    img_copy = img_copy.convert('RGB')
+    img_copy.thumbnail(dimensions, Image.Resampling.LANCZOS)
+    
     thumb_buffer = BytesIO()
-    image_obj.save(thumb_buffer, format='JPEG', quality=90)
+    img_copy.save(thumb_buffer, format='JPEG', quality=90)
+    thumb_buffer.seek(0)
+    
+    # Usamos el suffix en el nombre del archivo
     return ContentFile(thumb_buffer.getvalue(), name=f"avatar{suffix}.jpg")
 
 

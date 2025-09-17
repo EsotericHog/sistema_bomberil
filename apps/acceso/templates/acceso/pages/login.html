@@ -4,7 +4,6 @@
 {# Módulo #} {% block modulo %}Bomberil{% endblock  %}
 
 {% block contenido %}
-<img class="portal__imagen_fondo" src="{% static 'portal/imagenes/bomberil_portal_background_v2.jpg' %}" alt="">
 <div class="portal_login__container fondo_secundario">
     <h1 class="main__titulo_pagina fs_grande color_primario">
         Iniciar sesión
@@ -14,13 +13,8 @@
         {% csrf_token %}
 
         <div class="input_box">
-            <label class="fs_normal color_primario" for="LoginInputCorreo">Correo Electrónico</label>
-            <!--
-                <input class="fs_normal color_primario fondo_secundario_variante" name="LoginInputCorreo" type="text" placeholder="alguien@ejemplo.com">
-                <input class="fs_normal color_primario fondo_secundario_variante" name="LoginInputPassword" type="password">
-            
-            -->
-            {{formulario.correo}}
+            <label class="fs_normal color_primario" for="LoginInputCorreo">Rut</label>
+            {{formulario.rut}}
         </div>
         <div class="input_box">
             <label class="fs_normal color_primario" for="LoginInputPassword">Contraseña</label>
@@ -32,7 +26,7 @@
     </form>
 
     <div class="portal_login__enlaces">
-        <a class="fs_normal color_primario hover_color" href="">¿Olvidaste tu contraseña?</a>
+        <a class="fs_normal color_primario hover_color" href="{% url 'acceso:password_reset' %}">¿Olvidaste tu contraseña?</a>
     </div>
 
 </div>

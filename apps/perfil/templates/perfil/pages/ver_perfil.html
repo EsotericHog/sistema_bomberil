@@ -1,0 +1,91 @@
+{# Plantilla base #}{% extends 'portal/layouts/base.html' %}
+{# Cargar assets #}{% load static %}
+{# Título de la ventana #} {% block titulo_ventana %}Mi cuenta{% endblock %}
+{# Módulo #} {% block modulo %}Mi Cuenta{% endblock %}
+{# Título de la ventana #} {% block titulo_pagina %}Mi cuenta{% endblock %}
+
+{% block contenido %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-8 col-xl-6">
+            <div class="card shadow-sm border-0">
+                <div class="card-body p-5 fs_normal">
+                    <div class="d-flex align-items-center mb-4">
+                        
+                        {# --- SECCIÓN DEL AVATAR --- #}
+                        <div id="avatar-container-perfil" 
+                             class="position-relative me-3" 
+                             data-api-url="{% url 'api:ruta_editar_avatar_usuario' id=usuario.id %}">
+                            
+                            <img class="js-avatar-image rounded-circle" 
+                                 src="{% if usuario.avatar %}{{ usuario.avatar.url }}{% else %}{% static 'imagenes/default_avatar.png' %}{% endif %}" 
+                                 alt="Avatar de {{ usuario.first_name }}" 
+                                 style="width: 80px; height: 80px; object-fit: cover;">
+                            
+                            <span class="js-avatar-upload-button position-absolute bottom-0 end-0 bg-primary text-white rounded-circle d-flex align-items-center justify-content-center" 
+                                  style="width: 28px; height: 28px; cursor: pointer; border: 2px solid white;">
+                                <i class="fa-solid fa-pen" style="font-size: 0.8rem;"></i>
+                            </span>
+
+                            <input type="file" class="js-avatar-upload-input" hidden accept="image/*">
+                        </div>
+
+                        {# --- SECCION NOMBRE Y CORREO USUARIO --- #}
+                        <div>
+                            <h5 class="mb-0 fs_mediana">{{ usuario.first_name }} {{ usuario.last_name }}</h5>
+                            <p class="text-muted mb-0">{{ usuario.email }}</p>
+                        </div>
+                    </div>
+
+                    <hr class="mb-4">
+
+                    <div class="row mb-3">
+                        <div class="col-auto fw-bold">Nombres:</div>
+                        <div class="col text-end">{{ usuario.first_name|title }}</div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-auto fw-bold">Apellidos:</div>
+                        <div class="col text-end">{{ usuario.last_name|title }}</div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-auto fw-bold">Email:</div>
+                        <div class="col text-end">{{ usuario.email }}</div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-auto fw-bold">Rut:</div>
+                        <div class="col text-end">{{ usuario.rut|default:"Sin especificar" }}</div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-auto fw-bold">Teléfono:</div>
+                        <div class="col text-end">{{ usuario.phone|default:"Sin especificar" }}</div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-auto fw-bold">Fecha Nacimiento:</div>
+                        <div class="col text-end">{{ usuario.birthdate|date:"d/m/Y"|default:"Sin especificar" }}</div>
+                    </div>
+                    
+                    <div class="d-flex flex-column flex-md-row justify-content-end gap-2 mt-4">
+                        <a href="{% url 'perfil:editar' %}" class="btn btn-primary btn-block-sm fs_normal">Editar Información</a>
+                        <a href="{% url 'perfil:cambiar_contrasena' %}" class="btn btn-secondary btn-block-sm fs_normal">Cambiar Contraseña</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{# Token CSRF, necesario para el script #}
+{% csrf_token %} 
+{% endblock %}
+
+{% block scripts %}
+    {# Incluimos el script genérico #}
+    <script src="{% static 'js/avatar_uploader.js' %}"></script>
+    <script>
+        // Inicializamos el script para el contenedor de esta página
+        document.addEventListener('DOMContentLoaded', () => {
+            inicializarCargadorAvatar('avatar-container-perfil');
+        });
+    </script>
+
+{% endblock %}

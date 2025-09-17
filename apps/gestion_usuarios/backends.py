@@ -1,5 +1,6 @@
 from django.contrib.auth.backends import ModelBackend
-from .models import Membresia
+from django.db.models import Q
+from .models import Membresia, Usuario
 from apps.gestion_inventario.models import Estacion
 
 class RolBackend(ModelBackend):
@@ -25,21 +26,27 @@ class RolBackend(ModelBackend):
 
 
     def get_user_permissions(self, user_obj, obj=None):
-        # Esta función no es contextual, devuelve TODOS los permisos del usuario
-        # en todas las compañías donde tiene membresía activa.
         if not user_obj.is_active:
             return set()
         
-        # Permisos asignados directamente al usuario
-        user_perms = user_obj.user_permissions.all()
+        # --- LÍNEA CORREGIDA ---
+        # Construimos el string 'app_label.codename' manualmente
+        user_perms = {
+            f"{p.content_type.app_label}.{p.codename}" 
+            for p in user_obj.user_permissions.all()
+        }
         
-        # Permisos obtenidos a través de los roles en todas sus membresías activas
         roles = self._get_roles_for_user(user_obj)
         role_perms = set()
         for rol in roles:
-            role_perms.update(rol.permisos.all())
-            
-        return set(user_perms) | role_perms
+            # --- LÍNEA CORREGIDA ---
+            # Hacemos lo mismo para los permisos que vienen de los roles
+            role_perms.update({
+                f"{p.content_type.app_label}.{p.codename}" 
+                for p in rol.permisos.all()
+            })
+                
+        return user_perms | role_perms
 
 
 
@@ -70,3 +77,26 @@ class RolBackend(ModelBackend):
         
         # Si no hay contexto o el permiso no se encontró en el contexto, denegar.
         return False
+    
+
+
+    def authenticate(self, request, username=None, password=None, **kwargs):
+        """
+        Autentica a un usuario usando únicamente su RUT.
+        El campo 'username' del formulario debe contener el RUT.
+        """
+        try:
+            # Buscamos al usuario exclusivamente por su RUT.
+            # .get() es eficiente y correcto aquí porque el RUT es único.
+            user = Usuario.objects.get(rut__iexact=username)
+            
+            # Verificamos la contraseña.
+            if user.check_password(password) and user.is_active:
+                return user # Éxito
+        
+        except Usuario.DoesNotExist:
+            # Si no se encuentra el RUT, la autenticación falla.
+            return None
+        
+        # Si se encontró el RUT pero la contraseña es incorrecta, falla.
+        return None
