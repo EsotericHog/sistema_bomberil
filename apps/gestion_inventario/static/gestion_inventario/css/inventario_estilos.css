@@ -1,2 +1,8 @@
 /* Dashboard */
 @import url("dashboard.css");
+
+/* Tarjeta de Catálogo */
+@import url("catalogo_card.css");
+
+/* Tarjeta de Almacén */
+@import url("almacen_card.css");

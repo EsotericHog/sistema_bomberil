@@ -1,0 +1,74 @@
+{# Plantilla base #}{% extends 'gestion_inventario/layouts/base.html' %}
+{# Cargar assets #}{% load static %}
+{# Título de la ventana #} {% block titulo_ventana %}Lista de Almacenes{% endblock %}
+{# Título de la página #} {% block titulo_pagina %}Lista de Almacenes{% endblock %}
+
+{% block contenido %}
+{# Slider de secciones #}
+<div class="slider-container">
+    <div class="slider-viewport">
+        <div class="slider">
+
+            {% if secciones %}
+            {% for seccion in secciones  %}
+            {% include 'gestion_inventario/partials/_almacen_card.html' with seccion=seccion %}
+            {% endfor %}
+            {% endif %}
+
+        </div>
+    </div>
+
+    <button class="slider-btn prev-btn" aria-label="Anterior">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/>
+        </svg>
+    </button>
+    <button class="slider-btn next-btn" aria-label="Siguiente">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/>
+        </svg>
+    </button>
+</div>
+
+
+{# Tabla #}
+<table id="myTable" class="display tabla_1">
+    <thead class="color_blanco fondo_negro">
+        <tr>
+            <th>ID</th>
+            <th>Nombre</th>
+            <th>Compartimentos</th>
+            <th>Existencias</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody class="fondo_secundario_variante">
+        {% if secciones %}
+        {% for seccion in secciones %}
+        <tr>
+            {# ID #}
+            <td>{{seccion.id}}</td>
+            
+            {# Nombre #}
+            <td>
+                <span class="tabla_1__nombre_usuario">
+                    {{seccion.nombre|title}}
+                </span>
+            </td>
+            
+            {# Compartimentos totales #}
+            <td>{{seccion.total_compartimentos}}</td>
+
+            {# Existencias totales #}
+            <td>{{seccion.total_existencias}}</td>
+            
+            <td>Acciones</td>
+        </tr>
+        {% endfor %}
+        {% endif %}
+    </tbody>
+</table>
+
+
+<script src="{% static 'js/slider.js' %}"></script>
+{% endblock %}

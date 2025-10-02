@@ -1,0 +1,87 @@
+/* ==========================================================================
+   ESTILOS DE LA TARJETA DE ALMACÉN (almacen-card)
+   ========================================================================== */
+
+.almacen-card {
+    background-color: white;
+    border: 1px solid #e9ecef; /* Un borde muy sutil */
+    border-radius: 8px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+    overflow: hidden;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.almacen-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
+}
+
+.almacen-card img {
+    width: 100%;
+    height: 200px;
+    object-fit: cover;
+}
+
+/* Cuerpo de la tarjeta */
+.almacen-card-body {
+    padding: 25px;
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1; /* Ocupa todo el espacio vertical disponible */
+}
+
+/* Nombre y descripción */
+.almacen-card-info {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.almacen-card-info h4 {
+    margin: 0 0 8px 0;
+    font-weight: 300; /* Fuente más delgada como en la imagen */
+}
+
+.almacen-card-info p {
+    margin: 0;
+    line-height: 1.5;
+}
+
+/* Bloque de estadísticas */
+.almacen-card-stats {
+    display: flex;
+    justify-content: space-around;
+    text-align: center;
+    padding: 20px 0;
+    margin-bottom: 20px;
+    border-top: 1px solid #e9ecef;
+    border-bottom: 1px solid #e9ecef;
+}
+
+.stat-number {
+    display: block;
+}
+
+.stat-label {
+    display: block;
+    letter-spacing: 1px;
+    margin-top: 5px;
+}
+
+/* Botón de acción */
+.almacen-card-btn {
+    display: block;
+    width: 100%;
+    background-color: #20c997; /* Un color turquesa/verde */
+    padding: 15px;
+    border: none;
+    border-radius: 6px;
+    text-align: center;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background-color 0.3s;
+    margin-top: auto; /* ¡Clave! Empuja el botón al fondo de la tarjeta */
+}
+
+.almacen-card-btn:hover {
+    background-color: #1baa80; /* Un tono más oscuro */
+}
