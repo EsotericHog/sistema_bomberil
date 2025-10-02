@@ -36,6 +36,8 @@
 
         {# Contenido #}
         <main class="main fondo_main">
+            <h1 class="main__titulo_pagina fs_grande color_primario">{% block titulo_pagina %}{% endblock  %}</h1>
+
             {# Mensaje Flash #}
             {% include "layouts/flash.html" %}
 
