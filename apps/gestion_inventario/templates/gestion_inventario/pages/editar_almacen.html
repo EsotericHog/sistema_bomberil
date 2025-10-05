@@ -1,0 +1,114 @@
+{# Plantilla base #} {% extends 'gestion_inventario/layouts/base.html' %}
+{# Cargar assets #} {% load static %}
+{# Título de la ventana #} {% block titulo_ventana %}Editar Almacén{% endblock %} 
+{# Título de la página #} {% block titulo_pagina %}Editar Almacén{% endblock %}
+
+
+{% block contenido %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-12 col-md-10 col-lg-8">
+            <div class="card shadow-sm border-0 panel_base fondo_secundario">
+                <div class="card-body fondo_secundario">
+                    <h3 class="card-title h5 mb-3 fs_mediana color_primario">
+                        Editar almacén: {{ seccion.nombre|title }}
+                    </h3>
+
+                    <form method="post" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        <div class="mb-4">
+                            <label
+                                for="{{ formulario.nombre.id_for_label }}"
+                                class="form-label color_primario_variante fs_normal"
+                                >{{ formulario.nombre.label }}
+                                <span class="text-danger">*</span>
+                            </label>
+                            {{ formulario.nombre }}
+                            {% if formulario.nombre.help_text %}
+                            <div class="form-text color_primario_variante fs_pequena">
+                                {{ formulario.nombre.help_text }}
+                            </div>
+                            {% endif %} 
+
+                            {% for err in formulario.nombre.errors %}
+                            <div class="invalid-feedback d-block">
+                                {{ err }}
+                            </div>
+                            {% endfor %}
+                        </div>
+
+                        <div class="mb-4">
+                            <label
+                                for="{{ formulario.descripcion.id_for_label }}"
+                                class="form-label fs_normal color_primario_variante"
+                                >{{ formulario.descripcion.label }}
+                            </label>
+                            {{ formulario.descripcion }} 
+                            {% if formulario.descripcion.help_text %}
+                            <div class="form-text color_primario_variante fs_pequena">
+                                {{ formulario.descripcion.help_text }}
+                            </div>
+                            {% endif %}
+                            
+                            {% for err in formulario.descripcion.errors %}
+                            <div class="invalid-feedback d-block">
+                                {{ err }}
+                            </div>
+                            {% endfor %}
+                        </div>
+
+                        <div class="mb-4">
+                            <label
+                                for="{{ formulario.direccion.id_for_label }}"
+                                class="form-label fs_normal color_primario_variante"
+                                >{{ formulario.direccion.label }}</label
+                            >
+                            {{ formulario.direccion }} 
+                            {% if formulario.direccion.help_text %}
+                            <div class="form-text color_primario_variante fs_pequena">
+                                {{ formulario.direccion.help_text }}
+                            </div>
+                            {% endif %}
+                            {% for err in formulario.direccion.errors %}
+                            <div class="invalid-feedback d-block">
+                                {{ err }}
+                            </div>
+                            {% endfor %}
+                        </div>
+
+                        <div class="mb-4">
+                            <label
+                                for="{{ formulario.imagen.id_for_label }}"
+                                class="form-label fs_normal color_primario_variante"
+                                >{{ formulario.imagen.label }}</label
+                            >
+                            {{ formulario.imagen }} 
+                            {% if formulario.imagen.help_text %}
+                            <div class="form-text color_primario_variante fs_pequena">
+                                {{ formulario.imagen.help_text }}
+                            </div>
+                            {% endif %} 
+                            {% for err in formulario.imagen.errors %}
+                            <div class="invalid-feedback d-block">
+                                {{ err }}
+                            </div>
+                            {% endfor %}
+                        </div>
+
+                        <div class="d-flex justify-content-between mt-3">
+                            <a
+                                href="{% url 'gestion_inventario:ruta_gestionar_almacen' seccion.id %}"
+                                class="btn btn-secondary fs_normal"
+                                >Cancelar</a
+                            >
+                            <button type="submit" class="btn btn-primary fs_normal">
+                                Guardar
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

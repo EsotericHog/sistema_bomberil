@@ -15,4 +15,10 @@ urlpatterns = [
     path('almacenes/', AlmacenListaView.as_view(), name="ruta_lista_almacenes"),
     # Crear almacen
     path('almacenes/crear/', AlmacenCrearView.as_view(), name="ruta_crear_almacen"),
+    # Gestionar detalle de un almacen (seccion)
+    path('almacenes/<int:seccion_id>/gestionar/', AlmacenDetalleView.as_view(), name='ruta_gestionar_almacen'),
+    # Crear compartimento para una seccion
+    path('almacenes/<int:seccion_id>/compartimentos/crear/', CompartimentoCrearView.as_view(), name='ruta_crear_compartimento'),
+    # Editar almacen
+    path('almacenes/<int:seccion_id>/editar/', AlmacenEditarView.as_view(), name='ruta_editar_almacen'),
 ]

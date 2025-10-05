@@ -4,8 +4,9 @@ from django.http import JsonResponse
 from django.db.models import Count
 from django.urls import reverse
 from django.contrib import messages
-from .models import Seccion, Existencia, TipoSeccion, Estacion
-from .forms import AlmacenForm
+from .models import Seccion, Existencia, TipoSeccion, Estacion, Compartimento
+from .forms import AlmacenForm, CompartimentoForm
+from django.shortcuts import get_object_or_404
 
 
 class InventarioInicioView(View):
@@ -114,3 +115,57 @@ class AlmacenCrearView(View):
             return redirect(reverse('gestion_inventario:ruta_lista_almacenes'))
         # Si hay errores, volver a mostrar el formulario con errores
         return render(request, 'gestion_inventario/pages/crear_almacen.html', {'formulario': form})
+
+
+class AlmacenDetalleView(View):
+    """Vista para gestionar un almacén/sección: mostrar imagen, nombre, descripción, fecha de creación y sus compartimentos."""
+    def get(self, request, seccion_id):
+        estacion_id = request.session.get('active_estacion_id')
+        seccion = get_object_or_404(Seccion, id=seccion_id, estacion_id=estacion_id)
+
+        compartimentos = Compartimento.objects.filter(seccion=seccion)
+
+        context = {
+            'seccion': seccion,
+            'compartimentos': compartimentos,
+        }
+        return render(request, 'gestion_inventario/pages/gestionar_almacen.html', context)
+
+
+class CompartimentoCrearView(View):
+    """Crear un compartimento asociado a una sección (almacén)."""
+    def get(self, request, seccion_id):
+        form = CompartimentoForm()
+        seccion = get_object_or_404(Seccion, id=seccion_id)
+        return render(request, 'gestion_inventario/pages/crear_compartimento.html', {'formulario': form, 'seccion': seccion})
+
+    def post(self, request, seccion_id):
+        seccion = get_object_or_404(Seccion, id=seccion_id)
+        form = CompartimentoForm(request.POST)
+        if form.is_valid():
+            compartimento = form.save(commit=False)
+            compartimento.seccion = seccion
+            compartimento.save()
+            messages.success(request, f'Compartimento "{compartimento.nombre}" creado en {seccion.nombre}.')
+            return redirect(reverse('gestion_inventario:ruta_gestionar_almacen', kwargs={'seccion_id': seccion.id}))
+        return render(request, 'gestion_inventario/pages/crear_compartimento.html', {'formulario': form, 'seccion': seccion})
+
+
+class AlmacenEditarView(View):
+    """Editar datos de una sección/almacén."""
+    def get(self, request, seccion_id):
+        seccion = get_object_or_404(Seccion, id=seccion_id)
+        form = CompartimentoForm.__module__  # placeholder to avoid unused import warnings
+        from .forms import AlmacenEditForm
+        form = AlmacenEditForm(instance=seccion)
+        return render(request, 'gestion_inventario/pages/editar_almacen.html', {'formulario': form, 'seccion': seccion})
+
+    def post(self, request, seccion_id):
+        seccion = get_object_or_404(Seccion, id=seccion_id)
+        from .forms import AlmacenEditForm
+        form = AlmacenEditForm(request.POST, request.FILES, instance=seccion)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Almacén actualizado correctamente.')
+            return redirect(reverse('gestion_inventario:ruta_gestionar_almacen', kwargs={'seccion_id': seccion.id}))
+        return render(request, 'gestion_inventario/pages/editar_almacen.html', {'formulario': form, 'seccion': seccion})
