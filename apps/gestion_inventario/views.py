@@ -169,3 +169,43 @@ class AlmacenEditarView(View):
             messages.success(request, 'Almacén actualizado correctamente.')
             return redirect(reverse('gestion_inventario:ruta_gestionar_almacen', kwargs={'seccion_id': seccion.id}))
         return render(request, 'gestion_inventario/pages/editar_almacen.html', {'formulario': form, 'seccion': seccion})
+
+
+class CompartimentoListaView(View):
+    """Lista potente de compartimentos con filtros y búsqueda."""
+    def get(self, request):
+        estacion_id = request.session.get('active_estacion_id')
+
+        # Base queryset: todos los compartimentos pertenecientes a la estación
+        qs = Compartimento.objects.select_related('seccion', 'seccion__tipo_seccion', 'seccion__estacion')
+        if estacion_id:
+            qs = qs.filter(seccion__estacion_id=estacion_id)
+
+        # Filtros avanzados desde GET
+        seccion_id = request.GET.get('seccion')
+        nombre = request.GET.get('nombre')
+        descripcion_presente = request.GET.get('descripcion_presente')  # '1' para solo con descripción
+
+        if seccion_id:
+            try:
+                qs = qs.filter(seccion_id=int(seccion_id))
+            except ValueError:
+                pass
+
+        if nombre:
+            qs = qs.filter(nombre__icontains=nombre)
+
+        if descripcion_presente == '1':
+            qs = qs.exclude(descripcion__isnull=True).exclude(descripcion__exact='')
+
+        # Orden por sección y nombre
+        qs = qs.order_by('seccion__nombre', 'nombre')
+
+        # Opciones para filtros
+        secciones = Seccion.objects.filter(estacion_id=estacion_id).order_by('nombre') if estacion_id else Seccion.objects.order_by('nombre')
+
+        context = {
+            'compartimentos': qs,
+            'secciones': secciones,
+        }
+        return render(request, 'gestion_inventario/pages/lista_compartimentos.html', context)

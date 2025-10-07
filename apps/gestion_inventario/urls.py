@@ -13,6 +13,8 @@ urlpatterns = [
 
     # Lista de almacenes
     path('almacenes/', AlmacenListaView.as_view(), name="ruta_lista_almacenes"),
+    # Lista de compartimentos
+    path('compartimentos/', CompartimentoListaView.as_view(), name='ruta_lista_compartimentos'),
     # Crear almacen
     path('almacenes/crear/', AlmacenCrearView.as_view(), name="ruta_crear_almacen"),
     # Gestionar detalle de un almacen (seccion)
