@@ -18,8 +18,36 @@ class MedicoCrearView(View):
 class MedicoListaView(View):
     def get(self, request):
         return render(request, "gestion_medica/pages/lista_voluntarios.html")
+    
+class MedicoDatosView(View):
+    def get(self, request):
+        return render(request, "gestion_medica/pages/datos_paciente.html")
+    #def get(self, request, id):
+        #return HttpResponse("mostrar datos")
 
+class MedicoNumEmergView(View):
+    def get(self, request):
+        return render(request, "gestion_medica/pages/contacto_emergencia.html")
+    #def get(self, request, id):
+        #return HttpResponse("mostrar datos")
 
+class MedicoEnfermedadView(View):
+    def get(self, request):
+        return render(request, "gestion_medica/pages/enfermedad_paciente.html")
+    #def get(self, request, id):
+        #return HttpResponse("mostrar datos")
+
+class MedicoAlergiasView(View):
+    def get(self, request):
+        return render(request, "gestion_medica/pages/alergias_paciente.html")
+    #def get(self, request, id):
+        #return HttpResponse("mostrar datos")
+
+class MedicoInfoView(View):
+    def get(self, request):
+        return render(request, "gestion_medica/pages/informacion_paciente.html")
+    #def get(self, request, id):
+        #return HttpResponse("mostrar datos")
 
 class MedicoVerView(View):
     def get(self, request):
