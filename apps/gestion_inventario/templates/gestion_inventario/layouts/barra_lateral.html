@@ -30,7 +30,7 @@
         <div class="barra_lateral__modulo" data-toggle="modulo">
             <a href="" class="barra_lateral__modulo_nombre fs_nav_seccion color_primario hover_scale">
                 <i class="fa-solid fa-book"></i>
-                <span>Catálogo</span>
+                <span>Productos</span>
             </a>
             <i class="fa-solid fa-chevron-down color_primario barra_lateral__flecha_modulo"></i>
         </div>
@@ -56,6 +56,35 @@
             <li class="fondo_opcion_nav"><a class="color_primario fs_nav_opcion" href="">Pendiente</a></li>
         </ul>
     </section>
+    
+
+    {# Sección: Gestión de Almacenes / bodegas / espacios físicos #}
+    <section class="barra_lateral__seccion">
+
+        <div class="barra_lateral__modulo" data-toggle="modulo">
+            <a href="" class="barra_lateral__modulo_nombre fs_nav_seccion color_primario hover_scale">
+                <i class="fa-solid fa-warehouse"></i>
+                <span>Áreas</span>
+            </a>
+            <i class="fa-solid fa-chevron-down color_primario barra_lateral__flecha_modulo"></i>
+        </div>
+
+        <ul class="barra_lateral__lista_opciones oculto">
+            <li class="fondo_opcion_nav hover_color">
+                <a class="color_primario fs_nav_opcion" href="{% url 'gestion_inventario:ruta_lista_areas' %}">
+                    <i class="fa-solid fa-clipboard-list color_naranjo_claro"></i>
+                    Lista de áreas
+                </a>
+            </li>
+
+            <li class="fondo_opcion_nav hover_color">
+                <a class="color_primario fs_nav_opcion" href="{% url 'gestion_inventario:ruta_crear_area' %}">
+                    <i class="fa-solid fa-circle-plus color_verde"></i>
+                    Crear área
+                </a>
+            </li>
+        </ul>
+    </section>
 
 
     {# Sección: Gestión de Compartimentos #}
@@ -78,40 +107,6 @@
             </li>
         </ul>
     </section>
-
-
-    {# Sección: Gestión de Almacenes / bodegas / espacios físicos #}
-    <section class="barra_lateral__seccion">
-
-        <div class="barra_lateral__modulo" data-toggle="modulo">
-            <a href="" class="barra_lateral__modulo_nombre fs_nav_seccion color_primario hover_scale">
-                <i class="fa-solid fa-warehouse"></i>
-                <span>Almacenes</span>
-            </a>
-            <i class="fa-solid fa-chevron-down color_primario barra_lateral__flecha_modulo"></i>
-        </div>
-
-        <ul class="barra_lateral__lista_opciones oculto">
-            <li class="fondo_opcion_nav hover_color">
-                <a class="color_primario fs_nav_opcion" href="{% url 'gestion_inventario:ruta_lista_almacenes' %}">
-                    <i class="fa-solid fa-clipboard-list color_naranjo_claro"></i>
-                    Lista de almacenes
-                </a>
-            </li>
-
-            <li class="fondo_opcion_nav hover_color">
-                <a class="color_primario fs_nav_opcion" href="{% url 'gestion_inventario:ruta_crear_almacen' %}">
-                    <i class="fa-solid fa-circle-plus color_verde"></i>
-                    Crear almacén
-                </a>
-            </li>
-        </ul>
-    </section>
-
-
-
-
-
-
     
+
 </nav>

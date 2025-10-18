@@ -264,3 +264,7 @@ REST_FRAMEWORK = {
         'rest_framework.permissions.DjangoModelPermissionsOrAnonReadOnly'
     ]
 }
+
+# Configuración de Inventario
+INVENTARIO_AREA_NOMBRE = "ÁREA"
+INVENTARIO_VEHICULO_NOMBRE = "VEHÍCULO"

@@ -10,7 +10,7 @@
         <div class="col-12 col-md-8 col-lg-6">
             <div class="card shadow-sm panel_base fondo_secundario">
                 <div class="card-body fondo_secundario">
-                    <h3 class="card-title h5 mb-3 fs_mediana color_primario">Crear compartimento en {{ seccion.nombre|title }}</h3>
+                    <h3 class="card-title h5 mb-3 fs_mediana color_primario">Crear compartimento en {{ ubicacion.nombre|title }}</h3>
 
                     <form method="post">
                         {% csrf_token %}
@@ -30,7 +30,7 @@
                         {% endfor %}
 
                         <div class="d-flex justify-content-between">
-                            <a href="{% url 'gestion_inventario:ruta_gestionar_almacen' seccion.id %}" class="btn btn-secondary fs_normal">Cancelar</a>
+                            <a href="{% url 'gestion_inventario:ruta_gestionar_area' ubicacion.id %}" class="btn btn-secondary fs_normal">Cancelar</a>
                             <button type="submit" class="btn btn-primary fs_normal">Crear compartimento</button>
                         </div>
                     </form>

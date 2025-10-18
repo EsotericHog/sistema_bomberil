@@ -1,7 +1,7 @@
 {# Plantilla base #}{% extends 'gestion_inventario/layouts/base.html' %}
 {# Cargar assets #}{% load static %}
-{# Título de la ventana #} {% block titulo_ventana %}Lista de Almacenes{% endblock %}
-{# Título de la página #} {% block titulo_pagina %}Lista de Almacenes{% endblock %}
+{# Título de la ventana #} {% block titulo_ventana %}Lista de Áreas{% endblock %}
+{# Título de la página #} {% block titulo_pagina %}Lista de Áreas{% endblock %}
 
 {% block contenido %}
 {# Slider de secciones #}
@@ -9,9 +9,9 @@
     <div class="slider-viewport">
         <div class="slider">
 
-            {% if secciones %}
-            {% for seccion in secciones  %}
-            {% include 'gestion_inventario/partials/_almacen_card.html' with seccion=seccion %}
+            {% if ubicaciones %}
+            {% for ubicacion in ubicaciones  %}
+            {% include 'gestion_inventario/partials/_area_card.html' with ubicacion=ubicacion almacen=ubicacion %}
             {% endfor %}
             {% endif %}
 
@@ -43,29 +43,29 @@
         </tr>
     </thead>
     <tbody class="fondo_secundario_variante">
-        {% if secciones %}
-        {% for seccion in secciones %}
+        {% if ubicaciones %}
+        {% for ubicacion in ubicaciones %}
         <tr>
             {# ID #}
-            <td>{{seccion.id}}</td>
+            <td>{{ubicacion.id}}</td>
             
             {# Nombre #}
             <td>
                 <span class="tabla_1__nombre_usuario">
-                    {{seccion.nombre|title}}
+                    {{ubicacion.nombre|title}}
                 </span>
             </td>
             
             {# Compartimentos totales #}
-            <td>{{seccion.total_compartimentos}}</td>
+            <td>{{ubicacion.total_compartimentos}}</td>
 
             {# Existencias totales #}
-            <td>{{seccion.total_existencias}}</td>
+            <td>{{ubicacion.total_existencias}}</td>
             
             <td>Acciones</td>
         </tr>
-        {% endfor %}
-        {% endif %}
+    {% endfor %}
+    {% endif %}
     </tbody>
 </table>
 

@@ -1,0 +1,27 @@
+{% load static %}
+
+<div class="almacen-card slider-item">
+    <img src="{% if ubicacion.imagen %}{{ ubicacion.imagen.url }}{% else %}{% static 'gestion_inventario/imagenes/default_almacen.png' %}{% endif %}" alt="Imagen del {{ ubicacion.nombre }}">
+
+    <div class="almacen-card-body fondo_secundario fs_normal">
+        
+        <div class="almacen-card-info color_primario">
+            <h4 class="fs_normal">{{ubicacion.nombre}}</h4>
+            <p class="fs_pequena">{{ubicacion.descripcion|default:"Sin descripción"}}</p>
+        </div>
+
+        <div class="almacen-card-stats">
+            <div class="stat">
+                <span class="stat-number color_primario_variante fs_normal">{{ ubicacion.total_existencias }}</span>
+                <span class="stat-label color_primario_variante fs_pequena">Existencias</span>
+            </div>
+            <div class="stat">
+                <span class="stat-number color_primario_variante fs_normal">{{ ubicacion.total_compartimentos }}</span>
+                <span class="stat-label color_primario_variante fs_pequena">Compartimentos</span>
+            </div>
+        </div>
+
+    <a href="{% url 'gestion_inventario:ruta_gestionar_area' ubicacion.id %}" class="almacen-card-btn fs_normal color_blanco">Gestionar Área</a>
+
+    </div>
+</div>

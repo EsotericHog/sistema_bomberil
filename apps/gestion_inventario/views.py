@@ -1,12 +1,15 @@
 from django.shortcuts import render, redirect
 from django.views import View
 from django.http import JsonResponse
-from django.db.models import Count
+from django.db.models import Count, Sum, Value
+from django.db.models.functions import Coalesce
 from django.urls import reverse
 from django.contrib import messages
-from .models import Seccion, Existencia, TipoSeccion, Estacion, Compartimento
-from .forms import AlmacenForm, CompartimentoForm
 from django.shortcuts import get_object_or_404
+
+from .models import Estacion, Ubicacion, TipoUbicacion, Compartimento, Activo
+from .forms import AreaForm, CompartimentoForm
+from core.settings import INVENTARIO_AREA_NOMBRE as AREA_NOMBRE
 
 
 class InventarioInicioView(View):
@@ -18,15 +21,19 @@ class InventarioInicioView(View):
         return render(request, "gestion_inventario/pages/home.html", context)
 
 
+
+
 class InventarioPruebasView(View):
     def get(self, request):
         return render(request, "gestion_inventario/pages/pruebas.html")
 
 
+
+
 # Obtener total de existencias por categoría (VISTA TEMPORAL, DEBE MOVERSE A LA APP API)
 def grafico_existencias_por_categoria(request):
     datos = (
-        Existencia.objects
+        Activo.objects
         .values('catalogo__categoria__nombre')
         .annotate(score=Count('id'))
         .order_by('-score')
@@ -41,134 +48,130 @@ def grafico_existencias_por_categoria(request):
 
 
 
-class AlmacenListaView(View):
+class AreaListaView(View):
     def get(self, request):
         estacion_id = request.session.get('active_estacion_id')
 
-        # Filtrar sólo secciones físicas (no vehículos)
-        # Asumimos que el modelo TipoSeccion tiene un campo o nombre que permite distinguir físicas de vehículos
-        # Ejemplo: nombre != 'Vehículo' (ajustar si el nombre es distinto)
-        secciones_fisicas = (
-            Seccion.objects
+        # --- CONSULTA OPTIMIZADA ---
+        # Usamos .annotate() para calcular todo en una sola consulta a la base de datos.
+        ubicaciones_con_totales = (
+            Ubicacion.objects
             .filter(estacion_id=estacion_id)
-            .exclude(tipo_seccion__nombre__iexact='VEHÍCULO')
-            .select_related('tipo_seccion')
+            .exclude(tipo_ubicacion__nombre__iexact='VEHÍCULO')
+            .annotate(
+                # 1. Contar el número de compartimentos por ubicación
+                total_compartimentos=Count('compartimento', distinct=True),
+                
+                # 2. Contar el número de Activos únicos en los compartimentos de esta ubicación
+                total_activos=Count('compartimento__activo', distinct=True),
+                
+                # 3. Sumar la CANTIDAD de todos los Lotes de Insumos en los compartimentos
+                # Usamos Coalesce para que si no hay insumos, el resultado sea 0 en lugar de None
+                total_cantidad_insumos=Coalesce(Sum('compartimento__loteinsumo__cantidad'), 0)
+            )
+            .select_related('tipo_ubicacion')
         )
 
-        # Obtener totales de compartimentos y existencias por sección
-        # Prefetch compartimentos y existencias para eficiencia
-        from .models import Compartimento, Existencia
-        secciones = []
-        for seccion in secciones_fisicas:
-            compartimentos = Compartimento.objects.filter(seccion=seccion)
-            total_compartimentos = compartimentos.count()
-            # Sumar existencias en todos los compartimentos de la sección
-            total_existencias = Existencia.objects.filter(compartimento__in=compartimentos).count()
-            seccion.total_compartimentos = total_compartimentos
-            seccion.total_existencias = total_existencias
-            secciones.append(seccion)
+        # --- CÁLCULO FINAL ---
+        # Ahora iteramos sobre el resultado de la consulta (que ya tiene todos los datos)
+        # para sumar los activos y los insumos en una sola variable.
+        for ubicacion in ubicaciones_con_totales:
+            ubicacion.total_existencias = ubicacion.total_activos + ubicacion.total_cantidad_insumos
 
-        return render(request, "gestion_inventario/pages/lista_almacenes.html", {'secciones': secciones})
+        return render(
+            request, 
+            "gestion_inventario/pages/lista_areas.html", 
+            {'ubicaciones': ubicaciones_con_totales}
+        )
 
 
-class AlmacenCrearView(View):
+
+
+class AreaCrearView(View):
     def get(self, request):
         estacion_id = request.session.get('active_estacion_id')
         if not estacion_id:
-            messages.error(request, "No tienes una estación activa. No puedes crear almacenes.")
+            messages.error(request, "No tienes una estación activa. No puedes crear áreas.")
             return redirect(reverse('portal:ruta_inicio'))
 
-        form = AlmacenForm()
-        return render(request, 'gestion_inventario/pages/crear_almacen.html', {'formulario': form})
+        form = AreaForm()
+        return render(request, 'gestion_inventario/pages/crear_area.html', {'formulario': form})
 
     def post(self, request):
-        form = AlmacenForm(request.POST)
+        form = AreaForm(request.POST)
         estacion_id = request.session.get('active_estacion_id')
         if not estacion_id:
-            messages.error(request, "No tienes una estación activa. No puedes crear almacenes.")
+            messages.error(request, "No tienes una estación activa. No puedes crear areas.")
             return redirect(reverse('portal:ruta_inicio'))
 
         if form.is_valid():
-            # Guardar sin confirmar para asignar tipo_seccion y potencialmente estacion desde sesión
-            seccion = form.save(commit=False)
+            # Guardar sin confirmar para asignar tipo_ubicacion y potencialmente estacion desde sesión
+            ubicacion = form.save(commit=False)
 
-            # Obtener o crear el TipoSeccion con nombre 'AREA' (mayúsculas para consistencia)
-            tipo_area, created = TipoSeccion.objects.get_or_create(nombre__iexact='AREA', defaults={'nombre': 'AREA'})
+            # Obtener o crear el Tipoubicacion con nombre 'ÁREA' (mayúsculas para consistencia)
+            tipo_ubicacion, created = TipoUbicacion.objects.get_or_create(nombre__iexact=AREA_NOMBRE, defaults={'nombre': AREA_NOMBRE})
             # Si get_or_create con lookup no funciona en el dialecto usado, fallback a get_or_create por nombre exacto
-            if not tipo_area:
-                tipo_area, created = TipoSeccion.objects.get_or_create(nombre='AREA')
+            if not tipo_ubicacion:
+                tipo_ubicacion, created = TipoUbicacion.objects.get_or_create(nombre=AREA_NOMBRE)
 
-            seccion.tipo_seccion = tipo_area
+            ubicacion.tipo_ubicacion = tipo_ubicacion
 
             # Si hay una estación activa en sesión, asignarla; si no, mantener la seleccionada en el formulario
             # Asignar la estación desde la sesión (usuario sólo puede crear para su compañía)
             try:
                 estacion_obj = Estacion.objects.get(id=estacion_id)
-                seccion.estacion = estacion_obj
+                ubicacion.estacion = estacion_obj
             except Estacion.DoesNotExist:
                 messages.error(request, "La estación activa en sesión no es válida.")
                 return redirect(reverse('portal:ruta_inicio'))
 
-            seccion.save()
-            messages.success(request, f'Almacén/ubicación "{seccion.nombre.title()}" creado exitosamente.')
-            # Redirigir a la lista de almacenes
-            return redirect(reverse('gestion_inventario:ruta_lista_almacenes'))
+            ubicacion.save()
+            messages.success(request, f'Almacén/ubicación "{ubicacion.nombre.title()}" creado exitosamente.')
+            # Redirigir a la lista de areas
+            return redirect(reverse('gestion_inventario:ruta_lista_areas'))
         # Si hay errores, volver a mostrar el formulario con errores
-        return render(request, 'gestion_inventario/pages/crear_almacen.html', {'formulario': form})
+        return render(request, 'gestion_inventario/pages/crear_area.html', {'formulario': form})
 
 
-class AlmacenDetalleView(View):
-    """Vista para gestionar un almacén/sección: mostrar imagen, nombre, descripción, fecha de creación y sus compartimentos."""
-    def get(self, request, seccion_id):
+
+
+class AreaDetalleView(View):
+    """Vista para gestionar un almacén/ubicación: mostrar imagen, nombre, descripción, fecha de creación y sus compartimentos."""
+    def get(self, request, ubicacion_id):
         estacion_id = request.session.get('active_estacion_id')
-        seccion = get_object_or_404(Seccion, id=seccion_id, estacion_id=estacion_id)
+        ubicacion = get_object_or_404(Ubicacion, id=ubicacion_id, estacion_id=estacion_id)
 
-        compartimentos = Compartimento.objects.filter(seccion=seccion)
+        compartimentos = Compartimento.objects.filter(ubicacion=ubicacion)
 
         context = {
-            'seccion': seccion,
+            'ubicacion': ubicacion,
             'compartimentos': compartimentos,
         }
-        return render(request, 'gestion_inventario/pages/gestionar_almacen.html', context)
+        return render(request, 'gestion_inventario/pages/gestionar_area.html', context)
 
 
-class CompartimentoCrearView(View):
-    """Crear un compartimento asociado a una sección (almacén)."""
-    def get(self, request, seccion_id):
-        form = CompartimentoForm()
-        seccion = get_object_or_404(Seccion, id=seccion_id)
-        return render(request, 'gestion_inventario/pages/crear_compartimento.html', {'formulario': form, 'seccion': seccion})
-
-    def post(self, request, seccion_id):
-        seccion = get_object_or_404(Seccion, id=seccion_id)
-        form = CompartimentoForm(request.POST)
-        if form.is_valid():
-            compartimento = form.save(commit=False)
-            compartimento.seccion = seccion
-            compartimento.save()
-            messages.success(request, f'Compartimento "{compartimento.nombre}" creado en {seccion.nombre}.')
-            return redirect(reverse('gestion_inventario:ruta_gestionar_almacen', kwargs={'seccion_id': seccion.id}))
-        return render(request, 'gestion_inventario/pages/crear_compartimento.html', {'formulario': form, 'seccion': seccion})
 
 
-class AlmacenEditarView(View):
-    """Editar datos de una sección/almacén."""
-    def get(self, request, seccion_id):
-        seccion = get_object_or_404(Seccion, id=seccion_id)
+class AreaEditarView(View):
+    """Editar datos de una ubicación/almacén."""
+    def get(self, request, ubicacion_id):
+        ubicacion = get_object_or_404(Ubicacion, id=ubicacion_id)
         form = CompartimentoForm.__module__  # placeholder to avoid unused import warnings
-        from .forms import AlmacenEditForm
-        form = AlmacenEditForm(instance=seccion)
-        return render(request, 'gestion_inventario/pages/editar_almacen.html', {'formulario': form, 'seccion': seccion})
+        from .forms import AreaEditForm
+        form = AreaEditForm(instance=ubicacion)
+        return render(request, 'gestion_inventario/pages/editar_area.html', {'formulario': form, 'ubicacion': ubicacion})
 
-    def post(self, request, seccion_id):
-        seccion = get_object_or_404(Seccion, id=seccion_id)
-        from .forms import AlmacenEditForm
-        form = AlmacenEditForm(request.POST, request.FILES, instance=seccion)
+    def post(self, request, ubicacion_id):
+        ubicacion = get_object_or_404(Ubicacion, id=ubicacion_id)
+        from .forms import AreaEditForm
+        form = AreaEditForm(request.POST, request.FILES, instance=ubicacion)
         if form.is_valid():
             form.save()
             messages.success(request, 'Almacén actualizado correctamente.')
-            return redirect(reverse('gestion_inventario:ruta_gestionar_almacen', kwargs={'seccion_id': seccion.id}))
-        return render(request, 'gestion_inventario/pages/editar_almacen.html', {'formulario': form, 'seccion': seccion})
+            return redirect(reverse('gestion_inventario:ruta_gestionar_area', kwargs={'ubicacion_id': ubicacion.id}))
+        return render(request, 'gestion_inventario/pages/editar_area.html', {'formulario': form, 'ubicacion': ubicacion})
+
+
 
 
 class CompartimentoListaView(View):
@@ -177,18 +180,18 @@ class CompartimentoListaView(View):
         estacion_id = request.session.get('active_estacion_id')
 
         # Base queryset: todos los compartimentos pertenecientes a la estación
-        qs = Compartimento.objects.select_related('seccion', 'seccion__tipo_seccion', 'seccion__estacion')
+        qs = Compartimento.objects.select_related('ubicacion', 'ubicacion__tipo_ubicacion', 'ubicacion__estacion')
         if estacion_id:
-            qs = qs.filter(seccion__estacion_id=estacion_id)
+            qs = qs.filter(ubicacion__estacion_id=estacion_id)
 
         # Filtros avanzados desde GET
-        seccion_id = request.GET.get('seccion')
+        ubicacion_id = request.GET.get('ubicacion')
         nombre = request.GET.get('nombre')
         descripcion_presente = request.GET.get('descripcion_presente')  # '1' para solo con descripción
 
-        if seccion_id:
+        if ubicacion_id:
             try:
-                qs = qs.filter(seccion_id=int(seccion_id))
+                qs = qs.filter(ubicacion_id=int(ubicacion_id))
             except ValueError:
                 pass
 
@@ -199,13 +202,34 @@ class CompartimentoListaView(View):
             qs = qs.exclude(descripcion__isnull=True).exclude(descripcion__exact='')
 
         # Orden por sección y nombre
-        qs = qs.order_by('seccion__nombre', 'nombre')
+        qs = qs.order_by('ubicacion__nombre', 'nombre')
 
         # Opciones para filtros
-        secciones = Seccion.objects.filter(estacion_id=estacion_id).order_by('nombre') if estacion_id else Seccion.objects.order_by('nombre')
+        ubicaciones = Ubicacion.objects.filter(estacion_id=estacion_id).order_by('nombre') if estacion_id else Ubicacion.objects.order_by('nombre')
 
         context = {
             'compartimentos': qs,
-            'secciones': secciones,
+            'ubicaciones': ubicaciones,
         }
         return render(request, 'gestion_inventario/pages/lista_compartimentos.html', context)
+
+
+
+
+class CompartimentoCrearView(View):
+    """Crear un compartimento asociado a una ubicación (almacén)."""
+    def get(self, request, ubicacion_id):
+        form = CompartimentoForm()
+        ubicacion = get_object_or_404(Ubicacion, id=ubicacion_id)
+        return render(request, 'gestion_inventario/pages/crear_compartimento.html', {'formulario': form, 'ubicacion': ubicacion})
+
+    def post(self, request, ubicacion_id):
+        ubicacion = get_object_or_404(Ubicacion, id=ubicacion_id)
+        form = CompartimentoForm(request.POST)
+        if form.is_valid():
+            compartimento = form.save(commit=False)
+            compartimento.ubicacion = ubicacion
+            compartimento.save()
+            messages.success(request, f'Compartimento "{compartimento.nombre}" creado en {ubicacion.nombre}.')
+            return redirect(reverse('gestion_inventario:ruta_gestionar_area', kwargs={'ubicacion_id': ubicacion.id}))
+        return render(request, 'gestion_inventario/pages/crear_compartimento.html', {'formulario': form, 'ubicacion': ubicacion})

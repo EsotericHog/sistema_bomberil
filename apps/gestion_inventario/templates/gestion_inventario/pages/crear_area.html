@@ -9,7 +9,7 @@
     <div class="contenedor_formulario_simple fondo_secundario">
     <form 
     method="post" 
-    action="{% url 'gestion_inventario:ruta_crear_almacen' %}"
+    action="{% url 'gestion_inventario:ruta_crear_area' %}"
         class=" formulario_simple color_primario fs_normal"
         >
         {% csrf_token %}
@@ -46,7 +46,7 @@
 
             <div class="formulario_simple__caja_botones">
                 <button type="submit" class="boton fs_normal color_blanco fondo_verde hover_color">Crear</button>
-                <a href="{% url 'gestion_inventario:ruta_lista_almacenes' %}" class="color_primario fondo_transparente boton">Cancelar</a>
+                <a href="{% url 'gestion_inventario:ruta_lista_areas' %}" class="color_primario fondo_transparente boton">Cancelar</a>
             </div>
 
         </form>

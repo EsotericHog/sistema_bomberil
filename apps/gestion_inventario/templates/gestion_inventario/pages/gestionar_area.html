@@ -1,7 +1,7 @@
 {# Plantilla base #}{% extends 'gestion_inventario/layouts/base.html' %}
 {# Cargar assets #}{% load static %}
-{# Título de la ventana #} {% block titulo_ventana %}Gestionar Almacén{% endblock %}
-{# Título de la página #} {% block titulo_pagina %}Gestionar Almacén{% endblock %}
+{# Título de la ventana #} {% block titulo_ventana %}Gestionar Área{% endblock %}
+{# Título de la página #} {% block titulo_pagina %}Gestionar Área{% endblock %}
 
 
 {% block contenido %}
@@ -11,19 +11,19 @@
         <!-- Imagen y datos del almacén -->
         <div class="col-12 col-lg-4">
             <div class="card shadow-sm">
-                <img src="{% if seccion.imagen %}{{ seccion.imagen.url }}{% else %}{% static 'gestion_inventario/imagenes/default_almacen.png' %}{% endif %}"
-                         class="card-img-top img-fluid" alt="Imagen {{ seccion.nombre }}">
+                <img src="{% if ubicacion.imagen %}{{ ubicacion.imagen.url }}{% else %}{% static 'gestion_inventario/imagenes/default_almacen.png' %}{% endif %}"
+                         class="card-img-top img-fluid" alt="Imagen {{ ubicacion.nombre }}">
                 <div class="card-body fondo_secundario">
-                    <h3 class="card-title h5 color_primario fs_mediana">{{ seccion.nombre }}</h3>
-                    <p class="card-text mb-1 color_primario_variante fs_normal">{{ seccion.descripcion|default:"Sin descripción" }}</p>
-                    <p class="small mb-2 color_primario_variante fs_pequena">Creado: {{ seccion.fecha_creacion|date:"d/m/Y H:i" }}</p>
+                    <h3 class="card-title h5 color_primario fs_mediana">{{ ubicacion.nombre }}</h3>
+                    <p class="card-text mb-1 color_primario_variante fs_normal">{{ ubicacion.descripcion|default:"Sin descripción" }}</p>
+                    <p class="small mb-2 color_primario_variante fs_pequena">Creado: {{ ubicacion.created_at }}</p>
 
                     <div class="d-grid gap-2 d-md-flex">
-                        <a class="btn btn-primary me-md-2 fs_normal" href="{% url 'gestion_inventario:ruta_crear_compartimento' seccion.id %}">
+                        <a class="btn btn-primary me-md-2 fs_normal" href="{% url 'gestion_inventario:ruta_crear_compartimento' ubicacion.id %}">
                             <i class="fa-solid fa-plus"></i> Crear compartimento
                         </a>
-                        <a class="btn btn-secondary fs_normal" href="{% url 'gestion_inventario:ruta_editar_almacen' seccion.id %}">
-                            <i class="fa-solid fa-pen-to-square"></i> Editar almacén
+                        <a class="btn btn-secondary fs_normal" href="{% url 'gestion_inventario:ruta_editar_area' ubicacion.id %}">
+                            <i class="fa-solid fa-pen-to-square"></i> Editar área
                         </a>
                     </div>
                 </div>

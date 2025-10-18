@@ -1,10 +1,10 @@
 from django import forms
-from .models import Seccion
+from .models import Ubicacion, Compartimento
 
 
-class AlmacenForm(forms.ModelForm):
+class AreaForm(forms.ModelForm):
     class Meta:
-        model = Seccion
+        model = Ubicacion
         # tipo_seccion y estacion no se exponen: tipo_seccion será 'AREA' y estacion se asigna desde la sesión
         # La imagen no se puede subir en la creación; sólo al editar
         fields = ['nombre', 'descripcion', 'direccion']
@@ -15,23 +15,25 @@ class AlmacenForm(forms.ModelForm):
         }
 
 
-class CompartimentoForm(forms.ModelForm):
-    class Meta:
-        model = __import__('apps.gestion_inventario.models', fromlist=['Compartimento']).Compartimento
-        fields = ['nombre', 'descripcion']
-        widgets = {
-            'nombre': forms.TextInput(attrs={'class': 'form-control fs_normal color_primario fondo_secundario_variante border-0', 'placeholder': 'Nombre del compartimento'}),
-            'descripcion': forms.Textarea(attrs={'class': 'form-control fs_normal color_primario fondo_secundario_variante border-0', 'rows': 3}),
-        }
 
-
-class AlmacenEditForm(forms.ModelForm):
+class AreaEditForm(forms.ModelForm):
     class Meta:
-        model = __import__('apps.gestion_inventario.models', fromlist=['Seccion']).Seccion
+        model = Ubicacion
         fields = ['nombre', 'descripcion', 'direccion', 'imagen']
         widgets = {
             'nombre': forms.TextInput(attrs={'class': 'form-control fs_normal color_primario fondo_secundario_variante border-0'}),
             'descripcion': forms.Textarea(attrs={'class': 'form-control fs_normal  color_primario fondo_secundario_variante border-0', 'rows': 3}),
             'direccion': forms.TextInput(attrs={'class': 'form-control fs_normal color_primario fondo_secundario_variante border-0'}),
             'imagen': forms.FileInput(attrs={'class': 'form-control fs_normal color_primario fondo_secundario_variante border-0'}),
+        }
+
+
+
+class CompartimentoForm(forms.ModelForm):
+    class Meta:
+        model = Compartimento
+        fields = ['nombre', 'descripcion']
+        widgets = {
+            'nombre': forms.TextInput(attrs={'class': 'form-control fs_normal color_primario fondo_secundario_variante border-0', 'placeholder': 'Nombre del compartimento'}),
+            'descripcion': forms.Textarea(attrs={'class': 'form-control fs_normal color_primario fondo_secundario_variante border-0', 'rows': 3}),
         }
