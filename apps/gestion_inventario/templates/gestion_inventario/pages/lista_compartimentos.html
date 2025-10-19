@@ -34,10 +34,10 @@
       <form id="filtros" method="get" class="row g-2 align-items-end">
         <div class="col-12 col-md-4">
           <label class="form-label fs_normal color_primario_variante">Ubicación</label>
-          <select name="seccion" class="form-select fs_normal">
+          <select name="ubicacion" class="form-select fs_normal">
             <option value="">-- Todas --</option>
             {% for s in ubicaciones %}
-            <option value="{{ s.id }}" {% if request.GET.seccion == s.id|stringformat:'s' %}selected{% endif %}>{{ s.nombre }}</option>
+            <option value="{{ s.id }}" {% if request.GET.ubicacion == s.id|stringformat:'s' %}selected{% endif %}>{{ s.nombre }}</option>
             {% endfor %}
           </select>
         </div>
