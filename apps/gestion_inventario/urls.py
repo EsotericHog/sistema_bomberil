@@ -1,5 +1,18 @@
 from django.urls import path
-from .views import *
+from .views import (
+    InventarioInicioView, 
+    InventarioPruebasView, 
+    grafico_existencias_por_categoria,
+    AreaListaView,
+    CompartimentoListaView,
+    AreaCrearView,
+    AreaDetalleView,
+    CompartimentoCrearView,
+    AreaEditarView,
+    CatalogoGlobalListView,
+    ApiGetProductoGlobalSKU,
+    ApiAnadirProductoLocal,
+    )
 
 app_name = 'gestion_inventario'
 
@@ -23,4 +36,9 @@ urlpatterns = [
     path('areas/<int:ubicacion_id>/compartimentos/crear/', CompartimentoCrearView.as_view(), name='ruta_crear_compartimento'),
     # Editar área
     path('areas/<int:ubicacion_id>/editar/', AreaEditarView.as_view(), name='ruta_editar_area'),
+
+    # Catálogo global de productos
+    path('catalogo-global/', CatalogoGlobalListView.as_view(), name='ruta_catalogo_global'),
+    path('api/producto-global-sku/<int:pk>/', ApiGetProductoGlobalSKU.as_view(), name='api_get_producto_global_sku'),
+    path('api/anadir-producto-local/', ApiAnadirProductoLocal.as_view(), name='api_anadir_producto_local'),
 ]

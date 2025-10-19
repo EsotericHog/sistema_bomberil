@@ -1,14 +1,28 @@
+import json
+from django.db import IntegrityError
 from django.shortcuts import render, redirect
 from django.views import View
 from django.http import JsonResponse
-from django.db.models import Count, Sum, Value
+from django.db.models import Count, Sum, Value, Q
 from django.db.models.functions import Coalesce
 from django.urls import reverse
 from django.contrib import messages
 from django.shortcuts import get_object_or_404
+from django.core.paginator import Paginator
 
-from .models import Estacion, Ubicacion, TipoUbicacion, Compartimento, Activo
+from .models import (
+    Estacion, 
+    Ubicacion, 
+    TipoUbicacion, 
+    Compartimento, 
+    Activo,
+    ProductoGlobal,
+    Producto,
+    Marca,
+    Categoria
+    )
 from .forms import AreaForm, CompartimentoForm
+from .utils import generar_sku_sugerido
 from core.settings import INVENTARIO_AREA_NOMBRE as AREA_NOMBRE
 
 
@@ -233,3 +247,185 @@ class CompartimentoCrearView(View):
             messages.success(request, f'Compartimento "{compartimento.nombre}" creado en {ubicacion.nombre}.')
             return redirect(reverse('gestion_inventario:ruta_gestionar_area', kwargs={'ubicacion_id': ubicacion.id}))
         return render(request, 'gestion_inventario/pages/crear_compartimento.html', {'formulario': form, 'ubicacion': ubicacion})
+
+
+
+
+class CatalogoGlobalListView(View):
+    """
+    Muestra el Catálogo Maestro Global de Productos con filtros avanzados
+    de búsqueda, marca, categoría y asignación.
+    """
+    template_name = 'gestion_inventario/pages/catalogo_global.html'
+    paginate_by = 12
+
+    def get(self, request, *args, **kwargs):
+        
+        # 1. Obtener todos los parámetros de filtro de la URL
+        search_query = request.GET.get('q', None)
+        categoria_id_str = request.GET.get('categoria', None)
+        marca_id_str = request.GET.get('marca', None)
+        filtro_asignacion = request.GET.get('filtro', 'todos')
+        
+        view_mode = request.GET.get('view', 'gallery')
+        page_number = request.GET.get('page')
+
+        # 2. Empezar con el QuerySet base optimizado
+        queryset = ProductoGlobal.objects.select_related(
+            'marca', 
+            'categoria'
+        ).order_by('nombre_oficial')
+
+        # 3. Aplicar filtros dinámicamente
+        
+        # Filtro de Búsqueda (q)
+        if search_query:
+            queryset = queryset.filter(
+                Q(nombre_oficial__icontains=search_query) |
+                Q(modelo__icontains=search_query) |
+                Q(marca__nombre__icontains=search_query)
+            )
+        
+        # Filtro de Categoría
+        categoria_id = None
+        if categoria_id_str and categoria_id_str.isdigit():
+            categoria_id = int(categoria_id_str)
+            queryset = queryset.filter(categoria_id=categoria_id)
+
+        # Filtro de Marca
+        marca_id = None
+        if marca_id_str and marca_id_str.isdigit():
+            marca_id = int(marca_id_str)
+            queryset = queryset.filter(marca_id=marca_id)
+
+        # Filtro de Asignación (el que ya tenías, mejorado)
+        estacion_id = request.session.get('active_estacion_id')
+        productos_locales_ids = set()
+        if estacion_id:
+            productos_locales_ids = set(
+                Producto.objects.filter(estacion_id=estacion_id)
+                .values_list('producto_global_id', flat=True)
+            )
+            
+            if filtro_asignacion == 'no_asignados':
+                queryset = queryset.exclude(id__in=productos_locales_ids)
+            elif filtro_asignacion == 'asignados':
+                queryset = queryset.filter(id__in=productos_locales_ids)
+        
+        # 4. Obtener datos para rellenar los <select> del formulario
+        all_categorias = Categoria.objects.order_by('nombre')
+        all_marcas = Marca.objects.order_by('nombre')
+
+        # 5. Preparar parámetros para la paginación (para que conserve los filtros)
+        params = request.GET.copy()
+        if 'page' in params:
+            del params['page']
+        query_params = params.urlencode()
+
+        # 6. Paginación Manual
+        paginator = Paginator(queryset, self.paginate_by)
+        page_obj = paginator.get_page(page_number)
+
+        # 7. Construir el Contexto final
+        context = {
+            'productos': page_obj,
+            'page_obj': page_obj,
+            'paginator': paginator,
+            'view_mode': view_mode,
+            'query_params': query_params,
+            'productos_locales_set': productos_locales_ids,
+            
+            # Contexto para los filtros
+            'all_categorias': all_categorias,
+            'all_marcas': all_marcas,
+            'current_search': search_query or "",
+            'current_categoria_id': categoria_id_str or "",
+            'current_marca_id': marca_id_str or "",
+            'current_filtro': filtro_asignacion,
+        }
+        
+        return render(request, self.template_name, context)
+
+
+
+
+# --- VISTA API 1: OBTENER DETALLES Y SKU ---
+class ApiGetProductoGlobalSKU(View):
+    """
+    API (GET) para obtener los detalles de un ProductoGlobal y 
+    generar un SKU sugerido para el modal.
+    """
+    def get(self, request, pk, *args, **kwargs):
+        try:
+            producto_global = ProductoGlobal.objects.select_related('categoria', 'marca').get(pk=pk)
+            
+            # Generar el SKU sugerido
+            sku_sugerido = generar_sku_sugerido(producto_global)
+            
+            data = {
+                'id': producto_global.id,
+                'nombre_oficial': producto_global.nombre_oficial,
+                'sku_sugerido': sku_sugerido,
+            }
+            return JsonResponse(data, status=200)
+            
+        except ProductoGlobal.DoesNotExist:
+            return JsonResponse({'error': 'Producto no encontrado'}, status=404)
+        except Exception as e:
+            return JsonResponse({'error': str(e)}, status=500)
+
+
+# --- VISTA API 2: CREAR EL PRODUCTO LOCAL ---
+class ApiAnadirProductoLocal(View):
+    """
+    API (POST) para crear un nuevo registro de Producto (catálogo local)
+    desde el modal del catálogo global.
+    """
+    def post(self, request, *args, **kwargs):
+        try:
+            # Obtener la estación activa
+            estacion_id = request.session.get('active_estacion_id')
+            if not estacion_id:
+                return JsonResponse({'error': 'No hay una estación activa en la sesión.'}, status=403)
+            
+            estacion = Estacion.objects.get(pk=estacion_id)
+            
+            # Cargar datos del POST (que viene como JSON)
+            data = json.loads(request.body)
+            
+            productoglobal_id = int(data.get('productoglobal_id'))
+            sku = data.get('sku')
+            es_serializado = bool(data.get('es_serializado'))
+            es_expirable = bool(data.get('es_expirable'))
+            
+            # Validaciones básicas
+            if not productoglobal_id or not sku:
+                return JsonResponse({'error': 'Faltan datos (ID de producto o SKU).'}, status=400)
+            
+            producto_global = ProductoGlobal.objects.get(pk=productoglobal_id)
+            
+            # Crear el nuevo Producto local
+            nuevo_producto = Producto.objects.create(
+                producto_global=producto_global,
+                estacion=estacion,
+                sku=sku,
+                es_serializado=es_serializado,
+                es_expirable=es_expirable
+                # Puedes añadir más campos aquí si los recopilas (costo, etc.)
+            )
+            
+            return JsonResponse({
+                'success': True, 
+                'message': f'Producto "{nuevo_producto.producto_global.nombre_oficial}" añadido a tu estación.',
+                'productoglobal_id': nuevo_producto.producto_global_id
+            }, status=201)
+
+        except ProductoGlobal.DoesNotExist:
+            return JsonResponse({'error': 'El producto global no existe.'}, status=404)
+        except Estacion.DoesNotExist:
+            return JsonResponse({'error': 'La estación activa no es válida.'}, status=404)
+        except IntegrityError:
+            # Error de 'unique_together' (el producto ya fue añadido)
+            return JsonResponse({'error': 'Este producto ya ha sido añadido a tu estación.'}, status=409)
+        except Exception as e:
+            return JsonResponse({'error': f'Error inesperado: {str(e)}'}, status=500)
