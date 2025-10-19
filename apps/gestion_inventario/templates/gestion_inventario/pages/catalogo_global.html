@@ -128,6 +128,10 @@
     
     <div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-3">
         <h2 class="color_primario fs_grande"><i class="fas fa-globe me-2"></i> Catálogo Global</h2>
+
+        <a href="{% url 'gestion_inventario:ruta_crear_producto_global' %}" class="btn btn-success fs_normal">
+            <i class="fas fa-plus-circle me-1"></i> Crear Nuevo Producto Global
+        </a>
         
         <div class="btn-group" role="group">
             <a href="?{{ query_params }}&view=gallery" class="fs_normal btn {% if view_mode == 'gallery' %}btn-primary{% else %}btn-outline-secondary{% endif %}">

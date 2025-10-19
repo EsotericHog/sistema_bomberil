@@ -1,0 +1,135 @@
+{% extends "gestion_inventario/layouts/base.html" %}
+{% load static %}
+{% block titulo_ventana %}Crear Producto{% endblock %}
+
+{% block contenido %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card shadow-sm">
+                <div class="card-header fondo_secundario_variante">
+                    <h4 class="mb-0 fs_grande color_primario">Crear Nuevo Producto Global</h4>
+                </div>
+                <div class="card-body fondo_secundario">
+                    <p class="color_primario_muteado fs_normal">
+                        Estás creando un nuevo producto en el catálogo maestro, que estará disponible
+                        para todas las estaciones. Después de crearlo, podrás añadirlo a tu inventario local
+                        desde la página del catálogo.
+                    </p>
+                    <hr>
+                    
+                    <form method="POST" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        
+                        {% if form.non_field_errors %}
+                            <div class="alert alert-danger">
+                                {% for error in form.non_field_errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+
+                        <div class="mb-3">
+                            <label for="{{ form.nombre_oficial.id_for_label }}" class="form-label fs_normal color_primario_variante">
+                                {{ form.nombre_oficial.label }}
+                                <i class="fa-solid fa-asterisk color_rojo"></i>
+                            </label>
+                            {{ form.nombre_oficial }}
+                            <small class="form-text color_primario_muteado fs_pequena">{{ form.nombre_oficial.help_text }}</small>
+                            {% if form.nombre_oficial.errors %}
+                                <div class="text-danger fs_pequena mt-1">{{ form.nombre_oficial.errors|striptags }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.marca.id_for_label }}" class="form-label fs_normal color_primario_variante">{{ form.marca.label }}</label>
+                                {{ form.marca }}
+                                {% if form.marca.errors %}
+                                    <div class="text-danger fs_pequena mt-1">{{ form.marca.errors|striptags }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.modelo.id_for_label }}" class="form-label fs_normal color_primario_variante">{{ form.modelo.label }}</label>
+                                {{ form.modelo }}
+                                <small class="form-text color_primario_muteado fs_pequena">{{ form.modelo.help_text }}</small>
+                                {% if form.modelo.errors %}
+                                    <div class="text-danger fs_pequena mt-1">{{ form.modelo.errors|striptags }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="{{ form.categoria.id_for_label }}" class="form-label fs_normal color_primario_variante">
+                                {{ form.categoria.label }}
+                                <i class="fa-solid fa-asterisk color_rojo"></i>
+                            </label>
+                            {{ form.categoria }}
+                            {% if form.categoria.errors %}
+                                <div class="text-danger fs_pequena mt-1">{{ form.categoria.errors|striptags }}</div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="{{ form.vida_util_recomendada_anos.id_for_label }}" class="form-label fs_normal color_primario_variante">{{ form.vida_util_recomendada_anos.label }}</label>
+                            {{ form.vida_util_recomendada_anos }}
+                            <small class="form-text color_primario_muteado fs_pequena">{{ form.vida_util_recomendada_anos.help_text }}</small>
+                            {% if form.vida_util_recomendada_anos.errors %}
+                                <div class="text-danger fs_pequena mt-1">{{ form.vida_util_recomendada_anos.errors|striptags }}</div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="{{ form.descripcion_general.id_for_label }}" class="form-label fs_normal color_primario_variante">{{ form.descripcion_general.label }}</label>
+                            {{ form.descripcion_general }}
+                            {% if form.descripcion_general.errors %}
+                                <div class="text-danger fs_pequena mt-1">{{ form.descripcion_general.errors|striptags }}</div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="{{ form.imagen.id_for_label }}" class="form-label fs_normal color_primario_variante">{{ form.imagen.label }}</label>
+                            {{ form.imagen }}
+                            {% if form.imagen.errors %}
+                                <div class="text-danger fs_pequena mt-1">{{ form.imagen.errors|striptags }}</div>
+                            {% endif %}
+                        </div>
+
+                        <hr>
+                        <div class="d-flex justify-content-end gap-2">
+                            <a href="{% url 'gestion_inventario:ruta_catalogo_global' %}" class="btn btn-secondary fs_normal">Cancelar</a>
+                            <button type="submit" class="btn btn-primary fs_normal">Guardar Producto Global</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Busca todos los select que tengan la clase que definimos
+            document.querySelectorAll('.tom-select-creatable').forEach((el)=>{
+                new TomSelect(el,{
+                    create: true, // Habilita la creación de nuevas opciones
+                    createOnBlur: true, // Permite crear la opción al salir del campo
+                    persist: false, // No mantiene las opciones creadas en la lista desplegable después de seleccionar
+                    maxItems: 1,
+                    render: {
+                        option_create: function(data, escape) {
+                            // Texto que se muestra para la opción de crear
+                            return '<div class="create">Crear marca: <strong>' + escape(data.input) + '</strong>&hellip;</div>';
+                        },
+                        no_results: function(data, escape) {
+                            // Texto cuando no hay resultados de búsqueda
+                            return '<div class="no-results">No se encontró la marca. Puedes crearla.</div>';
+                        }
+                    }
+                });
+            });
+        });
+    </script>
+{% endblock %}

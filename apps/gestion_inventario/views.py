@@ -21,7 +21,7 @@ from .models import (
     Marca,
     Categoria
     )
-from .forms import AreaForm, CompartimentoForm
+from .forms import AreaForm, CompartimentoForm, ProductoGlobalForm
 from .utils import generar_sku_sugerido
 from core.settings import INVENTARIO_AREA_NOMBRE as AREA_NOMBRE
 
@@ -429,3 +429,66 @@ class ApiAnadirProductoLocal(View):
             return JsonResponse({'error': 'Este producto ya ha sido añadido a tu estación.'}, status=409)
         except Exception as e:
             return JsonResponse({'error': f'Error inesperado: {str(e)}'}, status=500)
+
+
+
+
+class ProductoGlobalCrearView(View):
+    template_name = 'gestion_inventario/pages/crear_producto_global.html'
+    form_class = ProductoGlobalForm
+
+    def get(self, request, *args, **kwargs):
+        form = self.form_class()
+        return render(request, self.template_name, {'form': form})
+
+    def post(self, request, *args, **kwargs):
+        form = self.form_class(request.POST, request.FILES)
+        
+        # --- LÓGICA PARA MANEJAR LA CREACIÓN DE MARCA ---
+        marca_input = request.POST.get('marca')
+        marca_obj = None
+
+        if marca_input:
+            # Si el valor NO es un número, significa que el usuario escribió una nueva marca
+            if not marca_input.isdigit():
+                try:
+                    # Intenta obtener o crear la nueva marca
+                    # Usamos .strip() para quitar espacios al inicio/final
+                    marca_obj, created = Marca.objects.get_or_create(
+                        nombre=marca_input.strip(), 
+                        defaults={'descripcion': ''} # Puedes añadir valores por defecto si tu modelo Marca los necesita
+                    )
+                    if created:
+                        messages.info(request, f'Se ha creado la nueva marca "{marca_obj.nombre}".')
+                    
+                    # MODIFICAMOS request.POST TEMPORALMENTE para que el form.is_valid() funcione
+                    # Le decimos al formulario que use el ID de la marca recién creada/encontrada
+                    post_data = request.POST.copy()
+                    post_data['marca'] = str(marca_obj.id)
+                    form = self.form_class(post_data, request.FILES) # Re-inicializamos el form con los datos modificados
+                    
+                except IntegrityError:
+                    # Esto podría pasar si hay un 'unique=True' en Marca y algo falla
+                    messages.error(request, f'Error al intentar crear la marca "{marca_input}". Ya existe o hubo un problema.')
+                    return render(request, self.template_name, {'form': form})
+                except Exception as e:
+                    messages.error(request, f'Error inesperado al crear la marca: {e}')
+                    return render(request, self.template_name, {'form': form})
+            # Si era un número, el ModelForm lo manejará como un ID existente normalmente
+        # --- FIN DE LA LÓGICA DE CREACIÓN DE MARCA ---
+
+        if form.is_valid():
+            try:
+                # Ahora .save() funcionará porque el campo 'marca' tiene un ID válido
+                nuevo_producto_global = form.save()
+                messages.success(request, f'Producto Global "{nuevo_producto_global.nombre_oficial}" creado exitosamente.')
+                return redirect('gestion_inventario:ruta_catalogo_global')
+            
+            except IntegrityError as e:
+                # Captura errores de unicidad del ProductoGlobal
+                messages.error(request, f'Error al guardar: Ya existe un producto con esa marca y modelo, o un genérico con ese nombre.')
+            except Exception as e:
+                messages.error(request, f'Ha ocurrido un error inesperado al guardar el producto: {e}')
+        
+        # Si el form no es válido (o si la creación de marca falló antes de re-inicializar)
+        return render(request, self.template_name, {'form': form})

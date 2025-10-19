@@ -12,6 +12,7 @@ from .views import (
     CatalogoGlobalListView,
     ApiGetProductoGlobalSKU,
     ApiAnadirProductoLocal,
+    ProductoGlobalCrearView
     )
 
 app_name = 'gestion_inventario'
@@ -41,4 +42,6 @@ urlpatterns = [
     path('catalogo-global/', CatalogoGlobalListView.as_view(), name='ruta_catalogo_global'),
     path('api/producto-global-sku/<int:pk>/', ApiGetProductoGlobalSKU.as_view(), name='api_get_producto_global_sku'),
     path('api/anadir-producto-local/', ApiAnadirProductoLocal.as_view(), name='api_anadir_producto_local'),
+    # Crear nuevo producto global
+    path('catalogo-global/crear/', ProductoGlobalCrearView.as_view(), name='ruta_crear_producto_global'),
 ]
