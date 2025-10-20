@@ -1,0 +1,390 @@
+{% extends "gestion_inventario/layouts/base.html" %}
+{% load static %}
+{% block titulo_ventana %}Catálogo de {{ estacion.nombre }}{% endblock %}
+
+{% block contenido %}
+{# Estilos para modo oscuro #}
+{% if request.session.dark_mode %}
+<style>
+    /* Cards */
+    .dark-mode .card {
+        background-color: #1a1d21 !important;
+        border-color: #2d3238 !important;
+    }
+    
+    .dark-mode .card-body.bg-light {
+        background-color: #1a1d21 !important;
+    }
+
+    /* Formularios */
+    .dark-mode .form-control,
+    .dark-mode .form-select {
+        background-color: #111318 !important;
+        border-color: #2b3136 !important;
+        color: #e6edf3 !important;
+    }
+
+    .dark-mode .form-control:focus,
+    .dark-mode .form-select:focus {
+        border-color: #0d6efd !important;
+        box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25) !important;
+    }
+
+    /* Labels y texto */
+    .dark-mode .form-label,
+    .dark-mode .card-title,
+    .dark-mode code {
+        color: #e6edf3 !important;
+    }
+
+    /* Tabla */
+    .dark-mode .table {
+        color: #e6edf3 !important;
+    }
+
+    .dark-mode .table-light {
+        background-color: #1a1d21 !important;
+        color: #e6edf3 !important;
+    }
+
+    .dark-mode .table-hover tbody tr:hover {
+        background-color: rgba(255,255,255,0.02) !important;
+        color: #e6edf3 !important;
+    }
+
+    /* Placeholder de imagen */
+    .dark-mode .card-img-top-placeholder,
+    .dark-mode .img-thumbnail-placeholder {
+        background-color: #1a1d21 !important;
+        color: #6c757d !important;
+    }
+
+    /* Badges específicos para el catálogo local */
+    .dark-mode .badge.bg-info {
+        background-color: #0d4a6d !important;
+        color: #7fdbff !important;
+    }
+
+    .dark-mode .badge.bg-secondary {
+        background-color: #343a40 !important;
+        color: #e6edf3 !important;
+    }
+
+    .dark-mode .badge.bg-warning {
+        background-color: #804d00 !important;
+        color: #ffd970 !important;
+    }
+
+    /* Paginación */
+    .dark-mode .page-link {
+        background-color: #1a1d21 !important;
+        border-color: #2d3238 !important;
+        color: #e6edf3 !important;
+    }
+
+    .dark-mode .page-item.active .page-link {
+        background-color: #0d6efd !important;
+        border-color: #0d6efd !important;
+    }
+
+    .dark-mode .page-item.disabled .page-link {
+        background-color: #1a1d21 !important;
+        border-color: #2d3238 !important;
+        color: #6c757d !important;
+    }
+
+    /* Alertas */
+    .dark-mode .alert-warning {
+        background-color: #332701 !important;
+        border-color: #856404 !important;
+        color: #ffd970 !important;
+    }
+
+    /* Otros elementos */
+    .dark-mode .text-muted {
+        color: #8b949e !important;
+    }
+
+    .dark-mode .text-success {
+        color: #3fb950 !important;
+    }
+
+    .dark-mode .bg-light {
+        background-color: #1a1d21 !important;
+    }
+
+    .dark-mode .img-thumbnail {
+        background-color: #1a1d21 !important;
+        border-color: #2d3238 !important;
+    }
+</style>
+{% endif %}
+
+<div class="container-fluid mt-4">
+    
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-3">
+        <h2 class="color_primario fs_grande"><i class="fas fa-clipboard-list me-2"></i> Catálogo Local: {{ estacion.nombre|title }}</h2>
+        
+        <div class="btn-group" role="group">
+            <a href="?{{ query_params }}&view=gallery" class="fs_normal btn {% if view_mode == 'gallery' %}btn-primary{% else %}btn-outline-secondary{% endif %}">
+                <i class="fas fa-th-large me-1"></i> Galería
+            </a>
+            <a href="?{{ query_params }}&view=table" class="fs_normal btn {% if view_mode == 'gallery' %}btn-outline-secondary{% else %}btn-primary{% endif %}">
+                <i class="fas fa-list me-1"></i> Tabla
+            </a>
+        </div>
+    </div>
+
+    <div class="card shadow-sm mb-3">
+        <div class="card-body bg-light {% if request.session.dark_mode %}dark-mode{% endif %}">
+            <form method="GET" action="{% url 'gestion_inventario:ruta_catalogo_local' %}">
+                <input type="hidden" name="view" value="{{ view_mode }}">
+                
+                <div class="row g-2 align-items-end">
+                    <div class="col-md-3">
+                        <label for="q" class="form-label fw-bold fs_pequena">Buscar</label>
+                        <input type="text" name="q" id="q" class="form-control form-control-sm fs_normal" 
+                               value="{{ current_search|default:'' }}" placeholder="SKU, Nombre, Modelo, Marca...">
+                    </div>
+                    
+                    <div class="col-md-2">
+                        <label for="categoria" class="form-label fw-bold fs_pequena">Categoría</label>
+                        <select name="categoria" id="categoria" class="form-select form-select-sm fs_normal">
+                            <option value="">Todas</option>
+                            {% for cat in all_categorias %}
+                                <option value="{{ cat.id }}" {% if cat.id|stringformat:"s" == current_categoria_id %}selected{% endif %}>{{ cat.nombre }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="col-md-2">
+                        <label for="marca" class="form-label fw-bold fs_pequena">Marca</label>
+                        <select name="marca" id="marca" class="form-select form-select-sm fs_normal">
+                            <option value="">Todas</option>
+                            {% for marca in all_marcas %}
+                                <option value="{{ marca.id }}" {% if marca.id|stringformat:"s" == current_marca_id %}selected{% endif %}>{{ marca.nombre }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="col-md-1">
+                        <label for="serializado" class="form-label fw-bold fs_pequena">Tipo</label>
+                        <select name="serializado" id="serializado" class="form-select form-select-sm fs_normal">
+                            <option value="" {% if not current_serializado %}selected{% endif %}>Ambos</option>
+                            <option value="si" {% if current_serializado == 'si' %}selected{% endif %}>Activo</option>
+                            <option value="no" {% if current_serializado == 'no' %}selected{% endif %}>Insumo</option>
+                        </select>
+                    </div>
+                    
+                    <div class="col-md-1">
+                        <label for="expirable" class="form-label fw-bold fs_pequena">Expiración</label>
+                        <select name="expirable" id="expirable" class="form-select form-select-sm fs_normal">
+                            <option value="" {% if not current_expirable %}selected{% endif %}>Ambos</option>
+                            <option value="si" {% if current_expirable == 'si' %}selected{% endif %}>Sí</option>
+                            <option value="no" {% if current_expirable == 'no' %}selected{% endif %}>No</option>
+                        </select>
+                    </div>
+
+                    <div class="col-md-2">
+                        <label for="sort" class="form-label fw-bold fs_pequena">Ordenar por</label>
+                        <select name="sort" id="sort" class="form-select form-select-sm fs_normal">
+                            <option value="fecha_desc" {% if current_sort == 'fecha_desc' %}selected{% endif %}>Más Reciente</option>
+                            <option value="fecha_asc" {% if current_sort == 'fecha_asc' %}selected{% endif %}>Más Antiguo</option>
+                            <option value="costo_desc" {% if current_sort == 'costo_desc' %}selected{% endif %}>Mayor Costo</option>
+                            <option value="costo_asc" {% if current_sort == 'costo_asc' %}selected{% endif %}>Menor Costo</option>
+                        </select>
+                    </div>
+
+                    <div class="col-md-1 d-flex gap-1">
+                        <button type="submit" class="btn btn-primary btn-sm w-100 fs_normal" title="Aplicar filtros y orden">
+                            <i class="fas fa-filter"></i>
+                        </button>
+                        <a href="{% url 'gestion_inventario:ruta_catalogo_local' %}?view={{ view_mode }}" 
+                           class="btn btn-outline-secondary btn-sm w-100 fs_normal" title="Limpiar filtros y orden">
+                            <i class="fas fa-times"></i>
+                        </a>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    {% if productos %}
+
+        {% if view_mode == 'gallery' %}
+            <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 row-cols-xl-5 g-4">
+                {% for prod_local in productos %}
+                <div class="col">
+                    <div class="card h-100 shadow-sm product-card {% if request.session.dark_mode %}dark-mode{% endif %}">
+                        {% with prod_global=prod_local.producto_global %} {# Atajo para no repetir #}
+                        {% if prod_global.imagen %}
+                            <img src="{{ prod_global.imagen.url }}" class="card-img-top" alt="{{ prod_global.nombre_oficial }}">
+                        {% else %}
+                            <div class="card-img-top-placeholder d-flex align-items-center justify-content-center bg-light text-muted">
+                                <i class="fas fa-image fa-3x"></i>
+                            </div>
+                        {% endif %}
+
+                        <div class="card-body d-flex flex-column">
+                            <h5 class="card-title fs_normal">{{ prod_global.nombre_oficial }}</h5>
+                            
+                            <ul class="list-unstyled color_primario_muteado fs_pequena mb-3 flex-grow-1">
+                                <li><strong>SKU:</strong> {{ prod_local.sku|default:"N/A" }}</li>
+                                <li>
+                                    <strong>Marca:</strong> 
+                                    {% if prod_global.marca %}{{ prod_global.marca.nombre }}{% else %}<span class="fst-italic">Genérico</span>{% endif %}
+                                </li>
+                                <li>
+                                    <strong>Modelo:</strong> 
+                                    {% if prod_global.modelo %}{{ prod_global.modelo }}{% else %}<span class="fst-italic">N/A</span>{% endif %}
+                                </li>
+                                <li><strong>Categoría:</strong> {{ prod_global.categoria.nombre }}</li>
+                                <li>
+                                    <strong>Tipo:</strong> 
+                                    {% if prod_local.es_serializado %}
+                                        <span class="badge bg-info text-dark fs_pequena">Activo</span>
+                                    {% else %}
+                                        <span class="badge bg-secondary fs_pequena">Insumo</span>
+                                    {% endif %}
+                                    {% if prod_local.es_expirable %}
+                                        <span class="badge bg-warning text-dark fs_pequena">Expirable</span>
+                                    {% endif %}
+                                </li>
+                            </ul>
+
+                            <div class="d-grid gap-1 mt-auto">
+                                <a href="#" class="btn btn-sm btn-outline-primary fs_normal">
+                                    <i class="fas fa-eye me-1"></i> Ver Stock
+                                </a>
+                                <a href="#" class="btn btn-sm btn-outline-secondary fs_normal">
+                                    <i class="fas fa-edit me-1"></i> Editar
+                                </a>
+                            </div>
+                        </div>
+                        {% endwith %}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+
+        {% else %}
+            <div class="card shadow-sm {% if request.session.dark_mode %}dark-mode{% endif %}">
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle table-sm {% if request.session.dark_mode %}table-dark{% endif %}">
+                            <thead class="table-light fs_pequena">
+                                <tr>
+                                    <th style="width: 8%;">Imagen</th>
+                                    <th>SKU</th>
+                                    <th>Nombre Oficial</th>
+                                    <th>Marca</th>
+                                    <th>Modelo</th>
+                                    <th>Categoría</th>
+                                    <th>Tipo</th>
+                                    <th>Expirable</th>
+                                    <th>Costo</th>
+                                    <th style="width: 12%;">Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody class="fs_pequena">
+                                {% for prod_local in productos %}
+                                <tr>
+                                    {% with prod_global=prod_local.producto_global %}
+                                    <td>
+                                        {% if prod_global.imagen %}
+                                            <img src="{{ prod_global.imagen.url }}" alt="{{ prod_global.nombre_oficial }}" class="img-thumbnail p-0 border-0" style="width: 40px; height: 40px; object-fit: cover;">
+                                        {% else %}
+                                            <div class="img-thumbnail-placeholder d-flex align-items-center justify-content-center bg-light text-muted" style="width: 40px; height: 40px;">
+                                                <i class="fas fa-image"></i>
+                                            </div>
+                                        {% endif %}
+                                    </td>
+                                    <td class=""><code class="color_primario_muteado">{{ prod_local.sku|default:"N/A" }}</code></td>
+
+                                    <td class="fs_normal">{{ prod_global.nombre_oficial }}</td>
+
+                                    <td class=" color_primario_muteado">
+                                        {% if prod_global.marca %}
+                                        {{ prod_global.marca.nombre }}
+                                        {% else %}
+                                        <span class="color_primario_muteado fst-italic">Genérico</span>
+                                        {% endif %}
+                                    </td>
+
+                                    <td class="color_primario_muteado">
+                                        {% if prod_global.modelo %}
+                                        {{ prod_global.modelo }}
+                                        {% else %}
+                                        <span class="fst-italic">N/A</span>
+                                        {% endif %}
+                                    </td>
+
+                                    <td>{{ prod_global.categoria.nombre }}</td>
+                                    <td>
+                                        {% if prod_local.es_serializado %}
+                                            <span class="badge bg-info fs_normal">Activo</span>
+                                        {% else %}
+                                            <span class="badge bg-secondary fs_normal">Insumo</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if prod_local.es_expirable %}
+                                            <i class="fas fa-check text-success"></i> Sí
+                                        {% else %}
+                                            <i class="fas fa-times text-muted"></i> No
+                                        {% endif %}
+                                    </td>
+                                    <td>${{ prod_local.costo_compra|default:"N/A" }}</td>
+                                    <td>
+                                        <a href="#" class="btn btn-sm btn-outline-primary fs_normal" title="Ver Stock"><i class="fas fa-eye"></i></a>
+                                        <a href="#" class="btn btn-sm btn-outline-secondary fs_normal" title="Editar"><i class="fas fa-edit"></i></a>
+                                    </td>
+                                    {% endwith %}
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        {% endif %}
+
+        <nav aria-label="Paginación del catálogo local" class="mt-4">
+            <ul class="pagination justify-content-center">
+                {% if page_obj.has_previous %}
+                    <li class="page-item"><a class="page-link" href="?{{ query_params }}&page={{ page_obj.previous_page_number }}">Anterior</a></li>
+                {% else %}
+                    <li class="page-item disabled"><span class="page-link">Anterior</span></li>
+                {% endif %}
+                <li class="page-item active"><span class="page-link">Página {{ page_obj.number }} de {{ page_obj.paginator.num_pages }}</span></li>
+                {% if page_obj.has_next %}
+                    <li class="page-item"><a class="page-link" href="?{{ query_params }}&page={{ page_obj.next_page_number }}">Siguiente</a></li>
+                {% else %}
+                    <li class="page-item disabled"><span class="page-link">Siguiente</span></li>
+                {% endif %}
+            </ul>
+        </nav>
+
+    {% else %}
+        <div class="alert alert-warning text-center" role="alert">
+            <i class="fas fa-info-circle me-2"></i>
+            {% if request.GET %} {# Si hay filtros activos #}
+                No se encontraron productos en tu catálogo que coincidan con los filtros aplicados.
+                <a href="{% url 'gestion_inventario:ruta_catalogo_local' %}?view={{ view_mode }}" class="alert-link ms-2">Limpiar filtros</a>
+            {% else %} {# Si no hay filtros, el catálogo está vacío #}
+                Aún no has añadido ningún producto a tu catálogo local.
+                <a href="{% url 'gestion_inventario:ruta_catalogo_global' %}" class="alert-link ms-2">Explorar el Catálogo Global</a>
+            {% endif %}
+        </div>
+    {% endif %}
+
+</div>
+
+<style>
+    .product-card .card-img-top { height: 180px; object-fit: cover; }
+    .product-card .card-img-top-placeholder { height: 180px; }
+</style>
+{% endblock %}
+
+{% block scripts %}
+    {% endblock %}

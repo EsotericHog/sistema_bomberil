@@ -19,7 +19,8 @@ from .models import (
     ProductoGlobal,
     Producto,
     Marca,
-    Categoria
+    Categoria,
+    LoteInsumo
     )
 from .forms import AreaForm, CompartimentoForm, ProductoGlobalForm
 from .utils import generar_sku_sugerido
@@ -492,3 +493,129 @@ class ProductoGlobalCrearView(View):
         
         # Si el form no es válido (o si la creación de marca falló antes de re-inicializar)
         return render(request, self.template_name, {'form': form})
+
+
+
+
+class ProductoLocalListView(View):
+    """
+    Muestra el Catálogo Local de Productos para la estación activa.
+    Incluye filtros avanzados, ordenación y cambio de vista (galería/tabla).
+    """
+    template_name = 'gestion_inventario/pages/catalogo_local.html'
+    paginate_by = 12 # Ajusta según prefieras
+
+    def get(self, request, *args, **kwargs):
+        
+        # 1. Obtener la estación activa (CRÍTICO para esta vista)
+        estacion_id = request.session.get('active_estacion_id')
+        if not estacion_id:
+            messages.error(request, "Debes tener una estación activa para ver el catálogo local.")
+            # Redirige a donde el usuario selecciona su estación o al inicio
+            return redirect('portal:ruta_inicio') # Ajusta esta URL si es necesario
+            
+        try:
+            estacion = Estacion.objects.get(pk=estacion_id)
+        except Estacion.DoesNotExist:
+             messages.error(request, "La estación activa no es válida.")
+             return redirect('portal:ruta_inicio') # Ajusta esta URL
+
+        # 2. Obtener parámetros de filtro y ordenación
+        search_query = request.GET.get('q', None)
+        categoria_id_str = request.GET.get('categoria', None)
+        marca_id_str = request.GET.get('marca', None)
+        es_serializado_str = request.GET.get('serializado', None) # 'si', 'no', ''
+        es_expirable_str = request.GET.get('expirable', None) # 'si', 'no', ''
+        sort_by = request.GET.get('sort', 'fecha_desc') # Opciones: fecha_desc, fecha_asc, costo_desc, costo_asc
+        
+        view_mode = request.GET.get('view', 'gallery')
+        page_number = request.GET.get('page')
+
+        # 3. QuerySet base: Productos de la estación activa, optimizado
+        queryset = Producto.objects.filter(
+            estacion_id=estacion_id
+        ).select_related(
+            'producto_global__marca', 
+            'producto_global__categoria'
+        ).order_by('-created_at') # Orden por defecto
+
+        # 4. Aplicar filtros dinámicamente
+        if search_query:
+            queryset = queryset.filter(
+                Q(sku__icontains=search_query) |
+                Q(producto_global__nombre_oficial__icontains=search_query) |
+                Q(producto_global__modelo__icontains=search_query) |
+                Q(producto_global__marca__nombre__icontains=search_query)
+            )
+        
+        categoria_id = None
+        if categoria_id_str and categoria_id_str.isdigit():
+            categoria_id = int(categoria_id_str)
+            queryset = queryset.filter(producto_global__categoria_id=categoria_id)
+
+        marca_id = None
+        if marca_id_str and marca_id_str.isdigit():
+            marca_id = int(marca_id_str)
+            queryset = queryset.filter(producto_global__marca_id=marca_id)
+            
+        if es_serializado_str == 'si':
+            queryset = queryset.filter(es_serializado=True)
+        elif es_serializado_str == 'no':
+             queryset = queryset.filter(es_serializado=False)
+             
+        if es_expirable_str == 'si':
+            queryset = queryset.filter(es_expirable=True)
+        elif es_expirable_str == 'no':
+             queryset = queryset.filter(es_expirable=False)
+
+        # 5. Aplicar Ordenación
+        if sort_by == 'fecha_asc':
+            queryset = queryset.order_by('created_at')
+        elif sort_by == 'costo_desc':
+            queryset = queryset.order_by('-costo_compra', '-created_at') # '-created_at' como desempate
+        elif sort_by == 'costo_asc':
+            queryset = queryset.order_by('costo_compra', 'created_at')
+        else: # Por defecto (fecha_desc)
+            queryset = queryset.order_by('-created_at')
+
+        # 6. Obtener datos para los <select> del formulario
+        all_categorias = Categoria.objects.order_by('nombre')
+        # Mostramos solo marcas que realmente estén en el catálogo local de esta estación
+        marcas_en_catalogo_ids = queryset.exclude(
+            producto_global__marca__isnull=True
+        ).values_list(
+            'producto_global__marca_id', flat=True
+        ).distinct()
+        all_marcas = Marca.objects.filter(id__in=marcas_en_catalogo_ids).order_by('nombre')
+
+        # 7. Preparar parámetros para la paginación
+        params = request.GET.copy()
+        if 'page' in params:
+            del params['page']
+        query_params = params.urlencode()
+
+        # 8. Paginación Manual
+        paginator = Paginator(queryset, self.paginate_by)
+        page_obj = paginator.get_page(page_number)
+
+        # 9. Construir el Contexto final
+        context = {
+            'productos': page_obj,
+            'page_obj': page_obj,
+            'paginator': paginator,
+            'view_mode': view_mode,
+            'query_params': query_params,
+            'estacion': estacion, # Pasamos la estación actual a la plantilla
+            
+            # Contexto para los filtros y ordenación
+            'all_categorias': all_categorias,
+            'all_marcas': all_marcas,
+            'current_search': search_query or "",
+            'current_categoria_id': categoria_id_str or "",
+            'current_marca_id': marca_id_str or "",
+            'current_serializado': es_serializado_str or "",
+            'current_expirable': es_expirable_str or "",
+            'current_sort': sort_by,
+        }
+        
+        return render(request, self.template_name, context)

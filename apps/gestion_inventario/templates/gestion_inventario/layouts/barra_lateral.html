@@ -9,7 +9,7 @@
         <div class="barra_lateral__modulo" data-toggle="modulo">
             <a href="" class="barra_lateral__modulo_nombre fs_nav_seccion color_primario hover_scale">
                 <i class="fa-solid fa-truck-ramp-box"></i> 
-                <span>Insumos</span>
+                <span>Artículos</span>
             </a>
             <i class="fa-solid fa-chevron-down color_primario barra_lateral__flecha_modulo"></i>
         </div>
@@ -17,8 +17,14 @@
         <ul class="barra_lateral__lista_opciones oculto">
             <li class="fondo_opcion_nav hover_color">
                 <a class="color_primario fs_nav_opcion" href="{% url 'gestion_inventario:ruta_catalogo_global' %}">
-                    <i class="fas fa-globe me-2"></i>
+                    <i class="fas fa-globe me-2 color_azul"></i>
                     Catálogo Global
+                </a>
+            </li>
+            <li class="fondo_opcion_nav hover_color">
+                <a class="color_primario fs_nav_opcion" href="{% url 'gestion_inventario:ruta_catalogo_local' %}">
+                    <i class="fa-solid fa-book color_morado"></i>
+                    Catálogo
                 </a>
             </li>
         </ul>

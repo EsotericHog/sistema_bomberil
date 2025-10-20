@@ -12,7 +12,8 @@ from .views import (
     CatalogoGlobalListView,
     ApiGetProductoGlobalSKU,
     ApiAnadirProductoLocal,
-    ProductoGlobalCrearView
+    ProductoGlobalCrearView,
+    ProductoLocalListView
     )
 
 app_name = 'gestion_inventario'
@@ -44,4 +45,7 @@ urlpatterns = [
     path('api/anadir-producto-local/', ApiAnadirProductoLocal.as_view(), name='api_anadir_producto_local'),
     # Crear nuevo producto global
     path('catalogo-global/crear/', ProductoGlobalCrearView.as_view(), name='ruta_crear_producto_global'),
+
+    # Catálogo local de productos
+    path('catalogo-local/', ProductoLocalListView.as_view(), name='ruta_catalogo_local'),
 ]
