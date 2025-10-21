@@ -1,0 +1,288 @@
+{% extends "gestion_inventario/layouts/base.html" %}
+{% load static %}
+{% block titulo_ventana %}Lista de Proveedores{% endblock %}
+
+{% block contenido %}
+{# Estilos para modo oscuro #}
+{% if request.session.dark_mode %}
+<style>
+    /* Cards */
+    .dark-mode .card {
+        background-color: #1a1d21 !important;
+        border-color: #2d3238 !important;
+    }
+    
+    .dark-mode .card-body.bg-light {
+        background-color: #1a1d21 !important;
+    }
+
+    /* Formularios */
+    .dark-mode .form-control,
+    .dark-mode .form-select {
+        background-color: #111318 !important;
+        border-color: #2b3136 !important;
+        color: #e6edf3 !important;
+    }
+
+    .dark-mode .form-control:focus,
+    .dark-mode .form-select:focus {
+        border-color: #0d6efd !important;
+        box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25) !important;
+    }
+
+    .dark-mode .form-control:disabled,
+    .dark-mode .form-select:disabled {
+        background-color: #1c1f24 !important;
+        color: #8b949e !important;
+    }
+
+    /* Labels y texto */
+    .dark-mode .form-label,
+    .dark-mode .card-title {
+        color: #e6edf3 !important;
+    }
+
+    /* Tabla */
+    .dark-mode .table {
+        color: #e6edf3 !important;
+    }
+
+    .dark-mode .table-light {
+        background-color: #1a1d21 !important;
+        color: #e6edf3 !important;
+    }
+
+    .dark-mode .table-hover tbody tr:hover {
+        background-color: rgba(255,255,255,0.02) !important;
+        color: #e6edf3 !important;
+    }
+
+    /* Paginación */
+    .dark-mode .page-link {
+        background-color: #1a1d21 !important;
+        border-color: #2d3238 !important;
+        color: #e6edf3 !important;
+    }
+
+    .dark-mode .page-item.active .page-link {
+        background-color: #0d6efd !important;
+        border-color: #0d6efd !important;
+    }
+
+    .dark-mode .page-item.disabled .page-link {
+        background-color: #1a1d21 !important;
+        border-color: #2d3238 !important;
+        color: #6c757d !important;
+    }
+
+    /* Alertas */
+    .dark-mode .alert-warning {
+        background-color: #332701 !important;
+        border-color: #856404 !important;
+        color: #ffd970 !important;
+    }
+
+    /* Otros elementos */
+    .dark-mode .text-muted {
+        color: #8b949e !important;
+    }
+</style>
+{% endif %}
+
+<div class="container-fluid mt-4">
+
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2 class="fs_grande color_primario"><i class="fas fa-truck me-2"></i> Proveedores</h2>
+        {# Puedes añadir un botón para crear proveedor aquí si lo deseas #}
+        {# <a href="..." class="btn btn-success"><i class="fas fa-plus me-1"></i> Nuevo Proveedor</a> #}
+    </div>
+
+    <div class="card shadow-sm mb-3 {% if request.session.dark_mode %}dark-mode{% endif %}">
+        <div class="card-body bg-light">
+            <form method="GET" action="{% url 'gestion_inventario:ruta_lista_proveedores' %}" id="formFiltrosProveedor">
+                <div class="row g-2 align-items-end">
+                    <div class="col-md-4">
+                        <label for="q" class="form-label fw-bold fs_pequena">Buscar por Nombre o RUT</label>
+                        <input type="text" name="q" id="q" class="form-control form-control-sm fs_normal"
+                               value="{{ current_search|default:'' }}" placeholder="Nombre o RUT...">
+                    </div>
+
+                    <!-- Filtro Región (data-url para el JS) -->
+                    <div class="col-md-3">
+                        <label for="region" class="form-label fw-bold fs_pequena">Región</label>
+                        <select name="region" id="region" class="form-select form-select-sm fs_normal"
+                                data-comunas-url="{% url 'api:comunas_por_region' 0 %}">
+                            <option value="">Todas</option>
+                            {% for region in all_regiones %}
+                                <option value="{{ region.id }}"
+                                        {% if region.id|stringformat:"s" == current_region_id %}selected{% endif %}>
+                                    {{ region.nombre }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <!-- Filtro Comuna -->
+                    <div class="col-md-3">
+                        <label for="comuna" class="form-label fw-bold fs_pequena">Comuna</label>
+                        <select name="comuna" id="comuna" class="form-select form-select-sm fs_normal" {% if not current_region_id %}disabled{% endif %}>
+                            <option value="">Todas</option>
+                            {# Rellenamos con las comunas de la región preseleccionada, si existe #}
+                            {% for comuna in comunas_para_filtro %}
+                                <option value="{{ comuna.id }}"
+                                        {% if comuna.id|stringformat:"s" == current_comuna_id %}selected{% endif %}>
+                                    {{ comuna.nombre }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="col-md-2 d-flex gap-2">
+                        <button type="submit" class="btn btn-primary btn-sm w-100 fs_normal">
+                            <i class="fas fa-filter me-1"></i> Filtrar
+                        </button>
+                        <a href="{% url 'gestion_inventario:ruta_lista_proveedores' %}"
+                           class="btn btn-outline-secondary btn-sm w-100 fs_normal">
+                            Limpiar
+                        </a>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    {% if proveedores %}
+        <div class="card shadow-sm {% if request.session.dark_mode %}dark-mode{% endif %}">
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover table-sm align-middle {% if request.session.dark_mode %}table-dark{% endif %}">
+                        <thead class="table-light fs_pequena">
+                            <tr>
+                                <th>Nombre Proveedor</th>
+                                <th>RUT</th>
+                                <th>Contacto Principal</th>
+                                <th>Teléfono</th>
+                                <th>Email</th>
+                                <th>Comuna</th>
+                                <th>Total Contactos</th>
+                                <th style="width: 10%;">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for proveedor in proveedores %}
+                            <tr>
+                                <td class="fs_normal">{{ proveedor.nombre }}</td>
+
+                                <td class="fs_pequena">{% if proveedor.rut %}{{ proveedor.rut }}{% else %}<span class="color_primario_muteado fst-italic">N/A</span>{% endif %}</td>
+
+                                {% with contacto=proveedor.contacto_principal %}
+                                    <td class="fs_pequena">
+                                        {% if contacto %}
+                                            {{ contacto.nombre_contacto }}
+                                        {% else %}
+                                            <span class="text-muted fst-italic">--</span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="fs_pequena">{{ contacto.telefono|default:"N/A" }}</td>
+                                    <td class="fs_pequena">{{ contacto.email|default:"N/A" }}</td>
+                                {% endwith %}
+                                
+                                <td class="fs_pequena">{% if proveedor.comuna %}{{ proveedor.comuna.nombre }}{% else %}<span class="text-muted fst-italic">N/A</span>{% endif %}</td>
+
+                                <td>
+                                    <span class="badge bg-secondary fs_pequena">{{ proveedor.contactos_count }}</span>
+                                </td>
+
+                                <td>
+                                    {# Aquí puedes poner enlaces a ver detalles, editar, etc. #}
+                                    <a href="#" class="btn btn-sm btn-outline-primary fs_normal" title="Ver Detalles"><i class="fas fa-eye"></i></a>
+                                    <a href="#" class="btn btn-sm btn-outline-secondary fs_normal" title="Editar"><i class="fas fa-edit"></i></a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <nav aria-label="Paginación de proveedores" class="mt-4">
+            <ul class="pagination justify-content-center">
+                {% if page_obj.has_previous %}
+                    <li class="page-item"><a class="page-link fs_pequena" href="?{{ query_params }}&page={{ page_obj.previous_page_number }}">Anterior</a></li>
+                {% else %}
+                    <li class="page-item disabled"><span class="page-link fs_pequena">Anterior</span></li>
+                {% endif %}
+                <li class="page-item active"><span class="page-link fs_pequena">Página {{ page_obj.number }} de {{ page_obj.paginator.num_pages }}</span></li>
+                {% if page_obj.has_next %}
+                    <li class="page-item"><a class="page-link fs_pequena" href="?{{ query_params }}&page={{ page_obj.next_page_number }}">Siguiente</a></li>
+                {% else %}
+                    <li class="page-item disabled"><span class="page-link fs_pequena">Siguiente</span></li>
+                {% endif %}
+            </ul>
+        </nav>
+
+    {% else %}
+        <div class="alert alert-warning text-center" role="alert">
+            <i class="fas fa-info-circle me-2"></i>
+            {% if request.GET %}
+                No se encontraron proveedores que coincidan con tus filtros.
+                <a href="{% url 'gestion_inventario:ruta_lista_proveedores' %}" class="alert-link ms-2">Limpiar filtros</a>
+            {% else %}
+                Aún no hay proveedores registrados en el sistema.
+            {% endif %}
+        </div>
+    {% endif %}
+
+</div>
+{% endblock %}
+
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const regionSelect = document.getElementById('region');
+    const comunaSelect = document.getElementById('comuna');
+    
+    if (regionSelect && comunaSelect) {
+        // Obtenemos la plantilla de la URL desde el atributo data
+        const comunasUrlTemplate = regionSelect.dataset.comunasUrl;
+
+        regionSelect.addEventListener('change', async function() {
+            const regionId = this.value;
+            
+            comunaSelect.innerHTML = '<option value="">Todas</option>'; 
+            if (!regionId) {
+                comunaSelect.disabled = true;
+                return;
+            }
+            
+            comunaSelect.disabled = true;
+            comunaSelect.innerHTML = '<option value="">Cargando...</option>';
+
+            try {
+                // Reemplazamos el '0' en la URL con el ID de la región seleccionada
+                const finalUrl = comunasUrlTemplate.replace('/0/', `/${regionId}/`);
+                
+                const response = await fetch(finalUrl);
+                if (!response.ok) throw new Error('Error al cargar comunas');
+                
+                const comunas = await response.json();
+
+                comunaSelect.innerHTML = '<option value="">Todas</option>'; 
+                comunas.forEach(comuna => {
+                    const option = new Option(comuna.nombre, comuna.id);
+                    comunaSelect.appendChild(option);
+                });
+                
+                comunaSelect.disabled = false;
+
+            } catch (error) {
+                console.error('Error cargando comunas:', error);
+                comunaSelect.innerHTML = '<option value="">Error al cargar</option>'; 
+            }
+        });
+    }
+});
+</script>
+{% endblock %}

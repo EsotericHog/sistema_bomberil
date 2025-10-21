@@ -20,7 +20,10 @@ from .models import (
     Producto,
     Marca,
     Categoria,
-    LoteInsumo
+    LoteInsumo,
+    Proveedor,
+    Region,
+    Comuna
     )
 from .forms import AreaForm, CompartimentoForm, ProductoGlobalForm, ProductoLocalEditForm
 from .utils import generar_sku_sugerido
@@ -701,4 +704,85 @@ class ProductoLocalEditView(View):
             'producto': self.producto,
             'estacion': self.estacion
         }
+        return render(request, self.template_name, context)
+
+
+
+
+class ProveedorListView(View):
+    """
+    Muestra una lista paginada de todos los Proveedores globales.
+    Permite filtrar por nombre/RUT, Región y Comuna.
+    """
+    template_name = 'gestion_inventario/pages/lista_proveedores.html'
+    paginate_by = 15 # Ajusta según prefieras
+
+    def get(self, request, *args, **kwargs):
+
+        # 1. Obtener parámetros de filtro
+        search_query = request.GET.get('q', None)
+        region_id_str = request.GET.get('region', None)
+        comuna_id_str = request.GET.get('comuna', None)
+        page_number = request.GET.get('page')
+
+        # 2. QuerySet base, optimizado con select_related
+        queryset = Proveedor.objects.select_related(
+            'comuna', 
+            'comuna__region',
+            'contacto_principal' # <-- 1. Traemos los datos del contacto principal eficientemente
+        ).annotate(
+            contactos_count=Count('contactos') # <-- 2. Contamos cuántos contactos tiene cada proveedor
+        ).order_by('nombre')
+
+        # 3. Aplicar filtros dinámicamente
+        if search_query:
+            queryset = queryset.filter(
+                Q(nombre__icontains=search_query) |
+                Q(rut__icontains=search_query.replace('-', '').replace('.', '')) # Limpiar RUT para búsqueda
+            )
+        
+        region_id = None
+        if region_id_str and region_id_str.isdigit():
+            region_id = int(region_id_str)
+            # Filtra por región directamente o a través de la comuna
+            queryset = queryset.filter(comuna__region_id=region_id)
+
+        comuna_id = None
+        if comuna_id_str and comuna_id_str.isdigit():
+            comuna_id = int(comuna_id_str)
+            queryset = queryset.filter(comuna_id=comuna_id)
+
+        # 4. Obtener datos para los <select> de los filtros
+        all_regiones = Region.objects.order_by('nombre')
+        # Las comunas se cargarán dinámicamente con JS, pero podemos pre-cargar
+        # las de la región seleccionada si existe una.
+        comunas_para_filtro = Comuna.objects.none() 
+        if region_id:
+            comunas_para_filtro = Comuna.objects.filter(region_id=region_id).order_by('nombre')
+
+        # 5. Preparar parámetros para la paginación
+        params = request.GET.copy()
+        if 'page' in params:
+            del params['page']
+        query_params = params.urlencode()
+
+        # 6. Paginación Manual
+        paginator = Paginator(queryset, self.paginate_by)
+        page_obj = paginator.get_page(page_number)
+
+        # 7. Construir el Contexto final
+        context = {
+            'proveedores': page_obj,
+            'page_obj': page_obj,
+            'paginator': paginator,
+            'query_params': query_params,
+            
+            # Contexto para los filtros
+            'all_regiones': all_regiones,
+            'comunas_para_filtro': comunas_para_filtro, # Comunas de la región seleccionada (si hay)
+            'current_search': search_query or "",
+            'current_region_id': region_id_str or "",
+            'current_comuna_id': comuna_id_str or "",
+        }
+        
         return render(request, self.template_name, context)
