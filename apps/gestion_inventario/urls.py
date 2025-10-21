@@ -13,7 +13,8 @@ from .views import (
     ApiGetProductoGlobalSKU,
     ApiAnadirProductoLocal,
     ProductoGlobalCrearView,
-    ProductoLocalListView
+    ProductoLocalListView,
+    ProductoLocalEditView
     )
 
 app_name = 'gestion_inventario'
@@ -48,4 +49,6 @@ urlpatterns = [
 
     # Catálogo local de productos
     path('catalogo-local/', ProductoLocalListView.as_view(), name='ruta_catalogo_local'),
+    # Editar producto local
+    path('catalogo-local/editar/<int:pk>/', ProductoLocalEditView.as_view(), name='ruta_editar_producto_local'),
 ]

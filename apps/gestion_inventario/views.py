@@ -22,7 +22,7 @@ from .models import (
     Categoria,
     LoteInsumo
     )
-from .forms import AreaForm, CompartimentoForm, ProductoGlobalForm
+from .forms import AreaForm, CompartimentoForm, ProductoGlobalForm, ProductoLocalEditForm
 from .utils import generar_sku_sugerido
 from core.settings import INVENTARIO_AREA_NOMBRE as AREA_NOMBRE
 
@@ -618,4 +618,87 @@ class ProductoLocalListView(View):
             'current_sort': sort_by,
         }
         
+        return render(request, self.template_name, context)
+
+
+
+
+class ProductoLocalEditView(View):
+    template_name = 'gestion_inventario/pages/editar_producto_local.html'
+    form_class = ProductoLocalEditForm
+
+    def dispatch(self, request, *args, **kwargs):
+        """
+        Verifica que haya una estación activa antes de proceder.
+        """
+        self.estacion_id = request.session.get('active_estacion_id')
+        if not self.estacion_id:
+            messages.error(request, "Debes tener una estación activa para editar productos locales.")
+            return redirect('portal:ruta_inicio') # Ajusta si es necesario
+        try:
+            self.estacion = Estacion.objects.get(pk=self.estacion_id)
+        except Estacion.DoesNotExist:
+             messages.error(request, "La estación activa no es válida.")
+             return redirect('portal:ruta_inicio')
+             
+        # Obtener el producto a editar, asegurándose que pertenezca a la estación activa
+        self.producto = get_object_or_404(Producto, pk=kwargs['pk'], estacion_id=self.estacion_id)
+        
+        return super().dispatch(request, *args, **kwargs)
+
+    def get(self, request, pk, *args, **kwargs):
+        """Muestra el formulario pre-rellenado."""
+        
+        # Verificar si existe inventario asociado para deshabilitar 'es_serializado'
+        existe_inventario = Activo.objects.filter(producto=self.producto).exists() or \
+                           LoteInsumo.objects.filter(producto=self.producto).exists()
+        
+        # Pasamos la instancia y los parámetros extra al formulario
+        form = self.form_class(
+            instance=self.producto, 
+            estacion=self.estacion, 
+            disable_es_serializado=existe_inventario
+        )
+        
+        context = {
+            'form': form,
+            'producto': self.producto, # Pasamos el objeto para mostrar info en la plantilla
+            'estacion': self.estacion
+        }
+        return render(request, self.template_name, context)
+
+    def post(self, request, pk, *args, **kwargs):
+        """Procesa el formulario enviado."""
+        
+        # Verificar si existe inventario asociado (igual que en GET)
+        existe_inventario = Activo.objects.filter(producto=self.producto).exists() or \
+                           LoteInsumo.objects.filter(producto=self.producto).exists()
+
+        # Pasamos la instancia, datos POST/FILES y los parámetros extra al formulario
+        form = self.form_class(
+            request.POST, 
+            request.FILES, 
+            instance=self.producto, 
+            estacion=self.estacion,
+            disable_es_serializado=existe_inventario
+        )
+        
+        if form.is_valid():
+            try:
+                producto_editado = form.save()
+                messages.success(request, f'Producto "{producto_editado.producto_global.nombre_oficial}" actualizado correctamente.')
+                # Redirigir de vuelta al catálogo local
+                return redirect('gestion_inventario:ruta_catalogo_local')
+            
+            except IntegrityError:
+                 messages.error(request, 'Error: Ya existe otro producto en tu estación con ese SKU.')
+            except Exception as e:
+                messages.error(request, f'Ha ocurrido un error inesperado: {e}')
+        
+        # Si el formulario no es válido, se vuelve a renderizar con los errores
+        context = {
+            'form': form,
+            'producto': self.producto,
+            'estacion': self.estacion
+        }
         return render(request, self.template_name, context)

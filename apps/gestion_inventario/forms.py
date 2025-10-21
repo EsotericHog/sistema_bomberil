@@ -1,5 +1,5 @@
 from django import forms
-from .models import Ubicacion, Compartimento, Categoria, Marca, ProductoGlobal
+from .models import Ubicacion, Compartimento, Categoria, Marca, ProductoGlobal, Producto, Proveedor
 
 
 class AreaForm(forms.ModelForm):
@@ -79,3 +79,70 @@ class ProductoGlobalForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
         self.fields['categoria'].queryset = Categoria.objects.order_by('nombre')
         self.fields['marca'].queryset = Marca.objects.order_by('nombre')
+
+
+
+
+class ProductoLocalEditForm(forms.ModelForm):
+    """
+    Formulario para editar un Producto local (catálogo de la estación).
+    Incluye lógica para deshabilitar 'es_serializado' si ya existe inventario.
+    """
+    class Meta:
+        model = Producto
+        fields = [
+            'sku', 
+            'es_serializado', 
+            'es_expirable', 
+            'proveedor_preferido', 
+            'costo_compra'
+        ]
+        widgets = {
+            'sku': forms.TextInput(attrs={'class': 'form-control fs_normal fondo_secundario color_primario'}),
+            'es_serializado': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+            'es_expirable': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+            'proveedor_preferido': forms.Select(attrs={'class': 'form-select fs_normal fondo_secundario color_primario'}),
+            'costo_compra': forms.NumberInput(attrs={'class': 'form-control fs_normal fondo_secundario color_primario'}),
+        }
+        help_texts = {
+            'sku': 'Código único interno de tu estación para este producto.',
+            'es_serializado': 'Marcar si es un Activo rastreable individualmente (ej: Casco). Desmarcado si es Insumo (ej: Guantes).',
+            'es_expirable': 'Marcar si este insumo requiere seguimiento de fecha de expiración.',
+        }
+
+    def __init__(self, *args, **kwargs):
+        """
+        Sobrescribimos __init__ para:
+        1. Poblar el queryset de proveedor_preferido.
+        2. Recibir la estación y si el campo 'es_serializado' debe estar deshabilitado.
+        """
+        # Extraemos argumentos personalizados antes de llamar al super()
+        estacion_actual = kwargs.pop('estacion', None)
+        disable_es_serializado = kwargs.pop('disable_es_serializado', False) 
+        
+        super().__init__(*args, **kwargs)
+
+        # Filtrar proveedores para mostrar solo los de la estación actual (si aplica)
+        # O podrías querer mostrar todos los proveedores globales. Ajusta según necesidad.
+        if estacion_actual and 'proveedor_preferido' in self.fields:
+             # Asumiendo que Proveedor tiene un campo 'estacion_creadora' o similar
+             # Si los proveedores son globales, elimina este filtro.
+            self.fields['proveedor_preferido'].queryset = Proveedor.objects.filter(estacion_creadora=estacion_actual).order_by('nombre')
+        elif 'proveedor_preferido' in self.fields:
+             self.fields['proveedor_preferido'].queryset = Proveedor.objects.order_by('nombre')
+
+
+        # Deshabilitar 'es_serializado' si se indica
+        if disable_es_serializado and 'es_serializado' in self.fields:
+            self.fields['es_serializado'].disabled = True
+            self.fields['es_serializado'].help_text += " (No se puede modificar porque ya existe inventario registrado para este producto)."
+
+    def clean_es_serializado(self):
+        """
+        Asegura que si el campo está deshabilitado, no se intente cambiar su valor.
+        """
+        # Si el campo está deshabilitado, devolvemos el valor original de la instancia
+        if self.fields['es_serializado'].disabled:
+            return self.instance.es_serializado 
+        # Si no, devolvemos el valor enviado en el formulario
+        return self.cleaned_data.get('es_serializado')
