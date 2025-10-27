@@ -3,122 +3,6 @@
 {% block titulo_ventana %}Catálogo de {{ estacion.nombre|title }}{% endblock %}
 
 {% block contenido %}
-{# Estilos para modo oscuro #}
-{% if request.session.dark_mode %}
-<style>
-    /* Cards */
-    .dark-mode .card {
-        background-color: #1a1d21 !important;
-        border-color: #2d3238 !important;
-    }
-    
-    .dark-mode .card-body.bg-light {
-        background-color: #1a1d21 !important;
-    }
-
-    /* Formularios */
-    .dark-mode .form-control,
-    .dark-mode .form-select {
-        background-color: #111318 !important;
-        border-color: #2b3136 !important;
-        color: #e6edf3 !important;
-    }
-
-    .dark-mode .form-control:focus,
-    .dark-mode .form-select:focus {
-        border-color: #0d6efd !important;
-        box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25) !important;
-    }
-
-    /* Labels y texto */
-    .dark-mode .form-label,
-    .dark-mode .card-title,
-    .dark-mode code {
-        color: #e6edf3 !important;
-    }
-
-    /* Tabla */
-    .dark-mode .table {
-        color: #e6edf3 !important;
-    }
-
-    .dark-mode .table-light {
-        background-color: #1a1d21 !important;
-        color: #e6edf3 !important;
-    }
-
-    .dark-mode .table-hover tbody tr:hover {
-        background-color: rgba(255,255,255,0.02) !important;
-        color: #e6edf3 !important;
-    }
-
-    /* Placeholder de imagen */
-    .dark-mode .card-img-top-placeholder,
-    .dark-mode .img-thumbnail-placeholder {
-        background-color: #1a1d21 !important;
-        color: #6c757d !important;
-    }
-
-    /* Badges específicos para el catálogo local */
-    .dark-mode .badge.bg-info {
-        background-color: #0d4a6d !important;
-        color: #7fdbff !important;
-    }
-
-    .dark-mode .badge.bg-secondary {
-        background-color: #343a40 !important;
-        color: #e6edf3 !important;
-    }
-
-    .dark-mode .badge.bg-warning {
-        background-color: #804d00 !important;
-        color: #ffd970 !important;
-    }
-
-    /* Paginación */
-    .dark-mode .page-link {
-        background-color: #1a1d21 !important;
-        border-color: #2d3238 !important;
-        color: #e6edf3 !important;
-    }
-
-    .dark-mode .page-item.active .page-link {
-        background-color: #0d6efd !important;
-        border-color: #0d6efd !important;
-    }
-
-    .dark-mode .page-item.disabled .page-link {
-        background-color: #1a1d21 !important;
-        border-color: #2d3238 !important;
-        color: #6c757d !important;
-    }
-
-    /* Alertas */
-    .dark-mode .alert-warning {
-        background-color: #332701 !important;
-        border-color: #856404 !important;
-        color: #ffd970 !important;
-    }
-
-    /* Otros elementos */
-    .dark-mode .text-muted {
-        color: #8b949e !important;
-    }
-
-    .dark-mode .text-success {
-        color: #3fb950 !important;
-    }
-
-    .dark-mode .bg-light {
-        background-color: #1a1d21 !important;
-    }
-
-    .dark-mode .img-thumbnail {
-        background-color: #1a1d21 !important;
-        border-color: #2d3238 !important;
-    }
-</style>
-{% endif %}
 
 <div class="container-fluid mt-4">
     
@@ -136,7 +20,7 @@
     </div>
 
     <div class="card shadow-sm mb-3">
-        <div class="card-body bg-light {% if request.session.dark_mode %}dark-mode{% endif %}">
+        <div class="card-body">
             <form method="GET" action="{% url 'gestion_inventario:ruta_catalogo_local' %}">
                 <input type="hidden" name="view" value="{{ view_mode }}">
                 
@@ -215,7 +99,7 @@
             <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 row-cols-xl-5 g-4">
                 {% for prod_local in productos %}
                 <div class="col">
-                    <div class="card h-100 shadow-sm product-card {% if request.session.dark_mode %}dark-mode{% endif %}">
+                    <div class="card h-100 shadow-sm product-card">
                         {% with prod_global=prod_local.producto_global %} {# Atajo para no repetir #}
                         {% if prod_global.imagen %}
                             <img src="{{ prod_global.imagen.url }}" class="card-img-top" alt="{{ prod_global.nombre_oficial }}">
@@ -244,10 +128,10 @@
                                     {% if prod_local.es_serializado %}
                                         <span class="badge bg-info text-dark fs_pequena">Activo</span>
                                     {% else %}
-                                        <span class="badge bg-secondary fs_pequena">Insumo</span>
+                                        <span class="badge bg-warning text-dark fs_pequena">Insumo</span>
                                     {% endif %}
                                     {% if prod_local.es_expirable %}
-                                        <span class="badge bg-warning text-dark fs_pequena">Expirable</span>
+                                        <span class="badge bg-secondary fs_pequena">Expirable</span>
                                     {% endif %}
                                 </li>
                             </ul>
@@ -268,7 +152,7 @@
             </div>
 
         {% else %}
-            <div class="card shadow-sm {% if request.session.dark_mode %}dark-mode{% endif %}">
+            <div class="card shadow-sm">
                 <div class="card-body">
                     <div class="table-responsive">
                         <table class="table table-hover align-middle table-sm {% if request.session.dark_mode %}table-dark{% endif %}">
@@ -322,9 +206,9 @@
                                     <td>{{ prod_global.categoria.nombre }}</td>
                                     <td>
                                         {% if prod_local.es_serializado %}
-                                            <span class="badge bg-info fs_normal">Activo</span>
+                                            <span class="badge bg-info text-dark fs_pequena">Activo</span>
                                         {% else %}
-                                            <span class="badge bg-secondary fs_normal">Insumo</span>
+                                            <span class="badge bg-warning text-dark fs_pequena">Insumo</span>
                                         {% endif %}
                                     </td>
                                     <td>
@@ -387,4 +271,5 @@
 {% endblock %}
 
 {% block scripts %}
-    {% endblock %}
+    {# Bloque de scripts vacío, se mantiene #}
+{% endblock %}
