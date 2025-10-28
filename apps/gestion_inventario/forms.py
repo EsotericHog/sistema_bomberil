@@ -1,4 +1,5 @@
 from django import forms
+from django.utils import timezone
 from .models import (
     Ubicacion, 
     Compartimento, 
@@ -217,3 +218,129 @@ class ContactoProveedorForm(forms.ModelForm):
                 pass  # Ignorar si la región no es válida
         elif self.instance.pk and self.instance.comuna:
              self.fields['comuna'].queryset = self.instance.comuna.region.comuna_set.order_by('nombre')
+
+
+
+
+class RecepcionCabeceraForm(forms.Form):
+    """ Formulario para los datos generales de la recepción """
+    proveedor = forms.ModelChoiceField(
+        queryset=Proveedor.objects.none(), # Se poblará en la vista
+        label="Proveedor",
+        widget=forms.Select(attrs={'class': 'form-select form-select-sm fs_normal'})
+    )
+    fecha_recepcion = forms.DateField(
+        label="Fecha de Recepción",
+        widget=forms.DateInput(attrs={'type': 'date', 'class': 'form-control form-control-sm fs_normal'}),
+        initial=timezone.now().date() 
+    )
+    notas = forms.CharField(
+        label="Notas Adicionales (Opcional)",
+        required=False,
+        widget=forms.Textarea(attrs={'rows': 2, 'class': 'form-control form-control-sm fs_normal'})
+    )
+
+    def __init__(self, *args, **kwargs):
+        estacion = kwargs.pop('estacion', None)
+        super().__init__(*args, **kwargs)
+        if estacion:
+            # Filtra proveedores por la estación activa
+            self.fields['proveedor'].queryset = Proveedor.objects.filter(estacion_creadora=estacion)
+
+
+
+
+class RecepcionDetalleForm(forms.Form):
+    """ Formulario para cada línea de producto en la recepción """
+    producto = forms.ModelChoiceField(
+        queryset=Producto.objects.none(), # Se poblará en la vista
+        label="Producto",
+        widget=forms.Select(attrs={'class': 'form-select form-select-sm producto-select fs_normal'}) # Clase para JS
+    )
+    compartimento_destino = forms.ModelChoiceField(
+        queryset=Compartimento.objects.none(), # Se poblará en la vista
+        label="Destino",
+        widget=forms.Select(attrs={'class': 'form-select form-select-sm fs_normal'})
+    )
+    
+    # --- Campos Comunes ---
+    costo_unitario = forms.DecimalField(
+        label="Costo Unit.", 
+        required=False, 
+        max_digits=10, 
+        decimal_places=0,
+        widget=forms.NumberInput(attrs={'class': 'form-control form-control-sm fs_normal', 'step': '1'})
+    )
+
+    # --- Campos para INSUMOS (No Serializados) ---
+    cantidad = forms.IntegerField(
+        label="Cantidad", 
+        min_value=1, 
+        widget=forms.NumberInput(attrs={'class': 'form-control form-control-sm insumo-field fs_normal', 'step': '1'}), # Clase para JS
+        required=False # Lo hacemos no requerido inicialmente, validaremos en clean
+    )
+    numero_lote = forms.CharField(
+        label="N° Lote", 
+        max_length=100, 
+        required=False,
+        widget=forms.TextInput(attrs={'class': 'form-control form-control-sm insumo-field fs_normal'}) # Clase para JS
+    )
+    fecha_vencimiento = forms.DateField(
+        label="Fecha de Vencimiento", 
+        required=False,
+        widget=forms.DateInput(attrs={'type': 'date', 'class': 'form-control form-control-sm insumo-field fs_normal'}) # Clase para JS
+    )
+    numero_serie = forms.CharField(
+        label="N° Serie Fab.", 
+        max_length=100, 
+        required=False,
+        widget=forms.TextInput(attrs={'class': 'form-control form-control-sm activo-field fs_normal'}) # Clase para JS
+    )
+    fecha_fabricacion = forms.DateField(
+        label="Fecha de Fabricación", 
+        required=False,
+        widget=forms.DateInput(attrs={'type': 'date', 'class': 'form-control form-control-sm activo-field fs_normal'}) # Clase para JS
+    )
+
+    def __init__(self, *args, **kwargs):
+        estacion = kwargs.pop('estacion', None)
+        super().__init__(*args, **kwargs)
+
+        if estacion:
+            self.fields['producto'].queryset = Producto.objects.filter(estacion=estacion).select_related('producto_global')
+            self.fields['compartimento_destino'].queryset = Compartimento.objects.filter(ubicacion__estacion=estacion).select_related('ubicacion')
+
+        if 'producto' in self.fields:
+            self.fields['producto'].label_from_instance = lambda obj: obj.producto_global.nombre_oficial
+
+    def clean(self):
+        cleaned_data = super().clean()
+        producto = cleaned_data.get('producto')
+        
+        if producto:
+            if producto.es_serializado:
+                # Para Activos, N° Serie es usualmente requerido (ajusta según necesidad)
+                # if not cleaned_data.get('numero_serie'):
+                #     self.add_error('numero_serie', 'El número de serie es requerido para activos.')
+                # Limpiamos campos de insumo si se ingresaron por error
+                cleaned_data['cantidad'] = 1 # Los activos siempre tienen cantidad 1
+                cleaned_data['numero_lote'] = None
+                cleaned_data['fecha_vencimiento'] = None
+            else:
+                # Para Insumos, Cantidad es requerida
+                if not cleaned_data.get('cantidad'):
+                    self.add_error('cantidad', 'La cantidad es requerida para insumos.')
+                # Fecha vencimiento puede ser requerida si el producto es expirable
+                if producto.es_expirable and not cleaned_data.get('fecha_vencimiento'):
+                     self.add_error('fecha_vencimiento', 'La fecha de vencimiento es requerida para este producto.')
+                # Limpiamos campos de activo
+                cleaned_data['numero_serie'] = None
+                cleaned_data['fecha_fabricacion'] = None
+        return cleaned_data
+
+# Creamos el FormSet
+RecepcionDetalleFormSet = forms.formset_factory(
+    RecepcionDetalleForm, 
+    extra=1, # Empieza con una línea vacía
+    can_delete=True # Permite eliminar líneas
+)

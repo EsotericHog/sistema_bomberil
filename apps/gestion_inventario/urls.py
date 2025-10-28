@@ -18,7 +18,8 @@ from .views import (
     ProveedorListView,
     ProveedorCrearView,
     StockActualListView,
-    VehiculoListaView
+    VehiculoListaView,
+    RecepcionStockView
     )
 
 app_name = 'gestion_inventario'
@@ -66,4 +67,6 @@ urlpatterns = [
 
     # Stock actual
     path('stock-actual/', StockActualListView.as_view(), name='ruta_stock_actual'),
+    # Recepción de stock
+    path('recepcion-stock/', RecepcionStockView.as_view(), name='ruta_recepcion_stock'),
 ]

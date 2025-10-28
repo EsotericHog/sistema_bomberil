@@ -28,7 +28,9 @@ from .models import (
     Proveedor,
     Region,
     Comuna,
-    Estado
+    Estado,
+    MovimientoInventario,
+    TipoMovimiento
     )
 from .forms import (
     AreaForm, 
@@ -36,7 +38,9 @@ from .forms import (
     ProductoGlobalForm, 
     ProductoLocalEditForm,
     ProveedorForm,
-    ContactoProveedorForm
+    ContactoProveedorForm,
+    RecepcionCabeceraForm,
+    RecepcionDetalleFormSet
     )
 from .utils import generar_sku_sugerido
 from core.settings import INVENTARIO_AREA_NOMBRE as AREA_NOMBRE
@@ -1025,9 +1029,9 @@ class StockActualListView(LoginRequiredMixin, View):
         # Pasamos los objetos para poblar los dropdowns de filtros
         context['todas_las_ubicaciones'] = Ubicacion.objects.filter(estacion=estacion_usuario)
         
-        # CORREGIDO: Usamos el TipoEstado "ESTADO ARTICULO"
+        # Usamos el TipoEstado "OPERATIVO"
         try:
-            context['todos_los_estados'] = Estado.objects.filter(tipo_estado__nombre="ESTADO ARTICULO") 
+            context['todos_los_estados'] = Estado.objects.filter(tipo_estado__nombre="OPERATIVO") 
         except Exception:
             context['todos_los_estados'] = Estado.objects.none() # Fallback
 
@@ -1037,4 +1041,134 @@ class StockActualListView(LoginRequiredMixin, View):
         context['current_ubicacion'] = ubicacion_id
         context['current_estado'] = estado_id
         
+        return render(request, self.template_name, context)
+
+
+
+
+class RecepcionStockView(LoginRequiredMixin, View):
+    template_name = 'gestion_inventario/pages/recepcion_stock.html'
+    login_url = '/acceso/login/'
+
+    def get(self, request, *args, **kwargs):
+        estacion_id = request.session.get('active_estacion_id')
+        if not estacion_id:
+            messages.error(request, "Seleccione una estación activa.")
+            return redirect('gestion_inventario:ruta_inicio')
+        
+        try:
+            estacion = Estacion.objects.get(id=estacion_id)
+        except Estacion.DoesNotExist:
+             messages.error(request, "Estación no válida.")
+             return redirect('gestion_inventario:ruta_inicio')
+
+        cabecera_form = RecepcionCabeceraForm(estacion=estacion)
+        # Pasamos la estación al formset para que filtre los selects
+        detalle_formset = RecepcionDetalleFormSet(form_kwargs={'estacion': estacion}, prefix='detalles')
+
+        context = {
+            'cabecera_form': cabecera_form,
+            'detalle_formset': detalle_formset,
+        }
+        return render(request, self.template_name, context)
+
+    def post(self, request, *args, **kwargs):
+        estacion_id = request.session.get('active_estacion_id')
+        if not estacion_id:
+            messages.error(request, "Seleccione una estación activa.")
+            return redirect('gestion_inventario:ruta_inicio')
+        
+        try:
+            estacion = Estacion.objects.get(id=estacion_id)
+        except Estacion.DoesNotExist:
+             messages.error(request, "Estación no válida.")
+             return redirect('gestion_inventario:ruta_inicio')
+
+        cabecera_form = RecepcionCabeceraForm(request.POST, estacion=estacion)
+        detalle_formset = RecepcionDetalleFormSet(request.POST, form_kwargs={'estacion': estacion}, prefix='detalles')
+
+        if cabecera_form.is_valid() and detalle_formset.is_valid():
+            try:
+                # Usamos una transacción para asegurar que todo se guarde o nada
+                with transaction.atomic():
+                    proveedor = cabecera_form.cleaned_data['proveedor']
+                    fecha_recepcion = cabecera_form.cleaned_data['fecha_recepcion']
+                    notas_cabecera = cabecera_form.cleaned_data['notas']
+
+                    for form in detalle_formset:
+                        if form.cleaned_data and not form.cleaned_data.get('DELETE'):
+                            producto = form.cleaned_data['producto']
+                            compartimento = form.cleaned_data['compartimento_destino']
+                            costo = form.cleaned_data.get('costo_unitario') # Opcional
+
+                            # Actualizar costo en ProductoLocal si se ingresó uno nuevo
+                            if costo is not None and producto.costo_compra != costo:
+                                producto.costo_compra = costo
+                                producto.save(update_fields=['costo_compra'])
+
+                            if producto.es_serializado:
+                                # Crear un Activo
+                                activo = Activo.objects.create(
+                                    producto=producto,
+                                    estacion=estacion,
+                                    compartimento=compartimento,
+                                    proveedor=proveedor, # Proveedor de la cabecera
+                                    estado_id=Estado.objects.get(nombre='DISPONIBLE', tipo_estado__nombre='OPERATIVO').id,
+                                    codigo_activo=form.cleaned_data.get('codigo_activo'),
+                                    numero_serie_fabricante=form.cleaned_data.get('numero_serie'),
+                                    fecha_fabricacion=form.cleaned_data.get('fecha_fabricacion'),
+                                    fecha_puesta_en_servicio=fecha_recepcion, # Usamos fecha recepción como puesta en servicio inicial
+                                    # fecha_expiracion=form.cleaned_data.get('fecha_expiracion_activo') # Si tuvieras expira en Activo
+                                )
+                                # Registrar Movimiento para el Activo
+                                MovimientoInventario.objects.create(
+                                    tipo_movimiento=TipoMovimiento.ENTRADA,
+                                    usuario=request.user,
+                                    estacion=estacion,
+                                    proveedor_origen=proveedor,
+                                    compartimento_destino=compartimento,
+                                    activo=activo,
+                                    cantidad_movida=1, # Siempre 1 para activos
+                                    notas=notas_cabecera
+                                )
+                            else:
+                                # Crear o actualizar un LoteInsumo
+                                # Aquí podrías buscar un lote existente con mismas características 
+                                # (producto, compartimento, lote, vencimiento) y sumar cantidad,
+                                # o crear siempre uno nuevo. Crearemos uno nuevo por simplicidad.
+                                cantidad = form.cleaned_data['cantidad']
+                                lote = LoteInsumo.objects.create(
+                                    producto=producto,
+                                    compartimento=compartimento,
+                                    cantidad=cantidad,
+                                    numero_lote_fabricante=form.cleaned_data.get('numero_lote'),
+                                    fecha_expiracion=form.cleaned_data.get('fecha_vencimiento')
+                                )
+                                # Registrar Movimiento para el Lote
+                                MovimientoInventario.objects.create(
+                                    tipo_movimiento=TipoMovimiento.ENTRADA,
+                                    usuario=request.user,
+                                    estacion=estacion,
+                                    proveedor_origen=proveedor,
+                                    compartimento_destino=compartimento,
+                                    lote_insumo=lote,
+                                    cantidad_movida=cantidad,
+                                    notas=notas_cabecera
+                                )
+                                
+                messages.success(request, "Recepción de stock guardada correctamente.")
+                return redirect('gestion_inventario:ruta_stock_actual') # Redirige a la lista de stock
+
+            except Exception as e:
+                # Si algo falla dentro de la transacción, se revierte todo
+                messages.error(request, f"Error al guardar la recepción: {e}")
+
+        else:
+            # Si los formularios no son válidos, renderizar de nuevo con errores
+            messages.warning(request, "Por favor, corrija los errores en el formulario.")
+        
+        context = {
+            'cabecera_form': cabecera_form,
+            'detalle_formset': detalle_formset,
+        }
         return render(request, self.template_name, context)
