@@ -202,9 +202,10 @@ class Compartimento(models.Model):
     class Meta:
         verbose_name = "Compartimento"
         verbose_name_plural = "Compartimentos"
+        ordering = ['ubicacion__nombre', 'nombre']
 
     def __str__(self):
-        return self.nombre
+        return f"{self.nombre} ({self.ubicacion.nombre})"
 
 
 
@@ -381,14 +382,14 @@ class Activo(models.Model):
     """
 
     producto = models.ForeignKey(Producto, on_delete=models.PROTECT, verbose_name="Producto")
-    codigo_activo = models.CharField(verbose_name="(opcional) Código de barras", max_length=1, blank=True, null=True, help_text="(Opcional) Ingrese el código de barras de la unidad / lote")
+    codigo_activo = models.CharField(verbose_name="Código de Activo (ID Interno)", max_length=50, blank=True, help_text="ID Interno único generado por el sistema (Ej: ACT-00123)")
     estacion = models.ForeignKey(Estacion, on_delete=models.PROTECT, verbose_name="Estación", help_text="Seleccionar estación propietaria de la existencia")
     numero_serie_fabricante = models.CharField(max_length=100, blank=True)
 
     horas_de_uso = models.IntegerField(verbose_name="(opcional) Horas de uso", null=True, blank=True)
     horas_de_uso_totales = models.IntegerField(verbose_name="(opcional) Horas de uso totales", null=True, blank=True)
     notas_adicionales = models.TextField(verbose_name="(opcional) Notas adicionales", blank=True, null=True)
-    estado = models.ForeignKey(Estado, on_delete=models.PROTECT, verbose_name="Estado de la existencia/lote")
+    estado = models.ForeignKey(Estado, on_delete=models.PROTECT, verbose_name="Estado de la existencia/lote", null=True, blank=True)
     compartimento = models.ForeignKey(Compartimento, on_delete=models.PROTECT, verbose_name="Compartimento", help_text="Seleccionar compartimento donde se encuentra la existencia")
     proveedor = models.ForeignKey(Proveedor, on_delete=models.PROTECT, verbose_name="Proveedor")
     asignado_a = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True) # Asumiendo que Bombero es el usuario
@@ -419,12 +420,37 @@ class Activo(models.Model):
     class Meta:
         verbose_name = "Activo"
         verbose_name_plural = "Activos"
-
+        unique_together = ('estacion', 'codigo_activo')
+    
 
     def save(self, *args, **kwargs):
-        # Asegura que el producto asignado pertenezca a la misma compañía que el activo
         if self.producto.estacion != self.estacion:
             raise ValueError("El producto de un activo debe pertenecer a la misma compañía.")
+
+        # ... (validación existente) ...
+        if not self.codigo_activo and not self.pk and self.estacion: 
+            # Construye el prefijo usando 'E' y el ID de la estación
+            prefix = f"E{self.estacion.id}-ACT-" # Ej: "E1-ACT-", "E2-ACT-"
+
+            last_activo = Activo.objects.filter(
+                estacion=self.estacion, 
+                codigo_activo__startswith=prefix 
+            ).order_by('codigo_activo').last() 
+            
+            next_num = 1
+            if last_activo and last_activo.codigo_activo:
+                try:
+                    last_num_str = last_activo.codigo_activo.split(prefix)[-1]
+                    next_num = int(last_num_str) + 1
+                except (IndexError, ValueError):
+                    pass 
+
+            self.codigo_activo = f"{prefix}{next_num:05d}" # Ej: "E1-ACT-00001"
+            
+            while Activo.objects.filter(estacion=self.estacion, codigo_activo=self.codigo_activo).exists():
+                 next_num += 1
+                 self.codigo_activo = f"{prefix}{next_num:05d}"
+            
         super().save(*args, **kwargs)
 
 
@@ -454,3 +480,54 @@ class LoteInsumo(models.Model):
     def __str__(self):
         exp_date = self.fecha_expiracion.strftime('%Y-%m-%d') if self.fecha_expiracion else "N/A"
         return f"{self.cantidad} x {self.producto.sku} | Exp: {exp_date}"
+
+
+
+
+class TipoMovimiento(models.TextChoices):
+    ENTRADA = 'ENT', 'Entrada (Recepción)'
+    SALIDA = 'SAL', 'Salida (Consumo/Baja)'
+    TRANSFERENCIA_INTERNA = 'TRA', 'Transferencia'
+    AJUSTE = 'AJU', 'Ajuste de Inventario'
+    TRASLADO = 'TRAS', 'Traslado de inventario a otra estación'
+
+class MovimientoInventario(models.Model):
+    """
+    Registra todos los cambios en el inventario (entradas, salidas, transferencias, ajustes).
+    """
+    tipo_movimiento = models.CharField(max_length=4, choices=TipoMovimiento.choices)
+    fecha_hora = models.DateTimeField(default=timezone.now)
+    usuario = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, related_name='movimientos_inventario')
+    estacion = models.ForeignKey(Estacion, on_delete=models.PROTECT) # Estación donde ocurrió
+
+    # Campos específicos para cada tipo de movimiento (pueden ser Null)
+    proveedor_origen = models.ForeignKey(Proveedor, on_delete=models.SET_NULL, null=True, blank=True, related_name='recepciones')
+    compartimento_origen = models.ForeignKey(Compartimento, on_delete=models.SET_NULL, null=True, blank=True, related_name='movimientos_salida')
+    compartimento_destino = models.ForeignKey(Compartimento, on_delete=models.SET_NULL, null=True, blank=True, related_name='movimientos_entrada')
+    
+    # Referencia al Activo o Lote afectado (Uno de estos debe estar presente)
+    activo = models.ForeignKey(Activo, on_delete=models.CASCADE, null=True, blank=True, related_name='movimientos')
+    lote_insumo = models.ForeignKey(LoteInsumo, on_delete=models.CASCADE, null=True, blank=True, related_name='movimientos')
+    
+    cantidad_movida = models.IntegerField(help_text="Positivo para entradas/ajustes+, Negativo para salidas/ajustes-")
+    
+    notas = models.TextField(blank=True, null=True)
+
+    class Meta:
+        verbose_name = "Movimiento de Inventario"
+        verbose_name_plural = "Movimientos de Inventario"
+        ordering = ['-fecha_hora']
+
+    def __str__(self):
+        item_str = f"Activo ID {self.activo.id}" if self.activo else f"Lote ID {self.lote_insumo.id}" if self.lote_insumo else "Item Desconocido"
+        return f"{self.get_tipo_movimiento_display()} de {self.cantidad_movida} ({item_str}) el {self.fecha_hora.strftime('%d/%m/%Y %H:%M')}"
+
+    def clean(self):
+        if self.tipo_movimiento == TipoMovimiento.ENTRADA and not self.proveedor_origen:
+             raise ValidationError("Las entradas deben especificar un proveedor de origen.")
+        if self.tipo_movimiento == TipoMovimiento.TRANSFERENCIA_INTERNA and (not self.compartimento_origen or not self.compartimento_destino):
+             raise ValidationError("Las transferencias deben especificar origen y destino.")
+        if not self.activo and not self.lote_insumo:
+            raise ValidationError("El movimiento debe estar asociado a un Activo o a un Lote de Insumo.")
+        if self.activo and self.lote_insumo:
+            raise ValidationError("El movimiento no puede estar asociado a un Activo Y a un Lote de Insumo simultáneamente.")
