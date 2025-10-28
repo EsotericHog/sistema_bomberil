@@ -394,7 +394,7 @@ class Activo(models.Model):
     proveedor = models.ForeignKey(Proveedor, on_delete=models.PROTECT, verbose_name="Proveedor")
     asignado_a = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True) # Asumiendo que Bombero es el usuario
     fecha_fabricacion = models.DateField(verbose_name="Fecha de fabricación", null=True, blank=True)
-    fecha_puesta_en_servicio = models.DateField(verbose_name="Fecha de puesta en servicio", null=True, blank=True)
+    fecha_recepcion = models.DateField(verbose_name="Fecha de Recepción", null=True, blank=True, db_index=True)
     fecha_expiracion = models.DateField(verbose_name="Fecha de expiración", null=True, blank=True, help_text="Usar solo para activos que tienen una fecha de caducidad específica.")
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -409,7 +409,7 @@ class Activo(models.Model):
         
         # La vida útil puede contar desde la fabricación o puesta en servicio.
         # Aquí un ejemplo que prioriza la fecha de fabricación.
-        fecha_inicio = self.fecha_fabricacion or self.fecha_puesta_en_servicio
+        fecha_inicio = self.fecha_fabricacion or self.fecha_recepcion
         if not fecha_inicio:
             return None
             
@@ -470,6 +470,7 @@ class LoteInsumo(models.Model):
     cantidad = models.PositiveIntegerField(default=0)
     fecha_expiracion = models.DateField(verbose_name="Fecha de expiración", null=True, blank=True)
     numero_lote_fabricante = models.CharField(max_length=100, blank=True, null=True, help_text="Número de lote del fabricante para trazabilidad.")
+    fecha_recepcion = models.DateField(verbose_name="Fecha de Recepción", null=True, blank=True, db_index=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

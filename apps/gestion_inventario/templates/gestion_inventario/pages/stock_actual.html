@@ -15,15 +15,14 @@
 <div class="container-fluid mt-4">
 
 <!-- Panel de Filtros y Búsqueda -->
-<div class="card shadow-sm mb-4 {% if request.session.dark_mode %}dark-mode{% endif %}">
+<div class="card shadow-sm mb-4">
     <div class="card-header fs_normal">
         <i class="fas fa-filter me-1"></i>
         Filtros y Búsqueda
     </div>
     <div class="card-body">
         <form method="get" action="{% url 'gestion_inventario:ruta_stock_actual' %}">
-            <div class="row g-3">
-                <!-- Barra de Búsqueda -->
+            <div class="row g-3 align-items-end"> 
                 <div class="col-md-6 col-lg-3">
                     <label for="search_query" class="form-label fw-bold fs_pequena">Buscar</label>
                     <div class="input-group input-group-sm">
@@ -34,49 +33,64 @@
                     </div>
                 </div>
                 
-                <!-- Filtro por Tipo (Activo/Insumo) -->
-                <div class="col-md-6 col-lg-3">
-                    <label for="filter_tipo" class="form-label fw-bold fs_pequena">Tipo de Producto</label>
+                <div class="col-md-6 col-lg-2"> 
+                    <label for="filter_tipo" class="form-label fw-bold fs_pequena">Tipo Producto</label>
                     <select id="filter_tipo" name="tipo" class="form-select form-select-sm fs_normal">
                         <option value="">Todos</option>
-                        <option value="activo" {% if current_tipo == 'activo' %}selected{% endif %}>Activo (Serializado)</option>
-                        <option value="insumo" {% if current_tipo == 'insumo' %}selected{% endif %}>Insumo (Fungible)</option>
+                        <option value="activo" {% if current_tipo == 'activo' %}selected{% endif %}>Activo</option>
+                        <option value="insumo" {% if current_tipo == 'insumo' %}selected{% endif %}>Insumo</option>
                     </select>
                 </div>
 
-                <!-- Filtro por Ubicación (Tu modelo 'Ubicacion') -->
-                <div class="col-md-6 col-lg-3">
+                <div class="col-md-6 col-lg-2"> 
                     <label for="filter_ubicacion" class="form-label fw-bold fs_pequena">Ubicación</label>
                     <select id="filter_ubicacion" name="ubicacion" class="form-select form-select-sm fs_normal">
-                        <option value="">Todas las Ubicaciones</option>
+                        <option value="">Todas</option>
                         {% for u in todas_las_ubicaciones %}
-                        <option value="{{ u.id }}" {% if current_ubicacion == u.id|stringformat:"s" %}selected{% endif %}>
-                            {{ u.nombre }}
-                        </option>
+                        <option value="{{ u.id }}" {% if current_ubicacion == u.id|stringformat:"s" %}selected{% endif %}>{{ u.nombre }}</option>
                         {% endfor %}
                     </select>
                 </div>
                 
-                <!-- Filtro por Estado (Tu modelo 'Estado') -->
-                <div class="col-md-6 col-lg-3">
+                <div class="col-md-6 col-lg-2"> 
                     <label for="filter_estado" class="form-label fw-bold fs_pequena">Estado (Activos)</label>
                     <select id="filter_estado" name="estado" class="form-select form-select-sm fs_normal">
-                        <option value="">Todos los Estados</option>
+                        <option value="">Todos</option>
                         {% for e in todos_los_estados %}
-                        <option value="{{ e.id }}" {% if current_estado == e.id|stringformat:"s" %}selected{% endif %}>
-                            {{ e.nombre|title }}
-                        </option>
+                        <option value="{{ e.id }}" {% if current_estado == e.id|stringformat:"s" %}selected{% endif %}>{{ e.nombre|title }}</option>
                         {% endfor %}
                     </select>
                 </div>
-            </div>
+
+                <div class="col-md-3 col-lg-1">
+                     <label for="fecha_desde" class="form-label fw-bold fs_pequena">Desde</label>
+                     <input type="date" name="fecha_desde" id="fecha_desde" 
+                            class="form-control form-control-sm fs_normal" 
+                            value="{{ current_fecha_desde|default:'' }}">
+                </div>
+                 <div class="col-md-3 col-lg-1">
+                     <label for="fecha_hasta" class="form-label fw-bold fs_pequena">Hasta</label>
+                     <input type="date" name="fecha_hasta" id="fecha_hasta" 
+                            class="form-control form-control-sm fs_normal" 
+                            value="{{ current_fecha_hasta|default:'' }}">
+                </div>
+                
+                <div class="col-md-6 col-lg-2">
+                     <label for="sort" class="form-label fw-bold fs_pequena">Ordenar Por</label>
+                     <select name="sort" id="sort" class="form-select form-select-sm fs_normal">
+                         <option value="fecha_desc" {% if current_sort == 'fecha_desc' %}selected{% endif %}>Recepción (Más Reciente)</option>
+                         <option value="fecha_asc" {% if current_sort == 'fecha_asc' %}selected{% endif %}>Recepción (Más Antiguo)</option>
+                         <option value="nombre_asc" {% if current_sort == 'nombre_asc' %}selected{% endif %}>Nombre Producto (A-Z)</option>
+                         {# Asegúrate que la vista maneje 'nombre_asc' y 'nombre_desc' si añades más #}
+                     </select>
+                </div>
+
+            </div> {# Cierre row g-3 #}
             <div class="row mt-3">
                 <div class="col-12 text-end">
-                    <a href="{% url 'gestion_inventario:ruta_stock_actual' %}" class="btn btn-outline-secondary btn-sm fs_normal">
-                        Limpiar
-                    </a>
+                    <a href="{% url 'gestion_inventario:ruta_stock_actual' %}" class="btn btn-outline-secondary btn-sm fs_normal">Limpiar</a>
                     <button type="submit" class="btn btn-primary btn-sm fs_normal">
-                        <i class="fas fa-filter me-1"></i> Filtrar
+                        <i class="fas fa-filter me-1"></i> Filtrar / Ordenar
                     </button>
                 </div>
             </div>
@@ -107,6 +121,7 @@
                         <th>Ubicación</th>
                         <th class="text-center">Cantidad</th>
                         <th class="text-center">Estado</th>
+                        <th>Recepción</th>
                         <th>Fecha Relevante</th>
                         <th class="text-center">Acciones</th>
                     </tr>
@@ -175,6 +190,11 @@
                                 <span class="badge bg-success fs_pequena">Operativo</span>
                             {% endif %}
                         </td>
+
+                        <td class="fs_pequena">
+                           {# Muestra la fecha_recepcion usando el filtro date #}
+                           {{ item.fecha_recepcion|date:"d/m/Y"|default:"N/A" }} 
+                        </td>
                         
                         <!-- Fecha Relevante -->
                         <td class="fs_pequena">
@@ -203,7 +223,7 @@
                     </tr>
                     {% empty %}
                     <tr>
-                        <td colspan="8" class="text-center fst-italic py-4">
+                        <td colspan="9" class="text-center fst-italic py-4">
                             No se encontraron artículos en el inventario que coincidan con los filtros seleccionados.
                         </td>
                     </tr>

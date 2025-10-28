@@ -1,4 +1,5 @@
 import json
+import datetime
 from itertools import chain
 from django.utils import timezone
 from django.db import IntegrityError, transaction
@@ -957,6 +958,9 @@ class StockActualListView(LoginRequiredMixin, View):
         tipo_producto = request.GET.get('tipo', '')
         ubicacion_id = request.GET.get('ubicacion', '')
         estado_id = request.GET.get('estado', '')
+        fecha_desde = request.GET.get('fecha_desde', '')
+        fecha_hasta = request.GET.get('fecha_hasta', '')
+        sort_by = request.GET.get('sort', 'fecha_desc')
 
         # 3. Obtener querysets base, filtrados por la ESTACIÓN ACTIVA
         activos_qs = Activo.objects.filter(estacion=estacion_usuario).select_related(
@@ -985,6 +989,13 @@ class StockActualListView(LoginRequiredMixin, View):
                 Q(numero_lote_fabricante__icontains=query)
             )
 
+        if fecha_desde:
+            activos_qs = activos_qs.filter(fecha_recepcion__gte=fecha_desde)
+            lotes_qs = lotes_qs.filter(fecha_recepcion__gte=fecha_desde)
+        if fecha_hasta:
+            activos_qs = activos_qs.filter(fecha_recepcion__lte=fecha_hasta)
+            lotes_qs = lotes_qs.filter(fecha_recepcion__lte=fecha_hasta)
+
         # 5. Aplicar filtro de Estado (SOLO APLICA A Activo)
         if estado_id:
             activos_qs = activos_qs.filter(estado__id=estado_id)
@@ -1006,10 +1017,18 @@ class StockActualListView(LoginRequiredMixin, View):
             stock_items_list = list(chain(activos_qs, lotes_qs))
 
         # 8. Ordenar la lista combinada
-        try:
-            stock_items_list.sort(key=lambda x: x.producto.producto_global.nombre_oficial)
-        except AttributeError:
-            pass
+        reverse_sort = sort_by.endswith('_desc') 
+        sort_field = sort_by.replace('_desc', '').replace('_asc', '')
+
+        if sort_field == 'fecha':
+            # Usa una fecha por defecto para manejar valores None
+            default_date = datetime.date.min if reverse_sort else datetime.date.max 
+            stock_items_list.sort(key=lambda x: getattr(x, 'fecha_recepcion', default_date) or default_date, reverse=reverse_sort)
+        elif sort_field == 'nombre': # Añadido orden por nombre
+             stock_items_list.sort(key=lambda x: x.producto.producto_global.nombre_oficial, reverse=reverse_sort)
+        # else: # Orden por defecto (fecha desc) ya aplicado arriba si sort_field == 'fecha'
+             # Si no es fecha ni nombre, podrías ordenar por nombre como fallback
+             # stock_items_list.sort(key=lambda x: x.producto.producto_global.nombre_oficial)
 
         # 9. Paginación
         paginator = Paginator(stock_items_list, self.paginate_by)
@@ -1022,24 +1041,20 @@ class StockActualListView(LoginRequiredMixin, View):
             page_obj = paginator.page(paginator.num_pages)
 
         # 10. Preparar contexto para la plantilla
-        context['page_obj'] = page_obj
-        context['stock_items'] = page_obj.object_list
-        context['today'] = timezone.now().date() # <-- AÑADIDO para lógica de vencimiento
-
-        # Pasamos los objetos para poblar los dropdowns de filtros
-        context['todas_las_ubicaciones'] = Ubicacion.objects.filter(estacion=estacion_usuario)
-        
-        # Usamos el TipoEstado "OPERATIVO"
-        try:
-            context['todos_los_estados'] = Estado.objects.filter(tipo_estado__nombre="OPERATIVO") 
-        except Exception:
-            context['todos_los_estados'] = Estado.objects.none() # Fallback
-
-        # Mantenemos los valores de los filtros
-        context['current_q'] = query
-        context['current_tipo'] = tipo_producto
-        context['current_ubicacion'] = ubicacion_id
-        context['current_estado'] = estado_id
+        context = {
+            'page_obj': page_obj,
+            'stock_items': page_obj.object_list,
+            'todas_las_ubicaciones': Ubicacion.objects.filter(estacion=estacion_usuario),
+            'todos_los_estados': Estado.objects.all(),
+            'current_q': query,
+            'current_tipo': tipo_producto,
+            'current_ubicacion': ubicacion_id,
+            'current_estado': estado_id,
+            'current_fecha_desde': fecha_desde,
+            'current_fecha_hasta': fecha_hasta,
+            'current_sort': sort_by,
+            'today': timezone.now().date() # Mantenido para lógica de vencimiento
+        }
         
         return render(request, self.template_name, context)
 
@@ -1117,7 +1132,7 @@ class RecepcionStockView(LoginRequiredMixin, View):
                                     codigo_activo=form.cleaned_data.get('codigo_activo'),
                                     numero_serie_fabricante=form.cleaned_data.get('numero_serie'),
                                     fecha_fabricacion=form.cleaned_data.get('fecha_fabricacion'),
-                                    fecha_puesta_en_servicio=fecha_recepcion, # Usamos fecha recepción como puesta en servicio inicial
+                                    fecha_recepcion=fecha_recepcion, # Usamos fecha recepción como puesta en servicio inicial
                                     # fecha_expiracion=form.cleaned_data.get('fecha_expiracion_activo') # Si tuvieras expira en Activo
                                 )
                                 # Registrar Movimiento para el Activo
@@ -1142,7 +1157,8 @@ class RecepcionStockView(LoginRequiredMixin, View):
                                     compartimento=compartimento,
                                     cantidad=cantidad,
                                     numero_lote_fabricante=form.cleaned_data.get('numero_lote'),
-                                    fecha_expiracion=form.cleaned_data.get('fecha_vencimiento')
+                                    fecha_expiracion=form.cleaned_data.get('fecha_vencimiento'),
+                                    fecha_recepcion=fecha_recepcion
                                 )
                                 # Registrar Movimiento para el Lote
                                 MovimientoInventario.objects.create(
