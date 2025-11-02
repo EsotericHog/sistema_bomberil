@@ -1037,6 +1037,94 @@ class ProveedorDetalleView(View):
 
 
 
+class ContactoPersonalizadoCrearView(View):
+    """
+    Permite a una estación activa crear un ContactoProveedor específico
+    (un 'ContactoPersonalizado') para un Proveedor existente.
+    """
+    template_name = 'gestion_inventario/pages/crear_contacto_personalizado.html'
+
+    def get(self, request, *args, **kwargs):
+        estacion_id = request.session.get('active_estacion_id')
+        if not estacion_id:
+            messages.error(request, "Debes tener una estación activa para esta acción.")
+            return redirect('gestion_inventario:ruta_lista_proveedores')
+
+        proveedor_id = self.kwargs.get('proveedor_pk')
+        proveedor = get_object_or_404(Proveedor, pk=proveedor_id)
+
+        # --- Validación clave ---
+        # Verificamos si ya existe un contacto para esta estación y este proveedor
+        existe_ya = ContactoProveedor.objects.filter(
+            proveedor=proveedor,
+            estacion_especifica_id=estacion_id
+        ).exists()
+
+        if existe_ya:
+            messages.warning(request, f"Tu estación ya tiene un contacto personalizado para {proveedor.nombre}. Serás redirigido para editarlo.")
+            # (Opcional: Redirigir a la vista de EDICIÓN cuando exista)
+            # Por ahora, lo devolvemos al detalle.
+            return redirect('gestion_inventario:ruta_detalle_proveedor', pk=proveedor_id)
+
+        # Si no existe, preparamos el formulario
+        contacto_form = ContactoProveedorForm()
+        
+        context = {
+            'contacto_form': contacto_form,
+            'proveedor': proveedor
+        }
+        return render(request, self.template_name, context)
+
+    def post(self, request, *args, **kwargs):
+        estacion_id = request.session.get('active_estacion_id')
+        if not estacion_id:
+            messages.error(request, "Tu sesión ha expirado o no tienes una estación activa.")
+            return redirect('gestion_inventario:ruta_lista_proveedores')
+
+        proveedor_id = self.kwargs.get('proveedor_pk')
+        proveedor = get_object_or_404(Proveedor, pk=proveedor_id)
+        estacion_actual = get_object_or_404(Estacion, pk=estacion_id)
+
+        # Repetimos la validación por seguridad en el POST
+        existe_ya = ContactoProveedor.objects.filter(
+            proveedor=proveedor,
+            estacion_especifica=estacion_actual
+        ).exists()
+
+        if existe_ya:
+            messages.error(request, "Error: Ya existe un contacto personalizado para este proveedor.")
+            return redirect('gestion_inventario:ruta_detalle_proveedor', pk=proveedor_id)
+
+        # Procesamos el formulario
+        contacto_form = ContactoProveedorForm(request.POST)
+
+        if contacto_form.is_valid():
+            try:
+                contacto = contacto_form.save(commit=False)
+                
+                # --- Asignación de claves foráneas ---
+                # El formulario no los pide, los asignamos desde el contexto
+                contacto.proveedor = proveedor
+                contacto.estacion_especifica = estacion_actual
+                
+                contacto.save()
+                
+                messages.success(request, f'Se ha creado el contacto "{contacto.nombre_contacto}" para tu estación.')
+                return redirect('gestion_inventario:ruta_detalle_proveedor', pk=proveedor.pk)
+            
+            except Exception as e:
+                messages.error(request, f'Ha ocurrido un error inesperado: {e}')
+        
+        # Si el formulario no es válido, volvemos a mostrar la página con errores
+        context = {
+            'contacto_form': contacto_form,
+            'proveedor': proveedor
+        }
+        return render(request, self.template_name, context)
+
+
+
+
 class StockActualListView(LoginRequiredMixin, View):
     """
     Vista para mostrar, filtrar y buscar en el stock actual

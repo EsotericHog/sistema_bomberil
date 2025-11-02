@@ -120,7 +120,7 @@
                     {% else %}
                         <p class="fs_normal color_primario">Tu estación no ha definido un contacto personalizado para este proveedor.</p>
                         <p class="fs_pequena color_primario_muteado">Si lo deseas, puedes usar el contacto principal global o agregar uno específico para tu estación.</p>
-                        <a href="#" class="btn btn-success fs_normal" title="Crear contacto para mi estación (Próximamente)">
+                        <a href="{% url 'gestion_inventario:ruta_crear_contacto_personalizado' proveedor_pk=proveedor.pk %}" class="btn btn-success fs_normal" title="Crear contacto para mi estación">
                             <i class="fas fa-plus me-1"></i> Crear Contacto para mi Estación
                         </a>
                     {% endif %}
