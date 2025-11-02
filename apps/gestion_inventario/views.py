@@ -1125,6 +1125,102 @@ class ContactoPersonalizadoCrearView(View):
 
 
 
+class ContactoPersonalizadoEditarView(View):
+    """
+    Permite a una estación activa editar SU PROPIO ContactoProveedor
+    específico (su 'ContactoPersonalizado').
+    """
+    template_name = 'gestion_inventario/pages/editar_contacto_personalizado.html'
+
+    def get_objeto_seguro(self, request, pk_contacto):
+        """
+        Método helper para obtener el contacto, asegurando que pertenezca
+        a la estación activa.
+        """
+        estacion_id = request.session.get('active_estacion_id')
+        if not estacion_id:
+            return None, redirect('gestion_inventario:ruta_lista_proveedores')
+
+        try:
+            # --- Validación clave de seguridad ---
+            # Obtenemos el contacto SÓLO SI el pk coincide Y
+            # la estacion_especifica coincide con la estación activa.
+            contacto = ContactoProveedor.objects.select_related(
+                'proveedor', 'comuna__region'
+            ).get(
+                pk=pk_contacto,
+                estacion_especifica_id=estacion_id
+            )
+            return contacto, None
+        
+        except ContactoProveedor.DoesNotExist:
+            messages.error(request, "El contacto no existe o no tienes permiso para editarlo.")
+            # Si el contacto no existe, no podemos saber de qué proveedor era,
+            # así que redirigimos a la lista general.
+            return None, redirect('gestion_inventario:ruta_lista_proveedores')
+
+    def get(self, request, *args, **kwargs):
+        pk_contacto = self.kwargs.get('pk')
+        contacto_a_editar, error_redirect = self.get_objeto_seguro(request, pk_contacto)
+        
+        if error_redirect:
+            return error_redirect
+        
+        # --- Pre-poblar el formulario ---
+        # Pasamos 'instance' para que el formulario se cargue con datos.
+        contacto_form = ContactoProveedorForm(instance=contacto_a_editar)
+
+        # --- Lógica para pre-seleccionar la Región ---
+        # El campo 'region' no está en el modelo, así que lo seteamos manualmente.
+        if contacto_a_editar.comuna:
+            # Seteamos el valor inicial del campo 'region'
+            contacto_form.fields['region'].initial = contacto_a_editar.comuna.region_id
+            
+            # El __init__ del form ya maneja poblar el queryset de comunas
+            # si 'instance' es proveído.
+            
+        
+        context = {
+            'contacto_form': contacto_form,
+            'proveedor': contacto_a_editar.proveedor,
+            'contacto': contacto_a_editar # Para el título o breadcrumbs
+        }
+        return render(request, self.template_name, context)
+
+    def post(self, request, *args, **kwargs):
+        pk_contacto = self.kwargs.get('pk')
+        contacto_a_editar, error_redirect = self.get_objeto_seguro(request, pk_contacto)
+
+        if error_redirect:
+            return error_redirect
+        
+        # Pasamos 'instance' Y 'request.POST' para procesar la actualización
+        contacto_form = ContactoProveedorForm(request.POST, instance=contacto_a_editar)
+
+        if contacto_form.is_valid():
+            try:
+                # No necesitamos asignar proveedor ni estación,
+                # 'instance' se encarga de que estemos actualizando el correcto.
+                contacto_form.save()
+                
+                messages.success(request, f'Se ha actualizado el contacto "{contacto_a_editar.nombre_contacto}".')
+                # Devolvemos al usuario al detalle del proveedor
+                return redirect('gestion_inventario:ruta_detalle_proveedor', pk=contacto_a_editar.proveedor_id)
+            
+            except Exception as e:
+                messages.error(request, f'Ha ocurrido un error inesperado: {e}')
+        
+        # Si el formulario no es válido, volvemos a mostrar la página con errores
+        context = {
+            'contacto_form': contacto_form,
+            'proveedor': contacto_a_editar.proveedor,
+            'contacto': contacto_a_editar
+        }
+        return render(request, self.template_name, context)
+
+
+
+
 class StockActualListView(LoginRequiredMixin, View):
     """
     Vista para mostrar, filtrar y buscar en el stock actual

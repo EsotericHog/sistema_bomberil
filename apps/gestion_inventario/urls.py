@@ -19,6 +19,7 @@ from .views import (
     ProveedorCrearView,
     ProveedorDetalleView,
     ContactoPersonalizadoCrearView,
+    ContactoPersonalizadoEditarView,
     StockActualListView,
     VehiculoListaView,
     RecepcionStockView
@@ -68,8 +69,11 @@ urlpatterns = [
     path('proveedores/crear/', ProveedorCrearView.as_view(), name='ruta_crear_proveedor'),
     # Ver detalle proveedor
     path('proveedores/<int:pk>/', ProveedorDetalleView.as_view(), name='ruta_detalle_proveedor'),
+
     # Crear contacto personalizado
     path('proveedores/<int:proveedor_pk>/crear-contacto-personalizado/', ContactoPersonalizadoCrearView.as_view(), name='ruta_crear_contacto_personalizado'),
+    # Editar contacto personalizado
+    path('proveedores/contacto/<int:pk>/editar/', ContactoPersonalizadoEditarView.as_view(), name='ruta_editar_contacto_personalizado'),
 
     # Stock actual
     path('stock-actual/', StockActualListView.as_view(), name='ruta_stock_actual'),

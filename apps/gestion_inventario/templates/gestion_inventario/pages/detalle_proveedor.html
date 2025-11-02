@@ -94,7 +94,7 @@
                         </div>
                     {% elif contacto_estacion_actual %}
                         <div class="d-flex justify-content-end mb-3">
-                             <a href="#" class="btn btn-sm btn-primary fs_pequena" title="Editar mi contacto (Próximamente)">
+                            <a href="{% url 'gestion_inventario:ruta_editar_contacto_personalizado' pk=contacto_estacion_actual.pk %}" class="btn btn-sm btn-primary fs_pequena" title="Editar mi contacto">
                                 <i class="fas fa-edit me-1"></i> Editar mi Contacto
                             </a>
                         </div>
