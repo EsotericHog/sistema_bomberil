@@ -6,13 +6,15 @@ from django.db import IntegrityError, transaction
 from django.shortcuts import render, redirect
 from django.views import View
 from django.http import JsonResponse
-from django.db.models import Count, Sum, Value, Q
+from django.db import models
+from django.db.models import Count, Sum, Value, Q, Subquery, OuterRef, Q
 from django.db.models.functions import Coalesce
 from django.urls import reverse
 from django.contrib import messages
 from django.shortcuts import get_object_or_404
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
+
 
 
 from .models import (
@@ -837,6 +839,9 @@ class ProveedorListView(View):
     """
     Muestra una lista paginada de todos los Proveedores globales.
     Permite filtrar por nombre/RUT, Región y Comuna.
+
+    MODIFICADO: El filtro de ubicación (Región/Comuna) ahora busca en
+    el Contacto Principal Y en todos los Contactos Personalizados.
     """
     template_name = 'gestion_inventario/pages/lista_proveedores.html'
     paginate_by = 15
@@ -847,36 +852,66 @@ class ProveedorListView(View):
         comuna_id_str = request.GET.get('comuna', None)
         page_number = request.GET.get('page')
 
-        # --- QUERYSET BASE CORREGIDO ---
+        # --- SUBQUERY para contar TOTAL de contactos ---
+        # Esto evita que los JOINS del filtro (más abajo) contaminen el conteo.
+        total_contactos_subquery = ContactoProveedor.objects.filter(
+            proveedor_id=OuterRef('pk')
+        ).values('proveedor_id').annotate(
+            c=Count('pk')
+        ).values('c')
+
+        # --- QUERYSET BASE MEJORADO ---
         queryset = Proveedor.objects.select_related(
-            # La ruta correcta para optimizar la consulta
-            'contacto_principal__comuna__region' 
+            'contacto_principal__comuna__region'
         ).annotate(
-            contactos_count=Count('contactos')
+            # Usamos Coalesce para asegurar 0 en lugar de None si no hay contactos
+            contactos_count=Coalesce(
+                Subquery(total_contactos_subquery, output_field=models.IntegerField()),
+                0
+            )
         ).order_by('nombre')
 
-        # --- LÓGICA DE FILTRADO CORREGIDA ---
+        # --- LÓGICA DE FILTRADO (Búsqueda por Nombre/RUT) ---
         if search_query:
             queryset = queryset.filter(
                 Q(nombre__icontains=search_query) |
                 Q(rut__icontains=search_query.replace('-', '').replace('.', ''))
             )
         
+        # --- LÓGICA DE FILTRADO (Ubicación) ---
+        
+        # Creamos un objeto Q para los filtros de ubicación
+        location_filters = Q()
+
         region_id = None
         if region_id_str and region_id_str.isdigit():
             region_id = int(region_id_str)
-            # Filtra a través de la comuna del contacto principal
-            queryset = queryset.filter(contacto_principal__comuna__region_id=region_id)
+            # Filtra por región principal O región de contactos personalizados
+            location_filters.add(
+                Q(contacto_principal__comuna__region_id=region_id) |
+                Q(contactos__comuna__region_id=region_id),
+                Q.AND
+            )
 
         comuna_id = None
         if comuna_id_str and comuna_id_str.isdigit():
             comuna_id = int(comuna_id_str)
-            # Filtra por la comuna del contacto principal
-            queryset = queryset.filter(contacto_principal__comuna_id=comuna_id)
+            # Filtra por comuna principal O comuna de contactos personalizados
+            location_filters.add(
+                Q(contacto_principal__comuna_id=comuna_id) |
+                Q(contactos__comuna_id=comuna_id),
+                Q.AND
+            )
+        
+        # Aplicamos los filtros de ubicación si existen
+        if location_filters:
+            # Usamos .distinct() para evitar duplicados si un proveedor
+            # coincide tanto en el principal como en el personalizado.
+            queryset = queryset.filter(location_filters).distinct()
         
         # ... (El resto de la vista: obtener datos para filtros, paginación y contexto se mantiene igual) ...
         all_regiones = Region.objects.order_by('nombre')
-        comunas_para_filtro = Comuna.objects.none() 
+        comunas_para_filtro = Comuna.objects.none()
         if region_id:
             comunas_para_filtro = Comuna.objects.filter(region_id=region_id).order_by('nombre')
         
@@ -891,7 +926,6 @@ class ProveedorListView(View):
         context = {
             'proveedores': page_obj,
             'page_obj': page_obj,
-            # ... (el resto de tu contexto se mantiene igual) ...
             'all_regiones': all_regiones,
             'comunas_para_filtro': comunas_para_filtro,
             'current_search': search_query or "",
