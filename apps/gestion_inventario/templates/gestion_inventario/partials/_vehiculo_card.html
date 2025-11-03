@@ -44,7 +44,7 @@
                 <span class="color_primario_variante fs_pequena">{{ ubicacion.total_existencias }} Existencia{{ ubicacion.total_existencias|pluralize }}</span>
             </li>
         </ul>
-        <a href="#" class="almacen-card__boton fondo_azul color_blanco fs_normal"> Gestionar Vehículo
+        <a href="{% url 'gestion_inventario:ruta_gestionar_ubicacion' ubicacion.id %}" class="almacen-card__boton fondo_azul color_blanco fs_normal"> Gestionar Vehículo
         </a>
     </div>
 </div>

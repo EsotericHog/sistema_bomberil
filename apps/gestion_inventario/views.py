@@ -183,13 +183,13 @@ class AreaCrearView(View):
 
 
 
-class AreaDetalleView(LoginRequiredMixin, View):
+class UbicacionDetalleView(LoginRequiredMixin, View):
     """
     Vista para gestionar un área/ubicación: muestra detalles, 
     resúmenes de stock, lista de compartimentos con sus totales,
     y una lista detallada de todas las existencias en el área.
     """
-    template_name = 'gestion_inventario/pages/gestionar_area.html'
+    template_name = 'gestion_inventario/pages/gestionar_ubicacion.html'
     login_url = '/acceso/login/'
 
     def get(self, request, ubicacion_id):
@@ -198,7 +198,7 @@ class AreaDetalleView(LoginRequiredMixin, View):
             messages.error(request, "No se ha seleccionado una estación activa.")
             return redirect('gestion_inventario:ruta_inicio')
         
-        # 1. Obtener la Ubicación (Área) principal
+        # 1. Obtener la Ubicación (genérica)
         ubicacion = get_object_or_404(Ubicacion, id=ubicacion_id, estacion_id=estacion_id)
 
         # 2. Obtener compartimentos con sus totales de stock anotados
