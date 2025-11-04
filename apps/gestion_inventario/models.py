@@ -469,6 +469,7 @@ class LoteInsumo(models.Model):
     """
     producto = models.ForeignKey(Producto, on_delete=models.CASCADE, limit_choices_to={'es_serializado': False})
     codigo_lote = models.CharField(verbose_name="Código de Lote (ID Interno)", max_length=50, unique=True, blank=True, editable=False, help_text="ID Interno único generado por el sistema (Ej: E1-LOT-00001)")
+    estado = models.ForeignKey(Estado, on_delete=models.PROTECT, verbose_name="Estado del Lote", help_text="Estado actual del lote (Disponible, Anulado, etc.)")
     compartimento = models.ForeignKey(Compartimento, on_delete=models.PROTECT, verbose_name="Compartimento")
     cantidad = models.PositiveIntegerField(default=0)
     fecha_expiracion = models.DateField(verbose_name="Fecha de expiración", null=True, blank=True)
@@ -493,6 +494,18 @@ class LoteInsumo(models.Model):
         Sobrescribe el método save para generar un 'codigo_lote' único 
         al crear un nuevo lote, similar a como lo hace el modelo Activo.
         """
+
+        # --- LÓGICA DE ESTADO POR DEFECTO ---
+        # Si es un objeto nuevo (no tiene pk) Y no se le ha asignado un estado
+        if not self.pk and not self.estado_id:
+            try:
+                # Buscamos 'DISPONIBLE' y lo asignamos
+                estado_disponible = Estado.objects.get(nombre='DISPONIBLE')
+                self.estado = estado_disponible
+            except Estado.DoesNotExist:
+                # Fallback por si 'DISPONIBLE' no existe
+                # (en un sistema real, aquí se debería loggear un error crítico)
+                pass
         
         # Comprueba si es un objeto nuevo (not self.pk) y si el código aún no se ha generado
         if not self.codigo_lote and not self.pk and self.compartimento:

@@ -1871,6 +1871,9 @@ class RecepcionStockView(LoginRequiredMixin, View):
 
         if cabecera_form.is_valid() and detalle_formset.is_valid():
             try:
+                # Obtener estado DISPONIBLE
+                estado_disponible_id = Estado.objects.get(nombre='DISPONIBLE', tipo_estado__nombre='OPERATIVO').id
+
                 # Usamos una transacción para asegurar que todo se guarde o nada
                 with transaction.atomic():
                     proveedor = cabecera_form.cleaned_data['proveedor']
@@ -1895,7 +1898,7 @@ class RecepcionStockView(LoginRequiredMixin, View):
                                     estacion=estacion,
                                     compartimento=compartimento,
                                     proveedor=proveedor, # Proveedor de la cabecera
-                                    estado_id=Estado.objects.get(nombre='DISPONIBLE', tipo_estado__nombre='OPERATIVO').id,
+                                    estado_id=estado_disponible_id,
                                     # codigo_activo=form.cleaned_data.get('codigo_activo'),
                                     numero_serie_fabricante=form.cleaned_data.get('numero_serie'),
                                     fecha_fabricacion=form.cleaned_data.get('fecha_fabricacion'),
@@ -2061,3 +2064,155 @@ class AgregarStockACompartimentoView(LoginRequiredMixin, View):
 
         # Si 'action' no es válido, redirigir
         return redirect('gestion_inventario:ruta_detalle_compartimento', compartimento_id=compartimento_id)
+
+
+
+
+def get_or_create_anulado_compartment(estacion: Estacion) -> Compartimento:
+    """
+    Busca o crea la ubicación y compartimento 'limbo' (ADMINISTRATIVA)
+    para los registros anulados de una estación.
+    """
+    
+    # 1. Buscar el TipoUbicacion "ADMINISTRATIVA"
+    # (Usamos get_or_create por robustez, en caso de que se borre)
+    tipo_admin, _ = TipoUbicacion.objects.get_or_create(nombre='ADMINISTRATIVA')
+
+    # 2. Buscar o crear la Ubicación "Registros Administrativos"
+    ubicacion_admin, _ = Ubicacion.objects.get_or_create(
+        nombre="Registros Administrativos",
+        estacion=estacion,
+        tipo_ubicacion=tipo_admin, # <-- ESTE ES EL CAMBIO CLAVE
+        defaults={
+            'descripcion': 'Ubicación simbólica para registros anulados por error.'
+        }
+    )
+
+    # 3. Buscar o crear el Compartimento "Stock Anulado"
+    compartimento_anulado, _ = Compartimento.objects.get_or_create(
+        nombre="Stock Anulado",
+        ubicacion=ubicacion_admin,
+        defaults={
+            'descripcion': 'Existencias (activos/lotes) que fueron anuladas por error de ingreso.'
+        }
+    )
+    return compartimento_anulado
+
+
+
+
+class AnularExistenciaView(LoginRequiredMixin, View):
+    """
+    Vista para anular un registro de existencia (Activo o LoteInsumo)
+    que fue ingresado por error.
+    """
+    template_name = 'gestion_inventario/pages/anular_existencia.html'
+    login_url = '/acceso/login/'
+
+    def _get_item_and_check_permission(self, estacion_id, tipo_item, item_id):
+        """
+        Función helper para obtener el Activo o Lote y verificar pertenencia.
+        """
+        item = None
+        if tipo_item == 'activo':
+            item = get_object_or_404(
+                Activo.objects.select_related('producto__producto_global', 'estado', 'compartimento__ubicacion'),
+                id=item_id, 
+                estacion_id=estacion_id
+            )
+        elif tipo_item == 'lote':
+            item = get_object_or_404(
+                LoteInsumo.objects.select_related('producto__producto_global', 'estado', 'compartimento__ubicacion'),
+                id=item_id, 
+                compartimento__ubicacion__estacion_id=estacion_id
+            )
+        return item
+
+    def get(self, request, tipo_item, item_id):
+        estacion_id = request.session.get('active_estacion_id')
+        if not estacion_id:
+            messages.error(request, "No se ha seleccionado una estación activa.")
+            return redirect('gestion_inventario:ruta_inicio')
+
+        item = self._get_item_and_check_permission(estacion_id, tipo_item, item_id)
+        if not item:
+            messages.error(request, "El tipo de ítem especificado no es válido.")
+            return redirect('gestion_inventario:ruta_stock_actual')
+        
+        if item.estado.nombre == 'ANULADO POR ERROR':
+            messages.warning(request, "Esta existencia ya se encuentra anulada.")
+            return redirect('gestion_inventario:ruta_stock_actual')
+
+        context = {
+            'item': item,
+            'tipo_item': tipo_item
+        }
+        return render(request, self.template_name, context)
+
+    def post(self, request, tipo_item, item_id):
+        estacion_id = request.session.get('active_estacion_id')
+        if not estacion_id:
+            messages.error(request, "No se ha seleccionado una estación activa.")
+            return redirect('gestion_inventario:ruta_inicio')
+        
+        try:
+            estacion_obj = Estacion.objects.get(id=estacion_id)
+        except Estacion.DoesNotExist:
+            messages.error(request, "Estación activa no encontrada.")
+            return redirect('gestion_inventario:ruta_inicio')
+
+        item = self._get_item_and_check_permission(estacion_id, tipo_item, item_id)
+        if not item:
+            messages.error(request, "El tipo de ítem especificado no es válido.")
+            return redirect('gestion_inventario:ruta_stock_actual')
+
+        try:
+            # Obtenemos los objetos necesarios para la anulación
+            estado_anulado = Estado.objects.get(nombre='ANULADO POR ERROR')
+            compartimento_anulado_limbo = get_or_create_anulado_compartment(estacion_obj)
+            
+            # Guardamos el compartimento original para el Movimiento
+            compartimento_original = item.compartimento
+
+        except Estado.DoesNotExist:
+            messages.error(request, "Error crítico: No se encontró el estado 'ANULADO POR ERROR'. Contacte al administrador.")
+            return redirect('gestion_inventario:ruta_stock_actual')
+        except Exception as e:
+            messages.error(request, f"Error de configuración al buscar compartimento 'Stock Anulado': {e}")
+            return redirect('gestion_inventario:ruta_stock_actual')
+
+        try:
+            with transaction.atomic():
+                cantidad_a_mover = 0 # Para el movimiento
+                
+                # 1. Actualizar el ítem
+                item.estado = estado_anulado
+                item.compartimento = compartimento_anulado_limbo # <-- ¡El cambio clave!
+                
+                if tipo_item == 'lote':
+                    cantidad_a_mover = item.cantidad * -1 # Negativo para ajuste
+                    item.cantidad = 0
+                else: # tipo_item == 'activo'
+                    cantidad_a_mover = -1
+
+                item.save()
+                
+                # 2. Crear el MovimientoInventario (como discutimos)
+                MovimientoInventario.objects.create(
+                    tipo_movimiento=TipoMovimiento.AJUSTE,
+                    usuario=request.user,
+                    estacion=estacion_obj,
+                    compartimento_origen=compartimento_original, # De dónde salió
+                    compartimento_destino=compartimento_anulado_limbo, # A dónde fue
+                    activo=item if tipo_item == 'activo' else None,
+                    lote_insumo=item if tipo_item == 'lote' else None,
+                    cantidad_movida=cantidad_a_mover,
+                    notas=f"Registro anulado por error de ingreso. Movido desde '{compartimento_original.nombre}'."
+                )
+
+            messages.success(request, f"La existencia '{item.producto.producto_global.nombre_oficial}' ha sido anulada y movida a 'Registros Administrativos'.")
+            return redirect('gestion_inventario:ruta_stock_actual')
+
+        except Exception as e:
+            messages.error(request, f"Ocurrió un error inesperado al anular: {e}")
+            return redirect('gestion_inventario:ruta_stock_actual')

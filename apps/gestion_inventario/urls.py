@@ -29,7 +29,8 @@ from .views import (
     StockActualListView,
     VehiculoListaView,
     RecepcionStockView,
-    AgregarStockACompartimentoView
+    AgregarStockACompartimentoView,
+    AnularExistenciaView
     )
 
 app_name = 'gestion_inventario'
@@ -100,5 +101,8 @@ urlpatterns = [
     # Recepción de stock
     path('recepcion-stock/', RecepcionStockView.as_view(), name='ruta_recepcion_stock'),
     # Añadir Stock a Compartimento
-    path('compartimentos/<int:compartimento_id>/añadir-stock/', AgregarStockACompartimentoView.as_view(), name='ruta_agregar_stock_compartimento')
+    path('compartimentos/<int:compartimento_id>/añadir-stock/', AgregarStockACompartimentoView.as_view(), name='ruta_agregar_stock_compartimento'),
+
+    # Anular existencia
+    path('existencia/<str:tipo_item>/<int:item_id>/anular/', AnularExistenciaView.as_view(), name='ruta_anular_existencia'),
 ]
