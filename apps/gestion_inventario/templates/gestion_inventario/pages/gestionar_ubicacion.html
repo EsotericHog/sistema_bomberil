@@ -59,26 +59,29 @@
                             <span class="badge bg-primary rounded-pill fs_pequena">{{ resumen_total_area }}</span>
                         </li>
                     </ul>
-                    <div class="d-grid gap-2 d-md-flex mt-3 pt-3 border-top">
-                        <a class="btn btn-primary me-md-2 fs_normal" href="{% url 'gestion_inventario:ruta_crear_compartimento' ubicacion.id %}">
-                            <i class="fa-solid fa-plus"></i> Crear compartimento
-                        </a>
-                        
-                        {# Botón de editar dinámico, apunta a la URL correcta según el tipo #}
-                        {% if ubicacion.tipo_ubicacion.nombre == 'VEHÍCULO' %}
-                            <a class="btn btn-secondary fs_normal" href="{% url 'gestion_inventario:ruta_editar_vehiculo' ubicacion.id %}"> {# Asegúrate de crear esta URL #}
-                                <i class="fa-solid fa-pen-to-square"></i> Editar vehículo
-                            </a>
-                        {% else %}
-                             <a class="btn btn-secondary fs_normal" href="{% url 'gestion_inventario:ruta_editar_area' ubicacion.id %}">
-                                <i class="fa-solid fa-pen-to-square"></i> Editar área
-                            </a>
-                        {% endif %}
 
-                        <a class="btn btn-outline-danger fs_normal ms-md-auto" href="{% url 'gestion_inventario:ruta_eliminar_ubicacion' ubicacion.id %}">
-                            <i class="fa-solid fa-trash"></i> Eliminar
-                        </a>
-                    </div>
+                    {% if ubicacion.tipo_ubicacion.nombre != 'ADMINISTRATIVA' %}
+                        <div class="d-grid gap-2 d-md-flex mt-3 pt-3 border-top">
+                            <a class="btn btn-primary me-md-2 fs_normal" href="{% url 'gestion_inventario:ruta_crear_compartimento' ubicacion.id %}">
+                                <i class="fa-solid fa-plus"></i> Crear compartimento
+                            </a>
+
+                            {% if ubicacion.tipo_ubicacion.nombre == 'VEHÍCULO' %}
+                                <a class="btn btn-secondary fs_normal me-md-2" href="{% url 'gestion_inventario:ruta_editar_vehiculo' ubicacion.id %}">
+                                    <i class="fa-solid fa-pen-to-square"></i> Editar vehículo
+                                </a>
+                            {% else %}
+                                 <a class="btn btn-secondary fs_normal me-md-2" href="{% url 'gestion_inventario:ruta_editar_area' ubicacion.id %}">
+                                    <i class="fa-solid fa-pen-to-square"></i> Editar área
+                                </a>
+                            {% endif %}
+                            
+                            <a class="btn btn-outline-danger fs_normal ms-md-auto" href="{% url 'gestion_inventario:ruta_eliminar_ubicacion' ubicacion.id %}">
+                                <i class="fa-solid fa-trash"></i> Eliminar
+                            </a>
+                        </div>
+                    {% endif %}
+                    
                 </div>
             </div>
         </div>

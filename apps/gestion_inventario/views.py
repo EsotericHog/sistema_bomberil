@@ -208,13 +208,18 @@ class UbicacionDetalleView(LoginRequiredMixin, View):
         # 1. Obtener la Ubicación (genérica)
         ubicacion = get_object_or_404(Ubicacion, id=ubicacion_id, estacion_id=estacion_id)
 
-        # 2. Obtener compartimentos con sus totales de stock anotados
+        # 2. Denegar acceso si es de tipo ADMINISTRATIVA
+        if ubicacion.tipo_ubicacion.nombre == 'ADMINISTRATIVA':
+            messages.error(request, "Esta ubicación es interna del sistema y no se puede gestionar.")
+            return redirect('gestion_inventario:ruta_stock_actual')
+
+        # 3. Obtener compartimentos con sus totales de stock anotados
         compartimentos_con_stock = Compartimento.objects.filter(ubicacion=ubicacion).annotate(
             total_activos=Count('activo', distinct=True),
             total_cantidad_insumos=Coalesce(Sum('loteinsumo__cantidad'), 0)
         ).order_by('nombre')
 
-        # 3. Calcular el resumen de stock total para el área (Tarjeta Izquierda)
+        # 4. Calcular el resumen de stock total para el área (Tarjeta Izquierda)
         resumen_activos_area = 0
         resumen_insumos_area = 0
         for c in compartimentos_con_stock:
@@ -224,7 +229,7 @@ class UbicacionDetalleView(LoginRequiredMixin, View):
         
         resumen_total_area = resumen_activos_area + resumen_insumos_area
 
-        # 4. Obtener la lista detallada de todo el stock en esta área
+        # 5. Obtener la lista detallada de todo el stock en esta área
         activos_en_area = Activo.objects.filter(compartimento__ubicacion=ubicacion).select_related(
             'producto__producto_global', 'compartimento', 'estado'
         )
@@ -234,10 +239,10 @@ class UbicacionDetalleView(LoginRequiredMixin, View):
 
         stock_items_list = list(chain(activos_en_area, lotes_en_area))
         
-        # 5. Ordenar la lista detallada (p.ej. por nombre de compartimento, luego por producto)
+        # 6. Ordenar la lista detallada (p.ej. por nombre de compartimento, luego por producto)
         stock_items_list.sort(key=lambda x: (x.compartimento.nombre, x.producto.producto_global.nombre_oficial))
         
-        # 6. Preparar el contexto completo
+        # 7. Preparar el contexto completo
         context = {
             'ubicacion': ubicacion,
             'compartimentos': compartimentos_con_stock, # Queryset anotado
@@ -2082,7 +2087,7 @@ def get_or_create_anulado_compartment(estacion: Estacion) -> Compartimento:
     ubicacion_admin, _ = Ubicacion.objects.get_or_create(
         nombre="Registros Administrativos",
         estacion=estacion,
-        tipo_ubicacion=tipo_admin, # <-- ESTE ES EL CAMBIO CLAVE
+        tipo_ubicacion=tipo_admin,
         defaults={
             'descripcion': 'Ubicación simbólica para registros anulados por error.'
         }

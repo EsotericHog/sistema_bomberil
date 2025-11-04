@@ -159,25 +159,33 @@
                         
                         <!-- Ubicación (Compartimento y Ubicacion) -->
                         <td class="fs_pequena">
-                        {% with ubicacion=item.compartimento.ubicacion %}
-                            {% if ubicacion.tipo_ubicacion.nombre == 'VEHÍCULO' %}
-                                <i class="fas fa-truck text-muted" title="Vehículo"></i>
-                            {% else %}
-                                <i class="fas fa-landmark text-muted" title="Área"></i>
-                            {% endif %}
-                            
-                            <strong>
-                                <a href="{% url 'gestion_inventario:ruta_gestionar_ubicacion' ubicacion.id %}">
-                                    {{ ubicacion.nombre }}
-                                </a>
-                            </strong>
-                            <br>
-                            <small>
-                                <a href="{% url 'gestion_inventario:ruta_detalle_compartimento' item.compartimento.id %}" class="text-muted">
-                                    {{ item.compartimento.nombre }}
-                                </a>
-                            </small>
-                        {% endwith %}
+                            {% with ubicacion=item.compartimento.ubicacion %}
+                                {% if ubicacion.tipo_ubicacion.nombre == 'VEHÍCULO' %}
+                                    <i class="fas fa-truck text-muted" title="Vehículo"></i>
+                                {% elif ubicacion.tipo_ubicacion.nombre == 'ÁREA' %}
+                                    <i class="fas fa-landmark text-muted" title="Área"></i>
+                                {% else %}
+                                    <i class="fas fa-server text-muted" title="Administrativa"></i>
+                                {% endif %}
+                                
+                                {% if ubicacion.tipo_ubicacion.nombre == 'ADMINISTRATIVA' %}
+                                    <strong>{{ ubicacion.nombre }}</strong>
+                                    <br>
+                                    <small class="text-muted">{{ item.compartimento.nombre }}</small>
+                                {% else %}
+                                    <strong>
+                                        <a href="{% url 'gestion_inventario:ruta_gestionar_ubicacion' ubicacion.id %}">
+                                            {{ ubicacion.nombre }}
+                                        </a>
+                                    </strong>
+                                    <br>
+                                    <small>
+                                        <a href="{% url 'gestion_inventario:ruta_detalle_compartimento' item.compartimento.id %}" class="text-muted">
+                                            {{ item.compartimento.nombre }}
+                                        </a>
+                                    </small>
+                                {% endif %}
+                                {% endwith %}
                         </td>
                         
                         <!-- Cantidad -->
@@ -218,7 +226,7 @@
                             {% if item.estado.nombre != "ANULADO POR ERROR" %}
                                 <a href="#" class="btn btn-sm btn-outline-primary fs_normal" title="Ver Detalles"><i class="fas fa-eye"></i></a>
                                 <a href="#" class="btn btn-sm btn-outline-secondary fs_normal" title="Mover Ítem"><i class="fas fa-truck-moving"></i></a>
-                                
+
                                 {% if item.producto.es_serializado %}
                                     <a href="{% url 'gestion_inventario:ruta_anular_existencia' tipo_item='activo' item_id=item.id %}" 
                                        class="btn btn-sm btn-outline-danger fs_normal" title="Anular Registro (Error de Ingreso)">
