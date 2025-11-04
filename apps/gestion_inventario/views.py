@@ -113,7 +113,7 @@ class AreaListaView(LoginRequiredMixin, View):
         ubicaciones_con_totales = (
             Ubicacion.objects
             .filter(estacion_id=estacion_id)
-            .exclude(tipo_ubicacion__nombre__iexact='VEHÍCULO')
+            .filter(tipo_ubicacion__nombre='ÁREA')
             .annotate(
                 # 1. Contar el número de compartimentos
                 total_compartimentos=Count('compartimento', distinct=True),
