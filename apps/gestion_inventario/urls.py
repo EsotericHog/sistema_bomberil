@@ -6,6 +6,7 @@ from .views import (
     AreaListaView,
     AreaCrearView,
     AreaEditarView,
+    VehiculoEditView,
     UbicacionDetalleView,
     CompartimentoListaView,
     CompartimentoDetalleView,
@@ -51,14 +52,14 @@ urlpatterns = [
     # Gestionar detalle de una ubicación
     path('ubicaciones/<int:ubicacion_id>/gestionar/', UbicacionDetalleView.as_view(), name='ruta_gestionar_ubicacion'),
     # Crear compartimento para un área
-    path('areas/<int:ubicacion_id>/compartimentos/crear/', CompartimentoCrearView.as_view(), name='ruta_crear_compartimento'),
+    path('ubicaciones/<int:ubicacion_id>/compartimentos/crear/', CompartimentoCrearView.as_view(), name='ruta_crear_compartimento'),
     # Editar área
     path('areas/<int:ubicacion_id>/editar/', AreaEditarView.as_view(), name='ruta_editar_area'),
 
     # Lista de vehículos
     path('vehiculos/', VehiculoListaView.as_view(), name='ruta_lista_vehiculos'),
-    # Editar vehículo
-    path('vehiculos/<int:ubicacion_id>/editar/', AreaEditarView.as_view(), name='ruta_editar_vehiculo'),
+    # Editar Vehículo
+    path('vehiculos/<int:ubicacion_id>/editar/', VehiculoEditView.as_view(), name='ruta_editar_vehiculo'),
 
     # Catálogo global de productos
     path('catalogo-global/', CatalogoGlobalListView.as_view(), name='ruta_catalogo_global'),

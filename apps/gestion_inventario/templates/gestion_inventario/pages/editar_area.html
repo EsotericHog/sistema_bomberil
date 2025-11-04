@@ -1,7 +1,7 @@
 {# Plantilla base #} {% extends 'gestion_inventario/layouts/base.html' %}
 {# Cargar assets #} {% load static %}
-{# Título de la ventana #} {% block titulo_ventana %}Editar Almacén{% endblock %} 
-{# Título de la página #} {% block titulo_pagina %}Editar Almacén{% endblock %}
+{# Título de la ventana #} {% block titulo_ventana %}Editar Área{% endblock %} 
+{# Título de la página #} {% block titulo_pagina %}Editar Área{% endblock %}
 
 
 {% block contenido %}
@@ -11,7 +11,7 @@
             <div class="card shadow-sm border-0 panel_base fondo_secundario">
                 <div class="card-body fondo_secundario">
                     <h3 class="card-title h5 mb-3 fs_mediana color_primario">
-                        Editar almacén: {{ seccion.nombre|title }}
+                        Editar área: {{ seccion.nombre|title }}
                     </h3>
 
                     <form method="post" enctype="multipart/form-data">

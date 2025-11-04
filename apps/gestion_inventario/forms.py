@@ -5,6 +5,8 @@ from .models import (
     Comuna,
     Estado,
     Ubicacion, 
+    Vehiculo,
+    TipoVehiculo,
     Compartimento, 
     Categoria, 
     Marca, 
@@ -41,6 +43,50 @@ class AreaEditForm(forms.ModelForm):
             'direccion': forms.TextInput(attrs={'class': 'form-control fs_normal color_primario fondo_secundario_variante border-0'}),
             'imagen': forms.FileInput(attrs={'class': 'form-control fs_normal color_primario fondo_secundario_variante border-0'}),
         }
+
+
+
+class VehiculoUbicacionEditForm(forms.ModelForm):
+    """
+    Formulario para editar la parte 'Ubicacion' de un vehículo.
+    (nombre, descripción, imagen, etc.)
+    """
+    class Meta:
+        model = Ubicacion
+        # Usamos los mismos campos que AreaEditForm para consistencia
+        fields = ['nombre', 'descripcion', 'imagen']
+        widgets = {
+            'nombre': forms.TextInput(attrs={'class': 'form-control fs_normal color_primario fondo_secundario_variante border-0'}),
+            'descripcion': forms.Textarea(attrs={'class': 'form-control fs_normal color_primario fondo_secundario_variante border-0', 'rows': 3}),
+            'direccion': forms.TextInput(attrs={'class': 'form-control fs_normal color_primario fondo_secundario_variante border-0'}),
+            'imagen': forms.FileInput(attrs={'class': 'form-control fs_normal color_primario fondo_secundario_variante border-0'}),
+        }
+
+
+class VehiculoDetalleEditForm(forms.ModelForm):
+    """
+    Formulario para editar la parte 'Vehiculo' (detalles técnicos).
+    """
+    class Meta:
+        model = Vehiculo
+        # Excluimos 'ubicacion' porque se manejará en la vista
+        fields = ['tipo_vehiculo', 'patente', 'marca', 'modelo', 'anho', 'chasis']
+        widgets = {
+            'tipo_vehiculo': forms.Select(attrs={'class': 'form-select fs_normal color_primario fondo_secundario_variante border-0 tom-select-basic'}),
+            'patente': forms.TextInput(attrs={'class': 'form-control fs_normal color_primario fondo_secundario_variante border-0'}),
+            'marca': forms.Select(attrs={'class': 'form-select fs_normal color_primario fondo_secundario_variante border-0 tom-select-creatable'}),
+            'modelo': forms.TextInput(attrs={'class': 'form-control fs_normal color_primario fondo_secundario_variante border-0'}),
+            'anho': forms.TextInput(attrs={'class': 'form-control fs_normal color_primario fondo_secundario_variante border-0', 'placeholder': 'Ej: 2023'}),
+            'chasis': forms.TextInput(attrs={'class': 'form-control fs_normal color_primario fondo_secundario_variante border-0'}),
+        }
+    
+    def __init__(self, *args, **kwargs):
+        """
+        Poblamos los QuerySets de los campos ForeignKey para que estén ordenados.
+        """
+        super().__init__(*args, **kwargs)
+        self.fields['tipo_vehiculo'].queryset = TipoVehiculo.objects.order_by('nombre')
+        self.fields['marca'].queryset = Marca.objects.order_by('nombre')
 
 
 

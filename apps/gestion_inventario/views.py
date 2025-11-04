@@ -20,6 +20,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMix
 from .models import (
     Estacion, 
     Ubicacion, 
+    Vehiculo,
     TipoUbicacion, 
     Compartimento, 
     Activo,
@@ -38,6 +39,8 @@ from .models import (
     )
 from .forms import (
     AreaForm, 
+    VehiculoUbicacionEditForm,
+    VehiculoDetalleEditForm,
     CompartimentoForm, 
     CompartimentoEditForm, 
     ProductoGlobalForm, 
@@ -321,6 +324,103 @@ class VehiculoListaView(LoginRequiredMixin, View):
 
 
 
+class VehiculoEditView(LoginRequiredMixin, View):
+    """
+    Vista para editar los detalles de un Vehículo.
+    Maneja dos formularios:
+    1. VehiculoUbicacionEditForm (para el modelo Ubicacion)
+    2. VehiculoDetalleEditForm (para el modelo Vehiculo)
+    """
+    template_name = 'gestion_inventario/pages/editar_vehiculo.html'
+    login_url = '/acceso/login/'
+
+    def get(self, request, ubicacion_id):
+        estacion_id = request.session.get('active_estacion_id')
+        if not estacion_id:
+            messages.error(request, "No se ha seleccionado una estación activa.")
+            return redirect('gestion_inventario:ruta_inicio')
+        
+        # Obtenemos la Ubicacion (Vehículo)
+        ubicacion = get_object_or_404(
+            Ubicacion,
+            id=ubicacion_id,
+            estacion_id=estacion_id,
+            tipo_ubicacion__nombre='VEHÍCULO'
+        )
+        
+        # Obtenemos los detalles del vehículo (modelo Vehiculo)
+        # Usamos try-except por si acaso se borró el registro hijo
+        try:
+            vehiculo_detalles = ubicacion.detalles_vehiculo
+        except Vehiculo.DoesNotExist:
+            vehiculo_detalles = None # El POST creará uno nuevo
+
+        # Instanciamos ambos formularios
+        form_ubicacion = VehiculoUbicacionEditForm(instance=ubicacion)
+        form_detalles = VehiculoDetalleEditForm(instance=vehiculo_detalles)
+        
+        context = {
+            'form_ubicacion': form_ubicacion,
+            'form_detalles': form_detalles,
+            'ubicacion': ubicacion
+        }
+        return render(request, self.template_name, context)
+
+    def post(self, request, ubicacion_id):
+        estacion_id = request.session.get('active_estacion_id')
+        if not estacion_id:
+            messages.error(request, "No se ha seleccionado una estación activa.")
+            return redirect('gestion_inventario:ruta_inicio')
+
+        ubicacion = get_object_or_404(
+            Ubicacion,
+            id=ubicacion_id,
+            estacion_id=estacion_id,
+            tipo_ubicacion__nombre='VEHÍCULO'
+        )
+        
+        try:
+            vehiculo_detalles = ubicacion.detalles_vehiculo
+        except Vehiculo.DoesNotExist:
+            vehiculo_detalles = None
+
+        # Instanciamos formularios con los datos del POST y los archivos
+        form_ubicacion = VehiculoUbicacionEditForm(request.POST, request.FILES, instance=ubicacion)
+        form_detalles = VehiculoDetalleEditForm(request.POST, instance=vehiculo_detalles)
+
+        if form_ubicacion.is_valid() and form_detalles.is_valid():
+            try:
+                # Usamos una transacción para asegurar que ambos formularios se guarden
+                with transaction.atomic():
+                    # Guardamos el formulario de Ubicacion
+                    form_ubicacion.save()
+                    
+                    # Guardamos el formulario de Detalles (sin commit)
+                    detalles_obj = form_detalles.save(commit=False)
+                    # Asignamos la relación OneToOne a la Ubicacion padre
+                    detalles_obj.ubicacion = ubicacion 
+                    detalles_obj.save()
+                
+                messages.success(request, f"El vehículo '{ubicacion.nombre}' se actualizó correctamente.")
+                # Redirigimos de vuelta a la vista de gestión
+                return redirect('gestion_inventario:ruta_gestionar_ubicacion', ubicacion_id=ubicacion.id)
+            
+            except Exception as e:
+                messages.error(request, f"Ocurrió un error inesperado: {e}")
+
+        else:
+            messages.error(request, "Hubo un error. Por favor, revisa los campos de ambos formularios.")
+        
+        context = {
+            'form_ubicacion': form_ubicacion,
+            'form_detalles': form_detalles,
+            'ubicacion': ubicacion
+        }
+        return render(request, self.template_name, context)
+
+
+
+
 class CompartimentoListaView(View):
     """Lista potente de compartimentos con filtros y búsqueda."""
     def get(self, request):
@@ -378,7 +478,7 @@ class CompartimentoCrearView(View):
             compartimento.ubicacion = ubicacion
             compartimento.save()
             messages.success(request, f'Compartimento "{compartimento.nombre}" creado en {ubicacion.nombre}.')
-            return redirect(reverse('gestion_inventario:ruta_gestionar_area', kwargs={'ubicacion_id': ubicacion.id}))
+            return redirect(reverse('gestion_inventario:ruta_gestionar_ubicacion', kwargs={'ubicacion_id': ubicacion.id}))
         return render(request, 'gestion_inventario/pages/crear_compartimento.html', {'formulario': form, 'ubicacion': ubicacion})
 
 
