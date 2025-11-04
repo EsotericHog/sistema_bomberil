@@ -158,5 +158,16 @@ AÑADIR ESTILOS PARA MODAL, ALERTAS Y SPINNERS (Modo Oscuro)
 .dark-mode .card-img-top-placeholder,
 .dark-mode .img-thumbnail-placeholder {
     background-color: var(--color-fondo-secundario) !important;
-    color: var(--color-texto-secundario) !important;
+    color: var(--color-primario) !important;
+}
+
+.ts-control {
+        font-size: var(--fs-normal) !important; 
+        padding-top: 0.35rem !important;
+        padding-bottom: 0.35rem !important;
+        background-color: var(--color-secundario);
+    }
+    
+.ts-control, .ts-wrapper.single.input-active .ts-control {
+    background-color: var(--color-secundario);
 }
