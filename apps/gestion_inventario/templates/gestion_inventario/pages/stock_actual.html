@@ -122,7 +122,6 @@
                         <th class="text-center">Cantidad</th>
                         <th class="text-center">Estado</th>
                         <th>Recepción</th>
-                        <th>Fecha Relevante</th>
                         <th class="text-center">Acciones</th>
                     </tr>
                 </thead>
@@ -136,15 +135,16 @@
                             <br><small class="text-muted">{{ item.producto.producto_global.marca|default:"" }} {{ item.producto.producto_global.modelo|default:"" }}</small>
                         </td>
                         
-                        <!-- Identificador / Lote (Usa 'item.producto.es_serializado') -->
+                        {# Columna ID / Lote #}
                         {% if item.producto.es_serializado %}
                             <td class="fs_pequena">
-                                ID Interno: <strong>{{ item.codigo_activo|default:"N/A" }}</strong>
+                                ID: <strong>{{ item.codigo_activo|default:"N/A" }}</strong>
                                 <br><small class="text-muted">N/S: {{ item.numero_serie_fabricante|default:"N/A" }}</small>
                             </td>
                         {% else %}
                             <td class="fs_pequena">
-                                Lote: <strong>{{ item.numero_lote_fabricante|default:"N/A" }}</strong>
+                                ID Lote: <strong>{{ item.codigo_lote|default:"N/A" }}</strong>
+                                <br><small class="text-muted">Lote Fab: {{ item.numero_lote_fabricante|default:"N/A" }}</small>
                             </td>
                         {% endif %}
                         
@@ -194,25 +194,6 @@
                         <td class="fs_pequena">
                            {# Muestra la fecha_recepcion usando el filtro date #}
                            {{ item.fecha_recepcion|date:"d/m/Y"|default:"N/A" }} 
-                        </td>
-                        
-                        <!-- Fecha Relevante -->
-                        <td class="fs_pequena">
-                            {% if item.producto.es_serializado %}
-                                {% if item.fin_vida_util %}
-                                    Vida Útil: {{ item.fin_vida_util|date:"d/m/Y" }}
-                                {% elif item.fecha_expiracion %}
-                                    Expira: {{ item.fecha_expiracion|date:"d/m/Y" }}
-                                {% else %}
-                                    N/A
-                                {% endif %}
-                            {% else %}
-                                {% if item.fecha_expiracion %}
-                                    Vence: {{ item.fecha_expiracion|date:"d/m/Y" }}
-                                {% else %}
-                                    N/A
-                                {% endif %}
-                            {% endif %}
                         </td>
                         
                         <!-- Acciones -->
