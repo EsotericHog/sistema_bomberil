@@ -6,6 +6,7 @@ from .views import (
     AreaListaView,
     AreaCrearView,
     AreaEditarView,
+    VehiculoCreateView,
     VehiculoEditView,
     UbicacionDetalleView,
     CompartimentoListaView,
@@ -58,6 +59,8 @@ urlpatterns = [
 
     # Lista de vehículos
     path('vehiculos/', VehiculoListaView.as_view(), name='ruta_lista_vehiculos'),
+    # Crear vehículo
+    path('vehiculos/crear/', VehiculoCreateView.as_view(), name='ruta_crear_vehiculo'),
     # Editar Vehículo
     path('vehiculos/<int:ubicacion_id>/editar/', VehiculoEditView.as_view(), name='ruta_editar_vehiculo'),
 

@@ -46,6 +46,28 @@ class AreaEditForm(forms.ModelForm):
 
 
 
+class VehiculoUbicacionCreateForm(forms.ModelForm):
+    """
+    Formulario para la parte 'Ubicacion' al crear un Vehículo.
+    Sigue el estilo de AreaForm (sin imagen, sin dirección).
+    """
+    class Meta:
+        model = Ubicacion
+        fields = ['nombre', 'descripcion']
+        widgets = {
+            'nombre': forms.TextInput(attrs={
+                'class': 'input_box__input fs_normal color_primario fondo_secundario', 
+                'placeholder': 'Nombre (Ej: "B-1", "Carro 1")'
+            }),
+            'descripcion': forms.Textarea(attrs={
+                'class': 'input_box__input fs_normal color_primario fondo_secundario', 
+                'rows': 3,
+                'placeholder': 'Descripción (opcional)'
+            }),
+        }
+
+
+
 class VehiculoUbicacionEditForm(forms.ModelForm):
     """
     Formulario para editar la parte 'Ubicacion' de un vehículo.

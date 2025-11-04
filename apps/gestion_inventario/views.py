@@ -39,6 +39,7 @@ from .models import (
     )
 from .forms import (
     AreaForm, 
+    VehiculoUbicacionCreateForm,
     VehiculoUbicacionEditForm,
     VehiculoDetalleEditForm,
     CompartimentoForm, 
@@ -320,6 +321,79 @@ class VehiculoListaView(LoginRequiredMixin, View):
             # Cambiamos el nombre del contexto para claridad en la plantilla
             {'vehiculos': vehiculos_con_totales} 
         )
+
+
+
+
+class VehiculoCreateView(LoginRequiredMixin, View):
+    """
+    Vista para crear un nuevo Vehículo.
+    Maneja la creación simultánea en los modelos Ubicacion y Vehiculo.
+    """
+    template_name = 'gestion_inventario/pages/crear_vehiculo.html'
+    login_url = '/acceso/login/'
+
+    def get(self, request, *args, **kwargs):
+        # Instanciamos los formularios vacíos
+        form_ubicacion = VehiculoUbicacionCreateForm()
+        form_detalles = VehiculoDetalleEditForm() # Reutilizamos el form de edición
+        
+        context = {
+            'form_ubicacion': form_ubicacion,
+            'form_detalles': form_detalles,
+        }
+        return render(request, self.template_name, context)
+
+    def post(self, request, *args, **kwargs):
+        estacion_id = request.session.get('active_estacion_id')
+        if not estacion_id:
+            messages.error(request, "No se ha seleccionado una estación activa.")
+            return redirect('gestion_inventario:ruta_inicio')
+        
+        # Obtenemos los objetos fijos que necesitamos
+        try:
+            estacion_activa = Estacion.objects.get(id=estacion_id)
+            tipo_vehiculo_obj = TipoUbicacion.objects.get(nombre='VEHÍCULO')
+        except (Estacion.DoesNotExist, TipoUbicacion.DoesNotExist):
+            messages.error(request, "Error de configuración: No se encontró la estación o el tipo 'VEHÍCULO'.")
+            return redirect('gestion_inventario:ruta_lista_vehiculos') # O a la lista
+
+        # Instanciamos formularios con los datos del POST
+        form_ubicacion = VehiculoUbicacionCreateForm(request.POST)
+        form_detalles = VehiculoDetalleEditForm(request.POST) # Reutilizamos el form
+
+        if form_ubicacion.is_valid() and form_detalles.is_valid():
+            try:
+                # Usamos una transacción para asegurar que ambos se creen o ninguno
+                with transaction.atomic():
+                    # 1. Guardar la parte de Ubicacion (sin commit)
+                    ubicacion_obj = form_ubicacion.save(commit=False)
+                    # Asignar los campos faltantes
+                    ubicacion_obj.estacion = estacion_activa
+                    ubicacion_obj.tipo_ubicacion = tipo_vehiculo_obj
+                    ubicacion_obj.save() # Guardar en la BD
+
+                    # 2. Guardar la parte de Detalles (sin commit)
+                    detalles_obj = form_detalles.save(commit=False)
+                    # Asignar la relación OneToOne
+                    detalles_obj.ubicacion = ubicacion_obj 
+                    detalles_obj.save() # Guardar en la BD
+                
+                messages.success(request, f"Vehículo '{ubicacion_obj.nombre}' creado exitosamente.")
+                # Redirigimos a la vista de gestión del nuevo vehículo
+                return redirect('gestion_inventario:ruta_gestionar_ubicacion', ubicacion_id=ubicacion_obj.id)
+            
+            except Exception as e:
+                messages.error(request, f"Ocurrió un error inesperado al guardar: {e}")
+
+        else:
+            messages.error(request, "Hubo un error. Por favor, revisa los campos de ambos formularios.")
+        
+        context = {
+            'form_ubicacion': form_ubicacion,
+            'form_detalles': form_detalles,
+        }
+        return render(request, self.template_name, context)
 
 
 

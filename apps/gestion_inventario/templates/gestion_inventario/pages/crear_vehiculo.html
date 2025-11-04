@@ -1,0 +1,109 @@
+{% extends 'gestion_inventario/layouts/base.html' %}
+{% load static %}
+
+{% block titulo_ventana %}Crear Nuevo Vehículo{% endblock %}
+
+{% block titulo_pagina %}
+    <span class="fs_grande color_primario">
+        <i class="fas fa-truck-medical me-2"></i> Crear Nuevo Vehículo
+    </span>
+{% endblock %}
+
+{% block contenido %}
+<div class="container-fluid mt-4">
+    <div class="row justify-content-center">
+        <div class="col-12 col-lg-10 col-xl-8">
+
+            <form method="POST" class="panel_formulario fondo_secundario" novalidate>
+                {% csrf_token %}
+
+                <div class="card shadow-sm mb-4 fondo_secundario border-0">
+                    <div class="card-header fs_mediana fw-bold fondo_secundario_variante">
+                        Información General
+                    </div>
+                    <div class="card-body p-4 p-md-5">
+                        <div class="input_box mb-3">
+                            <label for="{{ form_ubicacion.nombre.id_for_label }}" class="input_box__label fs_normal color_primario_variante">Nombre del Vehículo</label>
+                            {{ form_ubicacion.nombre }}
+                            {% if form_ubicacion.nombre.errors %}<div class="invalid-feedback d-block">{{ form_ubicacion.nombre.errors.0 }}</div>{% endif %}
+                        </div>
+                        <div class="input_box">
+                            <label for="{{ form_ubicacion.descripcion.id_for_label }}" class="input_box__label fs_normal color_primario_variante">Descripción (Opcional)</label>
+                            {{ form_ubicacion.descripcion }}
+                            {% if form_ubicacion.descripcion.errors %}<div class="invalid-feedback d-block">{{ form_ubicacion.descripcion.errors.0 }}</div>{% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card shadow-sm mb-4 fondo_secundario border-0">
+                    <div class="card-header fs_mediana fw-bold fondo_secundario_variante">
+                        Detalles Técnicos
+                    </div>
+                    <div class="card-body p-4 p-md-5">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label for="{{ form_detalles.tipo_vehiculo.id_for_label }}" class="form-label fs_normal color_primario_variante fw-bold">Tipo de Vehículo (*)</label>
+                                {{ form_detalles.tipo_vehiculo }}
+                                {% if form_detalles.tipo_vehiculo.errors %}<div class="invalid-feedback d-block">{{ form_detalles.tipo_vehiculo.errors.0 }}</div>{% endif %}
+                            </div>
+                            <div class="col-md-6">
+                                <label for="{{ form_detalles.patente.id_for_label }}" class="form-label fs_normal color_primario_variante fw-bold">Patente (Opcional)</label>
+                                {{ form_detalles.patente }}
+                                {% if form_detalles.patente.errors %}<div class="invalid-feedback d-block">{{ form_detalles.patente.errors.0 }}</div>{% endif %}
+                            </div>
+                            <div class="col-md-6">
+                                <label for="{{ form_detalles.marca.id_for_label }}" class="form-label fs_normal color_primario_variante fw-bold">Marca (Opcional)</label>
+                                {{ form_detalles.marca }}
+                                {% if form_detalles.marca.errors %}<div class="invalid-feedback d-block">{{ form_detalles.marca.errors.0 }}</div>{% endif %}
+                            </div>
+                            <div class="col-md-6">
+                                <label for="{{ form_detalles.modelo.id_for_label }}" class="form-label fs_normal color_primario_variante fw-bold">Modelo (Opcional)</label>
+                                {{ form_detalles.modelo }}
+                                {% if form_detalles.modelo.errors %}<div class="invalid-feedback d-block">{{ form_detalles.modelo.errors.0 }}</div>{% endif %}
+                            </div>
+                            <div class="col-md-6">
+                                <label for="{{ form_detalles.anho.id_for_label }}" class="form-label fs_normal color_primario_variante fw-bold">Año (Opcional)</label>
+                                {{ form_detalles.anho }}
+                                {% if form_detalles.anho.errors %}<div class="invalid-feedback d-block">{{ form_detalles.anho.errors.0 }}</div>{% endif %}
+                            </div>
+                            <div class="col-md-6">
+                                <label for="{{ form_detalles.chasis.id_for_label }}" class="form-label fs_normal color_primario_variante fw-bold">N° Chasis (Opcional)</label>
+                                {{ form_detalles.chasis }}
+                                {% if form_detalles.chasis.errors %}<div class="invalid-feedback d-block">{{ form_detalles.chasis.errors.0 }}</div>{% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row mt-4">
+                    <div class="col-12 d-flex justify-content-end">
+                        <a href="{% url 'gestion_inventario:ruta_lista_vehiculos' %}" class="btn btn-secondary fs_normal me-2">
+                            <i class="fas fa-times me-1"></i> Cancelar
+                        </a>
+                        <button typeT="submit" class="btn btn-primary fs_normal">
+                            <i class="fas fa-save me-1"></i> Guardar Vehículo
+                        </button>
+                    </div>
+                </div>
+
+            </form>
+
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Inicializar los TomSelect que hemos añadido
+document.addEventListener('DOMContentLoaded', function() {
+    // Usamos las clases que ya definimos en los widgets de los formularios
+    document.querySelectorAll('.tom-select-basic').forEach(el => {
+        if (!el.tomselect) new TomSelect(el, { create: false, placeholder: 'Seleccionar...' });
+    });
+    document.querySelectorAll('.tom-select-creatable').forEach(el => {
+        if (!el.tomselect) new TomSelect(el, { create: true, placeholder: 'Seleccionar o crear...' });
+    });
+});
+</script>
+{% endblock %}
