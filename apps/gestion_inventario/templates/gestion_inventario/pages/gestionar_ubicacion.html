@@ -74,6 +74,10 @@
                                 <i class="fa-solid fa-pen-to-square"></i> Editar área
                             </a>
                         {% endif %}
+
+                        <a class="btn btn-outline-danger fs_normal ms-md-auto" href="{% url 'gestion_inventario:ruta_eliminar_ubicacion' ubicacion.id %}">
+                            <i class="fa-solid fa-trash"></i> Eliminar
+                        </a>
                     </div>
                 </div>
             </div>

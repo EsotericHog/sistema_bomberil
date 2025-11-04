@@ -7,7 +7,7 @@ from django.shortcuts import render, redirect
 from django.views import View
 from django.http import JsonResponse
 from django.db import models
-from django.db.models import Count, Sum, Value, Q, Subquery, OuterRef, Q
+from django.db.models import Count, Sum, Value, Q, Subquery, OuterRef, Q, ProtectedError
 from django.db.models.functions import Coalesce
 from django.urls import reverse
 from django.contrib import messages
@@ -248,6 +248,70 @@ class UbicacionDetalleView(LoginRequiredMixin, View):
             'today': timezone.now().date(),
         }
         return render(request, self.template_name, context)
+
+
+
+
+class UbicacionDeleteView(LoginRequiredMixin, View):
+    """
+    Vista para confirmar y ejecutar la eliminación de una Ubicación (Área o Vehículo).
+    Maneja ProtectedError si la ubicación aún tiene compartimentos.
+    """
+    template_name = 'gestion_inventario/pages/eliminar_ubicacion.html'
+    login_url = '/acceso/login/'
+
+    def get(self, request, ubicacion_id):
+        estacion_id = request.session.get('active_estacion_id')
+        if not estacion_id:
+            messages.error(request, "No se ha seleccionado una estación activa.")
+            return redirect('gestion_inventario:ruta_inicio')
+        
+        ubicacion = get_object_or_404(
+            Ubicacion.objects.select_related('tipo_ubicacion'),
+            id=ubicacion_id,
+            estacion_id=estacion_id
+        )
+        
+        context = { 'ubicacion': ubicacion }
+        return render(request, self.template_name, context)
+
+    def post(self, request, ubicacion_id):
+        estacion_id = request.session.get('active_estacion_id')
+        if not estacion_id:
+            messages.error(request, "No se ha seleccionado una estación activa.")
+            return redirect('gestion_inventario:ruta_inicio')
+
+        ubicacion = get_object_or_404(
+            Ubicacion.objects.select_related('tipo_ubicacion'),
+            id=ubicacion_id,
+            estacion_id=estacion_id
+        )
+        
+        # Guardamos el tipo y nombre antes de borrar
+        tipo_nombre = ubicacion.tipo_ubicacion.nombre
+        ubicacion_nombre = ubicacion.nombre
+        
+        try:
+            # Intento de eliminación
+            ubicacion.delete()
+            
+            messages.success(request, f"El {tipo_nombre.lower()} '{ubicacion_nombre}' ha sido eliminado exitosamente.")
+            
+            # Redirigir a la lista correspondiente
+            if tipo_nombre == 'VEHÍCULO':
+                return redirect('gestion_inventario:ruta_lista_vehiculos')
+            else:
+                return redirect('gestion_inventario:ruta_lista_areas')
+
+        except ProtectedError:
+            # Si falla (on_delete=PROTECT), capturamos el error
+            messages.error(request, f"No se puede eliminar '{ubicacion_nombre}'. Asegúrese de que todos sus compartimentos (incluido 'General') estén vacíos y hayan sido eliminados primero.")
+            # Devolvemos al usuario a la página de gestión
+            return redirect('gestion_inventario:ruta_gestionar_ubicacion', ubicacion_id=ubicacion.id)
+        
+        except Exception as e:
+            messages.error(request, f"Ocurrió un error inesperado: {e}")
+            return redirect('gestion_inventario:ruta_gestionar_ubicacion', ubicacion_id=ubicacion.id)
 
 
 

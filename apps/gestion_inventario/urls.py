@@ -9,6 +9,7 @@ from .views import (
     VehiculoCreateView,
     VehiculoEditView,
     UbicacionDetalleView,
+    UbicacionDeleteView,
     CompartimentoListaView,
     CompartimentoDetalleView,
     CompartimentoCrearView,
@@ -63,6 +64,9 @@ urlpatterns = [
     path('vehiculos/crear/', VehiculoCreateView.as_view(), name='ruta_crear_vehiculo'),
     # Editar Vehículo
     path('vehiculos/<int:ubicacion_id>/editar/', VehiculoEditView.as_view(), name='ruta_editar_vehiculo'),
+
+    # Eliminar ubicación
+    path('ubicaciones/<int:ubicacion_id>/eliminar/', UbicacionDeleteView.as_view(), name='ruta_eliminar_ubicacion'),
 
     # Catálogo global de productos
     path('catalogo-global/', CatalogoGlobalListView.as_view(), name='ruta_catalogo_global'),
