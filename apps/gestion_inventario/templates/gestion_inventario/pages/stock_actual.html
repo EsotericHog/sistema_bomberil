@@ -127,7 +127,7 @@
                 </thead>
                 <tbody class="fs_normal">
                     {% for item in stock_items %}
-                    <tr>
+                    <tr class="{% if item.estado.nombre == 'ANULADO POR ERROR' %}text-muted opacity-75{% endif %}">
                         <!-- Producto -->
                         <td>
                             <strong>{{ item.producto.producto_global.nombre_oficial }}</strong>
@@ -159,12 +159,25 @@
                         
                         <!-- Ubicación (Compartimento y Ubicacion) -->
                         <td class="fs_pequena">
-                            {% if item.compartimento %}
-                                {{ item.compartimento.ubicacion.nombre }}
-                                <br><small class="text-muted">{{ item.compartimento.nombre }}</small>
+                        {% with ubicacion=item.compartimento.ubicacion %}
+                            {% if ubicacion.tipo_ubicacion.nombre == 'VEHÍCULO' %}
+                                <i class="fas fa-truck text-muted" title="Vehículo"></i>
                             {% else %}
-                                <span class="text-muted fst-italic">Sin ubicación</span>
+                                <i class="fas fa-landmark text-muted" title="Área"></i>
                             {% endif %}
+                            
+                            <strong>
+                                <a href="{% url 'gestion_inventario:ruta_gestionar_ubicacion' ubicacion.id %}">
+                                    {{ ubicacion.nombre }}
+                                </a>
+                            </strong>
+                            <br>
+                            <small>
+                                <a href="{% url 'gestion_inventario:ruta_detalle_compartimento' item.compartimento.id %}" class="text-muted">
+                                    {{ item.compartimento.nombre }}
+                                </a>
+                            </small>
+                        {% endwith %}
                         </td>
                         
                         <!-- Cantidad -->
@@ -176,18 +189,22 @@
                             {% endif %}
                         </td>
                         
-                        <!-- Estado (Solo para Activos) -->
                         <td class="text-center">
-                            {% if item.producto.es_serializado %}
-                                <span class="badge fs_pequena
-                                    {% if item.estado.nombre == 'DISPONIBLE' %}bg-success
-                                    {% elif item.estado.nombre == 'MANTENIMIENTO' %}bg-warning text-dark
-                                    {% elif item.estado.nombre == 'DE BAJA' %}bg-danger
-                                    {% else %}bg-secondary{% endif %}">
-                                    {{ item.estado.nombre|title }}
+                            {# --- LÓGICA DE ESTADO UNIFICADA --- #}
+                            {% with estado_nombre=item.estado.nombre|default:'N/A' %}
+                                <span class="badge fs_pequena 
+                                    {% if estado_nombre == 'DISPONIBLE' or estado_nombre == 'ASIGNADO' %}bg-success
+                                    {% elif estado_nombre == 'EN REPARACIÓN' or estado_nombre == 'PENDIENTE REVISIÓN' %}bg-warning text-dark
+                                    {% elif estado_nombre == 'DE BAJA' or estado_nombre == 'EXTRAVIADO' or estado_nombre == 'ANULADO POR ERROR' %}bg-danger
+                                    {% else %}bg-secondary
+                                    {% endif %}">
+                                    {{ estado_nombre|title }}
                                 </span>
-                            {% else %}
-                                <span class="badge bg-success fs_pequena">Operativo</span>
+                            {% endwith %}
+                            
+                            {# Añadir badge de vencido si es un insumo disponible/asignado pero vencido #}
+                            {% if not item.producto.es_serializado and item.fecha_expiracion and item.fecha_expiracion < today and item.estado.nombre in "DISPONIBLE,ASIGNADO" %}
+                                <br><span class="badge bg-danger fs_pequena mt-1">Vencido</span>
                             {% endif %}
                         </td>
 
@@ -198,24 +215,26 @@
                         
                         <!-- Acciones -->
                         <td class="text-center">
-                            <a href="#" class="btn btn-sm btn-outline-primary fs_normal" title="Ver Detalles"><i class="fas fa-eye"></i></a>
-                            <a href="#" class="btn btn-sm btn-outline-secondary fs_normal" title="Mover Ítem"><i class="fas fa-truck-moving"></i></a>
-
-                            {# Anular existencia #}
                             {% if item.estado.nombre != "ANULADO POR ERROR" %}
+                                <a href="#" class="btn btn-sm btn-outline-primary fs_normal" title="Ver Detalles"><i class="fas fa-eye"></i></a>
+                                <a href="#" class="btn btn-sm btn-outline-secondary fs_normal" title="Mover Ítem"><i class="fas fa-truck-moving"></i></a>
+                                
                                 {% if item.producto.es_serializado %}
                                     <a href="{% url 'gestion_inventario:ruta_anular_existencia' tipo_item='activo' item_id=item.id %}" 
-                                       class="btn btn-sm btn-outline-danger fs_normal" title="Anular Registro">
+                                       class="btn btn-sm btn-outline-danger fs_normal" title="Anular Registro (Error de Ingreso)">
                                         <i class="fas fa-times-circle"></i>
                                     </a>
                                 {% else %}
                                     <a href="{% url 'gestion_inventario:ruta_anular_existencia' tipo_item='lote' item_id=item.id %}" 
-                                       class="btn btn-sm btn-outline-danger fs_normal" title="Anular Registro">
+                                       class="btn btn-sm btn-outline-danger fs_normal" title="Anular Registro (Error de Ingreso)">
                                         <i class="fas fa-times-circle"></i>
                                     </a>
                                 {% endif %}
+                            {% else %}
+                                <span class="text-muted fst-italic fs_pequena">Anulado</span>
                             {% endif %}
                         </td>
+
                     </tr>
                     {% empty %}
                     <tr>
