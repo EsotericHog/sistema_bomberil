@@ -9,6 +9,7 @@ class GestionInventarioConfig(AppConfig):
     def ready(self):
         from django.db.models.signals import post_migrate
         from apps.common.utils import crear_permiso_de_acceso_al_modulo
+        import apps.gestion_inventario.signals
 
         # 2. Conecta la señal a esa función, pasándole la configuración
         #    de esta app específica (self).
