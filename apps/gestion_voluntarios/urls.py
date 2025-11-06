@@ -41,7 +41,7 @@ urlpatterns = [
     path('', VoluntariosInicioView.as_view(), name="ruta_inicio"),
 
     # Lista de voluntarios de la compañía
-    path('lista/', VoluntariosListaView.as_view(), name="ruta_lista"),
+    path('lista/', VoluntariosListaView.as_view(), name="ruta_lista_voluntarios"),
 
     # Ingresar voluntario al sistema
     path('crear/', VoluntariosCrearView.as_view(), name="ruta_crear"),

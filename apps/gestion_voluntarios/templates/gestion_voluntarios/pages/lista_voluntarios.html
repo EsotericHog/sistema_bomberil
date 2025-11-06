@@ -1,0 +1,75 @@
+{# Plantilla base #}{% extends 'gestion_voluntarios/layouts/base.html' %}
+{# Cargar assets #}{% load static %}
+{# Título de la ventana #} {% block titulo_ventana %}Lista de Volunatios{% endblock %}
+{# Título de la página #} {% block titulo_pagina %}Lista de Volunatios{% endblock %}
+
+{% block contenido %}
+
+
+    <div class="container">
+
+        <div class="filter-bar">
+            <div class="search-box">
+                <input type="text" placeholder="Buscar por nombre, RUT, etc.">
+                <i class="fas fa-search"></i>
+            </div>
+            <div class="filter-group">
+                <label for="estacion-filter">Estación:</label>
+                <select id="estacion-filter">
+                    <option value="global">Todas las estaciones</option>
+                    <option value="estacion1">Estación 1</option>
+                    <option value="estacion2">Estación 2</option>
+                    <option value="estacion3">Estación 3</option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <label for="rango-filter">Rango:</label>
+                <select id="rango-filter">
+                    <option value="global">Todos los rangos</option>
+                    <option value="rango1">Rango 1</option>
+                    <option value="rango2">Rango 2</option>
+                    <option value="rango3">Rango 3</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="volunteer-grid">
+
+            <div class="volunteer-card">
+                <div class="profile-header">
+                    <img src="https://via.placeholder.com/100" alt="Foto de perfil">
+                    <span class="status-indicator active"></span>
+                </div>
+                <div class="profile-info">
+                    <h3>Juan Pérez</h3>
+                    <p class="rank">Rango: Bombero</p>
+                    <p class="station">Estación: Quinta Compañía</p>
+                </div>
+                <div class="card-actions">
+                    <button class="action-btn view-btn"><i class="fas fa-eye"></i></button>
+                    <button class="action-btn edit-btn"><i class="fas fa-edit"></i></button>
+                    <button class="action-btn delete-btn"><i class="fas fa-trash-alt"></i></button>
+                </div>
+            </div>
+
+            <div class="volunteer-card">
+                <div class="profile-header">
+                    <img src="https://via.placeholder.com/100" alt="Foto de perfil">
+                    <span class="status-indicator inactive"></span>
+                </div>
+                <div class="profile-info">
+                    <h3>María López</h3>
+                    <p class="rank">Rango: Teniente</p>
+                    <p class="station">Estación: Primera Compañía</p>
+                </div>
+                <div class="card-actions">
+                    <button class="action-btn view-btn"><i class="fas fa-eye"></i></button>
+                    <button class="action-btn edit-btn"><i class="fas fa-edit"></i></button>
+                    <button class="action-btn delete-btn"><i class="fas fa-trash-alt"></i></button>
+                </div>
+            </div>
+            
+        </div>
+    </div>    
+    
+{% endblock  %}

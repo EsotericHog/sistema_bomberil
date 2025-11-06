@@ -8,15 +8,55 @@
 
         <div class="barra_lateral__modulo" data-toggle="modulo">
             <a href="" class="barra_lateral__modulo_nombre fs_nav_seccion color_primario scale">
-                <i class="fa-solid fa-clipboard"></i>
+                 {# Icono #}
+                <i class="fa-solid fa-users"></i>
                 <span>Voluntarios</span>
             </a>
             <i class="fa-solid fa-chevron-down color_primario fs_nav_seccion barra_lateral__flecha_modulo"></i>
         </div>
-
+        {# Subsección #}
         <ul class="barra_lateral__lista_opciones oculto">
-            <li class="fondo_opcion_nav"><a class="color_primario fs_nav_opcion" href="">Pendiente</a></li>
+            <li class="fondo_opcion_nav"><a class="color_primario fs_nav_opcion" href="{% url 'gestion_voluntarios:ruta_lista_voluntarios' %}">Lista de Voluntarios</a></li>
+            <li class="fondo_opcion_nav"><a class="color_primario fs_nav_opcion" href="">Agregar Voluntarios</a></li>
+            <li class="fondo_opcion_nav"><a class="color_primario fs_nav_opcion" href="">Traslado de Voluntarios</a></li>
         </ul>
+
     </section>
+
+    {# Sección #}
+    <section class="barra_lateral__seccion">
+
+        <div class="barra_lateral__modulo" data-toggle="modulo">
+            <a href="" class="barra_lateral__modulo_nombre fs_nav_seccion color_primario scale">
+                {# Icono #}
+                <i class="fa-solid fa-gear"></i>
+                <span>Configuración</span>
+            </a>
+            <i class="fa-solid fa-chevron-down color_primario fs_nav_seccion barra_lateral__flecha_modulo"></i>
+        </div>
+        {# Subsección #}
+        <ul class="barra_lateral__lista_opciones oculto">
+            <li class="fondo_opcion_nav"><a class="color_primario fs_nav_opcion" href="">Profesiones</a></li>
+            <li class="fondo_opcion_nav"><a class="color_primario fs_nav_opcion" href="">Rangos Bomberiles</a></li>
+        </ul>
+
+    </section>
+
+    {# Sección #}
+    <section class="barra_lateral__seccion">
+
+        <div class="barra_lateral__modulo" data-toggle="modulo">
+            <a href="" class="barra_lateral__modulo_nombre fs_nav_seccion color_primario scale">
+                {# Icono #}
+                <i class="fa-solid fa-chart-simple"></i>
+                <span>Reportes</span>
+            </a>
+            <i class="fa-solid fa-chevron-down color_primario fs_nav_seccion barra_lateral__flecha_modulo"></i>
+        </div>
+        {# Subsección #}
+        <ul class="barra_lateral__lista_opciones oculto">
+            <li class="fondo_opcion_nav"><a class="color_primario fs_nav_opcion" href="">Generar Hoja de Vida</a></li>
+            <li class="fondo_opcion_nav"><a class="color_primario fs_nav_opcion" href="">Exportar Listado</a></li>
+        </ul>
 
 </nav>
