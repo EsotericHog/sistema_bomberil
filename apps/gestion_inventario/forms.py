@@ -645,3 +645,20 @@ class MovimientoFilterForm(forms.Form):
             self.fields['usuario'].queryset = Usuario.objects.filter(
                 membresias__estacion=estacion
             ).order_by('first_name').distinct()
+
+
+
+
+class BajaExistenciaForm(forms.Form):
+    """
+    Formulario para registrar el motivo al dar de baja una existencia.
+    """
+    notas = forms.CharField(
+        label="Motivo de la Baja (Obligatorio)",
+        required=True,
+        widget=forms.Textarea(attrs={
+            'class': 'form-control fs_normal color_primario fondo_secundario_variante border-0', 
+            'rows': 3,
+            'placeholder': 'Ej: Fin de vida útil, casco roto en emergencia, lote vencido.'
+        })
+    )

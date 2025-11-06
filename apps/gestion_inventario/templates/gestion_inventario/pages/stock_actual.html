@@ -225,11 +225,16 @@
                         
                         <!-- Acciones -->
                         <td class="text-center">
-                            {% if item.estado.nombre != "ANULADO POR ERROR" %}
+                            {% if item.estado.nombre != "ANULADO POR ERROR" and item.estado.nombre != "DE BAJA" and item.estado.nombre != "EXTRAVIADO" %}
                                 <a href="#" class="btn btn-sm btn-outline-primary fs_normal" title="Ver Detalles"><i class="fas fa-eye"></i></a>
                                 <a href="#" class="btn btn-sm btn-outline-secondary fs_normal" title="Mover Ítem"><i class="fas fa-truck-moving"></i></a>
 
                                 {% if item.producto.es_serializado %}
+                                <!--Dar de baja activo-->
+                                    <a href="{% url 'gestion_inventario:ruta_dar_de_baja_existencia' tipo_item='activo' item_id=item.id %}"
+                                       class="btn btn-sm btn-outline-secondary fs_normal" title="Dar de Baja">
+                                        <i class="fas fa-thumbs-down"></i>
+                                    </a>
                                     <!-- Anular Activo -->
                                     <a href="{% url 'gestion_inventario:ruta_anular_existencia' tipo_item='activo' item_id=item.id %}" 
                                        class="btn btn-sm btn-outline-danger fs_normal" title="Anular Registro (Error de Ingreso)">
@@ -241,14 +246,24 @@
                                        class="btn btn-sm btn-outline-warning fs_normal" title="Ajustar Cantidad">
                                         <i class="fas fa-balance-scale"></i>
                                     </a>
+                                    <a href="{% url 'gestion_inventario:ruta_dar_de_baja_existencia' tipo_item='lote' item_id=item.id %}"
+                                       class="btn btn-sm btn-outline-secondary fs_normal" title="Dar de Baja (Lote Vencido/Dañado)">
+                                        <i class="fas fa-thumbs-down"></i>
+                                    </a>
                                     <!--Anular Lote-->
                                     <a href="{% url 'gestion_inventario:ruta_anular_existencia' tipo_item='lote' item_id=item.id %}" 
                                        class="btn btn-sm btn-outline-danger fs_normal" title="Anular Registro (Error de Ingreso)">
                                         <i class="fas fa-times-circle"></i>
                                     </a>
                                 {% endif %}
-                            {% else %}
+                            {% elif item.estado.nombre == "ANULADO POR ERROR" %}
                                 <span class="text-muted fst-italic fs_pequena">Anulado</span>
+                            {% elif item.estado.nombre == "DE BAJA" %}
+                                <span class="text-muted fst-italic fs_pequena">De Baja</span>
+                            {% elif item.estado.nombre == "EXTRAVIADO" %}
+                                <span class="text-muted fst-italic fs_pequena">Extraviado</span>
+                            {% else %}
+                                <span class="text-muted fst-italic fs_pequena">{{ item.estado.nombre|title }}</span>
                             {% endif %}
                         </td>
 

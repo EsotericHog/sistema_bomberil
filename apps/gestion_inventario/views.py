@@ -53,7 +53,8 @@ from .forms import (
     ActivoSimpleCreateForm,
     LoteInsumoSimpleCreateForm,
     LoteAjusteForm,
-    MovimientoFilterForm
+    MovimientoFilterForm,
+    BajaExistenciaForm
     )
 from .utils import generar_sku_sugerido
 from core.settings import INVENTARIO_AREA_NOMBRE as AREA_NOMBRE
@@ -2315,6 +2316,121 @@ class AjustarStockLoteView(LoginRequiredMixin, View):
                 messages.error(request, f"Error al guardar el ajuste: {e}")
         
         context = {'lote': lote, 'form': form}
+        return render(request, self.template_name, context)
+
+
+
+
+class BajaExistenciaView(LoginRequiredMixin, View):
+    """
+    Vista para Dar de Baja una existencia (Activo o LoteInsumo),
+    cambiando su estado y generando un movimiento de SALIDA.
+    """
+    template_name = 'gestion_inventario/pages/dar_de_baja_existencia.html'
+    login_url = '/acceso/login/'
+
+    def _get_item_and_check_permission(self, estacion_id, tipo_item, item_id):
+        """ Helper para obtener el ítem y verificar estado """
+        item = None
+        if tipo_item == 'activo':
+            item = get_object_or_404(
+                Activo.objects.select_related('producto__producto_global', 'estado', 'compartimento__ubicacion'),
+                id=item_id, 
+                estacion_id=estacion_id
+            )
+        elif tipo_item == 'lote':
+            item = get_object_or_404(
+                LoteInsumo.objects.select_related('producto__producto_global', 'estado', 'compartimento__ubicacion'),
+                id=item_id, 
+                compartimento__ubicacion__estacion_id=estacion_id
+            )
+        
+        if item and (item.estado.nombre == 'ANULADO POR ERROR' or item.estado.nombre == 'DE BAJA'):
+            messages.warning(self.request, "Esta existencia ya no está operativa y no se puede dar de baja.")
+            return None
+            
+        return item
+
+    def get(self, request, tipo_item, item_id):
+        estacion_id = request.session.get('active_estacion_id')
+        if not estacion_id:
+            messages.error(request, "No se ha seleccionado una estación activa.")
+            return redirect('gestion_inventario:ruta_inicio')
+
+        item = self._get_item_and_check_permission(estacion_id, tipo_item, item_id)
+        if not item:
+            return redirect('gestion_inventario:ruta_stock_actual')
+        
+        form = BajaExistenciaForm()
+        context = {
+            'item': item,
+            'tipo_item': tipo_item,
+            'form': form
+        }
+        return render(request, self.template_name, context)
+
+    def post(self, request, tipo_item, item_id):
+        estacion_id = request.session.get('active_estacion_id')
+        if not estacion_id:
+            messages.error(request, "No se ha seleccionado una estación activa.")
+            return redirect('gestion_inventario:ruta_inicio')
+
+        item = self._get_item_and_check_permission(estacion_id, tipo_item, item_id)
+        if not item:
+            return redirect('gestion_inventario:ruta_stock_actual')
+
+        form = BajaExistenciaForm(request.POST)
+
+        if form.is_valid():
+            notas = form.cleaned_data['notas']
+            
+            try:
+                estado_de_baja = Estado.objects.get(nombre='DE BAJA')
+            except Estado.DoesNotExist:
+                messages.error(request, "Error crítico: No se encontró el estado 'DE BAJA'. Contacte al administrador.")
+                return redirect('gestion_inventario:ruta_stock_actual')
+
+            try:
+                with transaction.atomic():
+                    cantidad_a_mover = 0 # Para el movimiento
+                    
+                    # 1. Actualizar el ítem
+                    item.estado = estado_de_baja
+                    
+                    if tipo_item == 'lote':
+                        # Para lotes, registramos la cantidad restante y la ponemos a 0
+                        cantidad_a_mover = item.cantidad * -1 # Negativo para salida
+                        item.cantidad = 0
+                    else: # tipo_item == 'activo'
+                        cantidad_a_mover = -1
+
+                    item.save()
+                    
+                    # 2. Crear el MovimientoInventario de SALIDA
+                    MovimientoInventario.objects.create(
+                        tipo_movimiento=TipoMovimiento.SALIDA,
+                        usuario=request.user,
+                        estacion_id=estacion_id,
+                        compartimento_origen=item.compartimento, # De dónde salió
+                        activo=item if tipo_item == 'activo' else None,
+                        lote_insumo=item if tipo_item == 'lote' else None,
+                        cantidad_movida=cantidad_a_mover,
+                        notas=notas # El motivo de la baja
+                    )
+
+                messages.success(request, f"La existencia '{item.producto.producto_global.nombre_oficial}' ha sido dada de baja.")
+                return redirect('gestion_inventario:ruta_stock_actual')
+
+            except Exception as e:
+                messages.error(request, f"Ocurrió un error inesperado al dar de baja: {e}")
+                return redirect('gestion_inventario:ruta_stock_actual')
+
+        # Si el formulario (notas) no es válido
+        context = {
+            'item': item,
+            'tipo_item': tipo_item,
+            'form': form
+        }
         return render(request, self.template_name, context)
 
 
