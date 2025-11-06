@@ -59,7 +59,8 @@ from .forms import (
     ExtraviadoExistenciaForm,
     LoteConsumirForm,
     MovimientoFilterForm,
-    TransferenciaForm
+    TransferenciaForm,
+    EtiquetaFilterForm
     )
 from .utils import generar_sku_sugerido
 from core.settings import INVENTARIO_AREA_NOMBRE as AREA_NOMBRE
@@ -1886,6 +1887,8 @@ class RecepcionStockView(LoginRequiredMixin, View):
             try:
                 # Obtener estado DISPONIBLE
                 estado_disponible_id = Estado.objects.get(nombre='DISPONIBLE', tipo_estado__nombre='OPERATIVO').id
+                nuevos_activos_ids = []
+                nuevos_lotes_ids = []
 
                 # Usamos una transacción para asegurar que todo se guarde o nada
                 with transaction.atomic():
@@ -1929,6 +1932,7 @@ class RecepcionStockView(LoginRequiredMixin, View):
                                     cantidad_movida=1, # Siempre 1 para activos
                                     notas=notas_cabecera
                                 )
+                                nuevos_activos_ids.append(activo.id) # <-- Capturar ID
                             else:
                                 # Crear o actualizar un LoteInsumo
                                 # Aquí podrías buscar un lote existente con mismas características 
@@ -1954,9 +1958,24 @@ class RecepcionStockView(LoginRequiredMixin, View):
                                     cantidad_movida=cantidad,
                                     notas=notas_cabecera
                                 )
+                                nuevos_lotes_ids.append(lote.id) # <-- Capturar ID
                                 
                 messages.success(request, "Recepción de stock guardada correctamente.")
-                return redirect('gestion_inventario:ruta_stock_actual') # Redirige a la lista de stock
+                
+                # --- LÓGICA DE REDIRECCIÓN ---
+                if nuevos_activos_ids or nuevos_lotes_ids:
+                    # Si se crearon ítems, redirigir a la vista de impresión
+                    query_params = []
+                    if nuevos_activos_ids:
+                        query_params.append(f"activos={','.join(map(str, nuevos_activos_ids))}")
+                    if nuevos_lotes_ids:
+                        query_params.append(f"lotes={','.join(map(str, nuevos_lotes_ids))}")
+                    
+                    return redirect(f"{reverse('gestion_inventario:ruta_imprimir_etiquetas')}?{'&'.join(query_params)}")
+                else:
+                    # Si no se creó nada (ej. solo forms borrados), ir al stock
+                    return redirect('gestion_inventario:ruta_stock_actual')
+                
 
             except Exception as e:
                 # Si algo falla dentro de la transacción, se revierte todo
@@ -2953,3 +2972,99 @@ class GenerarQRView(View):
         # Limpiamos el buffer y devolvemos su contenido
         buffer.seek(0)
         return HttpResponse(buffer.getvalue(), content_type="image/png")
+
+
+
+
+class ImprimirEtiquetasView(LoginRequiredMixin, View):
+    """
+    Muestra una página diseñada para imprimir etiquetas QR
+    para Activos y Lotes.
+    
+    Maneja dos modos:
+    1. Específico: Recibe IDs por GET (ej: ?activos=1,2&lotes=3)
+    2. Masivo: Muestra filtros para seleccionar qué imprimir
+    """
+    template_name = 'gestion_inventario/pages/imprimir_etiquetas.html'
+    login_url = '/acceso/login/'
+
+    def get_context_data(self, request, estacion_id):
+        """Prepara el contexto de la vista (filtros y querysets)"""
+        
+        # --- Obtener IDs de la URL (Modo Específico) ---
+        activos_ids_str = request.GET.get('activos')
+        lotes_ids_str = request.GET.get('lotes')
+        
+        impresion_directa = bool(activos_ids_str or lotes_ids_str)
+        
+        activos_queryset = Activo.objects.none()
+        lotes_queryset = LoteInsumo.objects.none()
+        
+        if impresion_directa:
+            # MODO 1: IMPRESIÓN ESPECÍFICA (Post-Recepción o Individual)
+            activos_ids = []
+            if activos_ids_str:
+                activos_ids = [int(id) for id in activos_ids_str.split(',') if id.isdigit()]
+            
+            lotes_ids = []
+            if lotes_ids_str:
+                lotes_ids = [int(id) for id in lotes_ids_str.split(',') if id.isdigit()]
+
+            activos_queryset = Activo.objects.filter(
+                estacion_id=estacion_id,
+                id__in=activos_ids
+            )
+            lotes_queryset = LoteInsumo.objects.filter(
+                compartimento__ubicacion__estacion_id=estacion_id,
+                id__in=lotes_ids
+            )
+            
+            filter_form = None
+
+        else:
+            # MODO 2: IMPRESIÓN MASIVA (Con Filtros)
+            estacion_obj = Estacion.objects.get(id=estacion_id)
+            filter_form = EtiquetaFilterForm(request.GET, estacion=estacion_obj)
+            
+            # Query base (solo ítems operativos)
+            activos_queryset = Activo.objects.filter(
+                estacion_id=estacion_id
+            ).exclude(estado__nombre__in=['ANULADO POR ERROR', 'DE BAJA', 'EXTRAVIADO'])
+            
+            lotes_queryset = LoteInsumo.objects.filter(
+                compartimento__ubicacion__estacion_id=estacion_id,
+                cantidad__gt=0 # Solo lotes con stock
+            ).exclude(estado__nombre__in=['ANULADO POR ERROR', 'DE BAJA', 'EXTRAVIADO'])
+
+            # Aplicar filtros
+            if filter_form.is_valid():
+                ubicacion = filter_form.cleaned_data.get('ubicacion')
+                if ubicacion:
+                    activos_queryset = activos_queryset.filter(compartimento__ubicacion=ubicacion)
+                    lotes_queryset = lotes_queryset.filter(compartimento__ubicacion=ubicacion)
+
+        # Optimizar querysets
+        activos_queryset = activos_queryset.select_related(
+            'producto__producto_global', 'compartimento__ubicacion'
+        ).order_by('codigo_activo')
+        
+        lotes_queryset = lotes_queryset.select_related(
+            'producto__producto_global', 'compartimento__ubicacion'
+        ).order_by('codigo_lote')
+        
+        return {
+            'activos': activos_queryset,
+            'lotes': lotes_queryset,
+            'filter_form': filter_form,
+            'impresion_directa': impresion_directa,
+            'total_items': len(activos_queryset) + len(lotes_queryset)
+        }
+
+    def get(self, request, *args, **kwargs):
+        estacion_id = request.session.get('active_estacion_id')
+        if not estacion_id:
+            messages.error(request, "Estación no seleccionada.")
+            return redirect('gestion_inventario:ruta_inicio')
+        
+        context = self.get_context_data(request, estacion_id)
+        return render(request, self.template_name, context)

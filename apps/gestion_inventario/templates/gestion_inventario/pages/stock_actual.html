@@ -229,6 +229,11 @@
                                 <a href="#" class="btn btn-sm btn-outline-primary fs_normal" title="Ver Detalles"><i class="fas fa-eye"></i></a>
 
                                 {% if item.producto.es_serializado %}
+                                    <!--Imprimir etiqueta de activo-->
+                                    <a href="{% url 'gestion_inventario:ruta_imprimir_etiquetas' %}?activos={{ item.id }}" 
+                                       class="btn btn-sm btn-outline-info fs_normal" title="Imprimir Etiqueta">
+                                        <i class="fas fa-qrcode"></i>
+                                    </a>
                                     <!--Mover activo-->
                                     <a href="{% url 'gestion_inventario:ruta_mover_existencia' tipo_item='activo' item_id=item.id %}" 
                                        class="btn btn-sm btn-outline-secondary fs_normal" title="Mover Ítem">
@@ -250,7 +255,12 @@
                                         <i class="fas fa-times-circle"></i>
                                     </a>
                                 {% else %}
-                                <!--Mover lote-->
+                                    <!--Imprimir etiqueta de lote-->
+                                    <a href="{% url 'gestion_inventario:ruta_imprimir_etiquetas' %}?lotes={{ item.id }}" 
+                                       class="btn btn-sm btn-outline-info fs_normal" title="Imprimir Etiqueta">
+                                        <i class="fas fa-qrcode"></i>
+                                    </a>
+                                    <!--Mover lote-->
                                     <a href="{% url 'gestion_inventario:ruta_mover_existencia' tipo_item='lote' item_id=item.id %}" 
                                        class="btn btn-sm btn-outline-secondary fs_normal" title="Mover Ítem">
                                         <i class="fas fa-truck-moving"></i>

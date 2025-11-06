@@ -37,7 +37,8 @@ from .views import (
     ExtraviadoExistenciaView,
     ConsumirStockLoteView,
     TransferenciaExistenciaView,
-    GenerarQRView
+    GenerarQRView,
+    ImprimirEtiquetasView
     )
 
 app_name = 'gestion_inventario'
@@ -128,4 +129,6 @@ urlpatterns = [
 
     # Generar Código QR: Esta ruta capturará cualquier string (ej: E1-ACT-00123)
     path('generar-qr/<str:codigo>/', GenerarQRView.as_view(), name='ruta_generar_qr'),
+    # Imprimir etiquetas QR
+    path('imprimir-etiquetas/', ImprimirEtiquetasView.as_view(), name='ruta_imprimir_etiquetas'),
 ]

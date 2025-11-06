@@ -1,0 +1,196 @@
+{% extends 'gestion_inventario/layouts/base.html' %}
+{% load static %}
+
+{% block titulo_ventana %}Imprimir Etiquetas QR{% endblock %}
+
+{% block titulo_pagina %}
+    <span class="fs_grande color_primario">
+        <i class="fas fa-qrcode me-2"></i> Imprimir Etiquetas
+    </span>
+{% endblock %}
+
+{% block extrastyles %}
+<style>
+    /* Estilos para las etiquetas en pantalla */
+    .etiqueta-container {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: start;
+    }
+    .etiqueta {
+        width: 3.5in; /* Ancho */
+        height: 2in; /* Alto */
+        border: 1px dashed #999;
+        padding: 0.25in;
+        margin: 0.1in;
+        display: flex;
+        flex-direction: row;
+        overflow: hidden;
+        background: var(--fondo-secundario-variante);
+    }
+    .etiqueta-qr {
+        flex-shrink: 0;
+        width: 1.5in;
+        height: 1.5in;
+        background: white;
+        padding: 5px;
+    }
+    .etiqueta-qr img {
+        width: 100%;
+        height: 100%;
+    }
+    .etiqueta-info {
+        flex-grow: 1;
+        padding-left: 0.2in;
+        font-family: Arial, sans-serif;
+        font-size: 10pt;
+        color: var(--color-primario);
+        display: flex;
+        flex-direction: column;
+    }
+    .etiqueta-info h5 {
+        font-size: 12pt;
+        font-weight: bold;
+        margin: 0 0 5px 0;
+        word-break: break-word;
+    }
+    .etiqueta-info p {
+        margin: 3px 0 0 0;
+    }
+    .etiqueta-codigo {
+        font-family: 'Courier New', Courier, monospace;
+        font-weight: bold;
+        font-size: 11pt;
+        margin-top: auto; /* Empuja el código al fondo */
+    }
+    
+    /* Panel de control "No Imprimir" */
+    .no-print {
+        margin-bottom: 20px;
+    }
+
+    /* Estilos solo para la impresión */
+    @media print {
+        /* Oculta todo menos el contenedor de etiquetas */
+        body > * {
+            display: none !important;
+        }
+        .etiqueta-container, .etiqueta-container * {
+            visibility: visible !important;
+            display: block !important;
+        }
+        .etiqueta-container {
+            margin: 0;
+            padding: 0;
+        }
+        .etiqueta {
+            display: flex !important;
+            flex-direction: row !important;
+            width: 3.5in; /* Asegura el tamaño en impresión */
+            height: 2in;
+            border: 1px solid #000;
+            color: #000;
+            page-break-inside: avoid; /* Evita cortes */
+            float: left; /* Permite que fluyan */
+            margin: 0.05in;
+        }
+        .etiqueta-info {
+            color: #000 !important;
+        }
+        .etiqueta-qr {
+            background: white !important;
+        }
+    }
+</style>
+{% endblock %}
+
+
+{% block contenido %}
+<div class="container-fluid mt-4">
+
+    <div class="no-print">
+        <div class="card shadow-sm mb-4">
+            <div class="card-body">
+                <div class="row align-items-center">
+                    <div class="col-md-8">
+                        {% if impresion_directa %}
+                            <h5 class="fs_mediana">Listos para Imprimir</h5>
+                            <p class="fs_normal color_primario_variante mb-0">
+                                Se encontraron <strong>{{ total_items }}</strong> etiquetas de tu última recepción.
+                            </p>
+                        {% else %}
+                            <h5 class="fs_mediana">Impresión Masiva de Etiquetas</h5>
+                            <p class="fs_normal color_primario_variante mb-0">
+                                Filtra las existencias que deseas etiquetar. Se imprimirán todos los resultados ({{ total_items }} ítems).
+                            </p>
+                        {% endif %}
+                    </div>
+                    <div class="col-md-4 text-end">
+                        <button class="btn btn-primary fs_normal" onclick="window.print()">
+                            <i class="fas fa-print me-1"></i> Imprimir {{ total_items }} Etiqueta{{ total_items|pluralize:"s" }}
+                        </button>
+                    </div>
+                </div>
+                
+                {% if not impresion_directa %}
+                <hr>
+                <form method="get" action="{% url 'gestion_inventario:ruta_imprimir_etiquetas' %}">
+                    <div class="row g-2 align-items-end">
+                        <div class="col-md-4">
+                            <label for="{{ filter_form.ubicacion.id_for_label }}" class="form-label fw-bold fs_pequena">{{ filter_form.ubicacion.label }}</label>
+                            {{ filter_form.ubicacion }}
+                        </div>
+                        <div class="col-md-2">
+                            <button type="submit" class="btn btn-sm btn-outline-primary fs_normal w-100">Filtrar</button>
+                        </div>
+                        <div class="col-md-2">
+                            <a href="{% url 'gestion_inventario:ruta_imprimir_etiquetas' %}" class="btn btn-sm btn-outline-secondary fs_normal w-100">Limpiar</a>
+                        </div>
+                    </div>
+                </form>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <div class="etiqueta-container" id="etiqueta-container">
+        
+        {% for item in activos %}
+        <div class="etiqueta">
+            <div class="etiqueta-qr">
+                <img src="{% url 'gestion_inventario:ruta_generar_qr' codigo=item.codigo_activo %}" alt="{{ item.codigo_activo }}">
+            </div>
+            <div class="etiqueta-info">
+                <h5>{{ item.producto.producto_global.nombre_oficial }}</h5>
+                <p>Ubicación: {{ item.compartimento.ubicacion.nombre }}</p>
+                <p>Compart: {{ item.compartimento.nombre }}</p>
+                <p class="etiqueta-codigo">{{ item.codigo_activo }}</p>
+            </div>
+        </div>
+        {% endfor %}
+        
+        {% for item in lotes %}
+        <div class="etiqueta">
+            <div class="etiqueta-qr">
+                <img src="{% url 'gestion_inventario:ruta_generar_qr' codigo=item.codigo_lote %}" alt="{{ item.codigo_lote }}">
+            </div>
+            <div class="etiqueta-info">
+                <h5>{{ item.producto.producto_global.nombre_oficial }}</h5>
+                <p>Ubicación: {{ item.compartimento.ubicacion.nombre }}</p>
+                <p>Compart: {{ item.compartimento.nombre }}</p>
+                <p>Cant: <strong>{{ item.cantidad }}</strong></p>
+                {% if item.fecha_expiracion %}
+                <p>Vence: <strong>{{ item.fecha_expiracion|date:"d/m/Y" }}</strong></p>
+                {% endif %}
+                <p class="etiqueta-codigo">{{ item.codigo_lote }}</p>
+            </div>
+        </div>
+        {% endfor %}
+        
+        {% if total_items == 0 %}
+            <p class="fs_normal text-muted">No hay etiquetas para mostrar con los filtros seleccionados.</p>
+        {% endif %}
+    </div>
+
+</div>
+{% endblock %}

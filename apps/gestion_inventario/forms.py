@@ -796,3 +796,30 @@ class TransferenciaForm(forms.Form):
         
         # Si es un Activo, la cantidad será 1 (manejada en la vista)
         return self.cleaned_data.get('cantidad')
+
+
+
+
+class EtiquetaFilterForm(forms.Form):
+    """Formulario utilizado para imprimir etiquetas QR"""
+    
+    ubicacion = forms.ModelChoiceField(
+        label="Filtrar por Ubicación",
+        required=False,
+        queryset=Ubicacion.objects.none(), # Se poblará en la vista
+        widget=forms.Select(attrs={'class': 'form-select form-select-sm fs_normal'})
+    )
+    
+    # (Podrías añadir más filtros si quisieras, ej: por producto)
+
+    def __init__(self, *args, **kwargs):
+        estacion = kwargs.pop('estacion', None)
+        super().__init__(*args, **kwargs)
+        
+        if estacion:
+            # Filtramos para mostrar solo ubicaciones operativas (no 'ADMINISTRATIVA')
+            self.fields['ubicacion'].queryset = Ubicacion.objects.filter(
+                estacion=estacion
+            ).exclude(
+                tipo_ubicacion__nombre='ADMINISTRATIVA'
+            ).order_by('nombre')
