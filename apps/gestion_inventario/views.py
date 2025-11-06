@@ -56,7 +56,8 @@ from .forms import (
     BajaExistenciaForm,
     ExtraviadoExistenciaForm,
     LoteConsumirForm,
-    MovimientoFilterForm
+    MovimientoFilterForm,
+    TransferenciaForm
     )
 from .utils import generar_sku_sugerido
 from core.settings import INVENTARIO_AREA_NOMBRE as AREA_NOMBRE
@@ -2679,6 +2680,152 @@ class ConsumirStockLoteView(LoginRequiredMixin, View):
                 messages.error(request, f"Error al guardar el consumo: {e}")
         
         context = {'lote': lote, 'form': form}
+        return render(request, self.template_name, context)
+
+
+
+
+class TransferenciaExistenciaView(LoginRequiredMixin, View):
+    """
+    Mueve una existencia (Activo o Lote) de un compartimento a otro
+    dentro de la misma estación, generando un movimiento de TRANSFERENCIA_INTERNA.
+    """
+    template_name = 'gestion_inventario/pages/transferir_existencia.html'
+    login_url = '/acceso/login/'
+
+    def _get_item_and_check_permission(self, estacion_id, tipo_item, item_id):
+        """ Helper para obtener el ítem y verificar estado """
+        item = None
+        if tipo_item == 'activo':
+            item = get_object_or_404(
+                Activo.objects.select_related('producto__producto_global', 'estado', 'compartimento__ubicacion'),
+                id=item_id, 
+                estacion_id=estacion_id
+            )
+        elif tipo_item == 'lote':
+            item = get_object_or_404(
+                LoteInsumo.objects.select_related('producto__producto_global', 'estado', 'compartimento__ubicacion'),
+                id=item_id, 
+                compartimento__ubicacion__estacion_id=estacion_id
+            )
+        
+        if item and item.estado.nombre not in ['DISPONIBLE', 'ASIGNADO']:
+            messages.error(self.request, f"No se puede mover un ítem con estado '{item.estado.nombre}'.")
+            return None
+            
+        return item
+
+    def get(self, request, tipo_item, item_id):
+        estacion_id = request.session.get('active_estacion_id')
+        if not estacion_id:
+            messages.error(request, "No se ha seleccionado una estación activa.")
+            return redirect('gestion_inventario:ruta_inicio')
+        
+        estacion_obj = Estacion.objects.get(id=estacion_id)
+        item = self._get_item_and_check_permission(estacion_id, tipo_item, item_id)
+        if not item:
+            return redirect('gestion_inventario:ruta_stock_actual')
+        
+        # Pasamos el item y la estacion al formulario para que filtre el queryset
+        form = TransferenciaForm(item=item, estacion=estacion_obj)
+        
+        context = {
+            'item': item,
+            'tipo_item': tipo_item,
+            'form': form,
+            'es_lote': (tipo_item == 'lote') # Para la plantilla
+        }
+        return render(request, self.template_name, context)
+
+    def post(self, request, tipo_item, item_id):
+        estacion_id = request.session.get('active_estacion_id')
+        if not estacion_id:
+            messages.error(request, "No se ha seleccionado una estación activa.")
+            return redirect('gestion_inventario:ruta_inicio')
+        
+        estacion_obj = Estacion.objects.get(id=estacion_id)
+        item_origen = self._get_item_and_check_permission(estacion_id, tipo_item, item_id)
+        if not item_origen:
+            return redirect('gestion_inventario:ruta_stock_actual')
+
+        form = TransferenciaForm(request.POST, item=item_origen, estacion=estacion_obj)
+
+        if form.is_valid():
+            compartimento_destino = form.cleaned_data['compartimento_destino']
+            compartimento_origen = item_origen.compartimento
+            notas = form.cleaned_data['notas']
+            
+            try:
+                with transaction.atomic():
+                    
+                    if tipo_item == 'activo':
+                        # --- LÓGICA PARA ACTIVOS (SIMPLE) ---
+                        item_origen.compartimento = compartimento_destino
+                        item_origen.save(update_fields=['compartimento', 'updated_at'])
+                        
+                        MovimientoInventario.objects.create(
+                            tipo_movimiento=TipoMovimiento.TRANSFERENCIA_INTERNA,
+                            usuario=request.user,
+                            estacion=estacion_obj,
+                            compartimento_origen=compartimento_origen,
+                            compartimento_destino=compartimento_destino,
+                            activo=item_origen,
+                            cantidad_movida=1, # Siempre 1 para activos
+                            notas=notas
+                        )
+                        msg_item_nombre = item_origen.codigo_activo
+                    
+                    else:
+                        # --- LÓGICA PARA LOTES (COMPLEJA) ---
+                        cantidad_a_mover = form.cleaned_data['cantidad']
+                        
+                        # 1. Buscar o crear un lote idéntico en el destino
+                        # Un lote es "idéntico" si comparte:
+                        # producto, lote_fabricante, fecha_expiracion y estado
+                        lote_destino, created = LoteInsumo.objects.get_or_create(
+                            producto=item_origen.producto,
+                            compartimento=compartimento_destino,
+                            numero_lote_fabricante=item_origen.numero_lote_fabricante,
+                            fecha_expiracion=item_origen.fecha_expiracion,
+                            estado=item_origen.estado, # Mover a un lote en el mismo estado
+                            defaults={
+                                'cantidad': 0,
+                                'fecha_recepcion': item_origen.fecha_recepcion 
+                            }
+                        )
+                        
+                        # 2. Mover la cantidad
+                        lote_destino.cantidad += cantidad_a_mover
+                        item_origen.cantidad -= cantidad_a_mover
+                        
+                        lote_destino.save()
+                        item_origen.save() # Guardamos el origen (con cantidad reducida)
+
+                        # 3. Crear el movimiento (lo vinculamos al Lote de Origen)
+                        MovimientoInventario.objects.create(
+                            tipo_movimiento=TipoMovimiento.TRANSFERENCIA_INTERNA,
+                            usuario=request.user,
+                            estacion=estacion_obj,
+                            compartimento_origen=compartimento_origen,
+                            compartimento_destino=compartimento_destino,
+                            lote_insumo=item_origen, # Vinculado al lote de origen
+                            cantidad_movida=cantidad_a_mover, # Cantidad que se movió
+                            notas=f"Transferidos {cantidad_a_mover} de {item_origen.codigo_lote} a {lote_destino.codigo_lote}. {notas}"
+                        )
+                        msg_item_nombre = f"{cantidad_a_mover} unidades de {item_origen.codigo_lote}"
+
+                messages.success(request, f"Se transfirió {msg_item_nombre} a '{compartimento_destino.nombre}'.")
+                return redirect('gestion_inventario:ruta_stock_actual')
+                
+            except Exception as e:
+                messages.error(request, f"Error al procesar la transferencia: {e}")
+        
+        context = {
+            'item': item_origen,
+            'tipo_item': tipo_item,
+            'form': form,
+            'es_lote': (tipo_item == 'lote')
+        }
         return render(request, self.template_name, context)
 
 

@@ -721,3 +721,78 @@ class LoteConsumirForm(forms.Form):
                 f"No se puede consumir más de la cantidad disponible ({self.lote.cantidad})."
             )
         return cantidad
+
+
+
+
+class TransferenciaForm(forms.Form):
+    """
+    Formulario para transferir una existencia (Activo o Lote)
+    a un nuevo compartimento.
+    """
+    compartimento_destino = forms.ModelChoiceField(
+        queryset=Compartimento.objects.none(), # Se poblará en la vista
+        label="Compartimento de Destino",
+        widget=forms.Select(attrs={
+            'class': 'form-select fs_normal color_primario fondo_secundario_variante border-0 tom-select-basic'
+        })
+    )
+    
+    cantidad = forms.IntegerField(
+        label="Cantidad a Mover",
+        min_value=1,
+        required=False, # No es requerido para Activos
+        widget=forms.NumberInput(attrs={
+            'class': 'form-control fs_normal color_primario fondo_secundario_variante border-0'
+        })
+    )
+    
+    notas = forms.CharField(
+        label="Notas (Opcional)",
+        required=False,
+        widget=forms.Textarea(attrs={
+            'class': 'form-control fs_normal color_primario fondo_secundario_variante border-0', 
+            'rows': 3,
+            'placeholder': 'Ej: Préstamo a B-2 para emergencia.'
+        })
+    )
+
+    def __init__(self, *args, **kwargs):
+        # Pasamos el 'item' (Activo o Lote) desde la vista
+        self.item = kwargs.pop('item', None)
+        self.estacion = kwargs.pop('estacion', None)
+        
+        super().__init__(*args, **kwargs)
+
+        if self.estacion and self.item:
+            # Filtramos el queryset para mostrar solo compartimentos de la misma estación,
+            # excluyendo el compartimento actual.
+            self.fields['compartimento_destino'].queryset = Compartimento.objects.filter(
+                ubicacion__estacion=self.estacion
+            ).exclude(
+                id=self.item.compartimento.id
+            ).select_related('ubicacion').order_by('ubicacion__nombre', 'nombre')
+
+        # Si el ítem es un Activo, ocultamos y deshabilitamos 'cantidad'
+        if self.item and self.item.producto.es_serializado:
+            self.fields['cantidad'].widget = forms.HiddenInput()
+            self.fields['cantidad'].disabled = True
+        else:
+            # Es un lote, hacemos 'cantidad' obligatoria
+            self.fields['cantidad'].required = True
+
+    def clean_cantidad(self):
+        """
+        Valida que la cantidad a mover no sea mayor que la disponible.
+        """
+        # Solo validamos si es un Lote
+        if self.item and not self.item.producto.es_serializado:
+            cantidad_a_mover = self.cleaned_data.get('cantidad')
+            if cantidad_a_mover > self.item.cantidad:
+                raise forms.ValidationError(
+                    f"No se puede mover más de la cantidad disponible ({self.item.cantidad})."
+                )
+            return cantidad_a_mover
+        
+        # Si es un Activo, la cantidad será 1 (manejada en la vista)
+        return self.cleaned_data.get('cantidad')

@@ -35,7 +35,8 @@ from .views import (
     MovimientoInventarioListView,
     BajaExistenciaView,
     ExtraviadoExistenciaView,
-    ConsumirStockLoteView
+    ConsumirStockLoteView,
+    TransferenciaExistenciaView
     )
 
 app_name = 'gestion_inventario'
@@ -118,6 +119,8 @@ urlpatterns = [
     path('existencia/<str:tipo_item>/<int:item_id>/extraviado/', ExtraviadoExistenciaView.as_view(), name='ruta_extraviado_existencia'),
     # Consumir stock (lotes de insumos)
     path('lotes/<int:lote_id>/consumir/', ConsumirStockLoteView.as_view(), name='ruta_consumir_stock_lote'),
+    # Mover/Trasferir existencias (interno
+    path('existencia/<str:tipo_item>/<int:item_id>/mover/', TransferenciaExistenciaView.as_view(), name='ruta_mover_existencia'),
 
     # Historial de movimientos
     path('movimientos/', MovimientoInventarioListView.as_view(), name='ruta_historial_movimientos')
