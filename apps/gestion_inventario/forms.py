@@ -679,3 +679,45 @@ class ExtraviadoExistenciaForm(forms.Form):
             'placeholder': 'Ej: No encontrado durante el inventario físico 05/11/2025.'
         })
     )
+
+
+
+
+class LoteConsumirForm(forms.Form):
+    """
+    Formulario para consumir una cantidad específica de un lote.
+    """
+    cantidad_a_consumir = forms.IntegerField(
+        label="Cantidad a Consumir",
+        min_value=1, # Se debe consumir al menos 1
+        widget=forms.NumberInput(attrs={
+            'class': 'form-control fs_grande text-center', 
+            'style': 'max-width: 200px; margin: 0 auto;'
+        })
+    )
+    notas = forms.CharField(
+        label="Motivo del Consumo (Obligatorio)",
+        required=True,
+        widget=forms.Textarea(attrs={
+            'class': 'form-control fs_normal color_primario fondo_secundario_variante border-0', 
+            'rows': 3,
+            'placeholder': 'Ej: Usado en emergencia Av. Prat, Salida 10-2.'
+        })
+    )
+
+    def __init__(self, *args, **kwargs):
+        # Pasamos el 'lote' a la vista para validación
+        self.lote = kwargs.pop('lote', None)
+        super().__init__(*args, **kwargs)
+
+    def clean_cantidad_a_consumir(self):
+        """
+        Valida que la cantidad a consumir no sea mayor
+        que la cantidad disponible en el lote.
+        """
+        cantidad = self.cleaned_data.get('cantidad_a_consumir')
+        if self.lote and cantidad > self.lote.cantidad:
+            raise forms.ValidationError(
+                f"No se puede consumir más de la cantidad disponible ({self.lote.cantidad})."
+            )
+        return cantidad

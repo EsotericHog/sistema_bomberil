@@ -246,6 +246,11 @@
                                         <i class="fas fa-times-circle"></i>
                                     </a>
                                 {% else %}
+                                    <!--Consumir stock-->
+                                    <a href="{% url 'gestion_inventario:ruta_consumir_stock_lote' item.id %}"
+                                       class="btn btn-sm btn-outline-success fs_normal" title="Consumir Stock">
+                                        <i class="fas fa-minus-circle"></i>
+                                    </a>
                                     <!-- Ajustar stock de lote -->
                                     <a href="{% url 'gestion_inventario:ruta_ajustar_stock_lote' item.id %}"
                                        class="btn btn-sm btn-outline-warning fs_normal" title="Ajustar Cantidad">

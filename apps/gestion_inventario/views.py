@@ -55,6 +55,7 @@ from .forms import (
     LoteAjusteForm,
     BajaExistenciaForm,
     ExtraviadoExistenciaForm,
+    LoteConsumirForm,
     MovimientoFilterForm
     )
 from .utils import generar_sku_sugerido
@@ -2586,6 +2587,98 @@ class ExtraviadoExistenciaView(LoginRequiredMixin, View):
             'tipo_item': tipo_item,
             'form': form
         }
+        return render(request, self.template_name, context)
+
+
+
+
+class ConsumirStockLoteView(LoginRequiredMixin, View):
+    """
+    Vista para consumir una cantidad de un LoteInsumo y crear
+    un MovimientoInventario de tipo SALIDA.
+    """
+    template_name = 'gestion_inventario/pages/consumir_stock_lote.html'
+    login_url = '/acceso/login/'
+
+    def _get_lote_and_check_permission(self, estacion_id, lote_id):
+        """ Helper para obtener el Lote y verificar permisos de consumo """
+        lote = get_object_or_404(
+            LoteInsumo.objects.select_related(
+                'producto__producto_global', 
+                'compartimento__ubicacion',
+                'estado'
+            ),
+            id=lote_id, 
+            compartimento__ubicacion__estacion_id=estacion_id
+        )
+        
+        # Solo se puede consumir de lotes 'Disponibles' o 'Asignados'
+        if lote.estado.nombre not in ['DISPONIBLE', 'ASIGNADO']:
+            messages.error(self.request, f"No se puede consumir de un lote que está '{lote.estado.nombre}'.")
+            return None
+        
+        if lote.cantidad <= 0:
+            messages.warning(self.request, "Este lote ya no tiene stock para consumir.")
+            return None
+        
+        return lote
+
+    def get(self, request, lote_id):
+        estacion_id = request.session.get('active_estacion_id')
+        if not estacion_id:
+            messages.error(request, "No se ha seleccionado una estación activa.")
+            return redirect('gestion_inventario:ruta_inicio')
+
+        lote = self._get_lote_and_check_permission(estacion_id, lote_id)
+        if not lote:
+            return redirect('gestion_inventario:ruta_stock_actual')
+        
+        # Pasamos el lote al form para la validación
+        form = LoteConsumirForm(lote=lote, initial={'cantidad_a_consumir': 1})
+        context = {'lote': lote, 'form': form}
+        return render(request, self.template_name, context)
+
+    def post(self, request, lote_id):
+        estacion_id = request.session.get('active_estacion_id')
+        if not estacion_id:
+            messages.error(request, "No se ha seleccionado una estación activa.")
+            return redirect('gestion_inventario:ruta_inicio')
+        
+        lote = self._get_lote_and_check_permission(estacion_id, lote_id)
+        if not lote:
+            return redirect('gestion_inventario:ruta_stock_actual')
+
+        form = LoteConsumirForm(request.POST, lote=lote) # Pasar el lote
+
+        if form.is_valid():
+            cantidad_consumida = form.cleaned_data['cantidad_a_consumir']
+            notas = form.cleaned_data['notas']
+            
+            try:
+                with transaction.atomic():
+                    # 1. Actualizar la cantidad del lote
+                    nueva_cantidad = lote.cantidad - cantidad_consumida
+                    lote.cantidad = nueva_cantidad
+                    lote.save(update_fields=['cantidad', 'updated_at'])
+
+                    # 2. Crear el registro de Movimiento (SALIDA)
+                    MovimientoInventario.objects.create(
+                        tipo_movimiento=TipoMovimiento.SALIDA,
+                        usuario=request.user,
+                        estacion_id=estacion_id,
+                        compartimento_origen=lote.compartimento, # Lugar del consumo
+                        lote_insumo=lote,
+                        cantidad_movida=cantidad_consumida * -1, # Negativo
+                        notas=notas
+                    )
+                
+                messages.success(request, f"Se consumieron {cantidad_consumida} unidades del lote {lote.codigo_lote}.")
+                return redirect('gestion_inventario:ruta_stock_actual')
+                
+            except Exception as e:
+                messages.error(request, f"Error al guardar el consumo: {e}")
+        
+        context = {'lote': lote, 'form': form}
         return render(request, self.template_name, context)
 
 
