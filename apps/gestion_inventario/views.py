@@ -5,7 +5,7 @@ from django.utils import timezone
 from django.db import IntegrityError, transaction
 from django.shortcuts import render, redirect
 from django.views import View
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponse
 from django.db import models
 from django.db.models import Count, Sum, Value, Q, Subquery, OuterRef, Q, ProtectedError
 from django.db.models.functions import Coalesce
@@ -14,6 +14,8 @@ from django.contrib import messages
 from django.shortcuts import get_object_or_404
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
+import qrcode
+import io
 
 
 
@@ -2910,3 +2912,44 @@ class MovimientoInventarioListView(LoginRequiredMixin, View):
             'page_obj': page_obj, # Para la plantilla de paginación
         }
         return render(request, self.template_name, context)
+
+
+
+
+class GenerarQRView(View):
+    """
+    Esta vista no renderiza HTML.
+    Genera una imagen QR basada en el 'codigo' proporcionado
+    y la devuelve como una respuesta de imagen PNG.
+    """
+    
+    def get(self, request, *args, **kwargs):
+        # 1. Obtenemos el código de la URL
+        codigo = kwargs.get('codigo')
+        if not codigo:
+            # Si no hay código, devolvemos un error
+            return HttpResponse("Código no proporcionado.", status=400)
+
+        # 2. Configurar y generar el QR en memoria
+        qr = qrcode.QRCode(
+            version=1, # Tamaño simple
+            error_correction=qrcode.constants.ERROR_CORRECT_L, # Nivel de corrección bajo (QR más simple)
+            box_size=10, # Tamaño de cada "pixel" del QR
+            border=4,  # Borde blanco
+        )
+        
+        # 3. Añadir el dato (el ID, ej: "E1-ACT-00123")
+        qr.add_data(codigo)
+        qr.make(fit=True)
+
+        # 4. Crear la imagen PNG
+        img = qr.make_image(fill_color="black", back_color="white")
+        
+        # 5. Guardar la imagen en un buffer de memoria (un "archivo falso")
+        buffer = io.BytesIO()
+        img.save(buffer, format="PNG")
+        
+        # 6. Devolver la imagen como una respuesta HTTP
+        # Limpiamos el buffer y devolvemos su contenido
+        buffer.seek(0)
+        return HttpResponse(buffer.getvalue(), content_type="image/png")

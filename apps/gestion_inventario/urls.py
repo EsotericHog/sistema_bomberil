@@ -36,7 +36,8 @@ from .views import (
     BajaExistenciaView,
     ExtraviadoExistenciaView,
     ConsumirStockLoteView,
-    TransferenciaExistenciaView
+    TransferenciaExistenciaView,
+    GenerarQRView
     )
 
 app_name = 'gestion_inventario'
@@ -123,5 +124,8 @@ urlpatterns = [
     path('existencia/<str:tipo_item>/<int:item_id>/mover/', TransferenciaExistenciaView.as_view(), name='ruta_mover_existencia'),
 
     # Historial de movimientos
-    path('movimientos/', MovimientoInventarioListView.as_view(), name='ruta_historial_movimientos')
+    path('movimientos/', MovimientoInventarioListView.as_view(), name='ruta_historial_movimientos'),
+
+    # Generar Código QR: Esta ruta capturará cualquier string (ej: E1-ACT-00123)
+    path('generar-qr/<str:codigo>/', GenerarQRView.as_view(), name='ruta_generar_qr'),
 ]
