@@ -50,7 +50,7 @@ urlpatterns = [
     path('voluntario/<int:id>/', VoluntariosVerView.as_view(), name="ruta_ver_voluntario"),
 
     # Modificar información de un voluntario
-    path('voluntario/<int:id>/editar', VoluntariosModificarView.as_view(), name="ruta_modificar"),
+    path('voluntario/<int:id>/editar', VoluntariosModificarView.as_view(), name="ruta_modificar_voluntario"),
 
     # Eliminar voluntario del sistema (A EVALUAR. PROBABLEMENTE TERMINE QUITANDO ESTE ENDPOINT)
     path('voluntario/<int:id>/editar', VoluntariosEliminarView.as_view(), name="ruta_eliminar"),
