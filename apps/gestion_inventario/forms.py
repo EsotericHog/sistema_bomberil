@@ -1,5 +1,6 @@
 from django import forms
 from django.utils import timezone
+from django.db.models import Q
 from .models import (
     Region,
     Comuna,
@@ -16,7 +17,9 @@ from .models import (
     ContactoProveedor,
     Activo,
     LoteInsumo,
-    TipoMovimiento
+    TipoMovimiento,
+    Destinatario,
+    Prestamo
 )
 from apps.gestion_usuarios.models import Usuario
 
@@ -823,3 +826,158 @@ class EtiquetaFilterForm(forms.Form):
             ).exclude(
                 tipo_ubicacion__nombre='ADMINISTRATIVA'
             ).order_by('nombre')
+
+
+
+
+class PrestamoCabeceraForm(forms.ModelForm):
+    """ Formulario para los datos generales del préstamo """
+    
+    # Campo para crear un destinatario "al vuelo"
+    nuevo_destinatario_nombre = forms.CharField(
+        label="O crear nuevo destinatario",
+        required=False,
+        widget=forms.TextInput(attrs={
+            'class': 'form-control form-control-sm fs_normal',
+            'placeholder': 'Nombre (Ej: Clínica XYZ)'
+        })
+    )
+    nuevo_destinatario_contacto = forms.CharField(
+        label="Contacto (Opcional)",
+        required=False,
+        widget=forms.TextInput(attrs={
+            'class': 'form-control form-control-sm fs_normal',
+            'placeholder': 'Persona/Teléfono'
+        })
+    )
+
+    class Meta:
+        model = Prestamo
+        fields = [
+            'destinatario', 
+            'fecha_devolucion_esperada', 
+            'notas_prestamo',
+            'nuevo_destinatario_nombre',
+            'nuevo_destinatario_contacto'
+        ]
+        widgets = {
+            'destinatario': forms.Select(attrs={'class': 'form-select form-select-sm fs_normal tom-select-basic'}),
+            'fecha_devolucion_esperada': forms.DateInput(attrs={'type': 'date', 'class': 'form-control form-control-sm fs_normal'}),
+            'notas_prestamo': forms.Textarea(attrs={'rows': 2, 'class': 'form-control form-control-sm fs_normal'}),
+        }
+
+    def __init__(self, *args, **kwargs):
+        estacion = kwargs.pop('estacion', None)
+        super().__init__(*args, **kwargs)
+        if estacion:
+            self.fields['destinatario'].queryset = Destinatario.objects.filter(estacion=estacion).order_by('nombre_entidad')
+            self.fields['destinatario'].required = False # Permitir seleccionar o crear
+
+    def clean(self):
+        cleaned_data = super().clean()
+        destinatario = cleaned_data.get('destinatario')
+        nuevo_nombre = cleaned_data.get('nuevo_destinatario_nombre')
+
+        if not destinatario and not nuevo_nombre:
+            raise forms.ValidationError("Debe seleccionar un destinatario existente o ingresar el nombre de uno nuevo.")
+        if destinatario and nuevo_nombre:
+            raise forms.ValidationError("No puede seleccionar un destinatario existente Y crear uno nuevo al mismo tiempo.")
+        
+        return cleaned_data
+
+
+
+
+class PrestamoDetalleForm(forms.Form):
+    """
+    Formulario para cada línea de ítem en el préstamo.
+    Usamos un forms.Form para manejar la lógica de selección Activo/Lote.
+    """
+    # Usamos un ModelChoiceField de Producto para filtrar
+    producto = forms.ModelChoiceField(
+        queryset=Producto.objects.none(), # Se poblará en la vista
+        label="Producto",
+        widget=forms.Select(attrs={'class': 'form-select form-select-sm fs_normal producto-select'})
+    )
+    
+    # Campo para seleccionar un Activo (si es serializado)
+    activo = forms.ModelChoiceField(
+        queryset=Activo.objects.none(),
+        label="ID Activo",
+        required=False,
+        widget=forms.Select(attrs={'class': 'form-select form-select-sm fs_normal activo-select'})
+    )
+    
+    # Campo para seleccionar un Lote (si es insumo)
+    lote = forms.ModelChoiceField(
+        queryset=LoteInsumo.objects.none(),
+        label="Lote",
+        required=False,
+        widget=forms.Select(attrs={'class': 'form-select form-select-sm fs_normal lote-select'})
+    )
+    
+    cantidad = forms.IntegerField(
+        label="Cantidad", 
+        min_value=1, 
+        widget=forms.NumberInput(attrs={'class': 'form-control form-control-sm fs_normal cantidad-input'}),
+        required=False # Se validará en 'clean'
+    )
+
+    def __init__(self, *args, **kwargs):
+        self.estacion = kwargs.pop('estacion', None)
+        super().__init__(*args, **kwargs)
+        
+        if self.estacion:
+            # Filtra solo productos que TIENEN stock disponible
+            productos_con_stock = Producto.objects.filter(
+                Q(estacion=self.estacion) &
+                (
+                    Q(activo__estado__nombre='DISPONIBLE') |
+                    Q(loteinsumo__estado__nombre='DISPONIBLE', loteinsumo__cantidad__gt=0)
+                )
+            ).distinct().select_related('producto_global')
+            
+            self.fields['producto'].queryset = productos_con_stock
+            
+            # Formateamos el label del producto
+            self.fields['producto'].label_from_instance = lambda obj: f"{obj.producto_global.nombre_oficial} ({'Activo' if obj.es_serializado else 'Insumo'})"
+
+    def clean(self):
+        cleaned_data = super().clean()
+        producto = cleaned_data.get('producto')
+        
+        if not producto:
+            return cleaned_data # No hay nada que validar
+
+        if producto.es_serializado:
+            activo = cleaned_data.get('activo')
+            if not activo:
+                self.add_error('activo', "Debe seleccionar un Activo específico.")
+            # Limpiar campos de lote
+            cleaned_data['lote'] = None
+            cleaned_data['cantidad'] = 1
+        
+        else: # Es Insumo
+            lote = cleaned_data.get('lote')
+            cantidad = cleaned_data.get('cantidad')
+            
+            if not lote:
+                self.add_error('lote', "Debe seleccionar un Lote disponible.")
+            if not cantidad:
+                self.add_error('cantidad', "Debe ingresar una cantidad.")
+            
+            if lote and cantidad and cantidad > lote.cantidad:
+                self.add_error('cantidad', f"No puede prestar más de {lote.cantidad} (stock actual del lote).")
+            
+            # Limpiar campo de activo
+            cleaned_data['activo'] = None
+            
+        return cleaned_data
+
+
+# Creamos el FormSet
+PrestamoDetalleFormSet = forms.formset_factory(
+    PrestamoDetalleForm, 
+    extra=1, # Empieza con una línea vacía
+    can_delete=True
+)

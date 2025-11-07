@@ -1,0 +1,370 @@
+{% extends 'gestion_inventario/layouts/base.html' %}
+{% load static %}
+
+{% block titulo_ventana %}Crear Préstamo Externo{% endblock %}
+
+{% block titulo_pagina %}
+    <span class="fs_grande color_primario">
+        <i class="fas fa-hand-holding-medical me-2"></i> Registrar Préstamo Externo
+    </span>
+{% endblock %}
+
+{% block extrastyles %}
+<style>
+    /* Estilos para la tabla de escaneo */
+    #scan-input {
+        font-size: 1.25rem;
+        text-align: center;
+    }
+    .scan-feedback {
+        height: 20px;
+        font-size: var(--fs-normal);
+    }
+    #items-prestados-table .btn-quitar {
+        font-size: var(--fs-pequena);
+    }
+    #items-prestados-table .item-info {
+        font-size: var(--fs-normal);
+    }
+    #items-prestados-table .item-code {
+        font-size: var(--fs-pequena);
+        font-family: monospace;
+    }
+</style>
+{% endblock %}
+
+
+{% block contenido %}
+<div class="container-fluid mt-4">
+
+<form method="post" id="prestamo-form" novalidate>
+    {% csrf_token %}
+    
+    <!-- Input oculto que mantendrá la lista de ítems -->
+    <input type="hidden" name="items_json" id="items-json-input" value="{{ items_json_error|default:'[]' }}">
+
+    <!-- Panel 1: Datos Generales -->
+    <div class="card shadow-sm mb-4">
+        <div class="card-header fw-bold fs_mediana">
+            <i class="fas fa-user-friends me-1"></i> Paso 1: Datos del Préstamo
+        </div>
+        <div class="card-body p-4">
+            <!-- (Formulario de Cabecera igual que antes) -->
+            <div class="row g-3">
+                <div class="col-md-5">
+                    <label for="{{ cabecera_form.destinatario.id_for_label }}" class="form-label fw-bold fs_pequena">Destinatario (Ej: Clínica, Hospital)</label>
+                    {{ cabecera_form.destinatario }}
+                    {% if cabecera_form.destinatario.errors %}<div class="invalid-feedback d-block">{{ cabecera_form.destinatario.errors.0 }}</div>{% endif %}
+                </div>
+                <div class="col-md-4">
+                    <label for="{{ cabecera_form.fecha_devolucion_esperada.id_for_label }}" class="form-label fw-bold fs_pequena">Fecha Devolución Esperada</label>
+                    {{ cabecera_form.fecha_devolucion_esperada }}
+                </div>
+            </div>
+            <div class="row g-3 mt-2">
+                <div class="col-md-5">
+                    <label for="{{ cabecera_form.nuevo_destinatario_nombre.id_for_label }}" class="form-label fw-bold fs_pequena">{{ cabecera_form.nuevo_destinatario_nombre.label }}</label>
+                    {{ cabecera_form.nuevo_destinatario_nombre }}
+                    {% if cabecera_form.nuevo_destinatario_nombre.errors %}<div class="invalid-feedback d-block">{{ cabecera_form.nuevo_destinatario_nombre.errors.0 }}</div>{% endif %}
+                </div>
+                <div class="col-md-4">
+                    <label for="{{ cabecera_form.nuevo_destinatario_contacto.id_for_label }}" class="form-label fw-bold fs_pequena">{{ cabecera_form.nuevo_destinatario_contacto.label }}</label>
+                    {{ cabecera_form.nuevo_destinatario_contacto }}
+                </div>
+            </div>
+            <div class="row g-3 mt-2">
+                <div class="col-md-9">
+                    <label for="{{ cabecera_form.notas_prestamo.id_for_label }}" class="form-label fw-bold fs_pequena">Notas / Motivo</label>
+                    {{ cabecera_form.notas_prestamo }}
+                </div>
+            </div>
+            {% if cabecera_form.non_field_errors %}
+                <div class="alert alert-danger mt-3 fs_normal">
+                    {% for error in cabecera_form.non_field_errors %}
+                        {{ error }}<br>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Panel 2: Escaneo de Ítems -->
+    <div class="card shadow-sm mb-4">
+        <div class="card-header fw-bold fs_mediana">
+            <i class="fas fa-qrcode me-1"></i> Paso 2: Escanear Ítems a Prestar
+        </div>
+        <div class="card-body p-4">
+            
+            <div class="row justify-content-center">
+                <div class="col-md-8">
+                    <label for="scan-input" class="form-label fw-bold fs_pequena">Escanear Código (QR o Barras)</label>
+                    <input type="text" class="form-control" id="scan-input" placeholder="Esperando escaneo...">
+                    <div class="scan-feedback mt-1">
+                        <span id="scan-feedback-text" class="text-danger"></span>
+                    </div>
+                </div>
+            </div>
+
+            <hr class="my-4">
+
+            <h5 class="fs_normal fw-bold color_primario">Ítems Agregados (<span id="item-count">0</span>)</h5>
+            <div class="table-responsive">
+                <table class="table align-middle" id="items-prestados-table">
+                    <thead class="fs_pequena">
+                        <tr>
+                            <th>Producto</th>
+                            <th>Código</th>
+                            <th class="text-center">Cantidad</th>
+                            <th class="text-end">Acción</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Las filas se agregarán aquí con JS -->
+                        <tr id="no-items-row">
+                            <td colspan="4" class="text-center fst-italic text-muted">Aún no se han escaneado ítems.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Botón de guardado -->
+            <div class="d-flex justify-content-end mt-4 pt-4 border-top">
+                <a href="{% url 'gestion_inventario:ruta_stock_actual' %}" class="btn btn-secondary fs_normal me-2">Cancelar</a>
+                <button type="submit" class="btn btn-primary fs_normal">
+                    <i class="fas fa-save me-1"></i> Finalizar y Guardar Préstamo
+                </button>
+            </div>
+            
+        </div>
+    </div>
+</form>
+
+</div> <!-- Cierre de container-fluid -->
+{% endblock %}
+
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    
+    // --- Selectores del DOM ---
+    const scanInput = document.getElementById('scan-input');
+    const feedbackText = document.getElementById('scan-feedback-text');
+    const itemsTableBody = document.querySelector('#items-prestados-table tbody');
+    const noItemsRow = document.getElementById('no-items-row');
+    const itemCountSpan = document.getElementById('item-count');
+    const hiddenJsonInput = document.getElementById('items-json-input');
+    const prestamoForm = document.getElementById('prestamo-form');
+
+    // --- INICIO DE LA CORRECCIÓN ---
+    // La URL de la API se obtiene de forma robusta.
+    // Usamos '0000' como un placeholder que REEMPLAZAREMOS.
+    const apiUrlTemplate = "{% url 'gestion_inventario:api_buscar_item_prestamo' codigo='0000' %}";
+    // --- FIN DE LA CORRECCIÓN ---
+
+    // --- Estado de la App (en JS) ---
+    let itemsPrestados = [];
+    try {
+        // Restaurar desde el input oculto (en caso de error de POST)
+        itemsPrestados = JSON.parse(hiddenJsonInput.value || '[]');
+    } catch (e) {
+        console.error("Error al parsear JSON de items: ", hiddenJsonInput.value);
+        itemsPrestados = [];
+    }
+
+
+    /**
+     * Pone el foco en el input de escaneo
+     */
+    function focusScanInput() {
+        scanInput.focus();
+        scanInput.select();
+    }
+
+    /**
+     * Muestra un mensaje de feedback (error o éxito)
+     */
+    function showFeedback(message, isError = false) {
+        feedbackText.textContent = message;
+        feedbackText.className = isError ? 'text-danger' : 'text-success';
+        
+        // Limpiar mensaje después de 3 seg
+        setTimeout(() => {
+            if (feedbackText.textContent === message) {
+                feedbackText.textContent = '';
+            }
+        }, 3000);
+    }
+    
+    /**
+     * Actualiza la tabla HTML basado en el array 'itemsPrestados'
+     */
+    function renderTabla() {
+        itemsTableBody.innerHTML = ''; // Limpiar tabla
+        
+        if (itemsPrestados.length === 0) {
+            itemsTableBody.appendChild(noItemsRow);
+        } else {
+            itemsPrestados.forEach((item, index) => {
+                const tr = document.createElement('tr');
+                tr.dataset.index = index; // Guardar el índice
+                
+                const cantidad = item.tipo === 'activo' ? 1 : item.cantidad_prestada;
+                
+                tr.innerHTML = `
+                    <td class="item-info">${item.nombre}</td>
+                    <td class="item-code">${item.codigo}</td>
+                    <td class="text-center item-info">${cantidad}</td>
+                    <td class="text-end">
+                        <button type="button" class="btn btn-danger btn-sm btn-quitar fs_pequena" data-index="${index}">
+                            Quitar
+                        </button>
+                    </td>
+                `;
+                itemsTableBody.appendChild(tr);
+            });
+        }
+        itemCountSpan.textContent = itemsPrestados.length;
+    }
+
+    /**
+     * Actualiza el input oculto con la data JSON
+     */
+    function actualizarInputOculto() {
+        hiddenJsonInput.value = JSON.stringify(itemsPrestados);
+    }
+
+    /**
+     * Maneja la adición de un ítem (después del fetch)
+     */
+    function addItem(itemData) {
+        // 1. Revisar si ya está en la lista
+        const esDuplicado = itemsPrestados.some(item => 
+            item.tipo === itemData.tipo && item.id === itemData.id
+        );
+        if (esDuplicado) {
+            showFeedback(`Error: El ítem ${itemData.codigo} ya fue escaneado.`, true);
+            return;
+        }
+        
+        // 2. Si es Lote, pedir cantidad
+        if (itemData.tipo === 'lote') {
+            const qty = prompt(`Ítem: ${itemData.nombre}\nCódigo: ${itemData.codigo}\n\n¿Cuántas unidades desea prestar? (Máx: ${itemData.max_qty})`, itemData.max_qty);
+            
+            const cantidadPrestada = parseInt(qty, 10);
+            
+            if (isNaN(cantidadPrestada) || cantidadPrestada <= 0) {
+                showFeedback("Cancelado. Cantidad no válida.", true);
+                return;
+            }
+            if (cantidadPrestada > itemData.max_qty) {
+                showFeedback(`Error: No puede prestar más de ${itemData.max_qty} unidades.`, true);
+                return;
+            }
+            itemData.cantidad_prestada = cantidadPrestada;
+        }
+
+        // 3. Añadir a la lista y actualizar UI
+        itemsPrestados.push(itemData);
+        renderTabla();
+        actualizarInputOculto();
+        showFeedback(`Agregado: ${itemData.nombre}`, false);
+    }
+
+    /**
+     * Maneja el escaneo (llamada a la API)
+     */
+    async function handleScan() {
+        const codigo = scanInput.value.trim().toUpperCase();
+        if (codigo === '') return;
+
+        scanInput.disabled = true; // Bloquear input
+        showFeedback("Buscando...", false);
+
+        // --- INICIO DE LA CORRECCIÓN ---
+        // Construimos la URL final reemplazando el placeholder
+        const finalUrl = apiUrlTemplate.replace('0000', encodeURIComponent(codigo));
+        // --- FIN DE LA CORRECCIÓN ---
+
+        try {
+            const response = await fetch(finalUrl); // Usamos la URL corregida
+            const data = await response.json();
+
+            if (!response.ok) {
+                // Error (404, 400) - Este es el flujo que SÍ funciona
+                throw new Error(data.error || 'Error desconocido');
+            }
+            
+            // Éxito
+            addItem(data);
+
+        } catch (error) {
+            // Aquí es donde veías el error para códigos válidos (por la URL mala)
+            // y donde verás los errores para códigos inválidos (correctamente)
+            showFeedback(`Error: ${error.message}`, true);
+        } finally {
+            // Limpiar y re-enfocar
+            scanInput.disabled = false;
+            scanInput.value = '';
+            focusScanInput();
+        }
+    }
+
+    /**
+     * Maneja el clic en el botón "Quitar" de la tabla
+     */
+    function handleQuitarItem(e) {
+        if (!e.target.classList.contains('btn-quitar')) {
+            return;
+        }
+        e.preventDefault();
+        
+        const index = parseInt(e.target.dataset.index, 10);
+        if (isNaN(index)) return;
+
+        const itemRemovido = itemsPrestados.splice(index, 1)[0];
+        showFeedback(`Quitado: ${itemRemovido.nombre}`, false);
+        
+        renderTabla();
+        actualizarInputOculto();
+        focusScanInput();
+    }
+    
+    // --- INICIALIZACIÓN ---
+    
+    // 1. Inicializar TomSelect Básico para el destinatario
+    document.querySelectorAll('.tom-select-basic').forEach(el => {
+        if (!el.tomselect) new TomSelect(el, { create: false, placeholder: "Seleccionar destinatario..."});
+    });
+
+    // 2. Poner foco en el input de escaneo
+    focusScanInput();
+
+    // 3. Listener para el "Enter" en el scan input
+    scanInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+            e.preventDefault(); // Evitar que el form se envíe
+            handleScan();
+        }
+    });
+
+    // 4. Listener para los botones "Quitar" (usando delegación)
+    itemsTableBody.addEventListener('click', handleQuitarItem);
+    
+    // 5. Renderizar la tabla inicial (si venimos de un error POST)
+    if (itemsPrestados.length > 0) {
+        renderTabla();
+    }
+    
+    // 6. Validar que la lista no esté vacía al enviar
+    prestamoForm.addEventListener('submit', (e) => {
+        if (itemsPrestados.length === 0) {
+            e.preventDefault();
+            showFeedback("Error: Debe escanear al menos un ítem para guardar el préstamo.", true);
+            focusScanInput();
+        }
+    });
+
+});
+</script>
+{% endblock %}

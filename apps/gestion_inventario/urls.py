@@ -38,7 +38,9 @@ from .views import (
     ConsumirStockLoteView,
     TransferenciaExistenciaView,
     GenerarQRView,
-    ImprimirEtiquetasView
+    ImprimirEtiquetasView,
+    CrearPrestamoView,
+    BuscarItemPrestamoJson
     )
 
 app_name = 'gestion_inventario'
@@ -123,6 +125,14 @@ urlpatterns = [
     path('lotes/<int:lote_id>/consumir/', ConsumirStockLoteView.as_view(), name='ruta_consumir_stock_lote'),
     # Mover/Trasferir existencias (interno
     path('existencia/<str:tipo_item>/<int:item_id>/mover/', TransferenciaExistenciaView.as_view(), name='ruta_mover_existencia'),
+
+    # Prestar existencias / Crear préstamo
+    path('prestamos/crear/', CrearPrestamoView.as_view(), name='ruta_crear_prestamo'),
+    # Endpoint para buscar existencias para préstamo
+    path('api/prestamo/buscar-item/<str:codigo>/', BuscarItemPrestamoJson.as_view(), name='api_buscar_item_prestamo'),
+    # TODO:
+    # path('prestamos/', HistorialPrestamosView.as_view(), name='ruta_historial_prestamos'),
+    # path('prestamos/<int:prestamo_id>/gestionar/', GestionarDevolucionView.as_view(), name='ruta_gestionar_devolucion'),
 
     # Historial de movimientos
     path('movimientos/', MovimientoInventarioListView.as_view(), name='ruta_historial_movimientos'),

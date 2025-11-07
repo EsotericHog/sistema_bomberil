@@ -36,6 +36,9 @@ from .models import (
     Region,
     Comuna,
     Estado,
+    Prestamo,
+    PrestamoDetalle,
+    Destinatario,
     MovimientoInventario,
     TipoMovimiento
     )
@@ -60,6 +63,8 @@ from .forms import (
     LoteConsumirForm,
     MovimientoFilterForm,
     TransferenciaForm,
+    PrestamoCabeceraForm,
+    PrestamoDetalleFormSet,
     EtiquetaFilterForm
     )
 from .utils import generar_sku_sugerido
@@ -2848,6 +2853,213 @@ class TransferenciaExistenciaView(LoginRequiredMixin, View):
             'es_lote': (tipo_item == 'lote')
         }
         return render(request, self.template_name, context)
+
+
+
+
+class CrearPrestamoView(LoginRequiredMixin, View):
+    """
+    Vista para crear un Préstamo (Cabecera y Detalles)
+    usando un flujo de "scan-first".
+    """
+    template_name = 'gestion_inventario/pages/crear_prestamo.html'
+    login_url = '/acceso/login/'
+
+    def get(self, request, *args, **kwargs):
+        estacion_id = request.session.get('active_estacion_id')
+        if not estacion_id:
+            messages.error(request, "Seleccione una estación activa.")
+            return redirect('gestion_inventario:ruta_inicio')
+        
+        estacion = Estacion.objects.get(id=estacion_id)
+
+        # El GET solo necesita el formulario de cabecera
+        cabecera_form = PrestamoCabeceraForm(estacion=estacion)
+
+        context = {
+            'cabecera_form': cabecera_form,
+        }
+        return render(request, self.template_name, context)
+
+    def post(self, request, *args, **kwargs):
+        estacion_id = request.session.get('active_estacion_id')
+        if not estacion_id:
+            messages.error(request, "Seleccione una estación activa.")
+            return redirect('gestion_inventario:ruta_inicio')
+        
+        estacion = Estacion.objects.get(id=estacion_id)
+        
+        cabecera_form = PrestamoCabeceraForm(request.POST, estacion=estacion)
+        
+        # --- Lógica de POST Rediseñada ---
+        # 1. Obtener la lista de ítems escaneados del input oculto
+        items_json_str = request.POST.get('items_json')
+        items_list = []
+        if items_json_str:
+            try:
+                items_list = json.loads(items_json_str)
+            except json.JSONDecodeError:
+                messages.error(request, "Error al procesar la lista de ítems escaneados.")
+        
+        if not items_list:
+            messages.error(request, "Debe escanear al menos un ítem para el préstamo.")
+            # Forzamos que el formulario de cabecera no sea válido para re-renderizar
+            cabecera_form.add_error(None, "No se escanearon ítems.")
+
+        if cabecera_form.is_valid() and items_list:
+            try:
+                # Obtenemos los objetos de estado y tipo de movimiento una sola vez
+                estado_prestamo = Estado.objects.get(nombre='EN PRÉSTAMO EXTERNO')
+                estado_disponible = Estado.objects.get(nombre='DISPONIBLE')
+                tipo_mov_prestamo = TipoMovimiento.PRESTAMO
+                
+                with transaction.atomic():
+                    # --- 1. Guardar Destinatario (si es nuevo) ---
+                    destinatario = cabecera_form.cleaned_data.get('destinatario')
+                    if not destinatario:
+                        nuevo_nombre = cabecera_form.cleaned_data.get('nuevo_destinatario_nombre')
+                        nuevo_contacto = cabecera_form.cleaned_data.get('nuevo_destinatario_contacto')
+                        destinatario, _ = Destinatario.objects.get_or_create(
+                            estacion=estacion,
+                            nombre_entidad=nuevo_nombre,
+                            defaults={'telefono_contacto': nuevo_contacto, 'creado_por': request.user}
+                        )
+
+                    # --- 2. Guardar Cabecera de Préstamo ---
+                    prestamo = cabecera_form.save(commit=False)
+                    prestamo.estacion = estacion
+                    prestamo.usuario_responsable = request.user
+                    prestamo.destinatario = destinatario
+                    prestamo.save()
+
+                    # --- 3. Procesar Lista de Ítems (del JSON) ---
+                    for item_data in items_list:
+                        producto_nombre = item_data['nombre']
+                        notas_prestamo = cabecera_form.cleaned_data['notas_prestamo']
+                        
+                        if item_data['tipo'] == 'activo':
+                            # Re-validar el Activo en el momento del POST (seguridad)
+                            activo = Activo.objects.select_for_update().get(
+                                id=item_data['id'], 
+                                estado=estado_disponible
+                            )
+                            
+                            PrestamoDetalle.objects.create(prestamo=prestamo, activo=activo, cantidad_prestada=1)
+                            activo.estado = estado_prestamo
+                            activo.save(update_fields=['estado', 'updated_at'])
+                            
+                            MovimientoInventario.objects.create(
+                                tipo_movimiento=tipo_mov_prestamo,
+                                usuario=request.user,
+                                estacion=estacion,
+                                compartimento_origen=activo.compartimento,
+                                activo=activo,
+                                cantidad_movida=-1,
+                                notas=f"Préstamo a {destinatario.nombre_entidad}. {notas_prestamo}"
+                            )
+                        
+                        elif item_data['tipo'] == 'lote':
+                            cantidad = int(item_data['cantidad_prestada'])
+                            
+                            # Re-validar el Lote en el momento del POST (seguridad)
+                            lote = LoteInsumo.objects.select_for_update().get(
+                                id=item_data['id'],
+                                estado=estado_disponible,
+                                cantidad__gte=cantidad # Asegurarse que el stock aún existe
+                            )
+                            
+                            PrestamoDetalle.objects.create(prestamo=prestamo, lote=lote, cantidad_prestada=cantidad)
+                            lote.cantidad -= cantidad
+                            lote.save(update_fields=['cantidad', 'updated_at'])
+                            
+                            MovimientoInventario.objects.create(
+                                tipo_movimiento=tipo_mov_prestamo,
+                                usuario=request.user,
+                                estacion=estacion,
+                                compartimento_origen=lote.compartimento,
+                                lote_insumo=lote,
+                                cantidad_movida=cantidad * -1,
+                                notas=f"Préstamo a {destinatario.nombre_entidad}. {notas_prestamo}"
+                            )
+
+                messages.success(request, f"Préstamo #{prestamo.id} creado exitosamente.")
+                # TODO: Redirigir a la futura página de historial de préstamos
+                return redirect('gestion_inventario:ruta_historial_movimientos') 
+
+            except (Estado.DoesNotExist, TipoMovimiento.DoesNotExist):
+                messages.error(request, "Error crítico de configuración: Faltan Estados o Tipos de Movimiento.")
+            except (Activo.DoesNotExist, LoteInsumo.DoesNotExist):
+                messages.error(request, "Error de concurrencia: Uno de los ítems escaneados ya no está disponible. Revise la lista y vuelva a intentarlo.")
+            except Exception as e:
+                messages.error(request, f"Error inesperado al guardar el préstamo: {e}")
+
+        else:
+            messages.warning(request, "Por favor, corrija los errores en el formulario.")
+        
+        context = {
+            'cabecera_form': cabecera_form,
+            # No pasamos 'items_list' de vuelta porque el JS lo maneja,
+            # pero sí es útil para depurar si falla el POST
+            'items_json_error': request.POST.get('items_json', '[]') 
+        }
+        return render(request, self.template_name, context)
+
+
+
+
+class BuscarItemPrestamoJson(LoginRequiredMixin, View):
+    """
+    API endpoint (solo GET) para buscar un ítem por su código
+    y verificar si está disponible para préstamo.
+    """
+    def get(self, request, *args, **kwargs):
+        estacion_id = request.session.get('active_estacion_id')
+        codigo = kwargs.get('codigo')
+
+        if not estacion_id or not codigo:
+            return JsonResponse({"error": "Faltan datos (estación o código)."}, status=400)
+
+        # 1. Buscar en Activos
+        try:
+            # Buscamos por el código exacto (case-insensitive)
+            activo = Activo.objects.select_related('producto__producto_global', 'estado')\
+                .get(codigo_activo__iexact=codigo, estacion_id=estacion_id)
+            
+            # Verificamos que esté 'DISPONIBLE'
+            if activo.estado.nombre != 'DISPONIBLE':
+                return JsonResponse({"error": f"Activo no disponible (Estado: {activo.estado.nombre})."}, status=400)
+
+            return JsonResponse({
+                "tipo": "activo",
+                "id": activo.id,
+                "codigo": activo.codigo_activo,
+                "nombre": activo.producto.producto_global.nombre_oficial
+            })
+        except Activo.DoesNotExist:
+            pass # No era un activo, buscar en lotes
+
+        # 2. Buscar en Lotes
+        try:
+            lote = LoteInsumo.objects.select_related('producto__producto_global', 'estado')\
+                .get(codigo_lote__iexact=codigo, compartimento__ubicacion__estacion_id=estacion_id)
+
+            if lote.estado.nombre != 'DISPONIBLE':
+                 return JsonResponse({"error": f"Lote no disponible (Estado: {lote.estado.nombre})."}, status=400)
+            
+            if lote.cantidad <= 0:
+                return JsonResponse({"error": f"Lote {lote.codigo_lote} no tiene stock (Cantidad: 0)."}, status=400)
+
+            return JsonResponse({
+                "tipo": "lote",
+                "id": lote.id,
+                "codigo": lote.codigo_lote,
+                "nombre": lote.producto.producto_global.nombre_oficial,
+                "max_qty": lote.cantidad
+            })
+        except LoteInsumo.DoesNotExist:
+            pass # No se encontró
+
+        return JsonResponse({"error": f"Código '{codigo}' no encontrado o no disponible en esta estación."}, status=404)
 
 
 
