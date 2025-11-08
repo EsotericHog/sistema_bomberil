@@ -42,7 +42,10 @@ from .views import (
     CrearPrestamoView,
     BuscarItemPrestamoJson,
     HistorialPrestamosView,
-    GestionarDevolucionView
+    GestionarDevolucionView,
+    DestinatarioListView,
+    DestinatarioCreateView,
+    DestinatarioEditView
     )
 
 app_name = 'gestion_inventario'
@@ -134,6 +137,11 @@ urlpatterns = [
     path('api/prestamo/buscar-item/<str:codigo>/', BuscarItemPrestamoJson.as_view(), name='api_buscar_item_prestamo'),
     path('prestamos/', HistorialPrestamosView.as_view(), name='ruta_historial_prestamos'),
     path('prestamos/<int:prestamo_id>/gestionar/', GestionarDevolucionView.as_view(), name='ruta_gestionar_devolucion'),
+
+    # Gestión de destinatarios
+    path('destinatarios/', DestinatarioListView.as_view(), name='ruta_lista_destinatarios'),
+    path('destinatarios/crear/', DestinatarioCreateView.as_view(), name='ruta_crear_destinatario'),
+    path('destinatarios/<int:destinatario_id>/editar/', DestinatarioEditView.as_view(), name='ruta_editar_destinatario'),
 
     # Historial de movimientos
     path('movimientos/', MovimientoInventarioListView.as_view(), name='ruta_historial_movimientos'),

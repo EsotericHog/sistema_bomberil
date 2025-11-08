@@ -1018,3 +1018,38 @@ class PrestamoFilterForm(forms.Form):
         if estacion:
             # Filtra los destinatarios para mostrar solo los de la estación
             self.fields['destinatario'].queryset = Destinatario.objects.filter(estacion=estacion).order_by('nombre_entidad')
+
+
+
+
+class DestinatarioForm(forms.ModelForm):
+    """
+    Formulario (simplificado) para crear y editar Destinatarios.
+    No incluye 'is_active'.
+    """
+    class Meta:
+        model = Destinatario
+        fields = [
+            'nombre_entidad', 
+            'rut_entidad', 
+            'nombre_contacto', 
+            'telefono_contacto'
+        ]
+        widgets = {
+            'nombre_entidad': forms.TextInput(attrs={'class': 'form-control form-control-sm fs_normal'}),
+            'rut_entidad': forms.TextInput(attrs={'class': 'form-control form-control-sm fs_normal'}),
+            'nombre_contacto': forms.TextInput(attrs={'class': 'form-control form-control-sm fs_normal'}),
+            'telefono_contacto': forms.TextInput(attrs={'class': 'form-control form-control-sm fs_normal'}),
+        }
+
+
+class DestinatarioFilterForm(forms.Form):
+    """
+    Formulario (simplificado) para filtrar la lista de Destinatarios.
+    Solo busca por texto.
+    """
+    q = forms.CharField(
+        label='Buscar (Nombre, RUT o Contacto)',
+        required=False,
+        widget=forms.TextInput(attrs={'class': 'form-control form-control-sm fs_normal', 'placeholder': 'Buscar...'})
+    )

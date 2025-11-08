@@ -66,6 +66,8 @@ from .forms import (
     PrestamoCabeceraForm,
     PrestamoDetalleFormSet,
     PrestamoFilterForm,
+    DestinatarioFilterForm,
+    DestinatarioForm,
     EtiquetaFilterForm
     )
 from .utils import generar_sku_sugerido
@@ -3331,6 +3333,160 @@ class GestionarDevolucionView(LoginRequiredMixin, View):
 
         messages.success(request, f"Se registraron {items_procesados_con_exito} devoluciones correctamente.")
         return redirect('gestion_inventario:ruta_gestionar_devolucion', prestamo_id=prestamo.id)
+
+
+
+
+class DestinatarioListView(LoginRequiredMixin, View):
+    """
+    Lista todos los destinatarios (para préstamos) de la estación activa.
+    Obtiene la estación desde la sesión.
+    """
+    template_name = 'gestion_inventario/pages/lista_destinatarios.html'
+    paginate_by = 25
+
+    def get(self, request, *args, **kwargs):
+        # --- CORRECCIÓN ---
+        # Obtener la estación activa desde la SESIÓN
+        estacion_id = request.session.get('active_estacion_id')
+        if not estacion_id:
+            messages.error(request, "Error: No se ha seleccionado una estación activa.")
+            return redirect('portal:ruta_inicio')
+        # Filtra por la estación de la sesión
+        base_queryset = Destinatario.objects.filter(estacion_id=estacion_id).order_by('nombre_entidad')
+        # --- FIN CORRECCIÓN ---
+
+        filter_form = DestinatarioFilterForm(request.GET)
+
+        if filter_form.is_valid():
+            q = filter_form.cleaned_data.get('q')
+            if q:
+                base_queryset = base_queryset.filter(
+                    Q(nombre_entidad__icontains=q) |
+                    Q(rut_entidad__icontains=q) |
+                    Q(nombre_contacto__icontains=q)
+                )
+
+        # Paginación
+        paginator = Paginator(base_queryset, self.paginate_by)
+        page_number = request.GET.get('page')
+        page_obj = paginator.get_page(page_number)
+
+        context = {
+            'page_obj': page_obj,
+            'is_paginated': paginator.num_pages > 1,
+            'filter_form': filter_form,
+            'params': request.GET.urlencode()
+        }
+        return render(request, self.template_name, context)
+
+
+
+
+class DestinatarioCreateView(LoginRequiredMixin, View):
+    """
+    Crea un nuevo destinatario.
+    Asigna la estación activa desde la SESIÓN.
+    """
+    template_name = 'gestion_inventario/pages/form_destinatario.html'
+
+    def get(self, request, *args, **kwargs):
+        form = DestinatarioForm()
+        context = {
+            'form': form,
+            'titulo': 'Crear Nuevo Destinatario'
+        }
+        return render(request, self.template_name, context)
+
+    def post(self, request, *args, **kwargs):
+        # --- CORRECCIÓN ---
+        estacion_id = request.session.get('active_estacion_id')
+        if not estacion_id:
+            messages.error(request, "Acción no permitida. No hay estación activa.")
+            return redirect('portal:ruta_inicio')
+        # --- FIN CORRECCIÓN ---
+        
+        form = DestinatarioForm(request.POST)
+        if form.is_valid():
+            try:
+                destinatario = form.save(commit=False)
+                # --- CORRECCIÓN ---
+                # Asigna el ID de la estación desde la sesión
+                destinatario.estacion_id = estacion_id
+                # --- FIN CORRECCIÓN ---
+                destinatario.creado_por = request.user
+                destinatario.save()
+                messages.success(request, f"Destinatario '{destinatario.nombre_entidad}' creado con éxito.")
+                return redirect('gestion_inventario:ruta_lista_destinatarios')
+            except IntegrityError:
+                messages.error(request, f"Ya existe un destinatario con el nombre '{form.cleaned_data['nombre_entidad']}' en esta estación.")
+                form.add_error('nombre_entidad', 'Este nombre ya está en uso.')
+        
+        context = {
+            'form': form,
+            'titulo': 'Crear Nuevo Destinatario'
+        }
+        return render(request, self.template_name, context)
+
+
+
+
+class DestinatarioEditView(LoginRequiredMixin, View):
+    """
+    Edita un destinatario existente.
+    Verifica la pertenencia usando la estación de la SESIÓN.
+    """
+    template_name = 'gestion_inventario/pages/form_destinatario.html'
+
+    def get(self, request, *args, **kwargs):
+        # --- CORRECCIÓN ---
+        estacion_id = request.session.get('active_estacion_id')
+        if not estacion_id:
+            messages.error(request, "Acción no permitida.")
+            return redirect('portal:ruta_inicio')
+        
+        destinatario_id = kwargs.get('destinatario_id')
+        # get_object_or_404 asegura que solo editen los de su estación (usando el ID de sesión)
+        destinatario = get_object_or_404(Destinatario, id=destinatario_id, estacion_id=estacion_id)
+        # --- FIN CORRECCIÓN ---
+        
+        form = DestinatarioForm(instance=destinatario)
+        context = {
+            'form': form,
+            'titulo': f"Editar Destinatario: {destinatario.nombre_entidad}",
+            'destinatario': destinatario
+        }
+        return render(request, self.template_name, context)
+
+    def post(self, request, *args, **kwargs):
+        # --- CORRECCIÓN ---
+        estacion_id = request.session.get('active_estacion_id')
+        if not estacion_id:
+            messages.error(request, "Acción no permitida.")
+            return redirect('portal:home')
+        
+        destinatario_id = kwargs.get('destinatario_id')
+        # V-lida de nuevo en el POST por seguridad
+        destinatario = get_object_or_404(Destinatario, id=destinatario_id, estacion_id=estacion_id)
+        # --- FIN CORRECCIÓN ---
+        
+        form = DestinatarioForm(request.POST, instance=destinatario)
+        
+        if form.is_valid():
+            try:
+                form.save()
+                messages.success(request, f"Destinatario '{destinatario.nombre_entidad}' actualizado con éxito.")
+                return redirect('gestion_inventario:ruta_lista_destinatarios')
+            except IntegrityError:
+                messages.error(request, f"Ya existe otro destinatario con el nombre '{form.cleaned_data['nombre_entidad']}'.")
+                form.add_error('nombre_entidad', 'Este nombre ya está en uso.')
+        
+        context = {
+            'form': form,
+            'titulo': f"Editar Destinatario: {destinatario.nombre_entidad}",
+            'destinatario': destinatario
+        }
+        return render(request, self.template_name, context)
 
 
 

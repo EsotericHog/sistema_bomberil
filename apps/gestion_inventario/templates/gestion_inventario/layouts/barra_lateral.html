@@ -72,7 +72,17 @@
                 <i class="fa-solid fa-hand-holding-hand"></i>
                 <span>Préstamos</span>
             </a>
+            <i class="fa-solid fa-chevron-down color_primario barra_lateral__flecha_modulo"></i>
         </div>
+
+        <ul class="barra_lateral__lista_opciones oculto">
+            <li class="fondo_opcion_nav hover_color">
+                <a class="color_primario fs_nav_opcion" href="{% url 'gestion_inventario:ruta_lista_destinatarios' %}">
+                    <i class="fa-solid fa-address-book color_naranjo_claro"></i>
+                    Gestionar Destinatarios
+                </a>
+            </li>
+        </ul>
 
     </section>
 
