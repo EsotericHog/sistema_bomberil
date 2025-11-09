@@ -2,6 +2,7 @@ from django.db import models
 from django.utils import timezone
 from django.conf import settings
 from django.core.exceptions import ValidationError
+from dateutil.relativedelta import relativedelta
 
 
 # ESTADOS
@@ -357,10 +358,10 @@ class Producto(models.Model):
     producto_global = models.ForeignKey(ProductoGlobal, on_delete=models.PROTECT, related_name="variantes_locales")
     sku = models.CharField(max_length=50, help_text="SKU o código interno de la compañía para este producto.", null=True, blank=True)
     es_serializado = models.BooleanField(default=False, help_text="Marcar si este producto es un Activo que requiere seguimiento individual.")
-
     proveedor_preferido = models.ForeignKey(Proveedor, on_delete=models.PROTECT, verbose_name="Proveedor preferido", help_text="Seleccione el proveedor preferido para este producto", null=True, blank=True)
     costo_compra = models.DecimalField(max_digits=10, decimal_places=0, null=True, blank=True)
     estacion = models.ForeignKey(Estacion, on_delete=models.PROTECT, verbose_name="Estación Origen")
+    vida_util_estacion_anos = models.PositiveIntegerField(verbose_name="Vida Útil (Años)", null=True, blank=True, help_text="Regla de la estación. Si se deja en blanco, se usará la recomendación global.")
     es_expirable = models.BooleanField(verbose_name="¿Es expirable?", default=0)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -373,6 +374,16 @@ class Producto(models.Model):
 
     def __str__(self):
         return f"{self.producto_global.nombre_oficial} ({self.estacion.nombre})"
+    
+    @property
+    def vida_util_efectiva(self):
+        """
+        Propiedad simple que devuelve la regla local si existe, 
+        o la regla global como fallback.
+        """
+        if self.vida_util_estacion_anos is not None:
+            return self.vida_util_estacion_anos
+        return self.producto_global.vida_util_recomendada_anos
 
 
 
@@ -398,25 +409,43 @@ class Activo(models.Model):
     fecha_fabricacion = models.DateField(verbose_name="Fecha de fabricación", null=True, blank=True)
     fecha_recepcion = models.DateField(verbose_name="Fecha de Recepción", null=True, blank=True, db_index=True)
     fecha_expiracion = models.DateField(verbose_name="Fecha de expiración", null=True, blank=True, help_text="Usar solo para activos que tienen una fecha de caducidad específica.")
+    fin_vida_util_calculada = models.DateField(verbose_name="Fin de Vida Útil (Calculada)", null=True, blank=True, db_index=True,editable=False)  # Se calcula siempre en save()
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
 
     @property
     def fin_vida_util(self):
-        """Calcula la fecha de fin de vida útil. Lógica de negocio."""
-        vida_util_anos = self.producto.producto_global.vida_util_recomendada_anos
-        if not vida_util_anos:
-            return None
+        """
+        Devuelve la fecha de vencimiento más próxima.
+        Prioridad 1: Expiración (si la tiene, ej: un químico).
+        Prioridad 2: Fin de vida útil calculado (ej: un casco).
+        """
+        if self.fecha_expiracion:
+            return self.fecha_expiracion
+        return self.fin_vida_util_calculada
+    
+
+    def _calcular_fin_vida_util(self):
+        """
+        Lógica interna para calcular y establecer la fecha de fin de vida útil.
+        LEE LA REGLA LOCAL PRIMERO.
+        """
+        self.fin_vida_util_calculada = None
         
-        # La vida útil puede contar desde la fabricación o puesta en servicio.
-        # Aquí un ejemplo que prioriza la fecha de fabricación.
+        # 1. Obtener la regla de vida útil (Local > Global)
+        vida_util_anos = self.producto.vida_util_efectiva
+        
+        if not vida_util_anos:
+            return # El producto (ni local ni global) no tiene vida útil
+
+        # 2. La vida útil cuenta desde la fabricación (prioridad) o la recepción.
         fecha_inicio = self.fecha_fabricacion or self.fecha_recepcion
         if not fecha_inicio:
-            return None
-            
-        from dateutil.relativedelta import relativedelta
-        return fecha_inicio + relativedelta(years=vida_util_anos)
+            return # No hay fecha de inicio para calcular
+
+        # 3. Calcular y guardar
+        self.fin_vida_util_calculada = fecha_inicio + relativedelta(years=vida_util_anos)
     
 
     class Meta:
@@ -452,6 +481,9 @@ class Activo(models.Model):
             while Activo.objects.filter(estacion=self.estacion, codigo_activo=self.codigo_activo).exists():
                  next_num += 1
                  self.codigo_activo = f"{prefix}{next_num:05d}"
+        
+        # Recalcula el fin de vida útil antes de guardar
+        self._calcular_fin_vida_util()
             
         super().save(*args, **kwargs)
 

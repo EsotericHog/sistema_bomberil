@@ -7,7 +7,7 @@ from django.shortcuts import render, redirect
 from django.views import View
 from django.http import JsonResponse, HttpResponse
 from django.db import models
-from django.db.models import Count, Sum, Q, Subquery, OuterRef, Q, ProtectedError
+from django.db.models import Count, Sum, Q, Subquery, OuterRef, ProtectedError, Value, Case, When, CharField
 from django.db.models.functions import Coalesce
 from django.urls import reverse
 from django.contrib import messages
@@ -16,6 +16,7 @@ from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
 import qrcode
 import io
+from django.db.models.functions import Coalesce
 
 
 
@@ -1261,8 +1262,31 @@ class ProductoLocalEditView(View):
         
         if form.is_valid():
             try:
-                producto_editado = form.save()
-                messages.success(request, f'Producto "{producto_editado.producto_global.nombre_oficial}" actualizado correctamente.')
+                # Usamos una transacción para asegurar que todo (o nada) se guarde
+                with transaction.atomic():
+                    producto_editado = form.save()
+                    
+                    # --- INICIO DE LA LÓGICA DE RECALCULO ---
+                    
+                    # Verificamos si el campo de vida útil realmente cambió.
+                    # No queremos recalcular cientos de activos si solo se cambió el SKU.
+                    if form.has_changed() and 'vida_util_estacion_anos' in form.changed_data:
+                        
+                        # Obtenemos TODOS los activos asociados a este producto
+                        activos_a_actualizar = Activo.objects.filter(producto=producto_editado)
+                        
+                        count_actualizados = 0
+                        for activo in activos_a_actualizar:
+                            # Simplemente llamamos a .save() en cada activo.
+                            # Esto disparará el método _calcular_fin_vida_util()
+                            # que ya definimos en el models.py del Activo.
+                            activo.save()
+                            count_actualizados += 1
+                        
+                        if count_actualizados > 0:
+                            messages.info(request, f"Se actualizó la vida útil de {count_actualizados} activos existentes.")
+
+                    messages.success(request, f'Producto "{producto_editado.producto_global.nombre_oficial}" actualizado correctamente.')
                 # Redirigir de vuelta al catálogo local
                 return redirect('gestion_inventario:ruta_catalogo_local')
             
@@ -1738,16 +1762,37 @@ class StockActualListView(LoginRequiredMixin, View):
         estado_id = request.GET.get('estado', '')
         fecha_desde = request.GET.get('fecha_desde', '')
         fecha_hasta = request.GET.get('fecha_hasta', '')
-        sort_by = request.GET.get('sort', 'fecha_desc')
+        sort_by = request.GET.get('sort', 'vencimiento_asc')
+
+        today = timezone.now().date()
+        warning_date = today + datetime.timedelta(days=90)
 
         # 3. Obtener querysets base, filtrados por la ESTACIÓN ACTIVA
+        # Añadir anotaciones de vencimiento
         activos_qs = Activo.objects.filter(estacion=estacion_usuario).select_related(
             'producto__producto_global', 'compartimento__ubicacion', 'estado'
-        ).all()
+        ).annotate(
+            vencimiento_final=Coalesce('fecha_expiracion', 'fin_vida_util_calculada'),
+            estado_vencimiento=Case(
+                When(vencimiento_final__isnull=True, then=Value('no_aplica')),
+                When(vencimiento_final__lt=today, then=Value('vencido')),
+                When(vencimiento_final__lt=warning_date, then=Value('proximo')),
+                default=Value('ok'),
+                output_field=CharField()
+            )
+        )
         
         lotes_qs = LoteInsumo.objects.filter(producto__estacion=estacion_usuario).select_related(
             'producto__producto_global', 'compartimento__ubicacion'
-        ).all()
+        ).annotate(
+            estado_vencimiento=Case(
+                When(fecha_expiracion__isnull=True, then=Value('no_aplica')),
+                When(fecha_expiracion__lt=today, then=Value('vencido')),
+                When(fecha_expiracion__lt=warning_date, then=Value('proximo')),
+                default=Value('ok'),
+                output_field=CharField()
+            )
+        )
 
         # 4. Aplicar filtros de búsqueda (query 'q')
         if query:
@@ -1795,18 +1840,34 @@ class StockActualListView(LoginRequiredMixin, View):
             stock_items_list = list(chain(activos_qs, lotes_qs))
 
         # 8. Ordenar la lista combinada
+        # Helper para obtener la clave de ordenamiento correcta
+        def get_sort_key(item, sort_field):
+            if sort_field == 'vencimiento':
+                if hasattr(item, 'vencimiento_final'): # Es un Activo
+                    return item.vencimiento_final
+                elif hasattr(item, 'fecha_expiracion'): # Es un Lote
+                    return item.fecha_expiracion
+            elif sort_field == 'fecha':
+                return getattr(item, 'fecha_recepcion', None)
+            elif sort_field == 'nombre':
+                return getattr(item.producto.producto_global, 'nombre_oficial', '')
+            return None
+        
         reverse_sort = sort_by.endswith('_desc') 
         sort_field = sort_by.replace('_desc', '').replace('_asc', '')
 
-        if sort_field == 'fecha':
-            # Usa una fecha por defecto para manejar valores None
+        if sort_field == 'vencimiento':
+            # Para vencimiento ASC, los Nones (no vencen) van al final
+            default_date = datetime.date.max
+            stock_items_list.sort(key=lambda x: get_sort_key(x, 'vencimiento') or default_date, reverse=reverse_sort)
+        
+        elif sort_field == 'fecha':
+            # Para fecha DESC (default original), los Nones van al final
             default_date = datetime.date.min if reverse_sort else datetime.date.max 
-            stock_items_list.sort(key=lambda x: getattr(x, 'fecha_recepcion', default_date) or default_date, reverse=reverse_sort)
-        elif sort_field == 'nombre': # Añadido orden por nombre
-             stock_items_list.sort(key=lambda x: x.producto.producto_global.nombre_oficial, reverse=reverse_sort)
-        # else: # Orden por defecto (fecha desc) ya aplicado arriba si sort_field == 'fecha'
-             # Si no es fecha ni nombre, podrías ordenar por nombre como fallback
-             # stock_items_list.sort(key=lambda x: x.producto.producto_global.nombre_oficial)
+            stock_items_list.sort(key=lambda x: get_sort_key(x, 'fecha') or default_date, reverse=reverse_sort)
+        
+        elif sort_field == 'nombre':
+            stock_items_list.sort(key=lambda x: get_sort_key(x, 'nombre'), reverse=reverse_sort)
 
         # 9. Paginación
         paginator = Paginator(stock_items_list, self.paginate_by)
@@ -1821,7 +1882,7 @@ class StockActualListView(LoginRequiredMixin, View):
         # 10. Preparar contexto para la plantilla
         context = {
             'page_obj': page_obj,
-            'stock_items': page_obj.object_list,
+            'stock_items': page_obj.object_list, # Esta es la lista que itera tu plantilla
             'todas_las_ubicaciones': Ubicacion.objects.filter(estacion=estacion_usuario),
             'todos_los_estados': Estado.objects.all(),
             'current_q': query,
@@ -1831,7 +1892,6 @@ class StockActualListView(LoginRequiredMixin, View):
             'current_fecha_desde': fecha_desde,
             'current_fecha_hasta': fecha_hasta,
             'current_sort': sort_by,
-            'today': timezone.now().date() # Mantenido para lógica de vencimiento
         }
         
         return render(request, self.template_name, context)

@@ -1,10 +1,8 @@
 {% extends 'gestion_inventario/layouts/base.html' %}
 {% load static %}
-
-{% block titulo_ventana %}Stock Actual{% endblock %}
+{% load i18n %} {% block titulo_ventana %}Stock Actual{% endblock %}
 
 {% block titulo_pagina %}
-    <!-- Título principal de la página, usando tus clases -->
     <span class="fs_grande color_primario">
         <i class="fas fa-boxes me-2"></i> Stock Actual
     </span>
@@ -14,7 +12,7 @@
 
 <div class="container-fluid mt-4">
 
-<!-- Panel de Filtros y Búsqueda -->
+{# Panel de Filtros y Búsqueda #}
 <div class="card shadow-sm mb-4">
     <div class="card-header fs_normal">
         <i class="fas fa-filter me-1"></i>
@@ -78,14 +76,14 @@
                 <div class="col-md-6 col-lg-2">
                      <label for="sort" class="form-label fw-bold fs_pequena">Ordenar Por</label>
                      <select name="sort" id="sort" class="form-select form-select-sm fs_normal">
-                         <option value="fecha_desc" {% if current_sort == 'fecha_desc' %}selected{% endif %}>Recepción (Más Reciente)</option>
+                        <option value="vencimiento_asc" {% if current_sort == 'vencimiento_asc' %}selected{% endif %}>Próximo a Vencer</option>
+                        <option value="fecha_desc" {% if current_sort == 'fecha_desc' %}selected{% endif %}>Recepción (Más Reciente)</option>
                          <option value="fecha_asc" {% if current_sort == 'fecha_asc' %}selected{% endif %}>Recepción (Más Antiguo)</option>
                          <option value="nombre_asc" {% if current_sort == 'nombre_asc' %}selected{% endif %}>Nombre Producto (A-Z)</option>
-                         {# Asegúrate que la vista maneje 'nombre_asc' y 'nombre_desc' si añades más #}
                      </select>
                 </div>
 
-            </div> {# Cierre row g-3 #}
+            </div>
             <div class="row mt-3">
                 <div class="col-12 text-end">
                     <a href="{% url 'gestion_inventario:ruta_stock_actual' %}" class="btn btn-outline-secondary btn-sm fs_normal">Limpiar</a>
@@ -98,7 +96,7 @@
     </div>
 </div>
 
-<!-- Tabla de Stock Actual -->
+{# Tabla de Stock Actual #}
 <div class="card shadow-sm mb-4 {% if request.session.dark_mode %}dark-mode{% endif %}">
     <div class="card-header d-flex justify-content-between align-items-center">
         <span class="fw-bold fs_normal">
@@ -111,7 +109,6 @@
     </div>
     <div class="card-body">
         <div class="table-responsive">
-            <!-- Aplicando el patrón de tu lista_proveedores.html -->
             <table class="table table-striped table-hover table-sm align-middle" id="tablaStockActual">
                 <thead class="fs_pequena">
                     <tr>
@@ -122,13 +119,14 @@
                         <th class="text-center">Cantidad</th>
                         <th class="text-center">Estado</th>
                         <th>Recepción</th>
+                        <th>Vencimiento / Fin Vida Útil</th>
                         <th class="text-center">Acciones</th>
                     </tr>
                 </thead>
                 <tbody class="fs_normal">
                     {% for item in stock_items %}
                     <tr class="{% if item.estado.nombre == 'ANULADO POR ERROR' %}text-muted opacity-75{% endif %}">
-                        <!-- Producto -->
+                        {# Producto #}
                         <td>
                             <strong>{{ item.producto.producto_global.nombre_oficial }}</strong>
                             <br><small class="text-muted">SKU: {{ item.producto.sku|default:"N/A" }}</small>
@@ -148,7 +146,7 @@
                             </td>
                         {% endif %}
                         
-                        <!-- Tipo -->
+                        {# Tipo de existencia #}
                         <td class="text-center">
                             {% if item.producto.es_serializado %}
                                 <span class="badge bg-info text-dark">Activo</span>
@@ -157,7 +155,7 @@
                             {% endif %}
                         </td>
                         
-                        <!-- Ubicación (Compartimento y Ubicacion) -->
+                        {# Ubicación #}
                         <td class="fs_pequena">
                             {% with ubicacion=item.compartimento.ubicacion %}
                                 {% if ubicacion.tipo_ubicacion.nombre == 'VEHÍCULO' %}
@@ -188,7 +186,7 @@
                                 {% endwith %}
                         </td>
                         
-                        <!-- Cantidad -->
+                        {# Cantidad #}
                         <td class="text-center">
                             {% if item.producto.es_serializado %}
                             <strong>1</strong>
@@ -197,7 +195,7 @@
                             {% endif %}
                         </td>
                         
-                        <!-- Estado -->
+                        {# Estado #}
                         <td class="text-center">
                             {# --- LÓGICA DE ESTADO UNIFICADA --- #}
                             {% with estado_nombre=item.estado.nombre|default:'N/A' %}
@@ -211,81 +209,98 @@
                                 </span>
                             {% endwith %}
                             
-                            {# Añadir badge de vencido si es un insumo disponible/asignado pero vencido #}
-                            {% if not item.producto.es_serializado and item.fecha_expiracion and item.fecha_expiracion < today and item.estado.nombre in "DISPONIBLE,ASIGNADO" %}
-                                <br><span class="badge bg-danger fs_pequena mt-1">Vencido</span>
+                            {# --- CAMBIO: Se elimina la lógica de vencido de aquí --- #}
+                            {# {% if not item.producto.es_serializado and item.fecha_expiracion and item.fecha_expiracion < today and item.estado.nombre in "DISPONIBLE,ASIGNADO" %} ... {% endif %} #}
+                        </td>
+
+                        {# Fecha de recepción #}
+                        <td class="fs_pequena">
+                            {# Muestra la fecha_recepcion usando el filtro date #}
+                            {{ item.fecha_recepcion|date:"d/m/Y"|default:"N/A" }} 
+                        </td>
+
+                        {# Fecha de vencimiento / fin de vida útil #}
+                        <td class="fs_pequena">
+                            {% if item.producto.es_serializado %}
+                                {% with vencimiento=item.fin_vida_util %} {# Usa la @property #}
+                                    {% if vencimiento %}
+                                        <span class="badge 
+                                            {% if item.estado_vencimiento == 'vencido' %}bg-danger
+                                            {% elif item.estado_vencimiento == 'proximo' %}bg-warning text-dark
+                                            {% else %}bg-success{% endif %}">
+                                            {{ vencimiento|date:"d/m/Y" }}
+                                        </span>
+                                    {% else %}
+                                        <span class="badge bg-light text-dark">N/A</span>
+                                    {% endif %}
+                                {% endwith %}
+                            {% else %}
+                                {% with vencimiento=item.fecha_expiracion %}
+                                    {% if vencimiento %}
+                                        <span class="badge 
+                                            {% if item.estado_vencimiento == 'vencido' %}bg-danger
+                                            {% elif item.estado_vencimiento == 'proximo' %}bg-warning text-dark
+                                            {% else %}bg-success{% endif %}">
+                                            {{ vencimiento|date:"d/m/Y" }}
+                                        </span>
+                                    {% else %}
+                                        <span class="badge bg-light text-dark">No Expira</span>
+                                    {% endif %}
+                                {% endwith %}
                             {% endif %}
                         </td>
 
-                        <!-- Fecha de recepción -->
-                        <td class="fs_pequena">
-                           {# Muestra la fecha_recepcion usando el filtro date #}
-                           {{ item.fecha_recepcion|date:"d/m/Y"|default:"N/A" }} 
-                        </td>
-                        
-                        <!-- Acciones -->
+                        {# Acciones #}
                         <td class="text-center">
                             {% if item.estado.nombre != "ANULADO POR ERROR" and item.estado.nombre != "DE BAJA" and item.estado.nombre != "EXTRAVIADO" %}
                                 <a href="#" class="btn btn-sm btn-outline-primary fs_normal" title="Ver Detalles"><i class="fas fa-eye"></i></a>
 
                                 {% if item.producto.es_serializado %}
-                                    <!--Imprimir etiqueta de activo-->
                                     <a href="{% url 'gestion_inventario:ruta_imprimir_etiquetas' %}?activos={{ item.id }}" 
                                        class="btn btn-sm btn-outline-info fs_normal" title="Imprimir Etiqueta">
                                         <i class="fas fa-qrcode"></i>
                                     </a>
-                                    <!--Mover activo-->
                                     <a href="{% url 'gestion_inventario:ruta_mover_existencia' tipo_item='activo' item_id=item.id %}" 
                                        class="btn btn-sm btn-outline-secondary fs_normal" title="Mover Ítem">
                                         <i class="fas fa-truck-moving"></i>
                                     </a>
-                                    <!--Dar de baja activo-->
                                     <a href="{% url 'gestion_inventario:ruta_dar_de_baja_existencia' tipo_item='activo' item_id=item.id %}"
                                        class="btn btn-sm btn-outline-secondary fs_normal" title="Dar de Baja">
                                         <i class="fas fa-thumbs-down"></i>
                                     </a>
-                                    <!-- Reportar activo extraviado-->
                                     <a href="{% url 'gestion_inventario:ruta_extraviado_existencia' tipo_item='activo' item_id=item.id %}"
                                        class="btn btn-sm btn-outline-secondary fs_normal" title="Reportar Extravío">
                                         <i class="fas fa-search-minus"></i>
                                     </a>
-                                    <!-- Anular Activo -->
                                     <a href="{% url 'gestion_inventario:ruta_anular_existencia' tipo_item='activo' item_id=item.id %}" 
                                        class="btn btn-sm btn-outline-danger fs_normal" title="Anular Registro (Error de Ingreso)">
                                         <i class="fas fa-times-circle"></i>
                                     </a>
                                 {% else %}
-                                    <!--Imprimir etiqueta de lote-->
                                     <a href="{% url 'gestion_inventario:ruta_imprimir_etiquetas' %}?lotes={{ item.id }}" 
                                        class="btn btn-sm btn-outline-info fs_normal" title="Imprimir Etiqueta">
                                         <i class="fas fa-qrcode"></i>
                                     </a>
-                                    <!--Mover lote-->
                                     <a href="{% url 'gestion_inventario:ruta_mover_existencia' tipo_item='lote' item_id=item.id %}" 
                                        class="btn btn-sm btn-outline-secondary fs_normal" title="Mover Ítem">
                                         <i class="fas fa-truck-moving"></i>
                                     </a>
-                                    <!--Consumir stock-->
                                     <a href="{% url 'gestion_inventario:ruta_consumir_stock_lote' item.id %}"
                                        class="btn btn-sm btn-outline-success fs_normal" title="Consumir Stock">
                                         <i class="fas fa-minus-circle"></i>
                                     </a>
-                                    <!-- Ajustar stock de lote -->
                                     <a href="{% url 'gestion_inventario:ruta_ajustar_stock_lote' item.id %}"
                                        class="btn btn-sm btn-outline-warning fs_normal" title="Ajustar Cantidad">
                                         <i class="fas fa-balance-scale"></i>
                                     </a>
-                                    <!--Dar de baja lote-->
                                     <a href="{% url 'gestion_inventario:ruta_dar_de_baja_existencia' tipo_item='lote' item_id=item.id %}"
                                        class="btn btn-sm btn-outline-secondary fs_normal" title="Dar de Baja (Lote Vencido/Dañado)">
                                         <i class="fas fa-thumbs-down"></i>
                                     </a>
-                                    <!--Reportar lote extraviado-->
                                     <a href="{% url 'gestion_inventario:ruta_extraviado_existencia' tipo_item='lote' item_id=item.id %}"
                                        class="btn btn-sm btn-outline-secondary fs_normal" title="Reportar Extravío">
                                         <i class="fas fa-search-minus"></i>
                                     </a>
-                                    <!--Anular Lote-->
                                     <a href="{% url 'gestion_inventario:ruta_anular_existencia' tipo_item='lote' item_id=item.id %}" 
                                        class="btn btn-sm btn-outline-danger fs_normal" title="Anular Registro (Error de Ingreso)">
                                         <i class="fas fa-times-circle"></i>
@@ -308,13 +323,12 @@
                         <td colspan="9" class="text-center fst-italic py-4">
                             No se encontraron artículos en el inventario que coincidan con los filtros seleccionados.
                         </td>
-                    </tr>
+                        </tr>
                     {% endfor %}
                 </tbody>
             </table>
         </div>
 
-        <!-- Paginación (Usando Bootstrap .pagination) -->
         {% if page_obj.has_other_pages %}
         <nav aria-label="Paginación de Stock" class="mt-3">
             <ul class="pagination pagination-sm justify-content-center">
