@@ -77,9 +77,15 @@
 
         <ul class="barra_lateral__lista_opciones oculto">
             <li class="fondo_opcion_nav hover_color">
+                <a class="color_primario fs_nav_opcion" href="{% url 'gestion_inventario:ruta_historial_prestamos' %}">
+                    <i class="fa-solid fa-hand-holding-hand color_naranjo_claro"></i>
+                    Préstamos
+                </a>
+            </li>
+            <li class="fondo_opcion_nav hover_color">
                 <a class="color_primario fs_nav_opcion" href="{% url 'gestion_inventario:ruta_lista_destinatarios' %}">
                     <i class="fa-solid fa-address-book color_naranjo_claro"></i>
-                    Gestionar Destinatarios
+                    Destinatarios
                 </a>
             </li>
         </ul>
