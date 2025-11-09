@@ -21,6 +21,7 @@ from .views import (
     ProductoGlobalCrearView,
     ProductoLocalListView,
     ProductoLocalEditView,
+    ProductoLocalDetalleView,
     ProveedorListView,
     ProveedorCrearView,
     ProveedorDetalleView,
@@ -98,6 +99,8 @@ urlpatterns = [
     path('catalogo-local/', ProductoLocalListView.as_view(), name='ruta_catalogo_local'),
     # Editar producto local
     path('catalogo-local/editar/<int:pk>/', ProductoLocalEditView.as_view(), name='ruta_editar_producto_local'),
+    # Ver detalle de producto local
+    path('catalogo-local/producto/<int:pk>/', ProductoLocalDetalleView.as_view(), name='ruta_detalle_producto_local'),
 
     # Lista de proveedores
     path('proveedores/', ProveedorListView.as_view(), name='ruta_lista_proveedores'),

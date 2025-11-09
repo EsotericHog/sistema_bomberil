@@ -1,0 +1,240 @@
+{% extends 'gestion_inventario/layouts/base.html' %}
+{% load static %}
+{% load i18n %}
+
+{% block titulo_ventana %}Detalle: {{ producto.producto_global.nombre_oficial }}{% endblock %}
+
+{% block titulo_pagina %}
+    <span class="fs_grande color_primario">
+        <i class="fas fa-box me-2"></i> {{ producto.producto_global.nombre_oficial }}
+    </span>
+{% endblock %}
+
+{% block contenido %}
+<div class="container-fluid mt-4">
+
+    <div class="row">
+        <div class="col-lg-5 mb-4">
+            <div class="card shadow-sm h-100">
+                <div class="card-header fs_normal">
+                    <i class="fas fa-globe me-1"></i> Información Global (Fabricante)
+                </div>
+                <div class="card-body">
+                    
+                    {% if producto.producto_global.imagen %}
+                        <img src="{{ producto.producto_global.imagen.url }}" class="img-fluid rounded mb-3" 
+                             alt="{{ producto.producto_global.nombre_oficial }}" 
+                             style="max-height: 300px; width: 100%; object-fit: cover; border: 1px solid #ddd;">
+                    {% else %}
+                        <div class="mb-3 d-flex align-items-center justify-content-center bg-light rounded text-muted" 
+                             style="height: 200px; border: 1px dashed #ccc;">
+                            <div class="text-center">
+                                <i class="fas fa-image fa-3x"></i>
+                                <br>
+                                <span class="fs_pequena">Sin imagen</span>
+                            </div>
+                        </div>
+                    {% endif %}
+                    <ul class="list-group list-group-flush fs_normal">
+                        <li class="list-group-item d-flex justify-content-between">
+                            <strong>Marca:</strong>
+                            <span>{{ producto.producto_global.marca|default:"N/A" }}</span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between">
+                            <strong>Modelo:</strong>
+                            <span>{{ producto.producto_global.modelo|default:"N/A" }}</span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between">
+                            <strong>Categoría:</strong>
+                            <span>{{ producto.producto_global.categoria.nombre }}</span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between">
+                            <strong>Vida Útil (Global):</strong>
+                            <span class="badge bg-secondary">{{ producto.producto_global.vida_util_recomendada_anos|default:"N/A" }} años</span>
+                        </li>
+                    </ul>
+                    <p class="card-text text-muted fs_pequena mt-3">{{ producto.producto_global.descripcion_general|default:"" }}</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-7 mb-4">
+            <div class="card shadow-sm h-100">
+                <div class="card-header fs_normal d-flex justify-content-between align-items-center">
+                    <span><i class="fas fa-map-marker-alt me-1"></i> Ficha Local (Tu Estación)</span>
+                    <a href="{% url 'gestion_inventario:ruta_editar_producto_local' producto.pk %}" class="btn btn-primary btn-sm">
+                        <i class="fas fa-pen me-1"></i> Editar Ficha
+                    </a>
+                </div>
+                <div class="card-body">
+                    <ul class="list-group list-group-flush fs_normal">
+                        <li class="list-group-item d-flex justify-content-between">
+                            <strong>SKU (Interno):</strong>
+                            <span class="fw-bold">{{ producto.sku|default:"N/A" }}</span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between">
+                            <strong>Tipo de Stock:</strong>
+                            <span>
+                                {% if producto.es_serializado %}
+                                    <span class="badge bg-info text-dark">Activo (Serializado)</span>
+                                {% else %}
+                                    <span class="badge bg-warning text-dark">Insumo (Lote)</span>
+                                {% endif %}
+                            </span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between">
+                            <strong>Proveedor Preferido:</strong>
+                            <span>{{ producto.proveedor_preferido.nombre|default:"N/A" }}</span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between">
+                            <strong>Costo (Ref):</strong>
+                            <span>${{ producto.costo_compra|default:0 }}</span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between">
+                            <strong>Vida Útil (Local):</strong>
+                            <span class="badge bg-primary">{{ producto.vida_util_efectiva|default:"N/A" }} años</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card shadow-sm mb-4">
+        <div class="card-header fs_normal">
+            <i class="fas fa-boxes me-1"></i> Stock en Estación
+        </div>
+        <div class="card-body">
+            
+            <div class="row mb-3">
+                <div class="col-md-3">
+                    <div class="alert alert-primary text-center py-2">
+                        <strong class="fs_normal">TOTAL EN STOCK</strong><br>
+                        <span class="fs_grande fw-bold">{{ stock_summary.total_general|default:0 }}</span>
+                    </div>
+                </div>
+                {% for estado_nombre, total in stock_summary.items %}
+                    {% if estado_nombre != 'total_general' %}
+                    <div class="col-md-3">
+                        <div class="alert alert-secondary text-center py-2">
+                            <strong class="fs_normal text-uppercase">{{ estado_nombre|default:"N/A" }}</strong><br>
+                            <span class="fs_grande fw-bold">{{ total }}</span>
+                        </div>
+                    </div>
+                    {% endif %}
+                {% endfor %}
+            </div>
+
+            <form method="get" action="" id="filter-form">
+                <div class="d-flex justify-content-between align-items-end mb-3">
+                    <div style="min-width: 250px;">
+                        <label for="{{ filter_form.estado.id_for_label }}" class="form-label fw-bold fs_pequena">{{ filter_form.estado.label }}</label>
+                        {{ filter_form.estado }}
+                    </div>
+                    <div>
+                        <span class="form-label fw-bold fs_pequena d-block">Ordenar por:</span>
+                        <div class="btn-group btn-group-sm">
+                            <a href="?sort=vencimiento_asc&estado={{ current_estado|default:'' }}" 
+                               class="btn {% if current_sort == 'vencimiento_asc' %}btn-primary{% else %}btn-outline-primary{% endif %}">
+                                <i class="fas fa-calendar-times me-1"></i> Vencimiento
+                            </a>
+                            <a href="?sort=recepcion_desc&estado={{ current_estado|default:'' }}" 
+                               class="btn {% if current_sort == 'recepcion_desc' %}btn-primary{% else %}btn-outline-primary{% endif %}">
+                                <i class="fas fa-calendar-check me-1"></i> Recepción
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </form>
+
+            <div class="table-responsive">
+                <table class="table table-striped table-hover table-sm align-middle">
+                    <thead class="fs_pequena">
+                        <tr>
+                            {% if producto.es_serializado %}
+                                <th>Código Activo</th>
+                                <th>N° Serie</th>
+                            {% else %}
+                                <th>Código Lote</th>
+                                <th class="text-center">Cantidad</th>
+                            {% endif %}
+                            <th>Ubicación</th>
+                            <th class="text-center">Estado</th>
+                            <th>Recepción</th>
+                            <th>Vencimiento / Fin Vida Útil</th>
+                            <th class="text-center">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody class="fs_normal">
+                        {% for item in stock_items %}
+                        <tr>
+                            <td class="fw-bold fs_pequena">
+                                {% if producto.es_serializado %}
+                                    {{ item.codigo_activo }}
+                                {% else %}
+                                    {{ item.codigo_lote }}
+                                {% endif %}
+                            </td>
+
+                            {% if producto.es_serializado %}
+                                <td class="fs_pequena text-muted">{{ item.numero_serie_fabricante|default:"N/A" }}</td>
+                            {% else %}
+                                <td class="text-center fw-bold fs_normal">{{ item.cantidad }}</td>
+                            {% endif %}
+                            
+                            <td class="fs_pequena">{{ item.compartimento.ubicacion.nombre }} / {{ item.compartimento.nombre }}</td>
+                            
+                            <td class="text-center">
+                                <span class="badge fs_pequena 
+                                    {% if item.estado.tipo_estado_id == 1 %}bg-success {% elif item.estado.tipo_estado_id == 2 %}bg-warning text-dark {% elif item.estado.tipo_estado_id == 3 %}bg-danger {% else %}bg-secondary{% endif %}">
+                                    {{ item.estado.nombre|default:"N/A" }}
+                                </span>
+                            </td>
+
+                            <td class="fs_pequena">{{ item.fecha_recepcion|date:"d/m/Y" }}</td>
+
+                            <td class="fs_pequena">
+                                {% with vencimiento=item.vencimiento %}
+                                    {% if vencimiento %}
+                                        <span class="badge 
+                                            {% if item.estado_vencimiento == 'vencido' %}bg-danger
+                                            {% elif item.estado_vencimiento == 'proximo' %}bg-warning text-dark
+                                            {% else %}bg-success{% endif %}">
+                                            {{ vencimiento|date:"d/m/Y" }}
+                                        </span>
+                                    {% else %}
+                                        <span class="badge bg-light text-dark">N/A</span>
+                                    {% endif %}
+                                {% endwith %}
+                            </td>
+
+                            <td class="text-center">
+                                <a href="#" class="btn btn-sm btn-outline-primary fs_normal" title="Ver Detalles"><i class="fas fa-eye"></i></a>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="7" class="text-center fst-italic py-3">
+                                No se encontró stock para este producto con los filtros seleccionados.
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Script simple para que el filtro de estado recargue la página
+    document.addEventListener("DOMContentLoaded", function() {
+        const estadoSelect = document.getElementById("{{ filter_form.estado.id_for_label }}");
+        if (estadoSelect) {
+            estadoSelect.addEventListener("change", function() {
+                this.form.submit();
+            });
+        }
+    });
+</script>
+{% endblock %}

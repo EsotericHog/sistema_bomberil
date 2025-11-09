@@ -7,7 +7,7 @@ from django.shortcuts import render, redirect
 from django.views import View
 from django.http import JsonResponse, HttpResponse
 from django.db import models
-from django.db.models import Count, Sum, Q, Subquery, OuterRef, ProtectedError, Value, Case, When, CharField
+from django.db.models import Count, Sum, Q, Subquery, OuterRef, ProtectedError, Value, Case, When, CharField, F
 from django.db.models.functions import Coalesce
 from django.urls import reverse
 from django.contrib import messages
@@ -52,6 +52,7 @@ from .forms import (
     CompartimentoEditForm, 
     ProductoGlobalForm, 
     ProductoLocalEditForm,
+    ProductoStockDetalleFilterForm,
     ProveedorForm,
     ContactoProveedorForm,
     RecepcionCabeceraForm,
@@ -1300,6 +1301,135 @@ class ProductoLocalEditView(View):
             'form': form,
             'producto': self.producto,
             'estacion': self.estacion
+        }
+        return render(request, self.template_name, context)
+
+
+
+
+class ProductoLocalDetalleView(LoginRequiredMixin, View):
+    """
+    Muestra los detalles de un Producto (Local y Global) y 
+    lista todo el stock existente (Activos o Lotes) de ese 
+    producto en la estación.
+    """
+    template_name = 'gestion_inventario/pages/detalle_producto_local.html'
+
+    def get(self, request, *args, **kwargs):
+        # 1. Obtener Estación Activa (tu lógica de sesión)
+        estacion_id = request.session.get('active_estacion_id')
+        if not estacion_id:
+            messages.error(request, "Estación no seleccionada.")
+            return redirect('portal:home')
+
+        # 2. Obtener el Producto (asegurando que sea de la estación)
+        producto_pk = kwargs.get('pk')
+        producto = get_object_or_404(
+            Producto.objects.select_related(
+                'producto_global__marca', 
+                'producto_global__categoria',
+                'proveedor_preferido'
+            ), 
+            pk=producto_pk, 
+            estacion_id=estacion_id
+        )
+
+        # 3. Obtener Filtros y Ordenamiento de la URL
+        sort_by = request.GET.get('sort', 'vencimiento_asc') # Default: por vencer primero
+        estado_id = request.GET.get('estado', None)
+
+        # 4. Preparar el formulario de filtro (CORREGIDO)
+        filter_form = ProductoStockDetalleFilterForm(request.GET)
+
+        # --- AÑADIDO: Fechas para cálculos de estado ---
+        today = timezone.now().date()
+        warning_date = today + datetime.timedelta(days=90) # Alerta de 90 días
+
+        # 5. Lógica de Stock (Separada por tipo de producto)
+        stock_queryset = None
+        stock_summary = {}
+        
+        estados_visibles = [1, 2] # IDs para OPERATIVO y NO OPERATIVO
+        
+        if producto.es_serializado:
+            # --- Es un ACTIVO ---
+            base_qs = Activo.objects.filter(producto=producto).select_related('compartimento__ubicacion', 'estado')
+            
+            # Calcular resumen de stock (antes de filtrar por estado)
+            summary_data = base_qs.values('estado__nombre').annotate(total=Count('id')).order_by('estado__nombre')
+            stock_summary = {item['estado__nombre']: item['total'] for item in summary_data}
+            stock_summary['total_general'] = base_qs.count()
+
+            # Aplicar filtros
+            if estado_id:
+                base_qs = base_qs.filter(estado_id=estado_id)
+            else:
+                base_qs = base_qs.filter(estado__tipo_estado__id__in=estados_visibles)
+
+            # --- AÑADIDO: Anotaciones de Vencimiento ---
+            base_qs = base_qs.annotate(
+                vencimiento=Coalesce('fecha_expiracion', 'fin_vida_util_calculada'),
+                estado_vencimiento=Case(
+                    When(vencimiento__isnull=True, then=Value('no_aplica')),
+                    When(vencimiento__lt=today, then=Value('vencido')),
+                    When(vencimiento__lt=warning_date, then=Value('proximo')),
+                    default=Value('ok'),
+                    output_field=CharField()
+                )
+            )
+            # --- FIN AÑADIDO ---
+
+            # Aplicar ordenamiento
+            if sort_by == 'vencimiento_asc':
+                base_qs = base_qs.order_by(F('vencimiento').asc(nulls_last=True))
+            else: # 'recepcion_desc'
+                base_qs = base_qs.order_by('-fecha_recepcion')
+            
+            stock_queryset = base_qs
+
+        else:
+            # --- Es un INSUMO (LOTE) ---
+            base_qs = LoteInsumo.objects.filter(producto=producto).select_related('compartimento__ubicacion', 'estado')
+
+            # (Lógica de resumen de stock)
+            summary_data = base_qs.filter(cantidad__gt=0).values('estado__nombre').annotate(total=Sum('cantidad')).order_by('estado__nombre')
+            stock_summary = {item['estado__nombre']: item['total'] for item in summary_data}
+            stock_summary['total_general'] = base_qs.filter(cantidad__gt=0).aggregate(total=Sum('cantidad'))['total'] or 0
+
+            # Aplicar filtros
+            if estado_id:
+                base_qs = base_qs.filter(estado_id=estado_id)
+            else:
+                 base_qs = base_qs.filter(estado__tipo_estado__id__in=estados_visibles, cantidad__gt=0)
+            
+            # --- AÑADIDO: Anotaciones de Vencimiento ---
+            base_qs = base_qs.annotate(
+                vencimiento=F('fecha_expiracion'), # Alias para consistencia
+                estado_vencimiento=Case(
+                    When(fecha_expiracion__isnull=True, then=Value('no_aplica')),
+                    When(fecha_expiracion__lt=today, then=Value('vencido')),
+                    When(fecha_expiracion__lt=warning_date, then=Value('proximo')),
+                    default=Value('ok'),
+                    output_field=CharField()
+                )
+            )
+            # --- FIN AÑADIDO ---
+            
+            # Aplicar ordenamiento
+            if sort_by == 'vencimiento_asc':
+                base_qs = base_qs.order_by(F('vencimiento').asc(nulls_last=True))
+            else: # 'recepcion_desc'
+                base_qs = base_qs.order_by('-fecha_recepcion')
+            
+            stock_queryset = base_qs
+
+        context = {
+            'producto': producto,
+            'stock_items': stock_queryset,
+            'stock_summary': stock_summary,
+            'filter_form': filter_form,
+            'current_sort': sort_by,
+            'current_estado': request.GET.get('estado', ''),
         }
         return render(request, self.template_name, context)
 

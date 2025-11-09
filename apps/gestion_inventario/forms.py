@@ -4,6 +4,7 @@ from django.db.models import Q
 from .models import (
     Region,
     Comuna,
+    TipoEstado,
     Estado,
     Ubicacion, 
     Vehiculo,
@@ -260,6 +261,72 @@ class ProductoLocalEditForm(forms.ModelForm):
             return self.instance.es_serializado 
         # Si no, devolvemos el valor enviado en el formulario
         return self.cleaned_data.get('es_serializado')
+    
+
+
+
+class GroupedEstadoChoiceField(forms.ModelChoiceField):
+    """
+    Campo de formulario personalizado para agrupar Estados por su TipoEstado.
+    """
+    def label_from_instance(self, obj):
+        return obj.nombre
+
+    def __init__(self, *args, **kwargs):
+        # Obtenemos todos los tipos de estado (Operativo, No Operativo, etc.)
+        tipo_estados = TipoEstado.objects.all().order_by('id')
+        
+        # --- INICIO CORRECCIÓN ---
+        # 1. Empezamos la lista de choices con "Todos"
+        choices = [('', 'Todos los Estados')]
+        # --- FIN CORRECCIÓN ---
+        
+        # Agrupamos por los TipoEstado que me diste
+        for tipo in tipo_estados:
+            # (Bug corregido: era tipo.estado_set, no obj.estado_set)
+            estados_en_tipo = [
+                (estado.id, self.label_from_instance(estado)) 
+                for estado in tipo.estado_set.all().order_by('nombre')
+            ]
+            if estados_en_tipo:
+                # Usamos el nombre del tipo de estado como el <optgroup>
+                choices.append((tipo.nombre.upper(), estados_en_tipo))
+                
+        kwargs['choices'] = choices
+        kwargs['queryset'] = Estado.objects.none()
+        super().__init__(*args, **kwargs)
+
+
+
+
+class ProductoStockDetalleFilterForm(forms.Form):
+    """
+    Formulario para filtrar el stock en la página de detalle del producto.
+    """
+    estado = forms.ModelChoiceField(
+        label='Filtrar por Estado',
+        # Dejamos el queryset base aquí. Ordenamos por TipoEstado y luego Nombre.
+        queryset=Estado.objects.all().order_by('tipo_estado__id', 'nombre'),
+        required=False,
+        widget=forms.Select(attrs={'class': 'form-select form-select-sm fs_normal'})
+    )
+
+    def __init__(self, *args, **kwargs):
+        # --- CORRECCIÓN ---
+        
+        # 1. Eliminamos la lógica de 'es_serializado'. No es necesaria.
+        kwargs.pop('es_serializado', None) 
+        
+        super().__init__(*args, **kwargs)
+        
+        # 2. Corregimos el TypeError. 
+        #    Debemos castear .choices a list() ANTES de concatenar.
+        self.fields['estado'].choices = [('', 'Todos los Estados')] + list(self.fields['estado'].choices)
+        
+        # 3. Eliminamos las otras líneas que filtraban el queryset
+        #    y modificaban .choices, ya no son necesarias.
+        
+        # --- FIN CORRECCIÓN ---
 
 
 
