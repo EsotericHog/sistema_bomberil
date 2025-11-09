@@ -1,0 +1,172 @@
+/* style.css - Estilos para el formulario de Profesión */
+
+/* --- 1. Variables (de colores.css y variables.css) --- */
+:root {
+    --color-primario: #2E4450;
+    --color-primario-variante: #526D82;
+    --color-secundario: #DDE6ED;
+    --color-secundario-variante: #9DB2BF;
+    --color-fondo: #F5F7F8;
+    --color-fondo-secundario: #FFFFFF;
+    
+    --color-texto-primario: #27374D;
+    --color-texto-secundario: #526D82;
+    --color-texto-deshabilitado: #9DB2BF;
+
+    --color-verde: #00917C;
+    --color-azul: #0079FF;
+    --color-rojo: #D80032;
+    --color-rojo-oscuro: #b8002a;
+    --color-naranjo: #FF6C22;
+    --color-blanco: #FFFFFF;
+    --color-gris: #F0F0F0;
+    --color-negro: #000000;
+
+    --color-borde: #E3E3E3;
+    
+    --sombra-corta: 0px 4px 10px 0px rgba(0, 0, 0, 0.05);
+    --sombra-media: 0px 4px 10px 0px rgba(0, 0, 0, 0.1);
+
+    --borde-radio-chico: 5px;
+    --borde-radio-grande: 10px;
+
+    --fs-muy-chico: 0.75rem;     /* 12px */
+    --fs-chico: 0.875rem;        /* 14px */
+    --fs-normal: 1rem;           /* 16px */
+    --fs-mediano: 1.125rem;      /* 18px */
+    --fs-grande: 1.25rem;        /* 20px */
+}
+
+/* --- 2. Base y Reset (de reset.css y fuentes.css) --- */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Raleway', sans-serif;
+    font-size: var(--fs-normal);
+    background-color: var(--color-fondo);
+    color: var(--color-texto-primario);
+    padding: 2rem;
+}
+
+.container {
+    max-width: 900px;
+    margin: 0 auto;
+}
+
+/* --- 3. Header Modulo (Componente personalizado) --- */
+.header_modulo {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+}
+
+.titulo_secundario {
+    font-size: var(--fs-grande);
+    font-weight: 700;
+    color: var(--color-primario);
+}
+
+/* --- 4. Paneles (de componentes/paneles.css) --- */
+.panel_base {
+    background-color: var(--color-fondo-secundario);
+    border-radius: var(--borde-radio-grande);
+    box-shadow: var(--sombra-corta);
+}
+
+.panel_base__contenido {
+    padding: 2rem;
+}
+
+/* --- 5. Botones (de componentes/botones.css) --- */
+.boton_primario,
+.boton_secundario {
+    padding: 0.75rem 1.25rem;
+    border: none;
+    border-radius: var(--borde-radio-chico);
+    font-size: var(--fs-chico);
+    font-weight: 600;
+    font-family: 'Raleway', sans-serif;
+    cursor: pointer;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    transition: background-color 0.2s ease-in-out, border-color 0.2s ease-in-out;
+}
+
+.boton_primario {
+    background-color: var(--color-primario);
+    color: var(--color-blanco);
+}
+
+.boton_primario:hover {
+    background-color: var(--color-primario-variante);
+}
+
+.boton_secundario {
+    background-color: var(--color-fondo-secundario);
+    color: var(--color-texto-secundario);
+    border: 1px solid var(--color-borde);
+}
+
+.boton_secundario:hover {
+    background-color: var(--color-gris);
+    border-color: var(--color-secundario-variante);
+}
+
+/* --- 6. Formularios (de componentes/formularios.css) --- */
+.formulario {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.formulario__campo {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.formulario__label {
+    font-size: var(--fs-chico);
+    font-weight: 600;
+    color: var(--color-texto-secundario);
+}
+
+.formulario__opciones {
+    margin-top: 1rem;
+    display: flex;
+    justify-content: flex-end;
+}
+
+/* --- 7. Inputs (de componentes/input.css) --- */
+.input_base,
+.textarea_base {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    font-size: var(--fs-normal);
+    font-family: 'Raleway', sans-serif;
+    color: var(--color-texto-primario);
+    background-color: var(--color-fondo-secundario);
+    border: 1px solid var(--color-borde);
+    border-radius: var(--borde-radio-chico);
+    transition: border-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+}
+
+.input_base:focus,
+.textarea_base:focus {
+    outline: none;
+    border-color: var(--color-primario);
+    box-shadow: 0 0 0 3px rgba(46, 68, 80, 0.1);
+}
+
+.textarea_base {
+    resize: vertical;
+    min-height: 80px;
+}

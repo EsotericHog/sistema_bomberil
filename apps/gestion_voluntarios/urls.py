@@ -56,16 +56,32 @@ urlpatterns = [
     path('voluntario/<int:id>/editar', VoluntariosEliminarView.as_view(), name="ruta_eliminar"),
 
 
+    # Lista de cargos y profesiones
+    path('cargos_lista/', CargosListaView.as_view(), name="ruta_cargos_lista"),
 
-    # Lista de cargos y profeciones
-    path('lista/', CargosListaView.as_view(), name="ruta_cargos_lista"),
+      # Ingresar profesion al sistema
+    path('crear_profesion/', ProfesionesCrearView.as_view(), name="ruta_profesion_crear"),
+
+    # Modificar profesion
+    path('profesion/<int:id>/editar', ProfesionesModificarView.as_view(), name="ruta_profesion_modificar"),
+
+    # Eliminar profesion (PROTEGIDO)
+    path('profesion/<int:id>/eliminar', ProfesionesEliminarView.as_view(), name="ruta_profesion_eliminar"),
 
     # Ingresar cargo al sistema
-    path('crear/', CargosCrearView.as_view(), name="ruta_cargos_crear"),
+    path('crear_cargos/', CargosCrearView.as_view(), name="ruta_cargos_crear"),
 
     # Modificar cargo
-    path('voluntario/<int:id>/editar', CargosModificarView.as_view(), name="ruta_cargos_modificar"),
+    path('cargo/<int:id>/editar', CargosModificarView.as_view(), name="ruta_cargos_modificar"),
 
     # Eliminar cargo (PROTEGIDO)
-    path('voluntario/<int:id>/eliminar', CargosEliminarView.as_view(), name="ruta_cargos_eliminar"),
+    path('cargo/<int:id>/eliminar', CargosEliminarView.as_view(), name="ruta_cargos_eliminar"),
+
+
+    # Generar hoja de vida
+    path('voluntario/generar_hoja_vida', HojaVidaView.as_view(), name="ruta_hoja_vida"),
+
+    # Generar exportar listado
+    path('voluntario/exportar_listado', ExportarListadoView.as_view(), name="ruta_exportar_listado"),
+
 ]

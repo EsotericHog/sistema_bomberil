@@ -6,4 +6,7 @@
 @import url("estilo_lista.css");
 @import url("estilo_crear.css");
 @import url("estilo_ver.css");
-@import url("estilo_modificar.css")
+@import url("estilo_modificar.css");
+@import url("estilo_lista_cargos_profes.css");
+@import url("estilo_crear_cargos_profes.css");
+@import url("estilo_generar.css");

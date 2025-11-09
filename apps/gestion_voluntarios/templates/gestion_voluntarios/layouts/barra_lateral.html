@@ -30,14 +30,15 @@
             <a href="" class="barra_lateral__modulo_nombre fs_nav_seccion color_primario scale">
                 {# Icono #}
                 <i class="fa-solid fa-gear"></i>
-                <span>Configuración</span>
+                <span>Profesiones y Rangos</span>
             </a>
             <i class="fa-solid fa-chevron-down color_primario barra_lateral__flecha_modulo"></i>
         </div>
         {# Subsección #}
         <ul class="barra_lateral__lista_opciones oculto">
-            <li class="fondo_opcion_nav"><a class="color_primario fs_nav_opcion" href="">Profesiones</a></li>
-            <li class="fondo_opcion_nav"><a class="color_primario fs_nav_opcion" href="">Rangos Bomberiles</a></li>
+            <li class="fondo_opcion_nav"><a class="color_primario fs_nav_opcion" href="{% url 'gestion_voluntarios:ruta_cargos_lista' %}">Lista de Cargos y Profesiones</a></li>
+            <li class="fondo_opcion_nav"><a class="color_primario fs_nav_opcion" href="{% url 'gestion_voluntarios:ruta_profesion_crear' %}">Agregar Profesión</a></li>
+            <li class="fondo_opcion_nav"><a class="color_primario fs_nav_opcion" href="{% url 'gestion_voluntarios:ruta_cargos_crear' %}">Agregar Rango Bomberil</a></li>
         </ul>
 
     </section>
@@ -48,15 +49,16 @@
         <div class="barra_lateral__modulo" data-toggle="modulo">
             <a href="" class="barra_lateral__modulo_nombre fs_nav_seccion color_primario scale">
                 {# Icono #}
-                <i class="fa-solid fa-chart-simple"></i>
+                <i class="fa-solid fa-file-import"></i>
+
                 <span>Reportes</span>
             </a>
             <i class="fa-solid fa-chevron-down color_primario barra_lateral__flecha_modulo"></i>
         </div>
         {# Subsección #}
         <ul class="barra_lateral__lista_opciones oculto">
-            <li class="fondo_opcion_nav"><a class="color_primario fs_nav_opcion" href="">Generar Hoja de Vida</a></li>
-            <li class="fondo_opcion_nav"><a class="color_primario fs_nav_opcion" href="">Exportar Listado</a></li>
+            <li class="fondo_opcion_nav"><a class="color_primario fs_nav_opcion" href="{% url 'gestion_voluntarios:ruta_hoja_vida' %}">Generar Hoja de Vida</a></li>
+            <li class="fondo_opcion_nav"><a class="color_primario fs_nav_opcion" href="{% url 'gestion_voluntarios:ruta_exportar_listado' %}">Exportar Listado</a></li>
         </ul>
 
 </nav>

@@ -52,12 +52,41 @@ class VoluntariosEliminarView(View):
 
 
 
-# GESTIÓN DE CARGOS Y profesiones
-# Lista de cargos
+# GESTIÓN DE CARGOS Y PROFESIONES
+
+# Lista de cargos y profesiones
 class CargosListaView(View):
     def get(self, request):
-        return render(request, "gestion_voluntarios/pages/lista_cargos.html")
+        return render(request, "gestion_voluntarios/pages/lista_cargos_profes.html")
 
+# Crear profesion
+class ProfesionesCrearView(View):
+    def get(self, request):
+        return render(request, "gestion_voluntarios/pages/crear_profesion.html")
+
+    def post(self, request):
+        # Lógica para guardar profesion
+        return render(request, "gestion_voluntarios/pages/crear_profesion.html")
+
+
+# Editar profesion
+class ProfesionesModificarView(View):
+    def get(self, request, id):
+        return render(request, "gestion_voluntarios/pages/modificar_profesion.html")
+
+    def post(self, request, id):
+        # Lógica para actualizar profesion
+        return render(request, "gestion_voluntarios/pages/modificar_profesion.html")
+
+
+# Eliminar profesion
+class ProfesionesEliminarView(View):
+    def get(self, request, id):
+        return render(request, "gestion_voluntarios/pages/eliminar_profesion.html")
+
+    def post(self, request, id):
+        # Lógica para eliminar profesion
+        return render(request, "gestion_voluntarios/pages/eliminar_profesion.html")
 
 # Crear cargo
 class CargosCrearView(View):
@@ -87,3 +116,16 @@ class CargosEliminarView(View):
     def post(self, request, id):
         # Lógica para eliminar cargo
         return render(request, "gestion_voluntarios/pages/eliminar_cargo.html")
+    
+
+# MODULO DE REPORTES EXPORTAR Y GENERAR HOJA DE VIDA
+
+# Generar hoja de vida del voluntario
+class HojaVidaView(View):
+    def get(self, request):
+        return render(request, "gestion_voluntarios/pages/hoja_vida.html")
+
+# Exportar listado 
+class ExportarListadoView(View):
+    def get(self, request):
+        return render(request, "gestion_voluntarios/pages/exportar_listado.html")

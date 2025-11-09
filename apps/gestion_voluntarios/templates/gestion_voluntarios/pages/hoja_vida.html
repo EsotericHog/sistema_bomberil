@@ -1,0 +1,50 @@
+{# Plantilla base #}{% extends 'gestion_voluntarios/layouts/base.html' %}
+{# Cargar assets #}{% load static %}
+{# Título de la ventana #} {% block titulo_ventana %}Módulo{% endblock %}
+{# Título de la página #} {% block titulo_pagina %}Título de la Página{% endblock %}
+
+{% block contenido %}
+
+<div class="panel">
+    <div class="panel-header">
+        <h1 class="titulo-pagina">Generar Hoja de Vida (PDF)</h1>
+    </div>
+
+    <div class="panel-body">
+        
+        <div class="card-reporte">
+            <h2 class="card-title-report">Generación de Documento Personal</h2>
+            <p class="text-muted-report">Seleccione un voluntario para generar su Hoja de Vida completa. El archivo se generará en formato PDF a partir de una plantilla HTML.</p>
+            
+            <form action="#" method="GET">
+                <div class="form-group">
+                    <label for="voluntario_hoja" class="label-custom">Seleccionar Voluntario:</label>
+                    <select id="voluntario_hoja" name="voluntario" class="form-control" required>
+                        <option value="">Buscar o seleccionar voluntario...</option>
+                        <option value="1">Juan Pérez (Cía. 1)</option>
+                        <option value="2">Guiliano Punulaf (Cía. 2)</option>
+                    </select>
+                </div>
+
+                <div class="form-group options-group">
+                    <label class="label-custom">Opciones de Contenido:</label>
+                    <div class="checkbox-option">
+                        <input type="checkbox" id="op_sanciones" name="incluir_sanciones" checked>
+                        <label for="op_sanciones">Incluir Historial de Sanciones</label>
+                    </div>
+                    <div class="checkbox-option">
+                        <input type="checkbox" id="op_reconocimientos" name="incluir_reconocimientos" checked>
+                        <label for="op_reconocimientos">Incluir Reconocimientos y Logros</label>
+                    </div>
+                </div>
+
+                <div class="form-actions-report">
+                    <button type="submit" class="btn btn-primary">Generar PDF</button>
+                </div>
+            </form>
+        </div>
+
+    </div>
+</div>
+
+        {% endblock  %}
