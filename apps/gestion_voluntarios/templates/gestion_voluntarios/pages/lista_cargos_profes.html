@@ -1,7 +1,7 @@
 {# Plantilla base #}{% extends 'gestion_voluntarios/layouts/base.html' %}
 {# Cargar assets #}{% load static %}
-{# Título de la ventana #} {% block titulo_ventana %}Módulo{% endblock %}
-{# Título de la página #} {% block titulo_pagina %}Título de la Página{% endblock %}
+{# Título de la ventana #} {% block titulo_ventana %}Gestión de Cargos y Profesiones{% endblock %}
+{# Título de la página #} {% block titulo_pagina %}Configuración: Cargos y Profesiones{% endblock %}
 
 {% block contenido %}
 
@@ -16,7 +16,7 @@
         <div id="profesiones" class="tab-content active">
             <div class="filter-controls-area">
                 <div class="add-new-item">
-                    <button type="submit" class="btn btn-primary">Agregar Profesión</button>
+                    <a href="{% url 'gestion_voluntarios:ruta_profesion_crear' %}" class="btn btn-primary">Agregar Profesión</a>
                 </div>
                 <div class="data-table-controls">
                     <div class="entries-selector">
@@ -44,22 +44,21 @@
                     </tr>
                 </thead>
                 <tbody>
+                    {# Bucle para mostrar profesiones reales #}
+                    {% for profesion in profesiones %}
                     <tr>
-                        <td>1</td>
-                        <td>Ingeniero Civil</td>
+                        <td>{{ profesion.id }}</td>
+                        <td>{{ profesion.nombre }}</td>
                         <td class="actions">
-                            <button class="btn btn-warning btn-sm btn-edit" data-id="1" data-type="profesion">Editar</button>
-                            <button class="btn btn-danger btn-sm btn-delete">Eliminar</button>
+                            <a href="{% url 'gestion_voluntarios:ruta_profesion_modificar' id=profesion.id %}" class="btn btn-warning btn-sm">Editar</a>
+                            <a href="{% url 'gestion_voluntarios:ruta_profesion_eliminar' id=profesion.id %}" class="btn btn-danger btn-sm">Eliminar</a>
                         </td>
                     </tr>
+                    {% empty %}
                     <tr>
-                        <td>2</td>
-                        <td>Técnico Paramédico</td>
-                        <td class="actions">
-                            <button class="btn btn-warning btn-sm btn-edit" data-id="2" data-type="profesion">Editar</button>
-                            <button class="btn btn-danger btn-sm btn-delete">Eliminar</button>
-                        </td>
+                        <td colspan="3" style="text-align: center;">No hay profesiones registradas.</td>
                     </tr>
+                    {% endfor %}
                 </tbody>
             </table>
         </div>
@@ -67,7 +66,7 @@
         <div id="rangos" class="tab-content" style="display:none;">
             <div class="filter-controls-area">
                 <div class="add-new-item">
-                    <button type="submit" class="btn btn-primary">Agregar Rango</button>
+                    <a href="{% url 'gestion_voluntarios:ruta_cargos_crear' %}" class="btn btn-primary">Agregar Rango</a>
                 </div>
                 <div class="data-table-controls">
                     <div class="entries-selector">
@@ -91,58 +90,33 @@
                     <tr>
                         <th>ID</th>
                         <th>Nombre del Rango</th>
+                        <th>Categoría</th>
                         <th>Acciones</th>
                     </tr>
                 </thead>
                 <tbody>
+                    {# Bucle para mostrar cargos (rangos) reales #}
+                    {% for cargo in cargos %}
                     <tr>
-                        <td>1</td>
-                        <td>Capitán</td>
+                        <td>{{ cargo.id }}</td>
+                        <td>{{ cargo.nombre }}</td>
+                        <td>{{ cargo.tipo_cargo.nombre | default:"Sin Categoría" }}</td>
                         <td class="actions">
-                            <button class="btn btn-warning btn-sm btn-edit" data-id="1" data-type="rango">Editar</button>
-                            <button class="btn btn-danger btn-sm btn-delete">Eliminar</button>
+                            <a href="{% url 'gestion_voluntarios:ruta_cargos_modificar' id=cargo.id %}" class="btn btn-warning btn-sm">Editar</a>
+                            <a href="{% url 'gestion_voluntarios:ruta_cargos_eliminar' id=cargo.id %}" class="btn btn-danger btn-sm">Eliminar</a>
                         </td>
                     </tr>
+                    {% empty %}
                     <tr>
-                        <td>2</td>
-                        <td>Voluntario Activo</td>
-                        <td class="actions">
-                            <button class="btn btn-info btn-sm">Ver</button>
-                            <button class="btn btn-warning btn-sm btn-edit" data-id="2" data-type="rango">Editar</button>
-                            <button class="btn btn-danger btn-sm btn-delete">Eliminar</button>
-                        </td>
+                        <td colspan="4" style="text-align: center;">No hay rangos (cargos) registrados.</td>
                     </tr>
+                    {% endfor %}
                 </tbody>
             </table>
         </div>
     </div>
     
-    <div id="editModal" class="modal">
-        <div class="modal-content">
-            <span class="close-button" onclick="document.getElementById('editModal').style.display='none'">&times;</span>
-            <h2 class="modal-title">Modificar <span id="modal-title-type"></span></h2>
-            
-            <form id="edit-form">
-                <input type="hidden" id="edit-id" name="id">
-                <input type="hidden" id="edit-type" name="type">
-                
-                <div class="form-group">
-                    <label for="edit-name">Nuevo Nombre:</label>
-                    <input type="text" id="edit-name" name="nombre" class="form-control" required>
-                </div>
-
-                <div class="modal-buttons">
-                    <button type="submit" class="btn btn-primary">Guardar Cambios</button>
-                    <button type="button" class="btn btn-secondary" onclick="document.getElementById('editModal').style.display='none'">Cancelar</button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    
-{% endblock %}
-
-
 {% block scripts %}
 <script src="{% static 'gestion_voluntarios/js/profesion_rango.js' %}"></script>
 {% endblock  %}
+{% endblock %}

@@ -93,7 +93,17 @@ class VoluntariosEliminarView(View):
 # Lista de cargos y profesiones
 class CargosListaView(View):
     def get(self, request):
-        return render(request, "gestion_voluntarios/pages/lista_cargos_profes.html")
+        
+        # --- Traemos los datos reales ---
+        profesiones = Profesion.objects.all().order_by('nombre')
+        # Usamos select_related para traer también la categoría (TipoCargo)
+        cargos = Cargo.objects.select_related('tipo_cargo').all().order_by('nombre')
+
+        context = {
+            'profesiones': profesiones,
+            'cargos': cargos, # 'cargos' es el modelo para "Rangos Bomberiles"
+        }
+        return render(request, "gestion_voluntarios/pages/lista_cargos_profes.html", context)
 
 # Crear profesion
 class ProfesionesCrearView(View):
