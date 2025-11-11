@@ -34,7 +34,7 @@ class UsuarioListaView(LoginRequiredMixin, ModuleAccessMixin, PermissionRequired
 
     template_name = "gestion_usuarios/pages/lista_usuarios.html"
     model = Membresia
-    permission_required = 'gestion_usuarios.view_company_users'
+    permission_required = 'gestion_usuarios.accion_usuarios_ver_usuarios_compania'
     
     def get(self, request):
         active_estacion_id = request.session.get('active_estacion_id')
@@ -53,7 +53,7 @@ class UsuarioObtenerView(LoginRequiredMixin, ModuleAccessMixin, PermissionRequir
 
     template_name = "gestion_usuarios/pages/ver_usuario.html"
     model = Membresia
-    permission_required = 'gestion_usuarios.view_company_users'
+    permission_required = 'gestion_usuarios.accion_usuarios_ver_usuarios_compania'
 
     def get(self, request, id):
         membresia = self.model.objects.filter(
@@ -74,7 +74,7 @@ class UsuarioAgregarView(LoginRequiredMixin, ModuleAccessMixin, PermissionRequir
     '''Vista para agregar usuario y que pueda acceder a la información de la compañía'''
 
     template_name = "gestion_usuarios/pages/agregar_usuario.html"
-    permission_required = 'gestion_usuarios.create_user'
+    permission_required = 'gestion_usuarios.accion_usuarios_crear_usuario'
 
     def get(self, request):
         return render(request, self.template_name)
@@ -127,7 +127,7 @@ class UsuarioCrearView(LoginRequiredMixin, ModuleAccessMixin, PermissionRequired
     '''Vista para crear usuarios'''
 
     template_name = "gestion_usuarios/pages/crear_usuario.html"
-    permission_required = 'gestion_usuarios.create_user'
+    permission_required = 'gestion_usuarios.accion_usuarios_crear_usuario'
 
     def get(self, request):
         formulario = FormularioCrearUsuario()
@@ -200,7 +200,7 @@ class UsuarioEditarView(LoginRequiredMixin, ModuleAccessMixin, PermissionRequire
     '''Vista para editar usuarios'''
 
     template_name = "gestion_usuarios/pages/editar_usuario.html"
-    permission_required = 'gestion_usuarios.change_user_personal_info'
+    permission_required = 'gestion_usuarios.accion_usuarios_modificar_info_personal'
 
 
     def get(self, request, id):
@@ -232,22 +232,10 @@ class UsuarioEditarView(LoginRequiredMixin, ModuleAccessMixin, PermissionRequire
 
 
 
-#class UsuarioEditarAvatarView(View):
-#    '''Vista para modificar el avatar de un usuario'''
-#
-#    def get(self, request):
-#        return HttpResponseNotAllowed(['POST'])
-#
-#    def post(self, request, id):
-#        pass
-
-
-
-
 class UsuarioDesactivarView(LoginRequiredMixin, ModuleAccessMixin, PermissionRequiredMixin, UsuarioDeMiEstacionMixin, View):
     '''Vista para desactivar usuarios. Desactivar un usuario consiste en no permitirle iniciar sesión en la compañía.'''
 
-    permission_required = 'gestion_usuarios.deactivate_user'
+    permission_required = 'gestion_usuarios.accion_usuarios_desactivar_usuario'
 
 
     def get(self, request, *args, **kwargs):
@@ -285,9 +273,9 @@ class UsuarioDesactivarView(LoginRequiredMixin, ModuleAccessMixin, PermissionReq
 
 
 class UsuarioActivarView(LoginRequiredMixin, ModuleAccessMixin, PermissionRequiredMixin, UsuarioDeMiEstacionMixin, View):
-    '''Vista para desactivar usuarios. Desactivar un usuario consiste en no permitirle iniciar sesión en la compañía.'''
+    '''Vista para activar usuarios. Activar un usuario le permitirle iniciar sesión en la compañía.'''
 
-    permission_required = 'gestion_usuarios.deactivate_user'
+    permission_required = 'gestion_usuarios.accion_usuarios_desactivar_usuario'
 
     def get(self, request, *args, **kwargs):
         return HttpResponseNotAllowed(['POST'])
@@ -330,7 +318,7 @@ class RolListaView(LoginRequiredMixin, ModuleAccessMixin, PermissionRequiredMixi
     """
 
     template_name = "gestion_usuarios/pages/lista_roles.html"
-    permission_required = 'gestion_usuarios.view_roles'
+    permission_required = 'gestion_usuarios.accion_usuarios_ver_roles'
 
     def get(self, request, *args, **kwargs):
 
@@ -364,7 +352,7 @@ class RolObtenerView(LoginRequiredMixin, ModuleAccessMixin, RolValidoParaEstacio
     '''Vista para obtener el detalle de un rol'''
 
     template_name = "gestion_usuarios/pages/ver_rol.html"
-    permission_required = 'gestion_usuarios.view_roles'
+    permission_required = 'gestion_usuarios.accion_usuarios_ver_roles'
     
     def get(self, request, id):
         # Usamos get_object_or_404 para manejar automáticamente el error si el rol no existe.
@@ -406,7 +394,7 @@ class RolEditarView(LoginRequiredMixin, ModuleAccessMixin, RolValidoParaEstacion
     form_class = FormularioRol
     template_name = "gestion_usuarios/pages/editar_rol.html"
     success_url = reverse_lazy('gestion_usuarios:ruta_lista_roles')
-    permission_required = 'gestion_usuarios.manage_custom_roles'
+    permission_required = 'gestion_usuarios.accion_usuarios_gestionar_roles'
 
 
     def dispatch(self, request, *args, **kwargs):
@@ -469,7 +457,7 @@ class RolCrearView(LoginRequiredMixin, ModuleAccessMixin, PermissionRequiredMixi
     form_class = FormularioRol
     template_name = 'gestion_usuarios/pages/crear_rol.html'
     success_url = reverse_lazy('gestion_usuarios:ruta_lista_roles')
-    permission_required = 'gestion_usuarios.manage_custom_roles'
+    permission_required = 'gestion_usuarios.accion_usuarios_gestionar_roles'
 
 
     def get(self, request, *args, **kwargs):
@@ -520,7 +508,7 @@ class RolAsignarPermisosView(LoginRequiredMixin, ModuleAccessMixin, RolValidoPar
 
     template_name = 'gestion_usuarios/pages/asignar_permisos.html'
     success_url = reverse_lazy('gestion_usuarios:ruta_lista_roles')
-    permission_required = 'gestion_usuarios.manage_custom_roles'
+    permission_required = 'gestion_usuarios.accion_usuarios_gestionar_roles'
 
     def dispatch(self, request, *args, **kwargs):
         """Valida que el rol sea editable y pertenece a la estación activa."""
@@ -605,7 +593,7 @@ class RolEliminarView(LoginRequiredMixin, ModuleAccessMixin, RolValidoParaEstaci
 
     # --- Atributos de Configuración ---
     template_name = 'gestion_usuarios/pages/eliminar_rol.html'
-    permission_required = 'gestion_usuarios.manage_custom_roles'
+    permission_required = 'gestion_usuarios.accion_usuarios_gestionar_roles'
     success_url = reverse_lazy('gestion_usuarios:ruta_lista_roles')
 
 
@@ -643,7 +631,7 @@ class RolEliminarView(LoginRequiredMixin, ModuleAccessMixin, RolValidoParaEstaci
 
 
 class UsuarioAsignarRolesView(LoginRequiredMixin, ModuleAccessMixin, UsuarioDeMiEstacionMixin, PermissionRequiredMixin, View):
-    permission_required = 'gestion_usuarios.assign_user_roles'
+    permission_required = 'gestion_usuarios.accion_usuarios_asignar_roles_usuario'
     template_name = 'gestion_usuarios/pages/asignar_roles.html'
     success_url = reverse_lazy('gestion_usuarios:ruta_lista_usuarios')
 
@@ -741,7 +729,7 @@ class UsuarioRestablecerContrasena(LoginRequiredMixin, ModuleAccessMixin, Permis
     Vista para que un administrador inicie el proceso de restablecimiento
     de contraseña para otro usuario.
     """
-    permission_required = 'gestion_usuarios.force_password_reset'
+    permission_required = 'gestion_usuarios.accion_usuarios_restablecer_contrasena'
     
     def post(self, request, id, *args, **kwargs):
         # El mixin UsuarioDeMiEstacionMixin ya ha verificado que el admin
@@ -782,7 +770,7 @@ class UsuarioVerPermisos(LoginRequiredMixin, ModuleAccessMixin, PermissionRequir
     Muestra una lista de solo lectura de todos los permisos que un usuario
     posee en la estación activa, consolidados de todos sus roles.
     """
-    permission_required = 'gestion_usuarios.view_user_permissions' # O un permiso más específico si lo creas
+    permission_required = 'gestion_usuarios.accion_usuarios_ver_permisos_usuario'
     template_name = 'gestion_usuarios/pages/ver_permisos_usuario.html'
 
     def get(self, request, id, *args, **kwargs):
