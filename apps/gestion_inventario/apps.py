@@ -11,9 +11,9 @@ class GestionInventarioConfig(AppConfig):
         from apps.common.utils import crear_permiso_de_acceso_al_modulo
         import apps.gestion_inventario.signals
 
-        # 2. Conecta la señal a esa función, pasándole la configuración
-        #    de esta app específica (self).
-        post_migrate.connect(
-            lambda sender, **kwargs: crear_permiso_de_acceso_al_modulo(self),
-            sender=self
-        )
+        ## 2. Conecta la señal a esa función, pasándole la configuración
+        ##    de esta app específica (self).
+        #post_migrate.connect(
+        #    lambda sender, **kwargs: crear_permiso_de_acceso_al_modulo(self),
+        #    sender=self
+        #)
