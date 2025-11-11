@@ -30,7 +30,6 @@ DJANGO_APPS = [
 # Aplicaciones del proyecto
 PROJECT_APPS = [
     'apps.common',
-    'apps.utilidades',
     'apps.gestion_inventario',
     'apps.gestion_mantenimiento',
     'apps.gestion_voluntarios',
