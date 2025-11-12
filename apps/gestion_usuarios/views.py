@@ -13,16 +13,19 @@ from django.db.models import Q
 from collections import defaultdict
 from django.apps import apps
 
+# Clases para paginación manual
+from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
+
 from .models import Usuario, Membresia, Rol
 from .forms import FormularioCrearUsuario, FormularioEditarUsuario, FormularioRol
 from .mixins import UsuarioDeMiEstacionMixin, RolValidoParaEstacionMixin
-from apps.common.mixins import ModuleAccessMixin, ObjectInStationRequiredMixin
+from apps.common.mixins import ModuleAccessMixin, ObjectInStationRequiredMixin, BaseEstacionMixin
 from .utils import generar_contraseña_segura
 from apps.gestion_inventario.models import Estacion
 
 
 
-class UsuarioInicioView(LoginRequiredMixin, ModuleAccessMixin, View):
+class UsuarioInicioView(BaseEstacionMixin, View):
     '''Vista para la página inicial de Gestión de Usuarios'''
 
     def get(self, request):
@@ -30,22 +33,95 @@ class UsuarioInicioView(LoginRequiredMixin, ModuleAccessMixin, View):
 
 
 
-class UsuarioListaView(LoginRequiredMixin, ModuleAccessMixin, PermissionRequiredMixin, View):
+class UsuarioListaView(BaseEstacionMixin, PermissionRequiredMixin, View):
     '''Vista para listar usuarios'''
 
     template_name = "gestion_usuarios/pages/lista_usuarios.html"
-    model = Membresia
     permission_required = 'gestion_usuarios.accion_usuarios_ver_usuarios_compania'
+    model = Membresia
+    paginate_by = 20
+
+    def get_queryset(self):    
+        # Empezamos con el queryset base (igual al que tenías)
+        queryset = (
+            self.model.objects
+            .filter(estacion_id=self.estacion_activa)
+            .select_related('usuario')
+            .prefetch_related('roles') # Optimización para cargar roles
+        )
+
+        # 3. Aplicamos el filtro de Búsqueda (q)
+        # Usamos self.search_q, que definiremos en el método get()
+        if hasattr(self, 'search_q') and self.search_q:
+            queryset = queryset.filter(
+                Q(usuario__first_name__icontains=self.search_q) |
+                Q(usuario__last_name__icontains=self.search_q) |
+                Q(usuario__email__icontains=self.search_q)
+            )
+
+        # 4. Aplicamos el filtro de Estado (estado)
+        if hasattr(self, 'filter_estado') and self.filter_estado:
+            queryset = queryset.filter(estado=self.filter_estado)
+
+        # 5. Aplicamos el filtro de Rol (rol)
+        if hasattr(self, 'filter_rol') and self.filter_rol:
+            queryset = queryset.filter(roles__id=self.filter_rol)
+
+        # Usamos .distinct() por si un usuario tiene múltiples roles
+        # y el filtro de rol causa duplicados.
+        return queryset.distinct().order_by('usuario__first_name', 'usuario__last_name')
     
-    def get(self, request):
-        active_estacion_id = request.session.get('active_estacion_id')
+    def get_context_data(self):
+        """
+        Este método ahora obtiene el queryset filtrado,
+        lo pagina manualmente y añade el contexto extra.
+        """
         
-        # Filtra el modelo Membresia, no Usuario
-        membresias = self.model.objects.filter(
-            estacion_id=active_estacion_id
-        ).select_related('usuario')
+        # Obtenemos la lista filtrada de membresías
+        membresias_filtradas = self.get_queryset()
+
+        # 6. Lógica de Paginación Manual
+        paginator = Paginator(membresias_filtradas, self.paginate_by)
+        page_number = self.request.GET.get('page') # Obtenemos el N° de página
+
+        try:
+            page_obj = paginator.get_page(page_number)
+        except PageNotAnInteger:
+            # Si 'page' no es un entero, muestra la primera página
+            page_obj = paginator.get_page(1)
+        except EmptyPage:
+            # Si 'page' está fuera de rango, muestra la última página
+            page_obj = paginator.get_page(paginator.num_pages)
+
+        # 7. Creamos el contexto final para la plantilla
+        context = {
+            # El objeto principal que itera la plantilla
+            'page_obj': page_obj,
+            
+            # El contexto para "recordar" los filtros en la plantilla
+            'current_q': getattr(self, 'search_q', ''),
+            'current_estado': getattr(self, 'filter_estado', ''),
+            'current_rol': getattr(self, 'filter_rol', ''),
+            
+            # El contexto para llenar el dropdown de roles
+            'todos_los_roles': Rol.objects.filter(
+                Q(estacion_id=self.estacion_activa) | Q(estacion__isnull=True)
+            ).order_by('nombre')
+        }
+        return context
+    
+    def get(self, request, *args, **kwargs):
+        # 8. Almacenamos los filtros en 'self' para que
+        # get_queryset() y get_context_data() puedan acceder a ellos.
+        self.search_q = request.GET.get('q', '')
+        self.filter_estado = request.GET.get('estado', '')
+        self.filter_rol = request.GET.get('rol', '')
         
-        return render(request, self.template_name, context={'membresias': membresias})
+        # 9. Obtenemos el contexto completo (que ahora incluye paginación y filtros)
+        context = self.get_context_data()
+        
+        # 10. Renderizamos la plantilla
+        return render(request, self.template_name, context)
 
 
 
