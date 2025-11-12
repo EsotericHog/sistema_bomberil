@@ -929,3 +929,54 @@ class UsuarioVerPermisos(LoginRequiredMixin, ModuleAccessMixin, PermissionRequir
         }
         
         return render(request, self.template_name, context)
+
+
+
+
+class UsuarioFinalizarMembresiaView(LoginRequiredMixin, ModuleAccessMixin, PermissionRequiredMixin, UsuarioDeMiEstacionMixin, View):
+    """
+    Muestra una página de confirmación y gestiona la finalización
+    de la membresía de un usuario en la estación activa.
+    """
+    template_name = 'gestion_usuarios/pages/finalizar_membresia.html'
+    permission_required = 'gestion_usuarios.accion_gestion_usuarios_finalizar_membresia'
+    success_url = reverse_lazy('gestion_usuarios:ruta_lista_usuarios')
+
+    def dispatch(self, request, *args, **kwargs):
+        """
+        Obtiene y almacena la membresía a finalizar.
+        El mixin UsuarioDeMiEstacionMixin ya validó que el usuario
+        pertenece a nuestra estación.
+        """
+        usuario_id = kwargs.get('id')
+        estacion_id = request.session.get('active_estacion_id')
+        
+        # Obtenemos la membresía activa o inactiva del usuario
+        self.membresia = get_object_or_404(
+            Membresia,
+            usuario_id=usuario_id,
+            estacion_id=estacion_id,
+            estado__in=[Membresia.Estado.ACTIVO, Membresia.Estado.INACTIVO]
+        )
+        return super().dispatch(request, *args, **kwargs)
+
+    def get(self, request, *args, **kwargs):
+        """Muestra la página de confirmación."""
+        context = {
+            'membresia': self.membresia
+        }
+        return render(request, self.template_name, context)
+
+    def post(self, request, *args, **kwargs):
+        """
+        Ejecuta la finalización de la membresía.
+        """
+        usuario_nombre = self.membresia.usuario.get_full_name
+        
+        # Actualizamos el estado y la fecha de fin
+        self.membresia.estado = Membresia.Estado.FINALIZADO
+        self.membresia.fecha_fin = timezone.now().date()
+        self.membresia.save()
+        
+        messages.success(request, f"La membresía de '{usuario_nombre}' ha sido finalizada correctamente.")
+        return redirect(self.success_url)

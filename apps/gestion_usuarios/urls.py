@@ -37,6 +37,9 @@ urlpatterns = [
     # Ver permisos de usuario
     path('usuarios/<int:id>/permisos/', UsuarioVerPermisos.as_view(), name='ruta_ver_permisos_usuario'),
 
+    # Finalizar membresía de un usuario
+    path('usuarios/<int:id>/finalizar-membresia/', UsuarioFinalizarMembresiaView.as_view(), name='ruta_finalizar_membresia'),
+
 
 
     # Lista de roles

@@ -72,7 +72,7 @@
                         </a>
                     {% endif %}
                     
-                    <a href="#" class="list-group-item list-group-item-action fs_normal list-group-item-danger">
+                    <a href="{% url 'gestion_usuarios:ruta_finalizar_membresia' id=membresia.usuario.id %}" class="list-group-item list-group-item-action fs_normal list-group-item-danger">
                         <i class="fa-solid fa-flag-checkered me-2"></i> Finalizar Membresía
                     </a>
                 </div>

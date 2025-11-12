@@ -64,7 +64,7 @@
 
     {# Finalizar membresía #}
     {% if perms.gestion_usuarios.end_user_membership and membresia.estado != 'FINALIZADO' %}
-    <a class="menu-acciones-usuarios__accion acciones-usuarios-finalizar color_rojo" href="#">
+    <a class="menu-acciones-usuarios__accion acciones-usuarios-finalizar color_rojo" href="{% url 'gestion_usuarios:ruta_finalizar_membresia' id=membresia.usuario.id %}">
         <i class="fa-solid fa-flag-checkered"></i> Finalizar Membresía
     </a>
     {% endif %}

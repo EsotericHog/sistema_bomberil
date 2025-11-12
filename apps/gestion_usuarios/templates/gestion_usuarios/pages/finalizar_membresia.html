@@ -1,0 +1,71 @@
+{% extends 'gestion_usuarios/layouts/base.html' %}
+{% load static %}
+{% load i18n %} 
+
+{% block titulo_ventana %}Finalizar Membresía{% endblock %}
+
+{% block titulo_pagina %}
+    <span class="fs_grande color_primario">
+        <i class="fas fa-flag-checkered me-2"></i> Finalizar Membresía
+    </span>
+{% endblock %}
+
+
+{% block contenido %}
+
+<div class="container-fluid mt-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-8 col-md-10">
+
+            {# 1. Alerta de Advertencia #}
+            <div class="alert alert-danger fs_normal" role="alert">
+                <strong><i class="fas fa-exclamation-triangle me-1"></i> ¡Acción Irreversible!</strong>
+                <p class="mb-0 mt-1">
+                    Al finalizar la membresía, el usuario perderá todo acceso a esta estación.
+                    Esta acción registra la fecha de término y no se puede deshacer fácilmente.
+                </p>
+            </div>
+
+            {# 2. Tarjeta de Confirmación #}
+            <div class="card shadow-sm border-danger {% if request.session.dark_mode %}dark-mode{% endif %}">
+                <div class="card-header bg-danger text-white fs_normal fw-bold">
+                    <i class="fas fa-exclamation-triangle me-1"></i>
+                    Confirmar Finalización de Membresía
+                </div>
+                
+                <form method="post" action="{% url 'gestion_usuarios:ruta_finalizar_membresia' id=membresia.usuario.id %}">
+                    {% csrf_token %}
+                    <div class="card-body">
+                        <p class="fs_normal">
+                            Estás a punto de finalizar permanentemente la membresía de:
+                        </p>
+
+                        <div class="d-flex align-items-center my-4 p-3 bg-light rounded">
+                            <img src="{% if membresia.usuario.avatar_thumb_small %}{{ membresia.usuario.avatar_thumb_small.url }}{% else %}{% static 'imagenes/default_avatar.png' %}{% endif %}"
+                                 alt="Avatar" class="rounded-circle me-3" style="width: 40px; height: 40px; object-fit: cover;">
+                            <h3 class="mb-0 text-danger">
+                                <strong>{{ membresia.usuario.get_full_name|title }}</strong>
+                            </h3>
+                        </div>
+                    
+                        <p class="fs_normal text-center mt-3">
+                            ¿Estás seguro de que deseas continuar?
+                        </p>
+                    </div>
+
+                    <div class="card-footer text-end">
+                        <a href="{% url 'gestion_usuarios:ruta_ver_usuario' id=membresia.usuario.id %}" class="btn btn-outline-secondary btn-sm fs_normal me-2">
+                            Cancelar
+                        </a>
+                        <button type="submit" class="btn btn-danger btn-sm fs_normal">
+                            <i class="fas fa-flag-checkered me-1"></i>
+                            Sí, Finalizar Membresía
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
