@@ -8,6 +8,7 @@ from django.http import Http404
 class ModuleAccessMixin(AccessMixin):
     """
     Verifica que el usuario tenga el permiso de acceso principal para el módulo.
+    (Actualizado para la arquitectura de permisos centralizada en Membresia)
     """
     def dispatch(self, request, *args, **kwargs):
         # 1. Obtenemos la ruta del módulo de la vista (ej: 'apps.gestion_usuarios.views')
@@ -20,16 +21,18 @@ class ModuleAccessMixin(AccessMixin):
 
         # 3. Construimos el codename del permiso (ej: 'acceso_gestion_usuarios')
         codename = f'acceso_{app_config.label}'
-        
+
         # 4. Construimos el nombre completo del permiso.
-        #    Recordemos que el permiso está ANCLADO en la app 'common'.
-        permission_required = f'common.{codename}'
+        #    Tal como lo espera el RolBackend (que usa el content_type
+        #    de Membresia), el app_label correcto es 'gestion_usuarios'.
+        permission_required = f'gestion_usuarios.{codename}'
 
         # 5. Verificamos si el usuario tiene el permiso
+        #    Esto llamará a RolBackend.has_perm(request.user, permission_required)
         if not request.user.has_perm(permission_required):
             raise PermissionDenied # Lanza un error 403 Prohibido
-
         # Si todo está en orden, la vista continúa.
+        print("El usuario tiene permiso para entrar al módulo")
         return super().dispatch(request, *args, **kwargs)
 
 
