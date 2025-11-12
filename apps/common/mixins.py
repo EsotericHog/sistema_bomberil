@@ -1,8 +1,12 @@
 from django.core.exceptions import PermissionDenied, ImproperlyConfigured
-from django.contrib.auth.mixins import AccessMixin
+from django.contrib.auth.mixins import AccessMixin, LoginRequiredMixin
 from django.apps import apps
-from django.shortcuts import get_object_or_404
+from django.shortcuts import get_object_or_404, redirect
 from django.http import Http404
+from django.contrib import messages
+from django.urls import reverse_lazy
+
+from apps.gestion_inventario.models import Estacion
 
 
 class ModuleAccessMixin(AccessMixin):
@@ -10,6 +14,8 @@ class ModuleAccessMixin(AccessMixin):
     Verifica que el usuario tenga el permiso de acceso principal para el módulo.
     (Actualizado para la arquitectura de permisos centralizada en Membresia)
     """
+    redirect_url_sin_acceso_modulo = 'portal:ruta_inicio'
+
     def dispatch(self, request, *args, **kwargs):
         # 1. Obtenemos la ruta del módulo de la vista (ej: 'apps.gestion_usuarios.views')
         view_module_path = self.request.resolver_match.func.__module__
@@ -34,6 +40,54 @@ class ModuleAccessMixin(AccessMixin):
         # Si todo está en orden, la vista continúa.
         print("El usuario tiene permiso para entrar al módulo")
         return super().dispatch(request, *args, **kwargs)
+
+
+
+
+class EstacionActivaRequiredMixin(AccessMixin):
+    """
+    Mixin que verifica que 'active_estacion_id' exista en la sesión,
+    que sea una Estacion válida, y adjunta 'self.estacion_activa'
+    a la vista para su uso.
+    """
+    
+    mensaje_sin_estacion = "No se ha seleccionado una estación activa."
+    redirect_url_sin_estacion = 'portal:ruta_inicio'
+
+    def dispatch(self, request, *args, **kwargs):
+        
+        # 1. Obtenemos el ID de la sesión
+        self.estacion_activa_id = request.session.get('active_estacion_id')
+        
+        if not self.estacion_activa_id:
+            # Caso 1: No hay ID en la sesión.
+            return self.handle_no_permission()
+        
+        try:
+            # 2. Hay ID, intentamos obtener el objeto Estacion
+            self.estacion_activa = Estacion.objects.get(id=self.estacion_activa_id)
+        
+        except (Estacion.DoesNotExist, ValueError, TypeError):
+            # Caso 3: El ID es inválido o la estación fue eliminada (sesión corrupta)
+            messages.error(request, "La estación activa en sesión no es válida.")
+            
+            # Limpiamos la sesión corrupta
+            if 'active_estacion_id' in request.session:
+                del request.session['active_estacion_id']
+            
+            return self.handle_no_permission()
+        
+        # ¡Éxito! El usuario tiene un ID y es válido.
+        # self.estacion_activa y self.estacion_activa_id están ahora
+        # disponibles en la vista (en self.get, self.post, etc.)
+        return super().dispatch(request, *args, **kwargs)
+
+    def handle_no_permission(self):
+        """
+        Maneja la redirección si no se encuentra una estación activa.
+        """
+        messages.error(self.request, self.mensaje_sin_estacion)
+        return redirect(self.redirect_url_sin_estacion)
 
 
 
@@ -77,3 +131,20 @@ class ObjectInStationRequiredMixin(AccessMixin):
             )
 
         return super().dispatch(request, *args, **kwargs)
+
+
+
+
+class BaseEstacionMixin(
+    LoginRequiredMixin, 
+    ModuleAccessMixin, 
+    EstacionActivaRequiredMixin
+):
+    """
+    Este "super-mixin" agrupa las 3 validaciones más comunes
+    del proyecto:
+    1. Que el usuario esté logueado.
+    2. Que el usuario tenga acceso al módulo actual.
+    3. Que el usuario tenga una estación activa en su sesión.
+    """
+    pass
