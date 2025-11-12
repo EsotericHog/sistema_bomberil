@@ -10,9 +10,10 @@ class FormularioCrearUsuario(forms.Form):
         required=True, 
         widget=forms.TextInput(
             attrs={
-                'id':'LoginInputCorreo',
-                'class':'input_box__input fs_normal color_primario fondo_secundario',
-                'autocomplete':'off',
+                # Reemplazamos las clases por las de Bootstrap + tu clase de fuente
+                'class': 'form-control form-control-sm fs_normal',
+                'autocomplete': 'off',
+                'placeholder': 'ejemplo@correo.com' # (Recomendado)
             }
         )
     )
@@ -20,9 +21,8 @@ class FormularioCrearUsuario(forms.Form):
         required=True, 
         widget=forms.TextInput(
             attrs={
-                'id':'UsuarioInputNombre',
-                'class':'input_box__input fs_normal color_primario fondo_secundario',
-                'autocomplete':'off',
+                'class': 'form-control form-control-sm fs_normal',
+                'autocomplete': 'off',
             }
         )
     )
@@ -30,9 +30,8 @@ class FormularioCrearUsuario(forms.Form):
         required=True, 
         widget=forms.TextInput(
             attrs={
-                'id':'UsuarioInputApellido',
-                'class':'input_box__input fs_normal color_primario fondo_secundario',
-                'autocomplete':'off',
+                'class': 'form-control form-control-sm fs_normal',
+                'autocomplete': 'off',
             }
         )
     )
@@ -40,9 +39,9 @@ class FormularioCrearUsuario(forms.Form):
         required=True, 
         widget=forms.TextInput(
             attrs={
-                'id':'UsuarioInputRut',
-                'class':'input_box__input fs_normal color_primario fondo_secundario',
-                'autocomplete':'off',
+                'class': 'form-control form-control-sm fs_normal',
+                'autocomplete': 'off',
+                'placeholder': '12.345.678-9' # (Recomendado)
             }
         )
     )
@@ -50,10 +49,9 @@ class FormularioCrearUsuario(forms.Form):
         required=False, 
         widget=forms.DateInput(
             attrs={
-                'type':'date',
-                'id':'UsuarioInputFechaNacimiento',
-                'class':'input_box__input fs_normal color_primario fondo_secundario',
-                'autocomplete':'off',
+                'type': 'date', # Mantenemos esto
+                'class': 'form-control form-control-sm fs_normal',
+                'autocomplete': 'off',
             }
         )
     )
@@ -61,9 +59,8 @@ class FormularioCrearUsuario(forms.Form):
         required=False, 
         widget=forms.TextInput(
             attrs={
-                'id':'UsuarioInputTelefono',
-                'class':'input_box__input fs_normal color_primario fondo_secundario',
-                'autocomplete':'off',
+                'class': 'form-control form-control-sm fs_normal',
+                'autocomplete': 'off',
             }
         )
     )
@@ -71,9 +68,9 @@ class FormularioCrearUsuario(forms.Form):
         required=False, 
         widget=forms.ClearableFileInput(
             attrs={
-                'id':'UsuarioInputAvatar',
-                'class':'input_box__input-file fs_normal color_primario fondo_secundario',
-                'autocomplete':'off',
+                # Bootstrap estiliza los inputs de archivo con 'form-control'
+                'class': 'form-control form-control-sm fs_normal',
+                'autocomplete': 'off',
             }
         )
     )
