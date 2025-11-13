@@ -73,6 +73,19 @@
         </div>
     </a>
 
+    {# Módulo: Gestión Documental #}
+    <a href="{% url 'gestion_documental:ruta_inicio' %}" class="portal__modulo fondo_secundario hover_scale hover_color">
+        <div class="modulo__header">
+            <img src="{% static 'portal/imagenes/modulo_documental.jpg' %}">
+        </div>
+        <div class="modulo__body">
+            <span class="fs_grande color_primario_variante">Documentación Histórica</span>
+            <p class="fs_normal color_primario_variante">
+                Preserva el legado de la compañía. Digitaliza y consulta el archivo histórico, manuales y documentos operativos en un solo lugar.
+            </p>
+        </div>
+    </a>
+
 </div>
 
 {% endblock  %}

@@ -13,6 +13,7 @@ urlpatterns = [
     path('mantenimiento/', include("apps.gestion_mantenimiento.urls")),
     path('voluntarios/', include("apps.gestion_voluntarios.urls")),
     path('medico/', include("apps.gestion_medica.urls")),
+    path('documental/', include("apps.gestion_documental.urls")),
     path('portal/', include("apps.portal.urls")),
     path('acceso/', include("apps.acceso.urls")),
     path('api/v1/', include("apps.api.urls")),
