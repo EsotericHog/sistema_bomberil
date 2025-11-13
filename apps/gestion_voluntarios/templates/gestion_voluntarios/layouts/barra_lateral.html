@@ -1,3 +1,5 @@
+{% load static %}
+
 <nav id="barra_lateral" class="barra_lateral fondo_barra_lateral">
     {# Botón para cerrar el menú en diseño móvil (una X) #}
     {% include 'layouts/boton_cerrar_sidebar.html' %}
@@ -53,8 +55,11 @@
         </div>
         {# Subsección #}
         <ul class="barra_lateral__lista_opciones oculto">
-            <li class="fondo_opcion_nav"><a class="color_primario fs_nav_opcion" href="{% url 'gestion_voluntarios:ruta_hoja_vida' %}">Generar Hoja de Vida</a></li>
+            
+            {# --- ENLACE ROTO ELIMINADO --- #}
+            
             <li class="fondo_opcion_nav"><a class="color_primario fs_nav_opcion" href="{% url 'gestion_voluntarios:ruta_exportar_listado' %}">Exportar Listado</a></li>
         </ul>
 
+    </section>
 </nav>

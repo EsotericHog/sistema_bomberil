@@ -2,6 +2,11 @@ from django.shortcuts import render, get_object_or_404, redirect
 from django.views import View
 from django.db.models import Prefetch
 from django.contrib import messages
+# --- ¡NUEVAS IMPORTACIONES PARA PDF! ---
+from django.http import HttpResponse
+from django.template.loader import render_to_string 
+import weasyprint
+# -------------------------------------
 
 # Importamos los modelos de voluntarios
 from .models import (
@@ -15,8 +20,13 @@ from apps.gestion_usuarios.models import Membresia
 # Importamos el modelo Estacion de gestion_inventario
 from apps.gestion_inventario.models import Estacion
 
-# --- ¡Importamos TODOS los formularios de nuestro forms.py local! ---
-from .forms import UsuarioForm, VoluntarioForm, ProfesionForm, CargoForm
+# --- ¡CORRECCIÓN DE IMPORTACIONES! ---
+# Importamos TODOS los formularios de nuestro forms.py local
+try:
+    from .forms import ProfesionForm, CargoForm, UsuarioForm, VoluntarioForm
+except ImportError:
+    # Maneja el caso si forms.py aún no existe
+    ProfesionForm = CargoForm = UsuarioForm = VoluntarioForm = None
 
 # Página Inicial
 class VoluntariosInicioView(View):
@@ -129,6 +139,11 @@ class VoluntariosModificarView(View):
     def get(self, request, id):
         voluntario = get_object_or_404(Voluntario.objects.select_related('usuario'), id=id)
         
+        # Comprobamos que los formularios se hayan importado
+        if not UsuarioForm or not VoluntarioForm:
+            messages.error(request, 'Faltan archivos de formulario (forms.py).')
+            return redirect('gestion_voluntarios:ruta_ver_voluntario', id=id)
+
         # Creamos instancias de los formularios con los datos del voluntario
         usuario_form = UsuarioForm(instance=voluntario.usuario)
         voluntario_form = VoluntarioForm(instance=voluntario)
@@ -165,6 +180,7 @@ class VoluntariosModificarView(View):
 
 # GESTIÓN DE CARGOS Y PROFESIONES
 
+# Ver cargo y profesiones
 class CargosListaView(View):
     def get(self, request):
         
@@ -178,7 +194,7 @@ class CargosListaView(View):
         return render(request, "gestion_voluntarios/pages/lista_cargos_profes.html", context)
 
 
-# --- VISTA "CREAR PROFESIÓN" (ACTUALIZADA) ---
+#Crear profesiones
 class ProfesionesCrearView(View):
     def get(self, request):
         form = ProfesionForm()
@@ -201,7 +217,7 @@ class ProfesionesCrearView(View):
         return render(request, "gestion_voluntarios/pages/crear_profesion.html", context)
 
 
-# --- VISTA "MODIFICAR PROFESIÓN" (ACTUALIZADA) ---
+#Modificar profesiones
 class ProfesionesModificarView(View):
     def get(self, request, id):
         profesion = get_object_or_404(Profesion, id=id)
@@ -229,7 +245,7 @@ class ProfesionesModificarView(View):
         return render(request, "gestion_voluntarios/pages/modificar_profesion.html", context)
 
 
-# --- VISTA "CREAR CARGO" (ACTUALIZADA) ---
+#Crear cargo
 class CargosCrearView(View):
     def get(self, request):
         form = CargoForm()
@@ -252,7 +268,7 @@ class CargosCrearView(View):
         return render(request, "gestion_voluntarios/pages/crear_cargo.html", context)
 
 
-# --- VISTA "MODIFICAR CARGO" (ACTUALIZADA) ---
+#Modificar cargo
 class CargosModificarView(View):
     def get(self, request, id):
         cargo = get_object_or_404(Cargo, id=id)
@@ -284,10 +300,79 @@ class CargosModificarView(View):
 
 # Generar hoja de vida del voluntario
 class HojaVidaView(View):
-    def get(self, request):
-        return render(request, "gestion_voluntarios/pages/hoja_vida.html")
-
-
+    def get(self, request, id):
+        
+        # 1. Obtenemos todos los datos del voluntario (igual que VoluntariosVerView)
+        active_membresia_prefetch = Prefetch(
+            'usuario__membresias',
+            queryset=Membresia.objects.filter(estado='ACTIVO').select_related('estacion'),
+            to_attr='membresia_activa_list'
+        )
+        current_cargo_prefetch = Prefetch(
+            'historial_cargos',
+            queryset=HistorialCargo.objects.filter(fecha_fin__isnull=True).select_related('cargo'),
+            to_attr='cargo_actual_list'
+        )
+        cargos_prefetch = Prefetch(
+            'historial_cargos',
+            queryset=HistorialCargo.objects.all().select_related('cargo', 'estacion_registra').order_by('-fecha_inicio')
+        )
+        reconocimientos_prefetch = Prefetch(
+            'historial_reconocimientos',
+            queryset=HistorialReconocimiento.objects.all().select_related('tipo_reconocimiento', 'estacion_registra').order_by('-fecha_evento')
+        )
+        sanciones_prefetch = Prefetch(
+            'historial_sanciones',
+            queryset=HistorialSancion.objects.all().select_related('estacion_registra', 'estacion_evento').order_by('-fecha_evento')
+        )
+        
+        voluntario = get_object_or_404(
+            Voluntario.objects.select_related(
+                'usuario', 'nacionalidad', 'profesion', 'domicilio_comuna'
+            ).prefetch_related(
+                active_membresia_prefetch,
+                current_cargo_prefetch,
+                cargos_prefetch,
+                reconocimientos_prefetch,
+                sanciones_prefetch
+            ),
+            id=id
+        )
+        
+        membresia_list = voluntario.usuario.membresia_activa_list
+        cargo_list = voluntario.cargo_actual_list
+        membresia_activa = membresia_list[0] if membresia_list else None
+        cargo_actual = cargo_list[0] if cargo_list else None
+        
+        context = {
+            'voluntario': voluntario,
+            'membresia': membresia_activa,
+            'cargo_actual': cargo_actual,
+            'request': request # Pasamos el request para construir URLs absolutas
+        }
+        
+        # 2. Renderizamos la plantilla HTML a un string
+        # Usamos la NUEVA plantilla hoja_vida_pdf.html
+        html_string = render_to_string(
+            "gestion_voluntarios/pages/hoja_vida_pdf.html", 
+            context
+        )
+        
+        # 3. Generamos el PDF
+        # base_url es para que WeasyPrint pueda encontrar tus archivos estáticos (CSS, imágenes)
+        base_url = request.build_absolute_uri('/')
+        pdf = weasyprint.HTML(string=html_string, base_url=base_url).write_pdf()
+        
+        # 4. Creamos la respuesta HTTP
+        response = HttpResponse(pdf, content_type='application/pdf')
+        
+        # 5. (Opcional) Forzar la descarga con un nombre de archivo
+        # response['Content-Disposition'] = f'attachment; filename="hoja_vida_{voluntario.usuario.rut}.pdf"'
+        
+        # 5. (Alternativa) Mostrar en el navegador
+        response['Content-Disposition'] = f'inline; filename="hoja_vida_{voluntario.usuario.rut}.pdf"'
+        
+        return response
 # Exportar listado 
 class ExportarListadoView(View):
     def get(self, request):

@@ -44,8 +44,9 @@
                 </p>
             </div>
             <div class="profile-actions">
-                <button class="action-btn pdf-btn"><i class="fas fa-file-pdf"></i> Generar Hoja de Vida</button>
-                {# URL de Modificar dinámica #}
+                <a href="{% url 'gestion_voluntarios:ruta_hoja_vida' id=voluntario.id %}" target="_blank" class="action-btn pdf-btn">
+                    <i class="fas fa-file-pdf"></i> Generar Hoja de Vida
+                </a>
                 <a href="{% url 'gestion_voluntarios:ruta_modificar_voluntario' id=voluntario.id %}" class="action-btn edit-btn"><i class="fas fa-user-edit"></i> Modificar Perfil</a>
             </div>
         </div>
@@ -79,7 +80,6 @@
         <div id="experience" class="tab-content">
             <h2>Historial de Servicio (Cargos)</h2>
             <ul class="history-list">
-                {# Bucle sobre el historial de cargos del voluntario #}
                 {% for cargo in voluntario.historial_cargos.all %}
                     <li>
                         <strong>{{ cargo.cargo.nombre }}</strong> - {{ cargo.ambito }}
@@ -97,7 +97,6 @@
         <div id="recognitions" class="tab-content">
             <h2>Reconocimientos y Logros</h2>
             <ul class="history-list">
-                 {# Bucle sobre el historial de reconocimientos del voluntario #}
                 {% for reco in voluntario.historial_reconocimientos.all %}
                     <li>
                         <strong>{{ reco.tipo_reconocimiento.nombre | default:reco.descripcion_personalizada }}</strong>
@@ -115,7 +114,6 @@
         <div id="sanctions" class="tab-content">
             <h2>Registro de Sanciones</h2>
             <ul class="history-list">
-                 {# Bucle sobre el historial de sanciones del voluntario #}
                 {% for sancion in voluntario.historial_sanciones.all %}
                      <li>
                         <strong>{{ sancion.get_tipo_sancion_display }}</strong>

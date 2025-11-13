@@ -69,7 +69,7 @@ urlpatterns = [
 
 
     # Generar hoja de vida
-    path('voluntario/generar_hoja_vida', HojaVidaView.as_view(), name="ruta_hoja_vida"),
+    path('voluntario/<int:id>/generar_hoja_vida/', HojaVidaView.as_view(), name="ruta_hoja_vida"),
 
     # Generar exportar listado
     path('voluntario/exportar_listado', ExportarListadoView.as_view(), name="ruta_exportar_listado"),
