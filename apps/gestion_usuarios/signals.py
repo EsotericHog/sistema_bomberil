@@ -34,7 +34,10 @@ def crear_perfiles_automaticamente(sender, instance, created, **kwargs):
     cuando un nuevo Usuario es creado.
     """
     if created:
-        # 1. Creamos el Perfil de Voluntario
-        voluntario_perfil = Voluntario.objects.create(usuario=instance)
-        # 2. Creamos la Ficha Médica vacía, vinculada al Voluntario
-        FichaMedica.objects.create(voluntario=voluntario_perfil)
+        try:
+            # 1. Creamos el Perfil de Voluntario
+            voluntario_perfil = Voluntario.objects.create(usuario=instance)
+            # 2. Creamos la Ficha Médica vacía, vinculada al Voluntario
+            FichaMedica.objects.create(voluntario=voluntario_perfil)
+        except Exception as e:
+            print(f"ERROR en signal crear_perfiles_automaticamente: {e}")

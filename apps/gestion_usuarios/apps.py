@@ -6,6 +6,10 @@ class UsuariosConfig(AppConfig):
     name = 'apps.gestion_usuarios'
     verbose_name = "Gestión de Usuarios y Permisos"
 
+    def ready(self):
+        # Esta línea es la que soluciona el problema
+        import apps.gestion_usuarios.signals
+
     #def ready(self):
     #    import apps.gestion_usuarios.signals
     #    from django.db.models.signals import post_migrate
