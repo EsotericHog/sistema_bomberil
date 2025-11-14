@@ -4,7 +4,6 @@
 <head>
     <meta charset="UTF-8">
     <title>Hoja de Vida: {{ voluntario.usuario.get_full_name }}</title>
-    
     <style>
         @page {
             size: A4;
@@ -85,7 +84,7 @@
 
     <div class="header">
         {% if voluntario.usuario.avatar %}
-            <img src="{{ request.scheme }}://{{ request.get_host }}{{ voluntario.usuario.avatar.url }}" alt="Foto de perfil">
+            <img src="{{ voluntario.usuario.avatar.url }}" alt="Foto de perfil">
         {% else %}
             {% endif %}
 

@@ -2,14 +2,18 @@ from django.shortcuts import render, get_object_or_404, redirect
 from django.views import View
 from django.db.models import Prefetch, Count
 from django.contrib import messages
-from django.http import HttpResponse
+# --- ¡IMPORTACIONES DE PDF ACTUALIZADAS! ---
+import csv
+import json
+import io # Para manejar el PDF en memoria
+from django.http import HttpResponse, JsonResponse
 from django.template.loader import render_to_string 
 from django.utils import timezone
 from django.core import serializers
-import weasyprint
 import openpyxl
-import csv
-import json # <--- Importar JSON para los gráficos
+from xhtml2pdf import pisa # <--- REEMPLAZA a weasyprint
+from .utils import link_callback # <--- Importamos la función auxiliar
+# -------------------------------------
 
 # Importamos los modelos de voluntarios
 from .models import (
@@ -34,28 +38,24 @@ class VoluntariosInicioView(View):
     def get(self, request):
         
         # --- 1. Datos para las Tarjetas (Cards) ---
-        # Contamos los voluntarios según el estado de su membresía
         voluntarios_activos = Membresia.objects.filter(estado='ACTIVO').count()
         voluntarios_inactivos = Membresia.objects.filter(estado='INACTIVO').count()
-        total_voluntarios_general = voluntarios_activos + voluntarios_inactivos
+        total_voluntarios_general = Voluntario.objects.count() 
 
         # --- 2. Datos para Gráfico de Rangos (Cargos) ---
-        # Agrupamos los cargos actuales (fecha_fin IS NULL) y contamos cuántos hay de cada uno
         rangos_data = HistorialCargo.objects.filter(fecha_fin__isnull=True) \
                       .values('cargo__nombre') \
                       .annotate(count=Count('cargo')) \
-                      .order_by('-count') # Ordenamos de mayor a menor
+                      .order_by('-count')
 
-        # Separamos los datos en etiquetas (labels) y cuentas (counts) para Chart.js
         chart_rangos_labels = [item['cargo__nombre'] for item in rangos_data]
         chart_rangos_counts = [item['count'] for item in rangos_data]
 
         # --- 3. Datos para Gráfico de Profesiones (Top 5) ---
-        # Agrupamos las profesiones de los perfiles de voluntarios y contamos
         profesiones_data = Voluntario.objects.exclude(profesion__isnull=True) \
                             .values('profesion__nombre') \
                             .annotate(count=Count('profesion')) \
-                            .order_by('-count')[:5] # Tomamos solo el Top 5
+                            .order_by('-count')[:5] 
 
         chart_profes_labels = [item['profesion__nombre'] for item in profesiones_data]
         chart_profes_counts = [item['count'] for item in profesiones_data]
@@ -65,8 +65,6 @@ class VoluntariosInicioView(View):
             'total_voluntarios_general': total_voluntarios_general,
             'voluntarios_activos': voluntarios_activos,
             'voluntarios_inactivos': voluntarios_inactivos,
-            
-            # Convertimos las listas de Python a JSON para que JavaScript pueda leerlas
             'chart_rangos_labels': json.dumps(chart_rangos_labels),
             'chart_rangos_counts': json.dumps(chart_rangos_counts),
             'chart_profes_labels': json.dumps(chart_profes_labels),
@@ -367,20 +365,15 @@ class HojaVidaView(View):
             'historial_sanciones',
             queryset=HistorialSancion.objects.all().select_related('estacion_registra', 'estacion_evento').order_by('-fecha_evento')
         )
-        
         voluntario = get_object_or_404(
             Voluntario.objects.select_related(
                 'usuario', 'nacionalidad', 'profesion', 'domicilio_comuna'
             ).prefetch_related(
-                active_membresia_prefetch,
-                current_cargo_prefetch,
-                cargos_prefetch,
-                reconocimientos_prefetch,
-                sanciones_prefetch
+                active_membresia_prefetch, current_cargo_prefetch,
+                cargos_prefetch, reconocimientos_prefetch, sanciones_prefetch
             ),
             id=id
         )
-        
         membresia_list = voluntario.usuario.membresia_activa_list
         cargo_list = voluntario.cargo_actual_list
         membresia_activa = membresia_list[0] if membresia_list else None
@@ -390,31 +383,33 @@ class HojaVidaView(View):
             'voluntario': voluntario,
             'membresia': membresia_activa,
             'cargo_actual': cargo_actual,
-            'request': request # Pasamos el request para construir URLs absolutas
+            'request': request # Pasamos el request para el link_callback
         }
         
         # 2. Renderizamos la plantilla HTML a un string
-        # Usamos la NUEVA plantilla hoja_vida_pdf.html
+        # (Asegúrate de que 'hoja_vida_pdf.html' existe)
         html_string = render_to_string(
             "gestion_voluntarios/pages/hoja_vida_pdf.html", 
             context
         )
         
-        # 3. Generamos el PDF
-        # base_url es para que WeasyPrint pueda encontrar tus archivos estáticos (CSS, imágenes)
-        base_url = request.build_absolute_uri('/')
-        pdf = weasyprint.HTML(string=html_string, base_url=base_url).write_pdf()
+        # 3. Creamos el PDF en memoria
+        result = io.BytesIO()
+        pdf = pisa.CreatePDF(
+            html_string,                # El HTML a convertir
+            dest=result,                # El objeto "archivo" en memoria
+            link_callback=link_callback # La función para encontrar estáticos
+        )
         
-        # 4. Creamos la respuesta HTTP
-        response = HttpResponse(pdf, content_type='application/pdf')
+        # 4. Verificamos si hubo errores
+        if not pdf.err:
+            response = HttpResponse(result.getvalue(), content_type='application/pdf')
+            response['Content-Disposition'] = f'inline; filename="hoja_vida_{voluntario.usuario.rut}.pdf"'
+            return response
         
-        # 5. (Opcional) Forzar la descarga con un nombre de archivo
-        # response['Content-Disposition'] = f'attachment; filename="hoja_vida_{voluntario.usuario.rut}.pdf"'
-        
-        # 5. (Alternativa) Mostrar en el navegador
-        response['Content-Disposition'] = f'inline; filename="hoja_vida_{voluntario.usuario.rut}.pdf"'
-        
-        return response
+        # Si hay un error, devolvemos un error HTML
+        return HttpResponse(f'Error al generar el PDF: {pdf.err}')
+
 # Exportar listado 
 class ExportarListadoView(View):
     
@@ -440,7 +435,6 @@ class ExportarListadoView(View):
                 historial_cargos__fecha_fin__isnull=True
             )
 
-        # Pre-cargamos los datos necesarios para el reporte
         active_membresia_prefetch = Prefetch(
             'usuario__membresias',
             queryset=Membresia.objects.filter(estado='ACTIVO').select_related('estacion'),
@@ -521,16 +515,25 @@ class ExportarListadoView(View):
             'voluntarios': voluntarios,
             'request': request
         }
+        # (Asegúrate de que 'lista_voluntarios_pdf.html' existe)
         html_string = render_to_string(
             "gestion_voluntarios/pages/lista_voluntarios_pdf.html", 
             context
         )
-        base_url = request.build_absolute_uri('/')
-        pdf = weasyprint.HTML(string=html_string, base_url=base_url).write_pdf()
         
-        response = HttpResponse(pdf, content_type='application/pdf')
-        response['Content-Disposition'] = f'inline; filename="listado_voluntarios_{timezone.now().strftime("%Y-%m-%d")}.pdf"'
-        return response
+        result = io.BytesIO()
+        pdf = pisa.CreatePDF(
+            html_string, 
+            dest=result,
+            link_callback=link_callback
+        )
+        
+        if not pdf.err:
+            response = HttpResponse(result.getvalue(), content_type='application/pdf')
+            response['Content-Disposition'] = f'inline; filename="listado_voluntarios_{timezone.now().strftime("%Y-%m-%d")}.pdf"'
+            return response
+        
+        return HttpResponse(f'Error al generar el PDF: {pdf.err}')
 
     def _export_json(self, voluntarios):
         """Genera y devuelve una respuesta HTTP con un archivo JSON."""
