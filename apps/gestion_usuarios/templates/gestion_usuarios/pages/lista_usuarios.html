@@ -186,7 +186,10 @@
     {% csrf_token %}
 </form>
 
+{# Ventanas modales #}
 {% include "gestion_usuarios/partials/_modal_restablecer_contrasena.html" %}
+{% include 'gestion_usuarios/partials/modal_desactivar_usuario.html' %}
+{% include 'gestion_usuarios/partials/modal_activar_usuario.html' %}
 
 {% endblock  %}
 
