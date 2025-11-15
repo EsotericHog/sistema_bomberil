@@ -1,0 +1,72 @@
+/*
+Estilos específicos para el Módulo de Gestión Documental
+Se cargan desde base.html de la app
+*/
+
+/* --- Estilos para lista_documentos.html --- */
+
+/* Ajustes para la tabla de documentos */
+.data-table .actions {
+    width: 100px; /* Ancho fijo para el botón "Ver" */
+    text-align: center;
+}
+
+/* Estilo para la descripción en la tabla */
+.data-table .text-muted {
+    font-size: 0.9em;
+    color: var(--color-texto-secundario); /* Usando variable global */
+    margin-top: 5px;
+    display: block; /* Asegura que esté en su propia línea */
+}
+
+.data-table strong {
+    font-weight: 600;
+    color: var(--color-texto-principal); /* Usando variable global */
+}
+
+
+/* --- Estilos para crear_documento.html --- */
+
+/* Estilo para el formulario de subida */
+.form-horizontal .form-group input[type="file"] {
+    font-family: var(--fuente-principal);
+    border: 2px dashed var(--color-borde);
+    padding: 1rem;
+    background-color: var(--fondo-header); /* Un fondo ligeramente diferente */
+    border-radius: var(--radius-componente);
+    transition: all 0.3s ease;
+    cursor: pointer;
+    color: var(--color-texto-secundario);
+}
+
+.form-horizontal .form-group input[type="file"]:hover {
+    border-color: var(--color-primario);
+    background-color: var(--fondo-main);
+}
+
+/* Estilo para el campo de texto y select */
+.form-horizontal .form-control {
+    width: 100%;
+    box-sizing: border-box; /* Asegura que el padding no rompa el layout */
+}
+
+/* Títulos de sección dentro del formulario */
+.form-section__titulo {
+    font-size: 1.3rem;
+    font-weight: 600;
+    color: var(--color-primario);
+    border-bottom: 1px solid var(--color-borde-light);
+    padding-bottom: 10px;
+    margin-bottom: 25px;
+}
+
+/* Contenedor de botones del formulario */
+.button-group {
+    text-align: right; 
+    padding-top: 20px; 
+    border-top: 1px solid var(--color-borde-light); 
+    margin-top: 20px;
+    display: flex; /* Para alinear botones */
+    justify-content: flex-end;
+    gap: 10px; /* Espacio entre botones */
+}

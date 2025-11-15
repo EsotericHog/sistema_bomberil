@@ -4,6 +4,7 @@
 {# Título de la página #} {% block titulo_pagina %}Agregar Nuevo Rango{% endblock %}
 
 {% block contenido %}
+<div class="container-fluid mt-4"> 
     <div class="container">
         <a href="{% url 'gestion_voluntarios:ruta_cargos_lista' %}" class="back-link"><i class="fas fa-arrow-left"></i> Volver al listado</a>
         
@@ -29,4 +30,6 @@
             </div>
         </form>
     </div>
+</div>
+
 {% endblock  %}

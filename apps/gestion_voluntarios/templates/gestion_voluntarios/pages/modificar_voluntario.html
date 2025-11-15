@@ -4,7 +4,7 @@
 {# Título de la página #} {% block titulo_pagina %}Modificar Voluntario{% endblock %}
 
 {% block contenido %}
-
+<div class="container-fluid mt-4"> 
     <div class="container">
         <h1>Modificar Voluntario: {{ voluntario.usuario.get_full_name }}</h1>
         <p>Ajuste la información del perfil del voluntario. El historial (cargos, reconocimientos) se gestiona desde la Hoja de Vida.</p>
@@ -60,5 +60,5 @@
             
         </form>
     </div>
-    
+</div>    
 {% endblock  %}

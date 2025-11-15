@@ -1,9 +1,18 @@
 from django.urls import path
-from .views import DocumentalInicioView
+# Importamos las nuevas vistas que crearemos
+from .views import DocumentoInicioView, ListaDocumentoView, SubirDocumentoView
 
 app_name = 'gestion_documental'
 
 urlpatterns = [
     # Página Inicial de la gestión documental
-    path('', DocumentalInicioView.as_view(), name="ruta_inicio"),
+    path('', DocumentoInicioView.as_view(), name="ruta_inicio"),
+
+    # --- NUEVAS RUTAS (RF10) ---
+    
+    # Muestra el listado de documentos
+    path('archivo/', ListaDocumentoView.as_view(), name="ruta_lista_documentos"),
+    
+    # Muestra el formulario para subir un nuevo documento
+    path('archivo/subir/', SubirDocumentoView.as_view(), name="ruta_subir_documento"),
 ]

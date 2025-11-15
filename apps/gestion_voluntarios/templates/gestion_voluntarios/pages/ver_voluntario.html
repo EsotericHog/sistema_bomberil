@@ -4,7 +4,7 @@
 {# Título de la página #} {% block titulo_pagina %}Hoja de Vida del Voluntario{% endblock %}
 
 {% block contenido %}
-
+<div class="container-fluid mt-4"> 
     <div class="container profile-container">
         <a href="{% url 'gestion_voluntarios:ruta_lista_voluntarios' %}" class="back-link"><i class="fas fa-arrow-left"></i> Volver al listado</a>
 
@@ -128,9 +128,8 @@
                 {% endfor %}
             </ul>
         </div>
-
     </div>
-    
+</div>    
 {% endblock  %}
 
 {% block scripts %}

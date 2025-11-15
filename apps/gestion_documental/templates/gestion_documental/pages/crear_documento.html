@@ -1,0 +1,45 @@
+{# Plantilla base #}{% extends 'gestion_documental/layouts/base.html' %}
+{# Cargar assets #}{% load static %}
+{# Título de la ventana #} {% block titulo_ventana %}Subir Documento{% endblock %}
+{# Título de la página #} {% block titulo_pagina %}Subir Nuevo Documento Histórico{% endblock %}
+
+{% block contenido %}
+<div class="container-fluid mt-4"> 
+    <div class="panel">
+        <div class="panel-header">
+            <h1 class="titulo-pagina">Subir Nuevo Documento</h1>
+            <a href="{% url 'gestion_documental:ruta_lista_documentos' %}" class="back-link" style="text-decoration: none;">
+                <i class="fas fa-arrow-left"></i> Volver al listado
+            </a>
+        </div>
+
+        <div class="panel-body">
+            <form method="POST" enctype="multipart/form-data" class="form-horizontal">
+                {% csrf_token %}
+                
+                <div class="form-section">
+                    <h2 class="form-section__titulo">Metadatos del Documento (RF10)</h2>
+                    
+                    {% for field in form %}
+                        <div class="form-group">
+                            {{ field.label_tag }}
+                            {{ field }}
+                            {% if field.errors %}
+                                <div class="error-message" style="color: red; font-size: 0.9em; margin-top: 5px;">{{ field.errors|first }}</div>
+                            {% endif %}
+                            {% if field.help_text %}
+                                <small class="help-text" style="font-size: 0.8em; color: #666; display: block; margin-top: 4px;">{{ field.help_text }}</small>
+                            {% endif %}
+                        </div>
+                    {% endfor %}
+                </div>
+                
+                <div class="button-group" style="text-align: right; padding-top: 20px; border-top: 1px solid #eee; margin-top: 20px;">
+                    <a href="{% url 'gestion_documental:ruta_lista_documentos' %}" class="btn btn-secondary">Cancelar</a>
+                    <button type="submit" class="btn btn-principal">Guardar Documento</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock  %}
