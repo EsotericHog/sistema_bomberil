@@ -1,4 +1,4 @@
-import pprint
+from datetime import datetime, timedelta
 from django.shortcuts import render, redirect, get_object_or_404
 from django.views import View
 from django.contrib import messages
@@ -16,11 +16,11 @@ from django.apps import apps
 # Clases para paginación manual
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 
-from .models import Usuario, Membresia, Rol
+from .models import Usuario, Membresia, Rol, RegistroActividad
 from .forms import FormularioCrearUsuario, FormularioEditarUsuario, FormularioRol
 from .mixins import UsuarioDeMiEstacionMixin, RolValidoParaEstacionMixin, MembresiaGestionableMixin
 from apps.common.mixins import ModuleAccessMixin, ObjectInStationRequiredMixin, BaseEstacionMixin
-from .utils import generar_contraseña_segura
+from .utils import generar_contraseña_segura, registrar_actividad
 from apps.gestion_inventario.models import Estacion
 
 
@@ -780,8 +780,6 @@ class RolCrearView(LoginRequiredMixin, ModuleAccessMixin, PermissionRequiredMixi
 
         # 3. Valida el formulario.
         if form.is_valid():
-            # El método .save() personalizado de nuestro form se encargará
-            # de asignar la estación al nuevo rol.
             form.save()
             messages.success(request, f"Rol creado correctamente.")
             return redirect(self.success_url)
@@ -1254,6 +1252,99 @@ class HistorialMembresiasView(BaseEstacionMixin, PermissionRequiredMixin, View):
         Captura los filtros de la URL antes de llamar a get_context_data.
         """
         self.search_q = request.GET.get('q', '')
+        self.fecha_desde = request.GET.get('fecha_desde', '')
+        self.fecha_hasta = request.GET.get('fecha_hasta', '')
+        
+        context = self.get_context_data()
+        return render(request, self.template_name, context)
+
+
+
+
+class RegistroActividadView(BaseEstacionMixin, PermissionRequiredMixin, View):
+    """
+    Muestra el "Feed de Actividad" (legible por humanos)
+    para la estación activa del usuario.
+    """
+    template_name = 'gestion_usuarios/pages/registro_actividad.html'
+    # Asegúrate de que este permiso exista en models.py
+    permission_required = 'gestion_usuarios.accion_gestion_usuarios_ver_auditoria'
+    paginate_by = 30 # Puedes ajustar este número
+
+    def get_queryset(self):
+        """
+        Obtiene el queryset base (solo registros de la estación activa)
+        y aplica los filtros de la URL.
+        """
+        
+        # 1. Queryset Base:
+        #    Filtra solo los registros de la estación activa.
+        #    (self.estacion_activa viene de BaseEstacionMixin)
+        queryset = RegistroActividad.objects.filter(
+            estacion_id=self.estacion_activa
+        ).select_related('actor').order_by('-fecha') # (actor es el "usuario" que hizo la acción)
+
+        # 2. Aplicar filtro de Búsqueda por Usuario (Actor)
+        if hasattr(self, 'search_user') and self.search_user:
+            queryset = queryset.filter(
+                Q(actor__first_name__icontains=self.search_user) |
+                Q(actor__last_name__icontains=self.search_user)
+            )
+
+        # 3. Aplicar filtros de Rango de Fechas
+        if hasattr(self, 'fecha_desde') and self.fecha_desde:
+            try:
+                # Filtra desde el inicio del día
+                fecha_desde_dt = datetime.strptime(self.fecha_desde, '%Y-%m-%d')
+                queryset = queryset.filter(fecha__gte=fecha_desde_dt)
+            except (ValueError, TypeError):
+                pass # Ignora fecha inválida
+
+        if hasattr(self, 'fecha_hasta') and self.fecha_hasta:
+            try:
+                # Filtra hasta el *final* de ese día
+                fecha_hasta_dt = datetime.strptime(self.fecha_hasta, '%Y-%m-%d')
+                # Añadimos 1 día y filtramos por "menor que" (lt)
+                # para incluir todo el día de 'fecha_hasta'.
+                fecha_hasta_plus_one = fecha_hasta_dt + timedelta(days=1)
+                queryset = queryset.filter(fecha__lt=fecha_hasta_plus_one)
+            except (ValueError, TypeError):
+                pass # Ignora fecha inválida
+            
+        return queryset
+
+    def get_context_data(self):
+        """
+        Prepara el contexto para la plantilla, incluyendo la paginación
+        y los valores de los filtros.
+        """
+        logs_filtrados = self.get_queryset()
+
+        paginator = Paginator(logs_filtrados, self.paginate_by)
+        page_number = self.request.GET.get('page')
+
+        try:
+            page_obj = paginator.get_page(page_number)
+        except PageNotAnInteger:
+            page_obj = paginator.get_page(1)
+        except EmptyPage:
+            page_obj = paginator.get_page(paginator.num_pages)
+
+        context = {
+            'page_obj': page_obj,
+            # Devolvemos los valores de los filtros a la plantilla
+            'current_q_user': getattr(self, 'search_user', ''),
+            'current_fecha_desde': getattr(self, 'fecha_desde', ''),
+            'current_fecha_hasta': getattr(self, 'fecha_hasta', ''),
+        }
+        return context
+
+    def get(self, request, *args, **kwargs):
+        """
+        Maneja la solicitud GET.
+        Captura los filtros de la URL antes de llamar a get_context_data.
+        """
+        self.search_user = request.GET.get('q_user', '')
         self.fecha_desde = request.GET.get('fecha_desde', '')
         self.fecha_hasta = request.GET.get('fecha_hasta', '')
         

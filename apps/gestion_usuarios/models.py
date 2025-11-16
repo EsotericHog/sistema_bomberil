@@ -1,7 +1,10 @@
 from django.db import models
+from django.conf import settings
 from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin, Permission
 from django.utils.translation import gettext_lazy as _
 from django.db.models import Q
+from django.contrib.contenttypes.fields import GenericForeignKey
+from django.contrib.contenttypes.models import ContentType
 
 from .manager import CustomUserManager
 from apps.gestion_inventario.models import Estacion
@@ -180,6 +183,7 @@ class Membresia(models.Model):
             ("accion_gestion_usuarios_asignar_roles", "Puede asignar y cambiar roles a un usuario"),
             ("accion_gestion_usuarios_desactivar_cuenta", "Puede desactivar o reactivar la cuenta de un usuario"),
             ("accion_gestion_usuarios_finalizar_membresia", "Puede finalizar la membresía de un usuario"),
+            ("accion_gestion_usuarios_ver_auditoria", "Puede ver el registro de actividad (auditoría)"),
 
             # === GESTIÓN DE INVENTARIO: CONFIGURACIÓN ===
             ("acceso_gestion_inventario", "Puede acceder al módulo de Gestión de Inventario"),
@@ -226,3 +230,57 @@ class Membresia(models.Model):
     
     def __str__(self):
         return f'{self.usuario.get_full_name} en {self.estacion.nombre} ({self.estado})'
+
+
+
+
+class RegistroActividad(models.Model):
+    """
+    Registra una acción legible por humanos para el feed de actividad
+    de la estación (Ej: "Admin X" "modificó a" "Usuario Y").
+    """
+    id = models.BigAutoField(primary_key=True)
+    
+    # El "QUIÉN" (El usuario que hizo la acción)
+    actor = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL, # Si se borra el admin, el log persiste
+        null=True,
+        related_name='acciones'
+    )
+    
+    # El "QUÉ HIZO" (La acción en texto)
+    verbo = models.CharField(max_length=255)
+    
+    # El "A QUIÉN/QUÉ" (El objeto que recibió la acción)
+    # Usamos GenericForeignKey para que pueda ser un Usuario, un Rol, etc.
+    objetivo_content_type = models.ForeignKey(
+        ContentType,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True
+    )
+    objetivo_object_id = models.PositiveIntegerField(null=True, blank=True)
+    objetivo_generico = GenericForeignKey(
+        'objetivo_content_type', 
+        'objetivo_object_id'
+    )
+    
+    # Un texto de respaldo por si el 'objetivo' se elimina
+    objetivo_repr = models.CharField(max_length=200, blank=True, null=True)
+
+    # El "DÓNDE" (Crucial para filtrar por estación)
+    estacion = models.ForeignKey(
+        Estacion, 
+        on_delete=models.SET_NULL, # El log debe persistir si se borra la estación
+        null=True, 
+        blank=True
+    )
+    
+    # El "CUÁNDO"
+    fecha = models.DateTimeField(auto_now_add=True, db_index=True)
+
+    class Meta:
+        verbose_name = "Registro de Actividad"
+        verbose_name_plural = "Registros de Actividad"
+        ordering = ['-fecha']

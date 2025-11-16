@@ -1,0 +1,118 @@
+{% extends 'gestion_usuarios/layouts/base.html' %}
+{% load static %}
+{% load i18n %} 
+
+{% block titulo_ventana %}Registro de Actividad{% endblock %}
+
+{% block titulo_pagina %}
+    <span class="fs_grande color_primario">
+        <i class="fas fa-clipboard-list me-2"></i> Registro de Actividad
+    </span>
+{% endblock %}
+
+{% block contenido %}
+
+<div class="container-fluid mt-4">
+
+{# Panel de Filtros y Búsqueda #}
+<div class="card shadow-sm mb-4">
+    <div class="card-header fs_normal">
+        <i class="fas fa-filter me-1"></i>
+        Filtrar Registro
+    </div>
+    <div class="card-body">
+        <form method="get" action="{% url 'gestion_usuarios:ruta_registro_actividad' %}">
+            <div class="row g-3 align-items-end"> 
+                
+                {# Filtro por Usuario (Actor) #}
+                <div class="col-md-4">
+                    <label for="search_user" class="form-label fw-bold fs_pequena">Buscar por Usuario</label>
+                    <input type="text" class="form-control form-control-sm fs_normal" id="search_user" name="q_user" 
+                           placeholder="Nombre o apellido..." 
+                           value="{{ current_q_user|default:'' }}">
+                </div>
+                
+                {# Filtro Fecha Desde #}
+                <div class="col-md-3">
+                    <label for="fecha_desde" class="form-label fw-bold fs_pequena">Desde</label>
+                    <input type="date" name="fecha_desde" id="fecha_desde" 
+                           class="form-control form-control-sm fs_normal" 
+                           value="{{ current_fecha_desde|default:'' }}">
+                </div>
+                
+                {# Filtro Fecha Hasta #}
+                <div class="col-md-3">
+                    <label for="fecha_hasta" class="form-label fw-bold fs_pequena">Hasta</label>
+                    <input type="date" name="fecha_hasta" id="fecha_hasta" 
+                           class="form-control form-control-sm fs_normal" 
+                           value="{{ current_fecha_hasta|default:'' }}">
+                </div>
+                
+                {# Botones #}
+                <div class="col-md-2 text-end">
+                    <a href="{% url 'gestion_usuarios:ruta_registro_actividad' %}" class="btn btn-outline-secondary btn-sm fs_normal me-1" title="Limpiar filtros">Limpiar</a>
+                    <button type="submit" class="btn btn-primary btn-sm fs_normal">
+                        <i class="fas fa-filter me-1"></i> Filtrar
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+{# Tabla de Registros de Actividad #}
+<div class="card shadow-sm mb-4 {% if request.session.dark_mode %}dark-mode{% endif %}">
+    <div class="card-header">
+        <span class="fw-bold fs_normal">
+            <i class="fas fa-table me-1"></i>
+            Historial de Cambios
+        </span>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover table-sm align-middle">
+                <thead class="fs_pequena">
+                    <tr>
+                        <th style="width: 20%;">Fecha y Hora</th>
+                        <th style="width: 80%;">Actividad</th>
+                    </tr>
+                </thead>
+                <tbody class="fs_normal">
+                    {% for log in page_obj %}
+                    <tr>
+                        <td class="fs_pequena text-muted">
+                            {{ log.fecha|date:"d/m/Y H:i" }}
+                        </td>
+                        
+                        {# --- AQUÍ ESTÁ EL FORMATO TIPO DISCORD --- #}
+                        <td class="fs_normal">
+                            <strong class="color_primario">
+                                {{ log.actor.get_full_name|title|default:'Usuario Desconocido' }}
+                            </strong>
+                            
+                            {{ log.verbo }}
+                            
+                            <strong class="color_primario">
+                                {{ log.objetivo_repr }}
+                            </strong>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="2" class="text-center fst-italic py-4">
+                            No se encontraron registros de actividad que coincidan con los filtros.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        {# Paginación (Usando el partial que ya creamos) #}
+        {% include 'gestion_usuarios/partials/_paginacion.html' with page_obj=page_obj %}
+
+    </div>
+</div>
+
+</div>
+{% endblock %}

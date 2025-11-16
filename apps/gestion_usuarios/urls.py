@@ -19,6 +19,7 @@ from .views import (
     RolEditarView,
     RolAsignarPermisosView,
     RolEliminarView,
+    RegistroActividadView
 )
 
 app_name = "gestion_usuarios"
@@ -62,6 +63,9 @@ urlpatterns = [
 
     # Historial de membresías
     path('usuarios/historial/', HistorialMembresiasView.as_view(), name="ruta_historial_membresias"),
+
+    # Registro de Actividad (Auditoría)
+    path('auditoria/actividad/', RegistroActividadView.as_view(), name="ruta_registro_actividad"),
 
 
 
