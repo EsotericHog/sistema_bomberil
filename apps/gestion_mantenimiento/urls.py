@@ -15,6 +15,9 @@ from .views import (
     OrdenMantenimientoDetalleView,
     ApiCambiarEstadoOrdenView,
     ApiRegistrarTareaMantenimientoView,
+    ApiBuscarActivoParaOrdenView,
+    ApiAnadirActivoOrdenView,
+    ApiQuitarActivoOrdenView,
 )
 
 app_name = 'gestion_mantenimiento'
@@ -83,4 +86,9 @@ urlpatterns = [
     # Registrar tarea/mantenimiento de un activo específico
     # Se llama cuando el usuario hace click en "Listo" o "Registrar" sobre un activo en la lista
     path('api/ordenes/<int:pk>/registrar-tarea/', ApiRegistrarTareaMantenimientoView.as_view(), name='api_registrar_tarea_orden'),
+
+    # --- Gestión de Activos en Orden de mantenimiento ---
+    path('api/ordenes/buscar-activo/', ApiBuscarActivoParaOrdenView.as_view(), name='api_buscar_activo_para_orden'),
+    path('api/ordenes/<int:pk>/anadir-activo/', ApiAnadirActivoOrdenView.as_view(), name='api_anadir_activo_orden'),
+    path('api/ordenes/<int:pk>/quitar-activo/', ApiQuitarActivoOrdenView.as_view(), name='api_quitar_activo_orden'),
 ]

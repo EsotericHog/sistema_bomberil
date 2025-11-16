@@ -82,6 +82,12 @@
                             </button>
                         {% endif %}
                         <div class="text-center small text-muted mt-1">La orden está activa. Registre las tareas abajo.</div>
+                        {# Opción de escape para la orden bugueada (vacia) #}
+                        {% if progreso.total == 0 %}
+                             <button onclick="cambiarEstadoOrden('cancelar')" class="btn btn-outline-danger btn-sm w-100 mt-2">
+                                Cancelar (Orden Vacía)
+                            </button>
+                        {% endif %}
                     {% elif orden.estado == 'REALIZADA' %}
                         <div class="alert alert-success mb-0 text-center py-2">
                             <i class="fas fa-check-double me-2"></i> Orden cerrada el {{ orden.fecha_cierre|date:"d/m/Y" }}
@@ -92,7 +98,35 @@
         </div>
     </div>
 
-    {# --- 3. Lista de Tareas (Activos) --- #}
+    {# --- 3. SECCIÓN DE AÑADIR ACTIVOS (SOLO VISIBLE SI ESTÁ PENDIENTE) --- #}
+    {% if orden.estado == 'PENDIENTE' %}
+    <div class="card shadow-sm border-0 mb-4 bg-primary text-white bg-opacity-100" 
+         style="background: linear-gradient(45deg, #1a237e 0%, #283593 100%);">
+        <div class="card-body p-4">
+            <h5 class="card-title fw-bold mb-3 text-white">
+                <i class="fas fa-plus-circle me-2"></i>Añadir Activos a la Orden
+            </h5>
+            <p class="small text-white-50 mb-3">Busque activos por nombre o código para añadirlos a esta orden de trabajo.</p>
+            
+            <div class="position-relative">
+                <div class="input-group">
+                    <span class="input-group-text border-0 bg-white text-muted">
+                        <i class="fas fa-search"></i>
+                    </span>
+                    <input type="text" id="buscador-activos" class="form-control border-0 py-2 shadow-none" 
+                           placeholder="Escriba código (E1-ACT...) o nombre del equipo..." autocomplete="off">
+                    {% csrf_token %} 
+                </div>
+                
+                <div id="resultados-busqueda" class="list-group position-absolute w-100 mt-1 shadow-lg d-none" 
+                     style="z-index: 1050; max-height: 300px; overflow-y: auto;">
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    {# --- 4. Lista de Tareas (Activos) --- #}
     <div class="card shadow-sm border-0">
         <div class="card-header bg-white py-3">
             <h6 class="card-title mb-0 fw-bold text-secondary">Checklist de Equipos</h6>
@@ -130,7 +164,6 @@
                             {{ item.activo.compartimento.ubicacion.nombre|default:"--" }} > {{ item.activo.compartimento.nombre|default:"--" }}
                         </td>
                         <td>
-                            {# Estado del Activo en Inventario #}
                             <span class="badge border text-dark fw-normal bg-white">{{ item.activo.estado.nombre }}</span>
                         </td>
                         <td>
@@ -158,8 +191,13 @@
                                         Registrar <i class="fas fa-chevron-right ms-1"></i>
                                     </button>
                                 {% endif %}
+                            {% elif orden.estado == 'PENDIENTE' %}
+                                {# Botón para Quitar (Solo en pendiente) #}
+                                <button onclick="quitarActivo('{{ item.activo.id }}', '{{ item.activo.producto.producto_global.nombre_oficial }}')" class="btn btn-sm btn-outline-danger" title="Quitar de la orden">
+                                    <i class="fas fa-times"></i>
+                                </button>
                             {% else %}
-                                <button disabled class="btn btn-sm btn-light text-muted border">Espera inicio</button>
+                                <button disabled class="btn btn-sm btn-light text-muted border">--</button>
                             {% endif %}
                         </td>
                     </tr>
@@ -170,7 +208,7 @@
     </div>
 </div>
 
-{# --- MODAL: Registrar Tarea --- #}
+{# --- MODAL: Registrar Tarea (Igual que antes) --- #}
 <div class="modal fade" id="modalRegistro" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content border-0 shadow">
@@ -215,7 +253,6 @@
     </div>
 </div>
 
-{# --- Estilos CSS Adicionales para el Radio Button Card --- #}
 <style>
     .card-radio-select input:checked + label {
         border-color: var(--bs-primary) !important;
@@ -231,7 +268,11 @@
     }
 </style>
 
-{# --- SCRIPTS --- #}
+{% endblock %}
+
+
+{% block scripts %}
+
 <script>
     const csrfToken = "{{ csrf_token }}";
     const ordenId = "{{ orden.id }}";
@@ -239,11 +280,65 @@
 
     document.addEventListener('DOMContentLoaded', () => {
         modalRegistro = new bootstrap.Modal(document.getElementById('modalRegistro'));
-        // Tooltips
         [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]')).map(el => new bootstrap.Tooltip(el));
+        
+        // Logica Buscador (Solo si existe el elemento, es decir, si es PENDIENTE)
+        const inputBuscador = document.getElementById('buscador-activos');
+        const divResultados = document.getElementById('resultados-busqueda');
+
+        if (inputBuscador) {
+            let debounceTimer;
+            inputBuscador.addEventListener('input', function() {
+                clearTimeout(debounceTimer);
+                const query = this.value.trim();
+                
+                if (query.length < 2) {
+                    divResultados.classList.add('d-none');
+                    return;
+                }
+
+                debounceTimer = setTimeout(() => {
+                    fetch(`{% url 'gestion_mantenimiento:api_buscar_activo_para_orden' %}?orden_id=${ordenId}&q=${query}`)
+                        .then(response => response.json())
+                        .then(data => {
+                            divResultados.innerHTML = '';
+                            if (data.results.length === 0) {
+                                divResultados.innerHTML = '<div class="list-group-item text-muted small">No se encontraron activos disponibles.</div>';
+                            } else {
+                                data.results.forEach(item => {
+                                    const btn = document.createElement('button');
+                                    btn.className = 'list-group-item list-group-item-action d-flex justify-content-between align-items-center px-3 py-2';
+                                    btn.innerHTML = `
+                                        <div class="d-flex align-items-center">
+                                            <div class="me-3 text-center" style="width:30px;">
+                                                ${item.imagen_url ? `<img src="${item.imagen_url}" class="rounded" width="30">` : '<i class="fas fa-box text-muted"></i>'}
+                                            </div>
+                                            <div>
+                                                <div class="fw-bold small">${item.nombre}</div>
+                                                <div class="text-muted extra-small font-monospace" style="font-size:0.75rem;">${item.codigo}</div>
+                                            </div>
+                                        </div>
+                                        <span class="badge bg-primary rounded-pill"><i class="fas fa-plus"></i></span>
+                                    `;
+                                    btn.addEventListener('click', () => anadirActivo(item.id));
+                                    divResultados.appendChild(btn);
+                                });
+                            }
+                            divResultados.classList.remove('d-none');
+                        });
+                }, 300);
+            });
+
+            document.addEventListener('click', function(e) {
+                if (!inputBuscador.contains(e.target) && !divResultados.contains(e.target)) {
+                    divResultados.classList.add('d-none');
+                }
+            });
+        }
     });
 
-    // --- 1. Gestión Global de Estado ---
+    // --- API CALLS ---
+
     function cambiarEstadoOrden(accion) {
         const verbos = { 'iniciar': 'Iniciar', 'finalizar': 'Finalizar', 'cancelar': 'Cancelar' };
         if (!confirm(`¿Seguro que desea ${verbos[accion]} esta orden?`)) return;
@@ -263,16 +358,39 @@
         });
     }
 
-    // --- 2. Modal y Registro Individual ---
+    function anadirActivo(activoId) {
+        fetch(`{% url 'gestion_mantenimiento:api_anadir_activo_orden' orden.id %}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrfToken },
+            body: JSON.stringify({ activo_id: activoId })
+        })
+        .then(r => r.json())
+        .then(data => {
+            if (data.status === 'ok') location.reload();
+            else alert('Error: ' + data.message);
+        });
+    }
+
+    function quitarActivo(activoId, nombre) {
+        if(!confirm(`¿Quitar ${nombre} de esta orden?`)) return;
+        fetch(`{% url 'gestion_mantenimiento:api_quitar_activo_orden' orden.id %}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrfToken },
+            body: JSON.stringify({ activo_id: activoId })
+        })
+        .then(r => r.json())
+        .then(data => {
+            if (data.status === 'ok') location.reload();
+            else alert('Error: ' + data.message);
+        });
+    }
+
     function abrirModalRegistro(activoId, nombre, notas = '', exitoso = 'true') {
         document.getElementById('modalActivoId').value = activoId;
         document.getElementById('modalActivoNombre').innerText = nombre;
         document.getElementById('modalNotas').value = notas;
-        
-        // Set radio
         if (exitoso === 'true') document.getElementById('resExito').checked = true;
         else document.getElementById('resFallo').checked = true;
-
         modalRegistro.show();
     }
 
@@ -282,27 +400,21 @@
         const exitoso = document.getElementById('resExito').checked;
 
         if(!notas.trim()) {
-            alert("Por favor ingrese una nota o detalle del trabajo.");
+            alert("Por favor ingrese una nota.");
             return;
         }
 
         fetch(`{% url 'gestion_mantenimiento:api_registrar_tarea_orden' orden.id %}`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrfToken },
-            body: JSON.stringify({ 
-                activo_id: activoId, 
-                notas: notas, 
-                exitoso: exitoso 
-            })
+            body: JSON.stringify({ activo_id: activoId, notas: notas, exitoso: exitoso })
         })
         .then(r => r.json())
         .then(data => {
-            if (data.status === 'ok') {
-                location.reload();
-            } else {
-                alert("Error: " + data.message);
-            }
+            if (data.status === 'ok') location.reload();
+            else alert("Error: " + data.message);
         });
     }
 </script>
-{% endblock %}
+
+{% endblock scripts %}

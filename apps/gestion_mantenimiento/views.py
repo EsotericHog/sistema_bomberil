@@ -584,3 +584,101 @@ class ApiRegistrarTareaMantenimientoView(BaseEstacionMixin, View):
 
         except Exception as e:
             return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
+
+
+
+
+class ApiBuscarActivoParaOrdenView(BaseEstacionMixin, View):
+    """
+    Busca activos para agregar a una ORDEN específica.
+    Excluye los que ya están en la orden.
+    """
+    def get(self, request, *args, **kwargs):
+        query = request.GET.get('q', '').strip()
+        orden_id = request.GET.get('orden_id')
+
+        if not query or len(query) < 2:
+            return JsonResponse({'results': []})
+
+        orden = get_object_or_404(OrdenMantenimiento, id=orden_id, estacion=self.estacion_activa)
+        
+        # Buscar activos de la estación que NO estén en esta orden
+        activos = Activo.objects.filter(
+            estacion=self.estacion_activa
+        ).filter(
+            Q(codigo_activo__icontains=query) | 
+            Q(producto__producto_global__nombre_oficial__icontains=query)
+        ).exclude(
+            ordenes_mantenimiento=orden
+        ).select_related(
+            'producto__producto_global', 
+            'compartimento__ubicacion'
+        )[:10]
+
+        results = []
+        for activo in activos:
+            ubicacion_str = "Sin ubicación"
+            if activo.compartimento:
+                 ubicacion_str = f"{activo.compartimento.ubicacion.nombre} > {activo.compartimento.nombre}"
+            
+            results.append({
+                'id': activo.id,
+                'codigo': activo.codigo_activo,
+                'nombre': activo.producto.producto_global.nombre_oficial,
+                'ubicacion': ubicacion_str,
+                'imagen_url': activo.producto.producto_global.imagen_thumb_small.url if activo.producto.producto_global.imagen_thumb_small else None
+            })
+
+        return JsonResponse({'results': results})
+
+
+
+
+class ApiAnadirActivoOrdenView(BaseEstacionMixin, View):
+    """
+    Añade un activo a la lista de 'activos_afectados' de una orden.
+    """
+    def post(self, request, pk, *args, **kwargs):
+        try:
+            orden = get_object_or_404(OrdenMantenimiento, pk=pk, estacion=self.estacion_activa)
+            
+            if orden.estado != OrdenMantenimiento.EstadoOrden.PENDIENTE:
+                return JsonResponse({'status': 'error', 'message': 'Solo se pueden agregar activos a órdenes PENDIENTES.'}, status=400)
+
+            data = json.loads(request.body)
+            activo_id = data.get('activo_id')
+            activo = get_object_or_404(Activo, pk=activo_id, estacion=self.estacion_activa)
+
+            orden.activos_afectados.add(activo)
+            
+            messages.success(request, f"Activo {activo.codigo_activo} añadido a la orden.")
+            return JsonResponse({'status': 'ok'})
+
+        except Exception as e:
+            return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
+
+
+
+
+class ApiQuitarActivoOrdenView(BaseEstacionMixin, View):
+    """
+    Quita un activo de la orden.
+    """
+    def post(self, request, pk, *args, **kwargs):
+        try:
+            orden = get_object_or_404(OrdenMantenimiento, pk=pk, estacion=self.estacion_activa)
+            
+            if orden.estado != OrdenMantenimiento.EstadoOrden.PENDIENTE:
+                return JsonResponse({'status': 'error', 'message': 'Solo se pueden quitar activos de órdenes PENDIENTES.'}, status=400)
+
+            data = json.loads(request.body)
+            activo_id = data.get('activo_id')
+            activo = get_object_or_404(Activo, pk=activo_id, estacion=self.estacion_activa)
+
+            orden.activos_afectados.remove(activo)
+
+            messages.warning(request, f"Activo {activo.codigo_activo} quitado de la orden.")
+            return JsonResponse({'status': 'ok'})
+            
+        except Exception as e:
+            return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
