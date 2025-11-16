@@ -1,7 +1,7 @@
 import json
 from django.views import View
-from django.views.generic import ListView, CreateView, DetailView, UpdateView, DeleteView
-from django.db.models import Q
+from django.views.generic import ListView, CreateView, DetailView, UpdateView, DeleteView, TemplateView
+from django.db.models import Q, Count
 from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse_lazy, reverse
 from django.contrib import messages
@@ -14,9 +14,60 @@ from apps.common.mixins import BaseEstacionMixin, ObjectInStationRequiredMixin
 from apps.gestion_inventario.models import Activo, Estado
 
 
-class MantenimientoInicioView(View):
-    def get(self, request):
-        return render(request, "gestion_mantenimiento/pages/home.html")
+class MantenimientoInicioView(BaseEstacionMixin, TemplateView):
+    """
+    Dashboard principal del módulo.
+    Ofrece métricas clave, alertas de vencimiento y accesos rápidos.
+    """
+    template_name = 'gestion_mantenimiento/pages/home.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        hoy = timezone.now()
+        estacion = self.estacion_activa
+
+        # --- 1. KPIs Principales (Tarjetas Superiores) ---
+        # Órdenes Pendientes (Todo lo que no está cerrado)
+        ordenes_activas = OrdenMantenimiento.objects.filter(
+            estacion=estacion,
+            estado__in=['PENDIENTE', 'EN_CURSO']
+        )
+        context['kpi_pendientes'] = ordenes_activas.count()
+        
+        # Planes Activos
+        context['kpi_planes'] = PlanMantenimiento.objects.filter(
+            estacion=estacion, 
+            activo_en_sistema=True
+        ).count()
+
+        # Activos Fuera de Servicio (En Reparación)
+        # Buscamos por nombre de estado, siendo flexibles con mayúsculas/minúsculas
+        context['kpi_en_taller'] = Activo.objects.filter(
+            estacion=estacion,
+            estado__nombre__icontains='REPARACIÓN' # Ajustar según tus nombres reales de estado
+        ).count()
+
+        # --- 2. Órdenes Urgentes (Tabla) ---
+        # Mostramos las 5 órdenes más urgentes (Vencidas o próximas a vencer)
+        context['ordenes_urgentes'] = ordenes_activas.order_by('fecha_programada')[:5]
+
+        # --- 3. Datos para Gráficos (Chart.js) ---
+        # Gráfico de Distribución de Estado de Órdenes
+        datos_estado = OrdenMantenimiento.objects.filter(estacion=estacion).values('estado').annotate(total=Count('estado'))
+        
+        # Preparamos estructura para JS: {'PENDIENTE': 5, 'REALIZADA': 10...}
+        stats_dict = {item['estado']: item['total'] for item in datos_estado}
+        
+        context['chart_labels'] = json.dumps(['Pendiente', 'En Curso', 'Realizada', 'Cancelada'])
+        context['chart_data'] = json.dumps([
+            stats_dict.get('PENDIENTE', 0),
+            stats_dict.get('EN_CURSO', 0),
+            stats_dict.get('REALIZADA', 0),
+            stats_dict.get('CANCELADA', 0),
+        ])
+
+        context['hoy'] = hoy # Para comparar fechas en template
+        return context
 
 
 
