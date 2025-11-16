@@ -95,17 +95,17 @@
                                 {% endif %}
                             </td>
 
-                            <!-- Columna Estado -->
+                            <!-- Columna Estado (INTERACTIVO) -->
                             <td class="text-center">
-                                {% if plan.activo_en_sistema %}
-                                    <span class="badge rounded-pill bg-success bg-opacity-10 text-success px-3">
-                                        Activo
-                                    </span>
-                                {% else %}
-                                    <span class="badge rounded-pill bg-secondary bg-opacity-10 text-secondary px-3">
-                                        Inactivo
-                                    </span>
-                                {% endif %}
+                                <div class="form-check form-switch d-flex justify-content-center">
+                                    <input class="form-check-input toggle-plan-activo" type="checkbox" 
+                                           data-plan-id="{{ plan.pk }}" 
+                                           id="switchPlan{{ plan.pk }}" 
+                                           {% if plan.activo_en_sistema %}checked{% endif %}>
+                                    <label class="form-check-label ms-2 small text-muted" for="switchPlan{{ plan.pk }}" id="labelPlan{{ plan.pk }}">
+                                        {% if plan.activo_en_sistema %}Activo{% else %}Inactivo{% endif %}
+                                    </label>
+                                </div>
                             </td>
 
                             <!-- Columna Cantidad Activos (usamos related_name) -->
@@ -198,11 +198,61 @@
     </div>
 </div>
 
-<script>
-    // Inicializar Tooltips de Bootstrap (necesario para que funcionen los títulos flotantes)
-    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
-    var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
-      return new bootstrap.Tooltip(tooltipTriggerEl)
-    })
-</script>
 {% endblock %}
+
+
+{% block scripts %}
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Inicializar Tooltips
+        var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+        var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+          return new bootstrap.Tooltip(tooltipTriggerEl)
+        });
+
+        // Lógica para Toggle Activo
+        const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+        
+        document.querySelectorAll('.toggle-plan-activo').forEach(switchEl => {
+            switchEl.addEventListener('change', function() {
+                const planId = this.dataset.planId;
+                const label = document.getElementById('labelPlan' + planId);
+                const originalState = !this.checked; // Para revertir si falla
+                
+                // Deshabilitar mientras carga
+                this.disabled = true;
+
+                // URL construida manualmente o mejor usando un data attribute con la url completa si es posible
+                const url = `{% url 'gestion_mantenimiento:api_toggle_plan_activo' 0 %}`.replace('0', planId);
+
+                fetch(url, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': csrfToken
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    this.disabled = false;
+                    if (data.status === 'ok') {
+                        // Actualizar texto visualmente
+                        label.textContent = data.nuevo_estado ? 'Activo' : 'Inactivo';
+                    } else {
+                        // Revertir y mostrar error
+                        this.checked = originalState;
+                        alert('Error: ' + data.message);
+                    }
+                })
+                .catch(error => {
+                    this.disabled = false;
+                    this.checked = originalState;
+                    console.error('Error:', error);
+                    alert('Ocurrió un error de conexión.');
+                });
+            });
+        });
+    });
+</script>
+
+{% endblock scripts %}

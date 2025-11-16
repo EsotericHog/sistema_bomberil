@@ -177,12 +177,6 @@ class PlanMantenimientoEliminarView(BaseEstacionMixin, ObjectInStationRequiredMi
 
 
 
-class ApiTogglePlanActivoView(View):
-    pass
-
-
-
-
 # --- APIs para Interactividad AJAX ---
 class ApiBuscarActivoParaPlanView(BaseEstacionMixin, View):
     """
@@ -282,6 +276,34 @@ class ApiQuitarActivoDePlanView(BaseEstacionMixin, View):
             
             messages.warning(request, f"Activo {activo_nombre} removido del plan.")
             return JsonResponse({'status': 'ok'})
+            
+        except Exception as e:
+            return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
+
+
+
+
+class ApiTogglePlanActivoView(BaseEstacionMixin, View):
+    """
+    API: Cambia el estado 'activo_en_sistema' de un plan (On/Off).
+    POST: URL param pk (id del PlanMantenimiento)
+    """
+    def post(self, request, pk, *args, **kwargs):
+        try:
+            # 1. Buscar el plan asegurando que pertenece a la estación activa
+            plan = get_object_or_404(PlanMantenimiento, pk=pk, estacion=self.estacion_activa)
+            
+            # 2. Toggle del booleano
+            plan.activo_en_sistema = not plan.activo_en_sistema
+            plan.save(update_fields=['activo_en_sistema'])
+            
+            # 3. Respuesta
+            estado_texto = "Activado" if plan.activo_en_sistema else "Desactivado"
+            return JsonResponse({
+                'status': 'ok',
+                'nuevo_estado': plan.activo_en_sistema,
+                'mensaje': f'Plan {estado_texto} correctamente.'
+            })
             
         except Exception as e:
             return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
