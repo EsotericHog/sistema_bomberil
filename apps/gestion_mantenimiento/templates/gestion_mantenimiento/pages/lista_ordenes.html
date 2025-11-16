@@ -1,0 +1,189 @@
+{% extends 'gestion_mantenimiento/layouts/base.html' %}
+{% load static %}
+
+{% block titulo_ventana %}Órdenes de Trabajo | Bomberos{% endblock %}
+
+{% block titulo_pagina %}
+    <i class="fas fa-tasks me-2"></i>Órdenes de Trabajo
+{% endblock %}
+
+{% block contenido %}
+<div class="container-fluid px-0">
+
+    {# --- 1. Cabecera y Controles --- #}
+    <div class="row mb-4 align-items-center g-3">
+        <div class="col-12 col-md-8">
+            {# Tabs de Navegación simulados con botones #}
+            <div class="btn-group shadow-sm" role="group">
+                <a href="?estado=activos" class="btn {% if filtro_estado == 'activos' %}btn-primary{% else %}btn-light text-secondary border{% endif %}">
+                    <i class="fas fa-clock me-2"></i>Pendientes y En Curso
+                </a>
+                <a href="?estado=historial" class="btn {% if filtro_estado == 'historial' %}btn-primary{% else %}btn-light text-secondary border{% endif %}">
+                    <i class="fas fa-history me-2"></i>Historial Finalizado
+                </a>
+            </div>
+        </div>
+        <div class="col-12 col-md-4 text-md-end">
+            <a href="{% url 'gestion_mantenimiento:ruta_crear_orden_correctiva' %}" class="btn btn-danger shadow-sm">
+                <i class="fas fa-exclamation-circle me-2"></i>Nueva Orden Correctiva
+            </a>
+        </div>
+    </div>
+
+    {# --- 2. Buscador --- #}
+    <div class="card shadow-sm border-0 mb-4">
+        <div class="card-body p-2">
+            <form method="get" action="" class="d-flex">
+                <input type="hidden" name="estado" value="{{ filtro_estado }}">
+                <div class="input-group">
+                    <span class="input-group-text bg-white border-0 text-muted"><i class="fas fa-search"></i></span>
+                    <input type="text" name="q" class="form-control border-0 shadow-none" 
+                           placeholder="Buscar por ID de orden o nombre del plan..." value="{{ busqueda }}">
+                    <button class="btn btn-dark px-4" type="submit">Filtrar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    {# --- 3. Tabla de Órdenes --- #}
+    <div class="card shadow-sm border-0">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="bg-light text-secondary text-uppercase small">
+                        <tr>
+                            <th class="ps-4" style="width: 10%;">ID</th>
+                            <th style="width: 15%;">Tipo</th>
+                            <th style="width: 30%;">Detalle / Plan</th>
+                            <th style="width: 15%;">Programación</th>
+                            <th class="text-center" style="width: 15%;">Activos</th>
+                            <th class="text-end pe-4" style="width: 15%;">Acción</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for orden in ordenes %}
+                        <tr>
+                            {# Columna ID #}
+                            <td class="ps-4">
+                                <span class="fw-bold text-dark">#{{ orden.id }}</span>
+                            </td>
+
+                            {# Columna Tipo y Estado #}
+                            <td>
+                                <div class="d-flex flex-column align-items-start gap-1">
+                                    {# Badge Tipo #}
+                                    {% if orden.tipo_orden == 'PROGRAMADA' %}
+                                        <span class="badge bg-info bg-opacity-10 text-info border border-info border-opacity-25">
+                                            <i class="fas fa-calendar-check me-1"></i> Programada
+                                        </span>
+                                    {% else %}
+                                        <span class="badge bg-danger bg-opacity-10 text-danger border border-danger border-opacity-25">
+                                            <i class="fas fa-wrench me-1"></i> Correctiva
+                                        </span>
+                                    {% endif %}
+
+                                    {# Badge Estado #}
+                                    {% if orden.estado == 'PENDIENTE' %}
+                                        <span class="badge bg-secondary">Pendiente</span>
+                                    {% elif orden.estado == 'EN_CURSO' %}
+                                        <span class="badge bg-warning text-dark spinner-grow-sm">
+                                            <i class="fas fa-spinner fa-spin me-1"></i> En Curso
+                                        </span>
+                                    {% elif orden.estado == 'REALIZADA' %}
+                                        <span class="badge bg-success">Realizada</span>
+                                    {% else %}
+                                        <span class="badge bg-dark">Cancelada</span>
+                                    {% endif %}
+                                </div>
+                            </td>
+
+                            {# Columna Detalle #}
+                            <td>
+                                {% if orden.plan_origen %}
+                                    <div class="fw-bold text-dark">{{ orden.plan_origen.nombre }}</div>
+                                    <small class="text-muted">Plan Recurrente</small>
+                                {% else %}
+                                    <div class="fw-bold text-dark">Mantenimiento Correctivo</div>
+                                    <small class="text-muted">Solicitud Manual</small>
+                                {% endif %}
+                            </td>
+
+                            {# Columna Fecha #}
+                            <td>
+                                {% if orden.estado == 'REALIZADA' %}
+                                    <div class="text-muted small">Finalizada el:</div>
+                                    <div class="fw-bold">{{ orden.fecha_cierre|date:"d/m/Y" }}</div>
+                                {% else %}
+                                    {# Lógica visual de vencimiento #}
+                                    {% if orden.fecha_programada.date < hoy.date %}
+                                        <span class="text-danger fw-bold">
+                                            <i class="fas fa-exclamation-triangle me-1"></i> {{ orden.fecha_programada|date:"d/m/Y" }}
+                                        </span>
+                                        <div class="extra-small text-danger fw-bold">¡Vencida!</div>
+                                    {% elif orden.fecha_programada.date == hoy.date %}
+                                        <span class="text-warning text-dark fw-bold">
+                                            <i class="far fa-clock me-1"></i> Hoy
+                                        </span>
+                                    {% else %}
+                                        <span class="text-secondary">
+                                            {{ orden.fecha_programada|date:"d/m/Y" }}
+                                        </span>
+                                    {% endif %}
+                                {% endif %}
+                            </td>
+
+                            {# Columna Cantidad Activos #}
+                            <td class="text-center">
+                                <span class="badge bg-light text-dark border">
+                                    {{ orden.activos_afectados.count }} Equipos
+                                </span>
+                            </td>
+
+                            {# Columna Acciones #}
+                            <td class="text-end pe-4">
+                                <a href="{% url 'gestion_mantenimiento:ruta_gestionar_orden' orden.pk %}" class="btn btn-sm btn-primary shadow-sm">
+                                    Gestionar <i class="fas fa-arrow-right ms-1"></i>
+                                </a>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="6" class="text-center py-5">
+                                <div class="text-muted opacity-50">
+                                    <i class="fas fa-clipboard-check fa-4x mb-3"></i>
+                                    <h5>No hay órdenes en esta vista</h5>
+                                    <p class="small">Cambia el filtro o crea una nueva orden correctiva.</p>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        {# Paginación #}
+        {% if is_paginated %}
+        <div class="card-footer bg-white border-top-0 py-3">
+            <nav>
+                <ul class="pagination justify-content-center mb-0">
+                    {% if page_obj.has_previous %}
+                        <li class="page-item"><a class="page-link border-0 text-secondary" href="?page={{ page_obj.previous_page_number }}&estado={{ filtro_estado }}&q={{ busqueda }}">Anterior</a></li>
+                    {% else %}
+                        <li class="page-item disabled"><span class="page-link border-0">Anterior</span></li>
+                    {% endif %}
+                    
+                    <li class="page-item disabled"><span class="page-link border-0 text-dark fw-bold">{{ page_obj.number }} de {{ page_obj.paginator.num_pages }}</span></li>
+
+                    {% if page_obj.has_next %}
+                        <li class="page-item"><a class="page-link border-0 text-primary" href="?page={{ page_obj.next_page_number }}&estado={{ filtro_estado }}&q={{ busqueda }}">Siguiente</a></li>
+                    {% else %}
+                        <li class="page-item disabled"><span class="page-link border-0">Siguiente</span></li>
+                    {% endif %}
+                </ul>
+            </nav>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

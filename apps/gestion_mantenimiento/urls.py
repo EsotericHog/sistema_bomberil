@@ -10,6 +10,11 @@ from .views import (
     ApiBuscarActivoParaPlanView,
     ApiAnadirActivoEnPlanView,
     ApiQuitarActivoDePlanView,
+    OrdenMantenimientoListView,
+    OrdenCorrectivaCreateView,
+    OrdenMantenimientoDetalleView,
+    ApiCambiarEstadoOrdenView,
+    ApiRegistrarTareaMantenimientoView,
 )
 
 app_name = 'gestion_mantenimiento'
@@ -19,7 +24,8 @@ urlpatterns = [
     path('', MantenimientoInicioView.as_view(), name="ruta_inicio"),
 
 
-    # --- Gestión de Planes (Punto 1) ---
+
+    # --- Gestión de Planes ---
     
     # 1. Lista de todos los planes de mantenimiento
     path('planes/', PlanMantenimientoListView.as_view(), name='ruta_lista_planes'),
@@ -37,6 +43,7 @@ urlpatterns = [
     # 5. Vista de confirmación para eliminar un plan
     path('planes/<int:pk>/eliminar/', PlanMantenimientoEliminarView.as_view(), name='ruta_eliminar_plan'),
 
+
     # --- API (Endpoints para gestionar planes de forma interactiva) ---
     
     # API para activar/desactivar el plan (cambia 'activo_en_sistema')
@@ -52,4 +59,28 @@ urlpatterns = [
     # API para quitar un activo de un plan (DELETE)
     # El 'pk' aquí es el ID del registro 'PlanActivoConfig'
     path('api/planes/configuracion/<int:pk>/quitar/', ApiQuitarActivoDePlanView.as_view(), name='api_quitar_activo_plan'),
+
+
+
+    # === GESTIÓN DE ÓRDENES DE TRABAJO ===
+
+    # 1. Listado de Órdenes (Dashboard Operativo)
+    path('ordenes/', OrdenMantenimientoListView.as_view(), name='ruta_lista_ordenes'),
+
+    # 2. Crear Orden Correctiva (Sin plan previo)
+    path('ordenes/nueva-correctiva/', OrdenCorrectivaCreateView.as_view(), name='ruta_crear_orden_correctiva'),
+
+    # 3. Espacio de Trabajo / Ejecución
+    # Usamos 'gestionar' para mantener consistencia con la nomenclatura de Planes
+    path('ordenes/<int:pk>/gestionar/', OrdenMantenimientoDetalleView.as_view(), name='ruta_gestionar_orden'),
+
+
+    # --- APIs para el flujo de trabajo ---
+
+    # Cambiar estado global (Ej: Iniciar trabajo, Finalizar orden)
+    path('api/ordenes/<int:pk>/cambiar-estado/', ApiCambiarEstadoOrdenView.as_view(), name='api_cambiar_estado_orden'),
+
+    # Registrar tarea/mantenimiento de un activo específico
+    # Se llama cuando el usuario hace click en "Listo" o "Registrar" sobre un activo en la lista
+    path('api/ordenes/<int:pk>/registrar-tarea/', ApiRegistrarTareaMantenimientoView.as_view(), name='api_registrar_tarea_orden'),
 ]

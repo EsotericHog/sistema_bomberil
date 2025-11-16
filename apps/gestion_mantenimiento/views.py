@@ -6,8 +6,9 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse_lazy
 from django.contrib import messages
 from django.http import JsonResponse
+from django.utils import timezone
 
-from .models import PlanMantenimiento, PlanActivoConfig
+from .models import PlanMantenimiento, PlanActivoConfig, OrdenMantenimiento
 from .forms import PlanMantenimientoForm
 from apps.common.mixins import BaseEstacionMixin, ObjectInStationRequiredMixin
 from apps.gestion_inventario.models import Activo
@@ -19,6 +20,8 @@ class MantenimientoInicioView(View):
 
 
 
+
+# === GESTIÓN DE PLANES ===
 
 class PlanMantenimientoListView(BaseEstacionMixin, ListView):
     """
@@ -307,3 +310,79 @@ class ApiTogglePlanActivoView(BaseEstacionMixin, View):
             
         except Exception as e:
             return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
+
+
+
+
+# === GESTIÓN DE ÓRDENES DE TRABAJO ===
+
+class OrdenMantenimientoListView(BaseEstacionMixin, ListView):
+    """
+    Bandeja de Entrada de Órdenes de Trabajo.
+    Muestra las órdenes filtradas por estado y estación.
+    """
+    model = OrdenMantenimiento
+    template_name = 'gestion_mantenimiento/pages/lista_ordenes.html'
+    context_object_name = 'ordenes'
+    paginate_by = 15
+
+    def get_queryset(self):
+        # 1. Base: Solo órdenes de mi estación
+        queryset = OrdenMantenimiento.objects.filter(
+            estacion=self.estacion_activa
+        ).select_related('plan_origen', 'responsable').prefetch_related('activos_afectados')
+
+        # 2. Filtro por Estado (Tabs de navegación)
+        # 'activos': Pendientes y En Curso (Default)
+        # 'historial': Realizadas y Canceladas
+        filtro_estado = self.request.GET.get('estado', 'activos')
+        
+        if filtro_estado == 'historial':
+            queryset = queryset.filter(estado__in=[
+                OrdenMantenimiento.EstadoOrden.REALIZADA,
+                OrdenMantenimiento.EstadoOrden.CANCELADA
+            ])
+            # Ordenar por fecha de cierre descendente (lo más reciente primero)
+            queryset = queryset.order_by('-fecha_cierre', '-fecha_programada')
+        else:
+            # Por defecto mostramos lo pendiente (lo que requiere acción)
+            queryset = queryset.filter(estado__in=[
+                OrdenMantenimiento.EstadoOrden.PENDIENTE,
+                OrdenMantenimiento.EstadoOrden.EN_CURSO
+            ])
+            # Ordenar por urgencia: Primero lo más antiguo programado (vencido)
+            queryset = queryset.order_by('fecha_programada')
+
+        # 3. Búsqueda manual (ID o Nombre del Plan)
+        q = self.request.GET.get('q')
+        if q:
+            # Buscamos por ID numérico o nombre del plan
+            if q.isdigit():
+                queryset = queryset.filter(id=q)
+            else:
+                queryset = queryset.filter(
+                    Q(plan_origen__nombre__icontains=q) | 
+                    Q(tipo_orden__icontains=q)
+                )
+
+        return queryset
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['titulo_pagina'] = 'Órdenes de Trabajo'
+        context['filtro_estado'] = self.request.GET.get('estado', 'activos')
+        context['busqueda'] = self.request.GET.get('q', '')
+        context['hoy'] = timezone.now() # Para lógica visual de "Vencido" en template
+        return context
+
+class OrdenCorrectivaCreateView(View):
+    pass
+
+class OrdenMantenimientoDetalleView(View):
+    pass
+
+class ApiCambiarEstadoOrdenView(View):
+    pass
+
+class ApiRegistrarTareaMantenimientoView(View):
+    pass
