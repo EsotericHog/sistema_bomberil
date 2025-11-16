@@ -1,6 +1,6 @@
 from django.db import models
 from django.conf import settings
-from gestion_inventario.models import Activo
+from apps.gestion_inventario.models import Activo, Estacion
 
 
 class PlanMantenimiento(models.Model):
@@ -63,7 +63,15 @@ class PlanMantenimiento(models.Model):
         verbose_name="Plan Activo",
         help_text="Desmarque para desactivar este plan sin borrarlo."
     )
-    
+    # --- VINCULACIÓN A ESTACIÓN ---
+    estacion = models.ForeignKey(
+        Estacion,
+        on_delete=models.CASCADE,
+        related_name='planes_mantenimiento',
+        verbose_name="Estación Propietaria",
+        help_text="La estación a la que pertenece este plan de mantenimiento."
+    )
+
     fecha_creacion = models.DateTimeField(auto_now_add=True)
     
     class Meta:
