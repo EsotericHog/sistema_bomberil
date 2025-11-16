@@ -1,6 +1,6 @@
 import json
 from django.views import View
-from django.views.generic import ListView, CreateView, DetailView
+from django.views.generic import ListView, CreateView, DetailView, UpdateView
 from django.db.models import Q
 from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse_lazy
@@ -118,8 +118,29 @@ class PlanMantenimientoGestionarView(BaseEstacionMixin, ObjectInStationRequiredM
         
         return context
 
-class PlanMantenimientoEditarView(View):
-    pass
+class PlanMantenimientoEditarView(BaseEstacionMixin, ObjectInStationRequiredMixin, UpdateView):
+    """
+    Vista para editar un plan existente.
+    Protegida por ObjectInStationRequiredMixin para asegurar propiedad.
+    """
+    model = PlanMantenimiento
+    form_class = PlanMantenimientoForm
+    template_name = 'gestion_mantenimiento/pages/editar_plan.html'
+    success_url = reverse_lazy('gestion_mantenimiento:ruta_lista_planes')
+    station_lookup = 'estacion' # Define el campo para verificar la propiedad
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['titulo_pagina'] = f'Editar Plan: {self.object.nombre}'
+        return context
+
+    def form_valid(self, form):
+        messages.success(self.request, f'Los cambios en el plan "{self.object.nombre}" se han guardado.')
+        return super().form_valid(form)
+
+    def form_invalid(self, form):
+        messages.error(self.request, 'No se pudieron guardar los cambios. Revise el formulario.')
+        return super().form_invalid(form)
 
 class PlanMantenimientoEliminarView(View):
     pass
