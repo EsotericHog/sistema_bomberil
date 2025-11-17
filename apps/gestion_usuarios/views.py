@@ -2,17 +2,19 @@ from datetime import datetime, timedelta
 from django.shortcuts import render, redirect, get_object_or_404
 from django.views import View
 from django.contrib import messages
+from django.contrib.auth import login, get_user_model
 from django.contrib.auth.models import Permission
-from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
+from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin, UserPassesTestMixin
 from django.contrib.auth.forms import PasswordResetForm
+from django.contrib.sessions.models import Session
 from django.db import IntegrityError, transaction
+from django.db.models import Q, Count
 from django.urls import reverse, reverse_lazy
 from django.http import HttpResponseNotAllowed, Http404
 from django.utils import timezone
-from django.db.models import Q, Count
 from collections import defaultdict
 from django.apps import apps
-from django.contrib.sessions.models import Session
+from django.core.exceptions import PermissionDenied
 
 # Clases para paginación manual
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
@@ -1395,3 +1397,116 @@ class UsuarioForzarCierreSesionView(LoginRequiredMixin, ModuleAccessMixin, Permi
             messages.info(request, f"El usuario {usuario_objetivo.get_full_name} no tenía sesiones activas en este momento.")
 
         return redirect(reverse('gestion_usuarios:ruta_ver_usuario', kwargs={'id': id}))
+
+
+
+
+class UsuarioImpersonarView(LoginRequiredMixin, UserPassesTestMixin, View):
+    """
+    Inicia la suplantación. Valida estrictamente que el objetivo
+    pertenezca a la estación activa del administrador.
+    """
+    def test_func(self):
+        return self.request.user.is_superuser
+
+    def post(self, request, id):
+        usuario_objetivo = get_object_or_404(Usuario, id=id)
+        usuario_original = request.user
+        
+        # 1. Obtener la estación actual desde la sesión del admin
+        estacion_id = request.session.get('active_estacion_id')
+        estacion_nombre = request.session.get('active_estacion_nombre')
+
+        # 2. Validación de Seguridad: Auto-impersonación
+        if usuario_objetivo == usuario_original:
+            messages.warning(request, "No puedes impersonarte a ti mismo.")
+            return redirect(reverse('gestion_usuarios:ruta_ver_usuario', kwargs={'id': id}))
+
+        # 3. Validación de Negocio: Pertenencia a la Estación [cite: 12, 13]
+        # El usuario objetivo DEBE tener una membresía en la estación actual.
+        # Si no hay estación activa, no se puede navegar, así que bloqueamos la acción.
+        if not estacion_id:
+            messages.error(request, "Debes tener una estación activa para impersonar a un usuario.")
+            return redirect(reverse('gestion_usuarios:ruta_ver_usuario', kwargs={'id': id}))
+
+        pertenece_a_estacion = Membresia.objects.filter(
+            usuario=usuario_objetivo,
+            estacion_id=estacion_id,
+            estado__in=['ACTIVO', 'INACTIVO'] # Permitimos inactivos para ver qué ven
+        ).exists()
+
+        if not pertenece_a_estacion:
+            messages.error(request, f"El usuario {usuario_objetivo.get_full_name} no pertenece a la estación actual. Cambia de estación para impersonarlo.")
+            return redirect(reverse('gestion_usuarios:ruta_ver_usuario', kwargs={'id': id}))
+
+        # 4. Auditoría (Antes de cambiar de usuario)
+        registrar_actividad(
+            actor=usuario_original,
+            verbo="inició sesión como",
+            objetivo=usuario_objetivo,
+            estacion=Estacion.objects.get(id=estacion_id)
+        )
+
+        # 5. Configurar backend y hacer Login
+        # (Esto destruye la sesión del admin y crea la del usuario objetivo)
+        usuario_objetivo.backend = 'apps.gestion_usuarios.backends.RolBackend'
+        login(request, usuario_objetivo)
+
+        # 6. Reconstruir el contexto en la NUEVA sesión
+        # Como validamos que pertenece, es seguro inyectar la estación.
+        request.session['active_estacion_id'] = estacion_id
+        request.session['active_estacion_nombre'] = estacion_nombre
+        
+        # La "nota adhesiva" para poder volver
+        request.session['impersonator_id'] = usuario_original.id
+        request.session['is_impersonating'] = True
+        
+        messages.info(request, f"Estás navegando como {usuario_objetivo.get_full_name} en {estacion_nombre}.")
+        return redirect('portal:ruta_inicio')
+
+
+
+
+class UsuarioDetenerImpersonacionView(LoginRequiredMixin, View):
+    """
+    Restaura la sesión del administrador original.
+    """
+    def get(self, request):
+        # 1. Verificar si existe la marca de impersonación
+        impersonator_id = request.session.get('impersonator_id')
+        
+        # Recuperamos la estación donde estaba el usuario suplantado para intentar volver ahí
+        estacion_id_salida = request.session.get('active_estacion_id')
+        estacion_nombre_salida = request.session.get('active_estacion_nombre')
+
+        if not impersonator_id:
+            # Si no hay ID, es un usuario normal intentando acceder a la URL.
+            return redirect('portal:ruta_inicio')
+
+        try:
+            # 2. Recuperar al admin original
+            admin_original = Usuario.objects.get(id=impersonator_id)
+
+            # 3. Validación de Seguridad Extra:
+            # Asegurarnos de que quien vuelve a tomar el control es realmente un superuser.
+            if not admin_original.is_superuser:
+                raise PermissionDenied("El usuario original no tiene privilegios de administrador.")
+            
+            # 4. Asignar backend y Loguear (Destruye sesión del usuario suplantado)
+            admin_original.backend = 'apps.gestion_usuarios.backends.RolBackend'
+            login(request, admin_original)
+            
+            # 5. Restaurar contexto de estación
+            # (El admin tiene acceso global o se validará en BaseEstacionMixin luego)
+            if estacion_id_salida:
+                request.session['active_estacion_id'] = estacion_id_salida
+                request.session['active_estacion_nombre'] = estacion_nombre_salida
+            
+            messages.success(request, "Has vuelto a tu identidad original.")
+            
+        except Usuario.DoesNotExist:
+            # Caso extremo: El admin fue borrado de la BD mientras impersonaba.
+            messages.error(request, "Error crítico: La cuenta original ya no existe.")
+            return redirect('acceso:ruta_login')
+        
+        return redirect('portal:ruta_inicio')

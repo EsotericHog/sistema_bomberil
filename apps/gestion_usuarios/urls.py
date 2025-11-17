@@ -20,7 +20,9 @@ from .views import (
     RolAsignarPermisosView,
     RolEliminarView,
     RegistroActividadView,
-    UsuarioForzarCierreSesionView
+    UsuarioForzarCierreSesionView,
+    UsuarioImpersonarView,
+    UsuarioDetenerImpersonacionView
 )
 
 app_name = "gestion_usuarios"
@@ -90,4 +92,11 @@ urlpatterns = [
 
     # Eliminar rol
     path('roles/<int:id>/eliminar/', RolEliminarView.as_view(), name="ruta_eliminar_rol"),
+
+
+    # Impersonar (Convertirse en) usuario
+    path('usuarios/<int:id>/impersonar/', UsuarioImpersonarView.as_view(), name="ruta_impersonar_usuario"),
+    
+    # Detener impersonación (Volver a ser admin)
+    path('usuarios/detener-impersonacion/', UsuarioDetenerImpersonacionView.as_view(), name="ruta_detener_impersonacion"),
 ]
