@@ -1,12 +1,136 @@
-{# Plantilla base #}{% extends 'gestion_medica/layouts/base.html' %}
-{# Cargar assets #}{% load static %}
-{# Título de la ventana #} {% block titulo_ventana %}Adicionar medicamentos{% endblock %}
-{# Título de la página #} {% block titulo_pagina %}Adición de medicamentos{% endblock %}
+{% extends 'gestion_medica/layouts/base.html' %}
+{% load static %}
+{% block titulo_ventana %}Gestión Medicamento{% endblock %}
+{% block titulo_pagina %}Datos del Medicamento{% endblock %}
 
 {% block contenido %}
+<div class="container-fluid mt-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-6">
+            <div class="card shadow-sm">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0 text-success">Información del Medicamento</h5>
+                </div>
+                <div class="card-body">
+                    
+                    <form method="post" id="formMedicamento">
+                        {% csrf_token %}
+                        
+                        <div class="d-none">
+                            {{ form.nombre }}
+                        </div>
 
-    <div class="contenedor_medico">
-        <div class="color_primario">FICHAS MEDICAS HOME</div>
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-8">
+                                <label class="form-label fw-bold">Nombre del Medicamento *</label>
+                                <input type="text" id="visualNombre" class="form-control" required 
+                                       placeholder="Ej: Paracetamol">
+                            </div>
+
+                            <div class="col-md-4">
+                                <label class="form-label fw-bold">Dosis / Gr *</label>
+                                <div class="input-group">
+                                    <input type="text" id="visualDosis" class="form-control" required 
+                                           placeholder="500">
+                                    <span class="input-group-text bg-light text-muted">mg</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="form-label">Laboratorio / Marca (Opcional)</label>
+                            <input type="text" id="visualLab" class="form-control" 
+                                   placeholder="Ej: Chile, Bagó">
+                        </div>
+
+                        <div class="alert alert-light border small text-muted mb-4">
+                            <i class="fa-solid fa-eye me-1"></i> <strong>Se guardará como:</strong> 
+                            <span id="vistaPrevia" class="fw-bold text-success">---</span>
+                        </div>
+
+                        {% if form.nombre.errors %}
+                            <div class="alert alert-danger small p-2">
+                                {{ form.nombre.errors.0 }}
+                            </div>
+                        {% endif %}
+
+                        <div class="d-flex justify-content-end gap-2">
+                            <a href="{% url 'gestion_medica:ruta_lista_medicamentos' %}" class="btn btn-outline-secondary">Cancelar</a>
+                            <button type="submit" class="btn btn-success">Guardar</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
     </div>
-    
-{% endblock  %}
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // 1. Identificamos los elementos
+        const inputReal = document.querySelector('[name="nombre"]'); // El campo de Django (oculto)
+        const vNombre = document.getElementById('visualNombre');
+        const vDosis = document.getElementById('visualDosis');
+        const vLab = document.getElementById('visualLab');
+        const vistaPrevia = document.getElementById('vistaPrevia');
+
+        // 2. Si estamos editando, intentamos separar el nombre guardado en las casillas visuales
+        if (inputReal.value) {
+            // Lógica simple: asumimos "Nombre Dosis (Lab)"
+            let texto = inputReal.value;
+            
+            // Intentar sacar laboratorio (entre paréntesis)
+            if (texto.includes('(') && texto.includes(')')) {
+                const partesLab = texto.split('(');
+                vLab.value = partesLab[1].replace(')', '').trim();
+                texto = partesLab[0].trim();
+            }
+
+            // Intentar sacar dosis (última palabra si es número+unidad)
+            const partes = texto.split(' ');
+            if (partes.length > 1) {
+                const posibleDosis = partes.pop();
+                // Si parece una dosis (tiene números), la ponemos en dosis
+                if (/\d/.test(posibleDosis)) {
+                    vDosis.value = posibleDosis.replace('mg', '').replace('g', '');
+                    vNombre.value = partes.join(' ');
+                } else {
+                    vNombre.value = texto; // No pudimos separar, ponemos todo en nombre
+                }
+            } else {
+                vNombre.value = texto;
+            }
+            actualizarReal(); // Refrescar vista previa
+        }
+
+        // 3. Función para actualizar el campo real
+        function actualizarReal() {
+            let resultado = vNombre.value;
+            
+            if (vDosis.value) {
+                resultado += ' ' + vDosis.value;
+                // Si es solo número, agregamos 'mg' visualmente
+                if (!isNaN(vDosis.value) && vDosis.value.trim() !== '') {
+                    resultado += 'mg';
+                } else if (vDosis.value && !/[a-zA-Z]/.test(vDosis.value)) {
+                    // Si tiene caracteres raros pero no letras, asumimos unidad
+                    resultado += 'mg';
+                }
+            }
+
+            if (vLab.value) {
+                resultado += ' (' + vLab.value + ')';
+            }
+
+            // ¡Aquí está la clave! Ponemos el texto unido en el input que Django va a guardar
+            inputReal.value = resultado;
+            vistaPrevia.textContent = resultado || "---";
+        }
+
+        // 4. Escuchar cambios
+        vNombre.addEventListener('input', actualizarReal);
+        vDosis.addEventListener('input', actualizarReal);
+        vLab.addEventListener('input', actualizarReal);
+    });
+</script>
+{% endblock %}

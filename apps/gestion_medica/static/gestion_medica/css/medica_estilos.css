@@ -1,87 +1,65 @@
+/* Estilos idénticos a Gestión de Usuarios */
+
+/* Contenedor Principal */
 .contenedor_medico {
+    width: 100%;
     display: flex;
     flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    width: 100%;
-}
-
-.contenedor_tarjetas {
-    display: flex;
-    flex-direction: row;
-    justify-content: center;
-    align-items: center;
-    width: 100%;
-    height: auto;
     gap: 20px;
 }
 
-.tarjeta {
+/* Grilla de Tarjetas */
+.contenedor_tarjetas {
     display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    width: 200px;
-    height: auto;
-    border-radius: 10px;
-    box-shadow: 1px 1px 1px var(--color-header-border);
-    padding: 15px;
-    background-color: var(--color-secondary-variant);
-    gap: 15px;
-    margin: 15px;
+    flex-wrap: wrap;
+    gap: 20px;
+    justify-content: flex-start; /* Alineadas a la izquierda */
 }
 
+/* Diseño de la Tarjeta Individual */
+.tarjeta {
+    background-color: var(--color-blanco); /* Usa variable global */
+    border-radius: 10px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    padding: 20px;
+    width: 250px; /* Ancho fijo para uniformidad */
+    height: 250px; /* Altura fija para cuadrados perfectos */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    text-align: center;
+    border: 1px solid #e0e0e0;
+}
+
+/* Efecto Hover */
+.tarjeta:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 15px rgba(0, 0, 0, 0.15);
+    border-color: var(--color-primario); /* Borde de color al pasar mouse */
+}
+
+/* Imagen dentro de la tarjeta */
+.tarjeta img {
+    width: 100px;
+    height: 100px;
+    object-fit: contain;
+    margin-bottom: 15px;
+}
+
+/* Título/Enlace de la tarjeta */
 .tarjeta_titulo {
     font-size: 1.2rem;
-    font-weight: bold;
-    text-align: center;
-    color: var(--color-primary);
+    font-weight: 600;
+    color: var(--color-texto-principal);
     text-decoration: none;
+    margin-top: 10px;
+    display: block;
 }
 
-.tarjeta img {
-    width: 150px;
-    height: 150px;
-    object-fit: cover;
-}
-
-.contenedor_tabla {
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    width: 100%;
-    height: auto;
-}
-
-table {
-    width: 100%;
-    border-collapse: collapse;
-    margin-top: 20px;
-    background-color: var(--color-secondary-variant);
-}
-
-th, td {
-    padding: 8px;
-    text-align: left;
-    border-bottom: 1px solid #ddd;
-}
-
-th {
-    background-color: #f2f2f2;
-}
-
-tr:hover {
-    background-color: var(--color-header-border);
-}
-
-td button {
-    background-color: transparent;
-    border: none;
-    cursor: pointer;
-    color: var(--color-primary);
-}
-
-td button:hover {
+.tarjeta_titulo:hover {
+    color: var(--color-primario);
     text-decoration: underline;
 }
+

@@ -1,12 +1,89 @@
-{# Plantilla base #}{% extends 'gestion_medica/layouts/base.html' %}
-{# Cargar assets #}{% load static %}
-{# Título de la ventana #} {% block titulo_ventana %}Lista Voluntarios{% endblock %}
-{# Título de la página #} {% block titulo_pagina %}Creación ficha medica de voluntario{% endblock %}
+{% extends 'gestion_medica/layouts/base.html' %}
+{% load static %}
+
+{% block titulo_ventana %}Enfermedades - {{ ficha.voluntario.usuario.get_full_name }}{% endblock %}
+{% block titulo_pagina %}Historial de Enfermedades{% endblock %}
 
 {% block contenido %}
-
-    <div class="contenedor_medico">
-        <div class="color_primario">FICHAS MEDICAS HOME</div>
-    </div>
+<div class="container-fluid">
     
-{% endblock  %}
+    <div class="mb-4">
+        <a href="{% url 'gestion_medica:ruta_informacion_paciente' pk=ficha.id %}" class="btn btn-outline-secondary">
+            <i class="fa-solid fa-arrow-left me-2"></i>Volver a la Ficha
+        </a>
+    </div>
+
+    <div class="row g-4">
+        <div class="col-lg-7">
+            <div class="card shadow-sm border-warning border-top-0 border-end-0 border-bottom-0 border-4">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0 text-secondary"><i class="fa-solid fa-heart-pulse me-2"></i>Enfermedades Crónicas</h5>
+                </div>
+                <div class="card-body">
+                    {% if enfermedades %}
+                        <ul class="list-group list-group-flush">
+                            {% for item in enfermedades %}
+                                <li class="list-group-item d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <strong class="text-dark">{{ item.enfermedad.nombre }}</strong>
+                                        {% if item.observaciones %}
+                                            <br><small class="text-muted">obs: {{ item.observaciones }}</small>
+                                        {% endif %}
+                                    </div>
+                                    
+                                    <form action="{% url 'gestion_medica:ruta_eliminar_enfermedad_paciente' pk=ficha.id enfermedad_id=item.id %}" method="post">
+                                        {% csrf_token %}
+                                        <button type="submit" class="btn btn-sm btn-outline-danger" title="Eliminar">
+                                            <i class="fa-solid fa-trash"></i>
+                                        </button>
+                                    </form>
+                                </li>
+                            {% endfor %}
+                        </ul>
+                    {% else %}
+                        <div class="alert alert-light text-center border border-dashed p-4">
+                            <h4 class="text-success fw-bold">SANO</h4>
+                            <p class="text-muted mb-0">No registra enfermedades crónicas.</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-5">
+            <div class="card shadow-sm">
+                <div class="card-header bg-light">
+                    <h6 class="mb-0 fw-bold">Añadir Nueva Enfermedad</h6>
+                </div>
+                <div class="card-body">
+                    <form method="post">
+                        {% csrf_token %}
+                        
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold text-muted">Enfermedad (Del Catálogo)</label>
+                            {{ form.enfermedad }}
+                            
+                            {% if form.enfermedad.errors %}
+                                <div class="text-danger small mt-1">{{ form.enfermedad.errors.0 }}</div>
+                            {% endif %}
+                            
+                            <div class="form-text">¿No está? Agrégala en el Catálogo Global.</div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold text-muted">Observaciones</label>
+                            {{ form.observaciones }}
+                        </div>
+
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-warning text-dark fw-bold">
+                                <i class="fa-solid fa-plus me-2"></i>Agregar
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

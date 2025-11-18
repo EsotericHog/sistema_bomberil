@@ -1,0 +1,149 @@
+{% extends 'gestion_medica/layouts/base.html' %}
+{% load static %}
+
+{% block titulo_ventana %}Tratamientos - {{ ficha.voluntario.usuario.get_full_name }}{% endblock %}
+{% block titulo_pagina %}Medicamentos en Uso{% endblock %}
+
+{% block contenido %}
+<div class="container-fluid">
+    
+    <div class="mb-4">
+        <a href="{% url 'gestion_medica:ruta_informacion_paciente' pk=ficha.id %}" class="btn btn-outline-secondary">
+            <i class="fa-solid fa-arrow-left me-2"></i>Volver a la Ficha
+        </a>
+    </div>
+
+    <div class="row g-4">
+        <div class="col-lg-7">
+            <div class="card shadow-sm border-primary border-top-0 border-end-0 border-bottom-0 border-4">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0 text-secondary"><i class="fa-solid fa-pills me-2"></i>Tratamientos Activos</h5>
+                </div>
+                <div class="card-body">
+                    {% if medicamentos_paciente %}
+                        <ul class="list-group list-group-flush">
+                            {% for item in medicamentos_paciente %}
+                                <li class="list-group-item d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <strong class="text-primary">{{ item.medicamento.nombre }}</strong>
+                                        <br>
+                                        <span class="badge bg-light text-dark border mt-1">
+                                            <i class="fa-regular fa-clock me-1"></i>{{ item.dosis_frecuencia }}
+                                        </span>
+                                    </div>
+                                    <form action="{% url 'gestion_medica:ruta_eliminar_medicamento_paciente' pk=ficha.id medicamento_id=item.id %}" method="post">
+                                        {% csrf_token %}
+                                        <button type="submit" class="btn btn-sm btn-outline-danger" title="Quitar">
+                                            <i class="fa-solid fa-trash"></i>
+                                        </button>
+                                    </form>
+                                </li>
+                            {% endfor %}
+                        </ul>
+                    {% else %}
+                        <div class="alert alert-light text-center border border-dashed p-4">
+                            <p class="text-muted mb-0">No tiene medicamentos asignados.</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-5">
+            <div class="card shadow-sm">
+                <div class="card-header bg-light">
+                    <h6 class="mb-0 fw-bold text-primary">Recetar / Asignar</h6>
+                </div>
+                <div class="card-body">
+                    <form method="post" id="formAsignarMedicamento">
+                        {% csrf_token %}
+                        
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold text-muted">Medicamento (Del Catálogo)</label>
+                            {{ form.medicamento }}
+                            
+                            {% if form.medicamento.errors %}
+                                <div class="text-danger small mt-1">
+                                    <i class="fa-solid fa-circle-exclamation me-1"></i>{{ form.medicamento.errors.0 }}
+                                </div>
+                            {% endif %}
+                            
+                            <div class="form-text">¿No está en la lista? Agrégalo primero en el Catálogo Global.</div>
+                        </div>
+                        <label class="form-label small fw-bold text-muted">Dosis</label>
+                        <div class="input-group mb-3">
+                            <input type="number" id="inputDosisValor" class="form-control" placeholder="Ej: 500" required min="1">
+                            
+                            <select id="selectDosisUnidad" class="form-select" style="max-width: 100px;">
+                                <option value="mg">mg</option>
+                                <option value="g">g</option>
+                                <option value="ml">ml</option>
+                                <option value="mcg">mcg</option>
+                                <option value="UI">UI</option>
+                                <option value="comprimido(s)">Comp.</option>
+                                <option value="puff">Puff</option>
+                                <option value="gotas">Gotas</option>
+                            </select>
+                        </div>
+
+                        <label class="form-label small fw-bold text-muted">Frecuencia</label>
+                        <div class="input-group mb-4">
+                            <span class="input-group-text bg-light">Cada</span>
+                            
+                            <input type="number" id="inputFreqValor" class="form-control" placeholder="8" required min="1">
+                            
+                            <select id="selectFreqUnidad" class="form-select">
+                                <option value="horas">Horas</option>
+                                <option value="días">Días</option>
+                                <option value="minutos">Minutos</option>
+                                <option value="semanas">Semanas</option>
+                            </select>
+                        </div>
+
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary fw-bold">
+                                <i class="fa-solid fa-plus me-2"></i>Guardar Receta
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Elementos
+        const inputReal = document.querySelector('[name="dosis_frecuencia"]');
+        const dosisValor = document.getElementById('inputDosisValor');
+        const dosisUnidad = document.getElementById('selectDosisUnidad');
+        const freqValor = document.getElementById('inputFreqValor');
+        const freqUnidad = document.getElementById('selectFreqUnidad');
+        const vistaPrevia = document.getElementById('vistaPrevia');
+
+        // Función que une todo en un string
+        function actualizarTexto() {
+            const dosis = dosisValor.value;
+            const unidad = dosisUnidad.value;
+            const freq = freqValor.value;
+            const tiempo = freqUnidad.value;
+
+            if (dosis && freq) {
+                // Formato: "500 mg cada 8 horas"
+                const textoFinal = `${dosis} ${unidad} cada ${freq} ${tiempo}`;
+                inputReal.value = textoFinal;
+                vistaPrevia.textContent = textoFinal;
+            } else {
+                vistaPrevia.textContent = "Complete los campos...";
+            }
+        }
+
+        // Escuchamos cambios en todos los inputs
+        dosisValor.addEventListener('input', actualizarTexto);
+        dosisUnidad.addEventListener('change', actualizarTexto);
+        freqValor.addEventListener('input', actualizarTexto);
+        freqUnidad.addEventListener('change', actualizarTexto);
+    });
+</script>
+{% endblock %}

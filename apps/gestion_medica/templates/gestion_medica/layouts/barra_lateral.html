@@ -2,49 +2,52 @@
     {# Botón para cerrar el menú en diseño móvil (una X) #}
     {% include 'layouts/boton_cerrar_sidebar.html' %}
 
-
-    {# Sección #}
+    {# SECCIÓN 1: Inicio #}
     <section class="barra_lateral__seccion">
-
         <div class="barra_lateral__modulo" data-toggle="modulo">
             <a href="{% url 'gestion_medica:ruta_inicio' %}" class="barra_lateral__modulo_nombre fs_nav_seccion color_primario scale">
-                <i class="fa-solid fa-clipboard"></i>
-                <span>Fichas médicas</span>
+                <i class="fa-solid fa-house-medical"></i>
+                <span>Inicio</span>
             </a>
-            <i class="fa-solid fa-chevron-down color_primario barra_lateral__flecha_modulo"></i>
         </div>
-
-        <ul class="barra_lateral__lista_opciones oculto">
-            {% if request.user.is_staff %}
-            <li class="fondo_opcion_nav"><a class="color_primario fs_pequena fs_nav_opcion" href="{% url 'gestion_medica:ruta_crear_paciente' %}">Crear pacientes</a></li>
-            {% endif %}
-            <li class="fondo_opcion_nav"><a class="color_primario fs_pequena fs_nav_opcion" href="{% url 'gestion_medica:ruta_lista_paciente' %}">Lista de pacientes</a></li>
-            <li class="fondo_opcion_nav"><a class="color_primario fs_pequena fs_nav_opcion" href="{% url 'gestion_medica:ruta_datos_paciente' %}">Datos del pacientes</a></li>
-            <li class="fondo_opcion_nav"><a class="color_primario fs_pequena fs_nav_opcion" href="{% url 'gestion_medica:ruta_contacto_emergencia' %}">Contacto de emergencia</a></li>
-            <li class="fondo_opcion_nav"><a class="color_primario fs_pequena fs_nav_opcion" href="{% url 'gestion_medica:ruta_enfermedad_paciente' %}">Enfermedad cronica</a></li>
-        </ul>
     </section>
 
-    {# Sección #}
+    {# SECCIÓN 2: Gestión #}
     <section class="barra_lateral__seccion">
-
         <div class="barra_lateral__modulo" data-toggle="modulo">
-            <a href="{% url 'gestion_medica:ruta_inicio' %}" class="barra_lateral__modulo_nombre fs_nav_seccion color_primario scale">
-                {# Icono #}
-                <i class="fa-solid fa-capsules"></i>
-                <span>Medicamentos</span>
+            <a href="{% url 'gestion_medica:ruta_lista_paciente' %}" class="barra_lateral__modulo_nombre fs_nav_seccion color_primario scale">
+                <i class="fa-solid fa-users-medical"></i>
+                <span>Fichas Médicas</span>
             </a>
-            <i class="fa-solid fa-chevron-down color_primario barra_lateral__flecha_modulo"></i>
         </div>
-        
-        {# Subsecciones #}
+    </section>
+
+    {# SECCIÓN 3: Catálogos (Desplegable) #}
+    <section class="barra_lateral__seccion">
+        <div class="barra_lateral__modulo" data-toggle="modulo">
+            <a href="#" class="barra_lateral__modulo_nombre fs_nav_seccion color_primario scale">
+                <i class="fa-solid fa-book-medical"></i>
+                <span>Catálogos</span>
+            </a>
+            <i class="fa-solid fa-chevron-down color_primario fs_nav_seccion barra_lateral__flecha_modulo"></i>
+        </div>
+
         <ul class="barra_lateral__lista_opciones oculto">
-            {% if request.user.is_staff %}
-            <li class="fondo_opcion_nav"><a class="color_primario fs_pequena fs_nav_opcion" href="{% url 'gestion_medica:ruta_crear_medicamento' %}">Agregar medicamento</a></li>
-            {% endif %}
-            <li class="fondo_opcion_nav"><a class="color_primario fs_pequena fs_nav_opcion" href="{% url 'gestion_medica:ruta_lista_medicamentos' %}">Lista de medicamentos</a></li>
-            <li class="fondo_opcion_nav"><a class="color_primario fs_pequena fs_nav_opcion" href="{% url 'gestion_medica:ruta_alergias_paciente' %}">Alergias</a></li>
-            <li class="fondo_opcion_nav"><a class="color_primario fs_pequena fs_nav_opcion" href="{% url 'gestion_medica:ruta_informacion_paciente' %}">Información Medica</a></li>
+            <li class="fondo_opcion_nav hover_color">
+                <a class="color_primario fs_pequena fs_nav_opcion" href="{% url 'gestion_medica:ruta_lista_medicamentos' %}">
+                    Medicamentos
+                </a>
+            </li>
+            <li class="fondo_opcion_nav hover_color">
+                <a class="color_primario fs_pequena fs_nav_opcion" href="{% url 'gestion_medica:ruta_lista_enfermedades' %}">
+                    Enfermedades
+                </a>
+            </li>
+            <li class="fondo_opcion_nav hover_color">
+                <a class="color_primario fs_pequena fs_nav_opcion" href="{% url 'gestion_medica:ruta_lista_alergias' %}">
+                    Alergias
+                </a>
+            </li>
         </ul>
     </section>
 </nav>

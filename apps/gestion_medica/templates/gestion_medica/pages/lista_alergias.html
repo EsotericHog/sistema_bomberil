@@ -1,15 +1,15 @@
 {% extends 'gestion_medica/layouts/base.html' %}
 {% load static %}
-{% block titulo_ventana %}Catálogo de Medicamentos{% endblock %}
-{% block titulo_pagina %}Catálogo Global{% endblock %}
+{% block titulo_ventana %}Catálogo de Alergias{% endblock %}
+{% block titulo_pagina %}Catálogo Global de Alergias{% endblock %}
 
 {% block contenido %}
 <div class="container-fluid mt-4">
     <div class="card shadow-sm">
         <div class="card-header d-flex justify-content-between bg-light">
-            <h5 class="mb-0 text-primary">Medicamentos Disponibles</h5>
-            <a href="{% url 'gestion_medica:ruta_crear_medicamento' %}" class="btn btn-success btn-sm">
-                <i class="fa-solid fa-plus"></i> Añadir Nuevo
+            <h5 class="mb-0 text-danger">Alergias Registradas</h5>
+            <a href="{% url 'gestion_medica:ruta_crear_alergia' %}" class="btn btn-danger btn-sm">
+                <i class="fa-solid fa-plus"></i> Nueva Alergia
             </a>
         </div>
         <div class="card-body p-0">
@@ -21,15 +21,15 @@
                     </tr>
                 </thead>
                 <tbody>
-                    {% for med in object_list %}
+                    {% for item in object_list %}
                     <tr>
-                        <td class="ps-4 fw-bold">{{ med.nombre }}</td>
+                        <td class="ps-4 fw-bold">{{ item.nombre }}</td>
                         <td class="text-end pe-4">
                             <div class="d-flex justify-content-end gap-2">
-                                <a href="{% url 'gestion_medica:ruta_editar_medicamento' pk=med.pk %}" class="btn btn-outline-primary btn-sm">
+                                <a href="{% url 'gestion_medica:ruta_editar_alergia' pk=item.pk %}" class="btn btn-outline-primary btn-sm">
                                     <i class="fa-solid fa-pencil"></i>
                                 </a>
-                                <form action="{% url 'gestion_medica:ruta_eliminar_medicamento' pk=med.pk %}" method="post">
+                                <form action="{% url 'gestion_medica:ruta_eliminar_alergia' pk=item.pk %}" method="post">
                                     {% csrf_token %}
                                     <button type="submit" class="btn btn-outline-danger btn-sm" onclick="return confirm('¿Eliminar?');">
                                         <i class="fa-solid fa-trash-can"></i>
@@ -39,7 +39,7 @@
                         </td>
                     </tr>
                     {% empty %}
-                    <tr><td colspan="2" class="text-center py-4">No hay medicamentos.</td></tr>
+                    <tr><td colspan="2" class="text-center py-4">No hay alergias registradas.</td></tr>
                     {% endfor %}
                 </tbody>
             </table>

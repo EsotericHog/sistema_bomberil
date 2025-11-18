@@ -1,0 +1,89 @@
+{% extends 'gestion_medica/layouts/base.html' %}
+{% load static %}
+
+{% block titulo_ventana %}Editar Ficha{% endblock %}
+{% block titulo_pagina %}Editar Datos Médicos{% endblock %}
+
+{% block contenido %}
+<div class="container-fluid">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white py-3 border-bottom">
+                    <h5 class="mb-0 text-primary fw-bold">
+                        <i class="fa-solid fa-pencil me-2"></i>Información Vital
+                    </h5>
+                </div>
+                <div class="card-body p-4">
+                    
+                    <form method="post">
+                        {% csrf_token %}
+                        
+                        {% if form.errors %}
+                            <div class="alert alert-danger">
+                                <i class="fa-solid fa-circle-exclamation me-2"></i>Corrija los siguientes errores:
+                                {{ form.errors }}
+                            </div>
+                        {% endif %}
+
+                        <div class="row g-4">
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold text-secondary">Peso (kg)</label>
+                                <div class="input-group">
+                                    {{ form.peso_kg }}
+                                    <span class="input-group-text bg-light">kg</span>
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold text-secondary">Altura (mts)</label>
+                                <div class="input-group">
+                                    {{ form.altura_mts }}
+                                    <span class="input-group-text bg-light">m</span>
+                                </div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold text-secondary">Presión Sistólica</label>
+                                {{ form.presion_arterial_sistolica }}
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold text-secondary">Presión Diastólica</label>
+                                {{ form.presion_arterial_diastolica }}
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold text-secondary">Grupo Sanguíneo</label>
+                                {{ form.grupo_sanguineo }}
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold text-secondary">Sistema de Salud</label>
+                                {{ form.sistema_salud }}
+                            </div>
+
+                            <div class="col-12">
+                                <label class="form-label fw-bold text-secondary">Observaciones Generales</label>
+                                {{ form.observaciones_generales }}
+                            </div>
+                        </div>
+
+                        <hr class="my-4 text-muted">
+
+                        <div class="d-flex justify-content-end gap-2">
+                            <a href="{% url 'gestion_medica:ruta_informacion_paciente' pk=ficha.id %}" class="btn btn-light border">
+                                Cancelar
+                            </a>
+                            <button type="submit" class="btn btn-primary px-4">
+                                <i class="fa-solid fa-save me-2"></i>Guardar Cambios
+                            </button>
+                        </div>
+                    </form>
+
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
