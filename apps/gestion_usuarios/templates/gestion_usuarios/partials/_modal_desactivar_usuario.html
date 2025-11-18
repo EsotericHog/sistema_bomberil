@@ -1,37 +1,31 @@
-<div id="ModalDesactivarUsuario" class="modal" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content fondo_secundario fs_normal color_primario">
+{# --- MODAL DESACTIVAR USUARIO (ESTANDARIZADO) --- #}
+<div id="ModalDesactivarUsuario" class="modal fade" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content shadow-sm {% if request.session.dark_mode %}dark-mode{% endif %}">
 
-            <div class="modal-header">
-                <h5 class="modal-title">Confirmar Desactivación</h5>
-                <button type="button" class="btn-close color_primario" data-bs-dismiss="modal" aria-label="Close"></button>
+            <div class="modal-header bg-danger bg-opacity-10 border-0">
+                <h5 class="modal-title fs_normal fw-bold text-danger">
+                    <i class="fas fa-ban me-2"></i>Confirmar Desactivación
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
 
-            <div class="modal-body">
-                <p>¿Estás seguro de que deseas desactivar a este usuario?. Si lo haces, no podrá conectarse al sistema de la compañía ni realizar ninguna acción.</p>
+            <div class="modal-body fs_normal">
+                <p>¿Estás seguro de que deseas desactivar a este usuario?</p>
+                <p class="text-muted fs_pequena mb-0">
+                    No podrá conectarse al sistema ni realizar ninguna acción.
+                </p>
             </div>
 
-            <div class="modal-footer">
+            <div class="modal-footer border-0">
                 <form id="formDesactivarUsuario" method="post" action="">
                     {% csrf_token %}
-                    <div class="acciones_modal">
-                        <button 
-                        id="cancelarModal" 
-                        type="button" 
-                        class="boton_s color_primario fondo_transparente" 
-                        data-bs-dismiss="modal"
-                        >
+                    <button id="cancelarModal" type="button" class="btn btn-outline-secondary btn-sm fs_normal" data-bs-dismiss="modal">
                         Cancelar
-                        </button>
-
-                        <button 
-                        id="confirmarDesactivacion" 
-                        type="submit" 
-                        class="boton_s fondo_azul color_blanco"
-                        >
-                        Sí, Desactivar
-                        </button>
-                    </div>
+                    </button>
+                    <button id="confirmarDesactivacion" type="submit" class="btn btn-danger btn-sm fs_normal">
+                        <i class="fas fa-ban me-1"></i>Sí, Desactivar
+                    </button>
                 </form>
             </div>
         </div>

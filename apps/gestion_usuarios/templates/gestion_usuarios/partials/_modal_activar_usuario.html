@@ -1,37 +1,31 @@
-<div id="ModalActivarUsuario" class="modal" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content fondo_secundario fs_normal color_primario">
+{# --- MODAL ACTIVAR USUARIO (ESTANDARIZADO) --- #}
+<div id="ModalActivarUsuario" class="modal fade" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content shadow-sm {% if request.session.dark_mode %}dark-mode{% endif %}">
 
-            <div class="modal-header">
-                <h5 class="modal-title">Confirmar Activación</h5>
-                <button type="button" class="btn-close color_primario" data-bs-dismiss="modal" aria-label="Close"></button>
+            <div class="modal-header bg-success bg-opacity-10 border-0">
+                <h5 class="modal-title fs_normal fw-bold text-success">
+                    <i class="fas fa-check-circle me-2"></i>Confirmar Activación
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
 
-            <div class="modal-body">
-                <p>¿Estás seguro de que deseas activar a este usuario?. Si lo activas, podrá iniciar sesión en el sistema de la compañía</p>
+            <div class="modal-body fs_normal">
+                <p>¿Estás seguro de que deseas activar a este usuario?</p>
+                <p class="text-muted fs_pequena mb-0">
+                    Si lo activas, podrá volver a iniciar sesión en el sistema.
+                </p>
             </div>
 
-            <div class="modal-footer">
+            <div class="modal-footer border-0">
                 <form id="formActivarUsuario" method="post" action="">
                     {% csrf_token %}
-                    <div class="acciones_modal">
-                        <button 
-                        id="cancelarModal" 
-                        type="button" 
-                        class="boton_s color_primario fondo_transparente" 
-                        data-bs-dismiss="modal"
-                        >
+                    <button id="cancelarModal" type="button" class="btn btn-outline-secondary btn-sm fs_normal" data-bs-dismiss="modal">
                         Cancelar
-                        </button>
-
-                        <button 
-                        id="confirmarActivacion" 
-                        type="submit" 
-                        class="boton_s fondo_azul color_blanco"
-                        >
-                        Sí, Activar
-                        </button>
-                    </div>
+                    </button>
+                    <button id="confirmarActivacion" type="submit" class="btn btn-success btn-sm fs_normal">
+                        <i class="fas fa-check me-1"></i>Sí, Activar
+                    </button>
                 </form>
             </div>
         </div>
