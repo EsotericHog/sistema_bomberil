@@ -1,0 +1,58 @@
+{# PLANTILLA BASE PARA EL MÓDULO DE GESTIÓN DE SISTEMA #}
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+
+    {# Importación de Estilos #}
+    {% include 'layouts/estilos.html' %}
+    <link rel="stylesheet" href="{% static 'core_admin/css/core_admin_estilos.css' %}">
+
+    {# Título de la ventana #}
+    <title>{% block titulo_ventana %}{% endblock %}</title>
+
+    {# Descripción #}
+    <meta name="description" content="Sistema de inventario diseñado para la Segunda Compañía de Bomberos de Iquique">
+
+</head>
+<body class="{% if request.session.dark_mode|default:False %}dark-mode{% endif %}">
+    {# Contenedor principal #}
+    <div id="root">
+
+        {# Header/Encabezado #}
+        {% include "layouts/header.html" %}
+
+        {# Menú desplegable con más opciones de cuenta/usuario. Por defecto está oculto #}
+        {% include "layouts/menu_desplegable_usuario.html" %}
+        
+        {# Menú lateral de navegación #}
+        {% include "core_admin/layouts/barra_lateral.html" %}
+
+        {# Contenido #}
+        <main class="main fondo_main">
+            <h1 class="main__titulo_pagina fs_grande color_primario">
+            {% block titulo_pagina %}{% endblock  %}
+            </h1>
+
+            {# Mensaje Flash #}
+            {% include "layouts/flash.html" %}
+            
+            {% block contenido %} {% endblock %}
+        </main>
+
+        {# Importación de Scripts #}
+        {% include 'layouts/scripts.html' %}
+
+        {# Scripts de la aplicación #}
+        <script src=""></script>
+        
+        {# Scripts de página #}
+        {% block scripts %}{% endblock %}
+
+    </div>
+</body>
+</html>
