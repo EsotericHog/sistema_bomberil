@@ -1,9 +1,11 @@
 from django.shortcuts import render
 from django.views import View
-from django.views.generic import ListView, DetailView
+from django.views.generic import ListView, DetailView, UpdateView
 from django.db.models import Count, Q
+from django.urls import reverse_lazy
 
 from .mixins import SuperuserRequiredMixin
+from .forms import EstacionForm
 from apps.gestion_inventario.models import Estacion, Ubicacion, Vehiculo, Prestamo, Producto, Activo
 
 
@@ -84,4 +86,24 @@ class EstacionDetalleView(SuperuserRequiredMixin, DetailView):
         ).order_by('nombre')
 
         context['menu_activo'] = 'estaciones'
+        return context
+
+
+
+
+class EstacionEditarView(SuperuserRequiredMixin, UpdateView):
+    model = Estacion
+    form_class = EstacionForm
+    template_name = 'core_admin/pages/estacion_form.html'
+    context_object_name = 'estacion'
+    
+    def get_success_url(self):
+        # Redirigir al detalle de la estación editada
+        return reverse_lazy('core_admin:ruta_ver_estacion', kwargs={'pk': self.object.pk})
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        # Título dinámico para reutilizar template si decides hacer el CreateView después
+        context['titulo_pagina'] = f"Editar: {self.object.nombre}"
+        context['accion'] = "Guardar Cambios"
         return context

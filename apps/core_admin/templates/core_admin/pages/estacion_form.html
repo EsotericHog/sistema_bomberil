@@ -1,0 +1,121 @@
+{% extends 'core_admin/layouts/base.html' %}
+{% load static %}
+
+{% block titulo_ventana %}Editar Estación | {{ estacion.nombre }}{% endblock %}
+{% block titulo_pagina %}{{ titulo_pagina }}{% endblock %}
+
+{% block contenido %}
+<div class="container-fluid mt-4">
+
+<form method="post" enctype="multipart/form-data" novalidate>
+    {% csrf_token %}
+    
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card shadow-sm border-0 mb-4">
+                <div class="card-header bg-white py-3">
+                    <h5 class="mb-0 fw-bold text-secondary"><i class="fas fa-info-circle me-2"></i>Información Institucional</h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label for="{{ form.nombre.id_for_label }}" class="form-label fw-bold">Nombre de la Estación *</label>
+                        {{ form.nombre }}
+                        {% if form.nombre.errors %}
+                            <div class="text-danger small mt-1">{{ form.nombre.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="{{ form.descripcion.id_for_label }}" class="form-label">Descripción / Lema</label>
+                        {{ form.descripcion }}
+                        <div class="form-text text-muted">Breve reseña o función principal de esta unidad.</div>
+                    </div>
+
+                    <div class="mb-3 p-3 bg-light rounded border d-flex align-items-center">
+                        <div class="form-check form-switch">
+                            {{ form.es_departamento }}
+                            <label class="form-check-label fw-bold" for="{{ form.es_departamento.id_for_label }}">
+                                ¿Es Cuerpo de Bomberos / Depto. Administrativo?
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card shadow-sm border-0 mb-4">
+                <div class="card-header bg-white py-3">
+                    <h5 class="mb-0 fw-bold text-secondary"><i class="fas fa-map-marked-alt me-2"></i>Ubicación Geográfica</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.comuna.id_for_label }}" class="form-label fw-bold">Comuna *</label>
+                            {{ form.comuna }}
+                            {% if form.comuna.errors %}
+                                <div class="text-danger small mt-1">{{ form.comuna.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.direccion.id_for_label }}" class="form-label fw-bold">Dirección (Calle y Número)</label>
+                            {{ form.direccion }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="card shadow-sm border-0 mb-4">
+                <div class="card-header bg-white py-3">
+                    <h5 class="mb-0 fw-bold text-secondary"><i class="fas fa-images me-2"></i>Identidad Visual</h5>
+                </div>
+                <div class="card-body text-center">
+                    
+                    <div class="mb-4">
+                        <label class="form-label fw-bold d-block text-start">Logo de la Compañía</label>
+                        <div class="mb-2 p-2 border rounded bg-light d-inline-block">
+                            {% if form.instance.logo %}
+                                <img src="{{ form.instance.logo.url }}" alt="Logo Actual" style="max-height: 80px;">
+                            {% else %}
+                                <span class="text-muted small">Sin logo actual</span>
+                            {% endif %}
+                        </div>
+                        {{ form.logo }}
+                        <div class="form-text text-start small">Se recomienda formato PNG transparente.</div>
+                    </div>
+
+                    <hr>
+
+                    <div class="mb-2">
+                        <label class="form-label fw-bold d-block text-start">Imagen de Fachada / Cuartel</label>
+                        <div class="mb-2 position-relative">
+                            {% if form.instance.imagen %}
+                                <img src="{{ form.instance.imagen.url }}" class="img-fluid rounded" style="max-height: 150px;">
+                            {% else %}
+                                <div class="bg-secondary bg-opacity-10 p-4 rounded text-muted">
+                                    <i class="fas fa-camera fa-2x"></i>
+                                </div>
+                            {% endif %}
+                        </div>
+                        {{ form.imagen }}
+                    </div>
+                </div>
+            </div>
+
+            <div class="card border-0 bg-transparent">
+                <div class="d-grid gap-2">
+                    <button type="submit" class="btn btn-primary btn-lg shadow-sm">
+                        <i class="fas fa-save me-2"></i>{{ accion }}
+                    </button>
+                    <a href="{% url 'core_admin:ruta_lista_estaciones' %}" class="btn btn-outline-secondary">
+                        Cancelar
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</form>
+
+</div>
+{% endblock %}

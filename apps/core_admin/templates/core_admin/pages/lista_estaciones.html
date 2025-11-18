@@ -43,7 +43,7 @@
                         {# 1. LÓGICA DE IMAGEN ROBUSTA #}
                         <td class="ps-4">
                             <div class="avatar-contenedor">
-                                {% if estacion.imagen %}
+                                {% if estacion.logo %}
                                     <img src="{{ estacion.logo.url }}" 
                                          alt="Logo {{ estacion.nombre }}"
                                          class="rounded shadow-sm img-estacion"
@@ -98,7 +98,7 @@
 
                         <td class="text-end pe-4">
                             <div class="btn-group" role="group">
-                                <a href="#" class="btn btn-sm btn-outline-secondary" data-bs-toggle="tooltip" title="Editar información">
+                                <a href="{% url 'core_admin:ruta_editar_estacion' estacion.pk %}" class="btn btn-sm btn-outline-secondary" data-bs-toggle="tooltip" title="Editar información">
                                     <i class="fas fa-pencil-alt"></i>
                                 </a>
                                 <a href="#" class="btn btn-sm btn-outline-secondary" data-bs-toggle="tooltip" title="Gestionar Usuarios">
