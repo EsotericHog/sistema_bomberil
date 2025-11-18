@@ -1,0 +1,204 @@
+[
+{
+  "model": "gestion_medica.sistemasalud",
+  "pk": 1,
+  "fields": {
+    "nombre": "FONASA - Tramo A"
+  }
+},
+{
+  "model": "gestion_medica.sistemasalud",
+  "pk": 2,
+  "fields": {
+    "nombre": "FONASA - Tramo B"
+  }
+},
+{
+  "model": "gestion_medica.sistemasalud",
+  "pk": 3,
+  "fields": {
+    "nombre": "FONASA - Tramo C"
+  }
+},
+{
+  "model": "gestion_medica.sistemasalud",
+  "pk": 4,
+  "fields": {
+    "nombre": "FONASA - Tramo D"
+  }
+},
+{
+  "model": "gestion_medica.sistemasalud",
+  "pk": 5,
+  "fields": {
+    "nombre": "Isapre Banmédica"
+  }
+},
+{
+  "model": "gestion_medica.sistemasalud",
+  "pk": 6,
+  "fields": {
+    "nombre": "Isapre Colmena"
+  }
+},
+{
+  "model": "gestion_medica.sistemasalud",
+  "pk": 7,
+  "fields": {
+    "nombre": "Isapre Consalud"
+  }
+},
+{
+  "model": "gestion_medica.sistemasalud",
+  "pk": 8,
+  "fields": {
+    "nombre": "Isapre Cruz Blanca"
+  }
+},
+{
+  "model": "gestion_medica.sistemasalud",
+  "pk": 9,
+  "fields": {
+    "nombre": "Isapre Esencial"
+  }
+},
+{
+  "model": "gestion_medica.sistemasalud",
+  "pk": 10,
+  "fields": {
+    "nombre": "Isapre Nueva Masvida"
+  }
+},
+{
+  "model": "gestion_medica.sistemasalud",
+  "pk": 11,
+  "fields": {
+    "nombre": "Isapre Vida Tres"
+  }
+},
+{
+  "model": "gestion_medica.sistemasalud",
+  "pk": 12,
+  "fields": {
+    "nombre": "DIPRECA (Carabineros/PDI)"
+  }
+},
+{
+  "model": "gestion_medica.sistemasalud",
+  "pk": 13,
+  "fields": {
+    "nombre": "CAPREDENA (FF.AA.)"
+  }
+},
+{
+  "model": "gestion_medica.sistemasalud",
+  "pk": 14,
+  "fields": {
+    "nombre": "Particular / Sin Previsión"
+  }
+},
+{
+  "model": "gestion_medica.gruposanguineo",
+  "pk": 1,
+  "fields": {
+    "nombre": "A+"
+  }
+},
+{
+  "model": "gestion_medica.gruposanguineo",
+  "pk": 2,
+  "fields": {
+    "nombre": "A-"
+  }
+},
+{
+  "model": "gestion_medica.gruposanguineo",
+  "pk": 3,
+  "fields": {
+    "nombre": "B+"
+  }
+},
+{
+  "model": "gestion_medica.gruposanguineo",
+  "pk": 4,
+  "fields": {
+    "nombre": "B-"
+  }
+},
+{
+  "model": "gestion_medica.gruposanguineo",
+  "pk": 5,
+  "fields": {
+    "nombre": "AB+"
+  }
+},
+{
+  "model": "gestion_medica.gruposanguineo",
+  "pk": 6,
+  "fields": {
+    "nombre": "AB-"
+  }
+},
+{
+  "model": "gestion_medica.gruposanguineo",
+  "pk": 7,
+  "fields": {
+    "nombre": "O+"
+  }
+},
+{
+  "model": "gestion_medica.gruposanguineo",
+  "pk": 8,
+  "fields": {
+    "nombre": "O-"
+  }
+},
+{
+  "model": "gestion_medica.fichamedica",
+  "pk": 1,
+  "fields": {
+    "voluntario": 1,
+    "peso_kg": null,
+    "altura_mts": null,
+    "presion_arterial_sistolica": null,
+    "presion_arterial_diastolica": null,
+    "grupo_sanguineo": null,
+    "sistema_salud": null,
+    "observaciones_generales": null,
+    "fecha_creacion": "2025-11-18T18:55:06.635Z",
+    "fecha_modificacion": "2025-11-18T18:55:06.635Z"
+  }
+},
+{
+  "model": "gestion_medica.fichamedica",
+  "pk": 2,
+  "fields": {
+    "voluntario": 2,
+    "peso_kg": null,
+    "altura_mts": null,
+    "presion_arterial_sistolica": null,
+    "presion_arterial_diastolica": null,
+    "grupo_sanguineo": null,
+    "sistema_salud": null,
+    "observaciones_generales": null,
+    "fecha_creacion": "2025-11-18T18:55:06.639Z",
+    "fecha_modificacion": "2025-11-18T18:55:06.639Z"
+  }
+},
+{
+  "model": "gestion_medica.fichamedica",
+  "pk": 3,
+  "fields": {
+    "voluntario": 3,
+    "peso_kg": null,
+    "altura_mts": null,
+    "presion_arterial_sistolica": null,
+    "presion_arterial_diastolica": null,
+    "grupo_sanguineo": null,
+    "sistema_salud": null,
+    "observaciones_generales": null,
+    "fecha_creacion": "2025-11-18T18:55:06.641Z",
+    "fecha_modificacion": "2025-11-18T18:55:06.641Z"
+  }
+}
+]

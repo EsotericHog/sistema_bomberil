@@ -28,7 +28,8 @@ Get-ChildItem -Path . -Recurse -File -Filter "*.py" | Where-Object {
 
 Write-Host "Borrando y recreando la base de datos MySQL '$DB_NAME'..."
 mysql -u root -e "DROP DATABASE IF EXISTS $DB_NAME;"
-mysql -u root -e "CREATE DATABASE $DB_NAME CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci;"
+mysql -u root -e "CREATE DATABASE $DB_NAME CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
+#mysql -u root -e "CREATE DATABASE $DB_NAME CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci;"
 Write-Host "Base de datos '$DB_NAME' recreada."
 
 
@@ -49,5 +50,8 @@ if ($LASTEXITCODE -ne 0) { throw "Error: 'loaddata datos_usuarios.json' falló."
 
 python manage.py loaddata apps/gestion_voluntarios/fixtures/datos_voluntarios.json
 if ($LASTEXITCODE -ne 0) { throw "Error: 'loaddata datos_voluntarios.json' falló." }
+
+python manage.py loaddata apps/gestion_medica/fixtures/datos_medica.json
+if ($LASTEXITCODE -ne 0) { throw "Error: 'loaddata datos_medica.json' falló." }
 
 Write-Host "¡Proceso completado! Base de datos reseteada y cargada."
