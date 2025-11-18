@@ -1,3 +1,4 @@
+import json
 from datetime import datetime, timedelta
 from django.shortcuts import render, redirect, get_object_or_404
 from django.views import View
@@ -29,10 +30,114 @@ from apps.gestion_inventario.models import Estacion
 
 
 class UsuarioInicioView(BaseEstacionMixin, View):
-    '''Vista para la página inicial de Gestión de Usuarios'''
+    '''
+    Dashboard principal de Gestión de Usuarios.
+    Muestra KPIs, Gráficos, Feed de Actividad y Alertas de Higiene.
+    '''
+    template_name = "gestion_usuarios/pages/home.html"
 
     def get(self, request):
-        return render(request, "gestion_usuarios/pages/home.html")
+        estacion = self.estacion_activa
+        hoy = timezone.now()
+        hace_90_dias = hoy - timedelta(days=90)
+        hace_6_meses = hoy - timedelta(days=180)
+
+        # 1. KPIs Principales
+        membresias_activas = Membresia.objects.filter(estacion=estacion, estado='ACTIVO')
+        membresias_inactivas = Membresia.objects.filter(estacion=estacion, estado='INACTIVO')
+        
+        # Roles (Locales + Globales visibles)
+        roles_count = Rol.objects.filter(
+            Q(estacion=estacion) | Q(estacion__isnull=True)
+        ).count()
+        
+        # Actividad de hoy
+        actividad_hoy = RegistroActividad.objects.filter(
+            estacion=estacion,
+            fecha__date=hoy.date()
+        ).count()
+
+        # 2. Datos para Gráficos (Chart.js)
+        
+        # A. Distribución de Roles (Top 5 + Otros)
+        # Contamos cuántas membresías ACTIVAS tienen cada rol
+        roles_dist = Rol.objects.filter(
+            asignaciones__estacion=estacion,
+            asignaciones__estado='ACTIVO'
+        ).annotate(total=Count('asignaciones')).order_by('-total')
+
+        labels_roles = [r.nombre for r in roles_dist[:5]]
+        data_roles = [r.total for r in roles_dist[:5]]
+        
+        # B. Curva de Ingresos (Últimos 6 meses)
+        # Agrupamos por mes
+        ingresos_por_mes = (
+            membresias_activas
+            .filter(fecha_inicio__gte=hace_6_meses)
+            .extra(select={'month': "EXTRACT(month FROM fecha_inicio)"}) # Nota: Esto varía según DB (SQLite/Postgres), usaremos python para ser agnósticos
+        )
+        # Procesamiento agnóstico en Python para la gráfica de línea
+        from collections import  OrderedDict
+        meses_data = OrderedDict()
+        for i in range(5, -1, -1):
+            mes_ref = hoy - timedelta(days=i*30)
+            mes_key = mes_ref.strftime('%b') # Ej: "Nov"
+            meses_data[mes_key] = 0
+            
+        for m in ingresos_por_mes:
+            mes_key = m.fecha_inicio.strftime('%b')
+            if mes_key in meses_data:
+                meses_data[mes_key] += 1
+
+        # 3. Feed de Actividad (Últimos 10)
+        actividad_reciente = RegistroActividad.objects.filter(
+            estacion=estacion
+        ).select_related('actor').order_by('-fecha')[:10]
+
+        # 4. Alertas de Higiene (Seguridad y Limpieza)
+        alertas = []
+        
+        # Alerta A: Usuarios activos sin roles (Riesgo/Error)
+        usuarios_sin_rol = membresias_activas.annotate(num_roles=Count('roles')).filter(num_roles=0).count()
+        if usuarios_sin_rol > 0:
+            alertas.append({
+                'tipo': 'danger',
+                'icono': 'fa-user-shield',
+                'mensaje': f'Hay {usuarios_sin_rol} usuarios activos sin ningún rol asignado.',
+                'accion_url': reverse('gestion_usuarios:ruta_lista_usuarios') + '?q=&estado=ACTIVO&rol=',
+                'accion_texto': 'Revisar'
+            })
+
+        # Alerta B: Usuarios "Fantasma" (Sin login > 90 días)
+        usuarios_fantasma = membresias_activas.filter(
+            usuario__last_login__lt=hace_90_dias
+        ).count()
+        if usuarios_fantasma > 0:
+            alertas.append({
+                'tipo': 'warning',
+                'icono': 'fa-user-clock',
+                'mensaje': f'{usuarios_fantasma} usuarios no han iniciado sesión en los últimos 3 meses.',
+                'accion_url': reverse('gestion_usuarios:ruta_lista_usuarios'), # Se puede crear un filtro especial
+                'accion_texto': 'Ver lista'
+            })
+
+        context = {
+            'kpi': {
+                'activos': membresias_activas.count(),
+                'inactivos': membresias_inactivas.count(),
+                'roles': roles_count,
+                'actividad': actividad_hoy
+            },
+            'graficos': {
+                'roles_labels': json.dumps(labels_roles),
+                'roles_data': json.dumps(data_roles),
+                'historia_labels': json.dumps(list(meses_data.keys())),
+                'historia_data': json.dumps(list(meses_data.values())),
+            },
+            'actividad_reciente': actividad_reciente,
+            'alertas': alertas
+        }
+        return render(request, self.template_name, context)
 
 
 
