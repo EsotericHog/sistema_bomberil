@@ -1,86 +1,167 @@
 {% extends 'gestion_medica/layouts/base.html' %}
 {% load static %}
 
-{% block titulo_ventana %}Editar Ficha{% endblock %}
-{% block titulo_pagina %}Editar Datos Médicos{% endblock %}
+{# BLOQUE 1: Título de la pestaña del navegador #}
+{% block titulo_ventana %}Editar Ficha Médica{% endblock %}
 
+{# BLOQUE 2: Título H1 de la página #}
+{% block titulo_pagina %}Gestión de Pacientes{% endblock %}
+
+{# BLOQUE 3: Contenido Principal #}
 {% block contenido %}
 <div class="container-fluid">
     <div class="row justify-content-center">
-        <div class="col-lg-8">
-            <div class="card border-0 shadow-sm">
-                <div class="card-header bg-white py-3 border-bottom">
-                    <h5 class="mb-0 text-primary fw-bold">
-                        <i class="fa-solid fa-pencil me-2"></i>Información Vital
-                    </h5>
-                </div>
-                <div class="card-body p-4">
+        <div class="col-lg-10">
+            
+            <div class="card shadow mb-4 border-bottom-primary">
+                
+                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between bg-white">
                     
+                    <h6 class="m-0 font-weight-bold text-primary">
+                        <i class="fas fa-heartbeat me-2"></i> Información Vital y Antecedentes
+                    </h6>
+                    
+                    <div class="bg-light px-3 py-1 rounded border">
+                        <span class="small text-muted text-uppercase fw-bold me-2" style="font-size: 0.7rem;">Paciente:</span>
+                        <span class="h6 m-0 font-weight-bold text-dark">
+                            <i class="fas fa-user-circle me-1"></i>
+                            {# Usamos .rut porque tu modelo Usuario no tiene username #}
+                            {{ ficha.voluntario.usuario.get_full_name|default:ficha.voluntario.usuario.rut }}
+                        </span>
+                    </div>
+                </div>
+
+                <div class="card-body">
                     <form method="post">
                         {% csrf_token %}
                         
                         {% if form.errors %}
-                            <div class="alert alert-danger">
-                                <i class="fa-solid fa-circle-exclamation me-2"></i>Corrija los siguientes errores:
-                                {{ form.errors }}
+                            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                                <strong><i class="fas fa-exclamation-triangle"></i> Atención:</strong> Por favor corrija los errores indicados abajo.
+                                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                             </div>
                         {% endif %}
 
-                        <div class="row g-4">
-                            <div class="col-md-6">
-                                <label class="form-label fw-bold text-secondary">Peso (kg)</label>
-                                <div class="input-group">
+                        <h6 class="heading-small text-muted mb-3 text-uppercase" style="font-size: 0.75rem; letter-spacing: 1px; border-bottom: 1px solid #eee; padding-bottom: 5px;">
+                            Datos Corporales
+                        </h6>
+                        
+                        <div class="row mb-4">
+                            <div class="col-md-6 col-lg-3 mb-3">
+                                <label class="form-label small fw-bold text-gray-700">Peso</label>
+                                <div class="input-group shadow-sm">
                                     {{ form.peso_kg }}
-                                    <span class="input-group-text bg-light">kg</span>
+                                    <span class="input-group-text bg-light fw-bold">kg</span>
                                 </div>
+                                {% if form.peso_kg.errors %}<div class="text-danger small mt-1">{{ form.peso_kg.errors.0 }}</div>{% endif %}
                             </div>
                             
-                            <div class="col-md-6">
-                                <label class="form-label fw-bold text-secondary">Altura (mts)</label>
-                                <div class="input-group">
+                            <div class="col-md-6 col-lg-3 mb-3">
+                                <label class="form-label small fw-bold text-gray-700">Altura</label>
+                                <div class="input-group shadow-sm">
                                     {{ form.altura_mts }}
-                                    <span class="input-group-text bg-light">m</span>
+                                    <span class="input-group-text bg-light fw-bold">mts</span>
                                 </div>
                             </div>
+                        </div>
 
-                            <div class="col-md-6">
-                                <label class="form-label fw-bold text-secondary">Presión Sistólica</label>
-                                {{ form.presion_arterial_sistolica }}
-                            </div>
+                        <div class="card bg-light border-left-info mb-4">
+                            <div class="card-body pt-3 pb-3">
+                                <h6 class="text-info font-weight-bold mb-3" style="font-size: 0.85rem; text-transform: uppercase;">
+                                    <i class="fas fa-stethoscope me-1"></i> Presión Arterial
+                                </h6>
+                                
+                                <div class="row align-items-center">
+                                    <div class="col-lg-5 col-md-12 mb-3 mb-lg-0">
+                                        <div class="form-group">
+                                            <label class="small font-weight-bold text-gray-600 mb-1">Lectura (Sistólica / Diastólica)</label>
+                                            <div class="input-group input-group-lg shadow-sm">
+                                                <span class="input-group-text bg-white text-danger border-end-0">
+                                                    <i class="fas fa-heartbeat"></i>
+                                                </span>
+                                                
+                                                {{ form.presion_arterial_sistolica }}
+                                                
+                                                <span class="input-group-text bg-light border-start-0 border-end-0 fw-bold text-muted">/</span>
+                                                
+                                                {{ form.presion_arterial_diastolica }}
+                                            </div>
+                                        </div>
+                                    </div>
 
-                            <div class="col-md-6">
-                                <label class="form-label fw-bold text-secondary">Presión Diastólica</label>
-                                {{ form.presion_arterial_diastolica }}
-                            </div>
-
-                            <div class="col-md-6">
-                                <label class="form-label fw-bold text-secondary">Grupo Sanguíneo</label>
-                                {{ form.grupo_sanguineo }}
-                            </div>
-
-                            <div class="col-md-6">
-                                <label class="form-label fw-bold text-secondary">Sistema de Salud</label>
-                                {{ form.sistema_salud }}
-                            </div>
-
-                            <div class="col-12">
-                                <label class="form-label fw-bold text-secondary">Observaciones Generales</label>
-                                {{ form.observaciones_generales }}
+                                    <div class="col-lg-7 col-md-12">
+                                        <div class="alert alert-white border shadow-sm mb-0 p-3" style="border-left: 4px solid #36b9cc !important;">
+                                            <div class="row">
+                                                <div class="col-sm-6 mb-2 mb-sm-0">
+                                                    <small class="d-block text-uppercase font-weight-bold text-danger mb-1" style="font-size: 0.7rem;">
+                                                        Sistólica (Alta)
+                                                    </small>
+                                                    <p class="small text-muted m-0 lh-sm">
+                                                        Presión máxima ejercida cuando el corazón late y bombea sangre.
+                                                    </p>
+                                                </div>
+                                                <div class="col-sm-6">
+                                                    <small class="d-block text-uppercase font-weight-bold text-primary mb-1" style="font-size: 0.7rem;">
+                                                        Diastólica (Baja)
+                                                    </small>
+                                                    <p class="small text-muted m-0 lh-sm">
+                                                        Presión mínima en las arterias cuando el corazón descansa entre latidos.
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
 
-                        <hr class="my-4 text-muted">
+                        <h6 class="heading-small text-muted mb-3 mt-4 text-uppercase" style="font-size: 0.75rem; letter-spacing: 1px; border-bottom: 1px solid #eee; padding-bottom: 5px;">
+                            Clasificación Médica
+                        </h6>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label small fw-bold text-gray-700">Grupo Sanguíneo</label>
+                                <div class="input-group shadow-sm">
+                                    <span class="input-group-text bg-white text-danger border-right-0"><i class="fas fa-tint"></i></span>
+                                    {{ form.grupo_sanguineo }}
+                                </div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label small fw-bold text-gray-700">Sistema de Salud</label>
+                                <div class="input-group shadow-sm">
+                                    <span class="input-group-text bg-white text-success border-right-0"><i class="fas fa-hospital-user"></i></span>
+                                    {{ form.sistema_salud }}
+                                </div>
+                            </div>
+                        </div>
+
+                        <h6 class="heading-small text-muted mb-3 mt-4 text-uppercase" style="font-size: 0.75rem; letter-spacing: 1px; border-bottom: 1px solid #eee; padding-bottom: 5px;">
+                            Notas Adicionales
+                        </h6>
+
+                        <div class="mb-4">
+                            {{ form.observaciones_generales }}
+                            <div class="form-text text-muted small fst-italic mt-1">
+                                <i class="fas fa-info-circle"></i> Registre aquí condiciones crónicas no listadas, prótesis, o detalles relevantes para emergencias.
+                            </div>
+                        </div>
+
+                        <hr class="my-4">
 
                         <div class="d-flex justify-content-end gap-2">
-                            <a href="{% url 'gestion_medica:ruta_informacion_paciente' pk=ficha.id %}" class="btn btn-light border">
-                                Cancelar
+                            <a href="{% url 'gestion_medica:ruta_lista_paciente' %}" class="btn btn-light border text-secondary px-4">
+                                <i class="fas fa-times me-1"></i> Cancelar
                             </a>
-                            <button type="submit" class="btn btn-primary px-4">
-                                <i class="fa-solid fa-save me-2"></i>Guardar Cambios
+                            <button type="submit" class="btn btn-primary btn-icon-split px-4 shadow-sm">
+                                <span class="icon text-white-50 me-2">
+                                    <i class="fas fa-save"></i>
+                                </span>
+                                <span class="text font-weight-bold">Guardar Ficha</span>
                             </button>
                         </div>
-                    </form>
 
+                    </form>
                 </div>
             </div>
         </div>
