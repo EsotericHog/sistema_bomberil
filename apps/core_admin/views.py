@@ -10,8 +10,8 @@ from django.contrib.auth.forms import PasswordResetForm
 from django.db import transaction
 from django.utils import timezone
 
-from .mixins import SuperuserRequiredMixin
-from .forms import EstacionForm, ProductoGlobalForm, UsuarioCreationForm, UsuarioChangeForm, AsignarMembresiaForm
+from .mixins import SuperuserRequiredMixin, PermisosMatrixMixin
+from .forms import EstacionForm, ProductoGlobalForm, UsuarioCreationForm, UsuarioChangeForm, AsignarMembresiaForm, RolGlobalForm
 from apps.gestion_inventario.models import Estacion, Ubicacion, Vehiculo, Prestamo, Compartimento, Categoria, Marca, ProductoGlobal, Producto, Activo, LoteInsumo, MovimientoInventario
 from apps.gestion_usuarios.models import Membresia, Rol
 
@@ -580,15 +580,17 @@ class RolGlobalListView(SuperuserRequiredMixin, ListView):
     context_object_name = 'roles'
     
     def get_queryset(self):
-        # CORRECCIÓN:
-        # Count acepta un argumento 'filter'. 
-        # Filtramos 'asignaciones' (el related_name de Membresia) por estado='ACTIVO'.
+        filtro_negocio = Q(permisos__codename__startswith='accion_') | \
+                         Q(permisos__codename__startswith='acceso_')
+        
+        filtro_activos = Q(asignaciones__estado='ACTIVO')
+
         return Rol.objects.filter(estacion__isnull=True).annotate(
-            total_permisos=Count('permisos'),
-            total_asignaciones=Count(
-                'asignaciones', 
-                filter=Q(asignaciones__estado='ACTIVO')
-            )
+            # AGREGAR distinct=True AQUÍ
+            total_permisos=Count('permisos', filter=filtro_negocio, distinct=True),
+            
+            # Y AQUÍ TAMBIÉN
+            total_asignaciones=Count('asignaciones', filter=filtro_activos, distinct=True)
         ).order_by('nombre')
 
     def get_context_data(self, **kwargs):
