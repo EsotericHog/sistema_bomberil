@@ -531,3 +531,42 @@ class MembresiaCreateView(SuperuserRequiredMixin, CreateView):
         context['titulo_pagina'] = "Asignar Acceso a Estación"
         # YA NO NECESITAMOS PASAR 'usuario_preseleccionado' al contexto
         return context
+
+
+
+
+class UsuarioFinalizarMembresiasView(SuperuserRequiredMixin, View):
+    """
+    Cierra (finaliza) todas las membresías activas de un usuario específico.
+    Útil para revocar acceso inmediato a todas las estaciones.
+    """
+    def post(self, request, pk):
+        User = get_user_model()
+        usuario = get_object_or_404(User, pk=pk)
+        
+        # 1. Buscar membresías activas
+        membresias_activas = Membresia.objects.filter(
+            usuario=usuario,
+            estado='ACTIVO'
+        )
+        
+        cantidad = membresias_activas.count()
+        
+        if cantidad > 0:
+            # 2. Actualización masiva (Bulk Update)
+            # Establecemos estado FINALIZADO y fecha de fin = Hoy
+            membresias_activas.update(
+                estado='FINALIZADO',
+                fecha_fin=timezone.now().date()
+            )
+            messages.success(
+                request, 
+                f"Se han finalizado {cantidad} membresía(s) activa(s) para {usuario.get_full_name}."
+            )
+        else:
+            messages.warning(
+                request, 
+                f"El usuario {usuario.get_full_name} no tiene ninguna membresía activa para finalizar."
+            )
+            
+        return redirect('core_admin:ruta_lista_usuarios')

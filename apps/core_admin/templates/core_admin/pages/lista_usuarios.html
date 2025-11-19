@@ -158,6 +158,17 @@
                             title="Dar Acceso / Crear Membresía">
                                 <i class="fas fa-id-badge"></i>
                             </a>
+
+                            <button 
+                            type="button" 
+                            class="btn btn-sm btn-outline-danger" 
+                            data-bs-toggle="modal" 
+                            data-bs-target="#modalFinalizarMembresias"
+                            data-usuario-id="{{ usuario.pk }}"
+                            data-usuario-nombre="{{ usuario.get_full_name|default:usuario.email }}"
+                            title="Revocar accesos / Finalizar membresías">
+                                <i class="fas fa-user-slash"></i>
+                            </button>
                         </div>
                     </td>
                 </tr>
@@ -229,6 +240,42 @@
 </div>
 
 
+<div class="modal fade" id="modalFinalizarMembresias" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title fw-bold">
+                    <i class="fas fa-user-slash me-2"></i>Revocar Accesos
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>¿Está seguro de que desea finalizar <strong>TODAS</strong> las membresías activas de este usuario?</p>
+                
+                <div class="alert alert-light border text-center fw-bold text-danger" id="modal_finalizar_usuario_nombre">
+                    </div>
+
+                <div class="alert alert-warning small mb-0">
+                    <i class="fas fa-exclamation-triangle me-1"></i>
+                    El usuario perderá el acceso inmediato a todas las estaciones donde esté activo actualmente. 
+                    Esta acción no elimina el historial, solo cambia el estado a "Finalizado".
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                
+                <form method="post" id="formFinalizarMembresias" action="">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger">
+                        <i class="fas fa-check-circle me-2"></i>Confirmar Revocación
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+
 </div>
 {% endblock %}
 
@@ -267,6 +314,25 @@
                     btnSubmit.disabled = false;
                     btnSubmit.innerHTML = '<i class="fas fa-paper-plane me-2"></i>Enviar Correo';
                 }
+            });
+        }
+
+
+        // Lógica para Modal Finalizar Membresías
+        var modalFinalizar = document.getElementById('modalFinalizarMembresias');
+        if (modalFinalizar) {
+            modalFinalizar.addEventListener('show.bs.modal', function(event) {
+                var button = event.relatedTarget;
+                var userId = button.getAttribute('data-usuario-id');
+                var userName = button.getAttribute('data-usuario-nombre');
+                
+                // Actualizar texto
+                document.getElementById('modal_finalizar_usuario_nombre').textContent = userName;
+                
+                // Actualizar Action del Form
+                var urlBase = "{% url 'core_admin:ruta_finalizar_membresias_usuario' 0 %}";
+                var urlFinal = urlBase.replace('0', userId);
+                document.getElementById('formFinalizarMembresias').action = urlFinal;
             });
         }
     });

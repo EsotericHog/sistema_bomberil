@@ -16,7 +16,8 @@ from .views import (
     UsuarioUpdateView,
     UsuarioResetPasswordView,
     ApiRolesPorEstacionView,
-    MembresiaCreateView
+    MembresiaCreateView,
+    UsuarioFinalizarMembresiasView
 )
 
 app_name = 'core_admin'
@@ -72,5 +73,8 @@ urlpatterns = [
 
     # Asignar membresía a usuario
     path('membresias/asignar/', MembresiaCreateView.as_view(), name='ruta_crear_membresia'),
+
+    # Finalizar todas las membresías activas de un usuario
+    path('usuarios/<int:pk>/finalizar-membresias/', UsuarioFinalizarMembresiasView.as_view(), name='ruta_finalizar_membresias_usuario'),
 
 ]
