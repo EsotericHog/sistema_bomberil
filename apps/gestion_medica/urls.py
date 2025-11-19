@@ -48,6 +48,8 @@ urlpatterns = [
     # Ver información médica de un voluntario
     path('paciente/enfermedad/<int:pk>/', MedicoEnfermedadView.as_view(), name="ruta_enfermedad_paciente"),
 
+    path('paciente/enfermedad/editar/<int:pk>/<int:enfermedad_id>/', EditarEnfermedadPacienteView.as_view(), name="ruta_editar_enfermedad_paciente"),
+
     path('paciente/enfermedad/eliminar/<int:pk>/<int:enfermedad_id>/', EliminarEnfermedadPacienteView.as_view(), name="ruta_eliminar_enfermedad_paciente"),
 
     # Ver información médica de un voluntario
@@ -86,6 +88,8 @@ urlpatterns = [
     # Rutas para Medicamentos DEL PACIENTE (No el catálogo global)
     path('paciente/medicamentos/<int:pk>/', MedicoMedicamentosView.as_view(), name="ruta_medicamentos_paciente"),
     
+    path('paciente/medicamentos/editar/<int:pk>/<int:medicamento_id>/', EditarMedicamentoPacienteView.as_view(),  name="ruta_editar_medicamento_paciente"),
+
     path('paciente/medicamentos/eliminar/<int:pk>/<int:medicamento_id>/', EliminarMedicamentoPacienteView.as_view(), name="ruta_eliminar_medicamento_paciente"),
 
     # --- CATÁLOGO DE ALERGIAS ---
@@ -94,11 +98,12 @@ urlpatterns = [
     
     path('alergias/crear/', AlergiaCrearView.as_view(), name="ruta_crear_alergia"),
     
-    # ¡FALTAN ESTAS DOS! 👇
     path('alergias/editar/<int:pk>/', AlergiaUpdateView.as_view(), name="ruta_editar_alergia"),
    
     path('alergias/eliminar/<int:pk>/', AlergiaDeleteView.as_view(), name="ruta_eliminar_alergia"),
 
+    path('paciente/contacto/editar/<int:pk>/<int:contacto_id>/', EditarContactoView.as_view(), name="ruta_editar_contacto"),
+    
     #Ruta Contacto (Eliminar faltaba)
     path('paciente/contacto/eliminar/<int:pk>/<int:contacto_id>/', EliminarContactoView.as_view(), name="ruta_eliminar_contacto"),
 
@@ -109,7 +114,10 @@ urlpatterns = [
 
     # --- CATÁLOGO DE ENFERMEDADES ---
     path('enfermedades/', EnfermedadListView.as_view(), name="ruta_lista_enfermedades"),
+    
     path('enfermedades/crear/', EnfermedadCrearView.as_view(), name="ruta_crear_enfermedad"),
+    
     path('enfermedades/editar/<int:pk>/', EnfermedadUpdateView.as_view(), name="ruta_editar_enfermedad"),
+    
     path('enfermedades/eliminar/<int:pk>/', EnfermedadDeleteView.as_view(), name="ruta_eliminar_enfermedad"),
     ]   

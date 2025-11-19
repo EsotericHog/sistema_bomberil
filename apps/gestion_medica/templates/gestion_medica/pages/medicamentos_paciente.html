@@ -1,111 +1,161 @@
 {% extends 'gestion_medica/layouts/base.html' %}
 {% load static %}
 
-{% block titulo_ventana %}Tratamientos - {{ ficha.voluntario.usuario.get_full_name }}{% endblock %}
-{% block titulo_pagina %}Medicamentos en Uso{% endblock %}
+{% block titulo_ventana %}Medicamentos del Paciente{% endblock %}
 
 {% block contenido %}
 <div class="container-fluid">
-    
-    <div class="mb-4">
-        <a href="{% url 'gestion_medica:ruta_informacion_paciente' pk=ficha.id %}" class="btn btn-outline-secondary">
-            <i class="fa-solid fa-arrow-left me-2"></i>Volver a la Ficha
-        </a>
+
+    <div class="card border-0 shadow-sm mb-4 bg-gradient-info text-white overflow-hidden" style="border-radius: 15px;">
+        <div class="card-body p-4 position-relative">
+            <i class="fas fa-pills position-absolute text-white-50" style="font-size: 10rem; right: -20px; top: -30px; opacity: 0.15;"></i>
+            
+            <div class="row align-items-center position-relative">
+                <div class="col-md-8">
+                    <h5 class="text-white-50 text-uppercase font-weight-bold mb-1 ls-1">
+                        <i class="fas fa-prescription-bottle-alt me-2"></i>Farmacología
+                    </h5>
+                    <h1 class="display-6 font-weight-bold text-white mb-0">
+                        {{ ficha.voluntario.usuario.get_full_name|default:ficha.voluntario.usuario.rut|title }}
+                    </h1>
+                    <p class="mb-0 text-white-50 mt-2">
+                        <i class="fas fa-id-card me-2"></i>RUT: {{ ficha.voluntario.usuario.rut }}
+                    </p>
+                </div>
+                <div class="col-md-4 text-md-end mt-3 mt-md-0">
+                    <a href="{% url 'gestion_medica:ruta_informacion_paciente' pk=ficha.id %}" class="btn btn-light text-info-custom fw-bold shadow-sm rounded-pill px-4 py-2">
+                        <i class="fas fa-arrow-left me-2"></i> Volver a Ficha
+                    </a>
+                </div>
+            </div>
+        </div>
     </div>
 
     <div class="row g-4">
-        <div class="col-lg-7">
-            <div class="card shadow-sm border-primary border-top-0 border-end-0 border-bottom-0 border-4">
-                <div class="card-header bg-white">
-                    <h5 class="mb-0 text-secondary"><i class="fa-solid fa-pills me-2"></i>Tratamientos Activos</h5>
+        
+        <div class="col-lg-4">
+            <div class="card shadow border-0 h-100" style="border-radius: 15px;">
+                <div class="card-header bg-white border-bottom-0 pt-4 pb-0">
+                    <h5 class="font-weight-bold text-secondary mb-0">
+                        <i class="fas fa-plus-circle text-info-custom me-2"></i>Asignar Medicamento
+                    </h5>
                 </div>
-                <div class="card-body">
-                    {% if medicamentos_paciente %}
-                        <ul class="list-group list-group-flush">
-                            {% for item in medicamentos_paciente %}
-                                <li class="list-group-item d-flex justify-content-between align-items-center">
-                                    <div>
-                                        <strong class="text-primary">{{ item.medicamento.nombre }}</strong>
-                                        <br>
-                                        <span class="badge bg-light text-dark border mt-1">
-                                            <i class="fa-regular fa-clock me-1"></i>{{ item.dosis_frecuencia }}
-                                        </span>
-                                    </div>
-                                    <form action="{% url 'gestion_medica:ruta_eliminar_medicamento_paciente' pk=ficha.id medicamento_id=item.id %}" method="post">
-                                        {% csrf_token %}
-                                        <button type="submit" class="btn btn-sm btn-outline-danger" title="Quitar">
-                                            <i class="fa-solid fa-trash"></i>
-                                        </button>
-                                    </form>
-                                </li>
-                            {% endfor %}
-                        </ul>
-                    {% else %}
-                        <div class="alert alert-light text-center border border-dashed p-4">
-                            <p class="text-muted mb-0">No tiene medicamentos asignados.</p>
+                <div class="card-body p-4">
+                    <form method="post" class="needs-validation">
+                        {% csrf_token %}
+                        
+                        <div class="mb-4">
+                            <label class="form-label text-muted font-weight-bold small text-uppercase">Nombre del Medicamento</label>
+                            <div class="input-group input-group-lg shadow-sm rounded-pill overflow-hidden border input-group-focus-info">
+                                <span class="input-group-text bg-white border-0 text-info-custom ps-4">
+                                    <i class="fas fa-capsules"></i>
+                                </span>
+                                {{ form.medicamento }}
+                            </div>
+                            {% if form.medicamento.errors %}
+                                <div class="text-danger small mt-2 ms-3 fw-bold">
+                                    <i class="fas fa-exclamation-circle me-1"></i> {{ form.medicamento.errors.0 }}
+                                </div>
+                            {% endif %}
+                            <div class="form-text ms-3 mt-1 small text-muted">Seleccione del catálogo de farmacia.</div>
                         </div>
-                    {% endif %}
+
+                        <div class="mb-4">
+                            <label class="form-label text-muted font-weight-bold small text-uppercase">Dosis y Frecuencia</label>
+                            <div class="input-group input-group-lg shadow-sm rounded-pill overflow-hidden border input-group-focus-info">
+                                <span class="input-group-text bg-white border-0 text-info-custom ps-4">
+                                    <i class="fas fa-stopwatch"></i>
+                                </span>
+                                {{ form.dosis_frecuencia }}
+                            </div>
+                            <div class="form-text ms-3 mt-2 small text-muted">
+                                <i class="fas fa-info-circle me-1"></i> Ej: 500mg cada 8 horas.
+                            </div>
+                        </div>
+
+                        <div class="d-grid mt-5">
+                            <button type="submit" class="btn btn-info-custom w-100 btn-lg rounded-pill shadow-sm hover-elevate-info fw-bold py-3 text-white">
+                                <i class="fas fa-save me-2"></i> GUARDAR ASIGNACIÓN
+                            </button>
+                        </div>
+                    </form>
                 </div>
             </div>
         </div>
 
-        <div class="col-lg-5">
-            <div class="card shadow-sm">
-                <div class="card-header bg-light">
-                    <h6 class="mb-0 fw-bold text-primary">Recetar / Asignar</h6>
+        <div class="col-lg-8">
+            <div class="card shadow border-0 h-100" style="border-radius: 15px;">
+                <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center border-bottom">
+                    <h5 class="font-weight-bold text-gray-800 mb-0">Tratamientos Activos</h5>
+                    <span class="badge bg-info-soft text-info-custom border border-info rounded-pill px-3 py-2">
+                        {{ medicamentos_paciente.count }} Asignados
+                    </span>
                 </div>
-                <div class="card-body">
-                    <form method="post" id="formAsignarMedicamento">
-                        {% csrf_token %}
-                        
-                        <div class="mb-3">
-                            <label class="form-label small fw-bold text-muted">Medicamento (Del Catálogo)</label>
-                            {{ form.medicamento }}
-                            
-                            {% if form.medicamento.errors %}
-                                <div class="text-danger small mt-1">
-                                    <i class="fa-solid fa-circle-exclamation me-1"></i>{{ form.medicamento.errors.0 }}
-                                </div>
-                            {% endif %}
-                            
-                            <div class="form-text">¿No está en la lista? Agrégalo primero en el Catálogo Global.</div>
-                        </div>
-                        <label class="form-label small fw-bold text-muted">Dosis</label>
-                        <div class="input-group mb-3">
-                            <input type="number" id="inputDosisValor" class="form-control" placeholder="Ej: 500" required min="1">
-                            
-                            <select id="selectDosisUnidad" class="form-select" style="max-width: 100px;">
-                                <option value="mg">mg</option>
-                                <option value="g">g</option>
-                                <option value="ml">ml</option>
-                                <option value="mcg">mcg</option>
-                                <option value="UI">UI</option>
-                                <option value="comprimido(s)">Comp.</option>
-                                <option value="puff">Puff</option>
-                                <option value="gotas">Gotas</option>
-                            </select>
-                        </div>
 
-                        <label class="form-label small fw-bold text-muted">Frecuencia</label>
-                        <div class="input-group mb-4">
-                            <span class="input-group-text bg-light">Cada</span>
-                            
-                            <input type="number" id="inputFreqValor" class="form-control" placeholder="8" required min="1">
-                            
-                            <select id="selectFreqUnidad" class="form-select">
-                                <option value="horas">Horas</option>
-                                <option value="días">Días</option>
-                                <option value="minutos">Minutos</option>
-                                <option value="semanas">Semanas</option>
-                            </select>
-                        </div>
+                <div class="card-body p-0">
+                    {% if medicamentos_paciente %}
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle mb-0">
+                                <thead class="bg-light">
+                                    <tr>
+                                        <th class="ps-4 py-3 text-uppercase text-muted small font-weight-bold" style="width: 35%;">Medicamento</th>
+                                        <th class="py-3 text-uppercase text-muted small font-weight-bold">Posología</th>
+                                        <th class="pe-4 py-3 text-end text-uppercase text-muted small font-weight-bold">Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for item in medicamentos_paciente %}
+                                    <tr class="border-bottom-light">
+                                        <td class="ps-4 py-4">
+                                            <div class="d-flex align-items-center">
+                                                <div class="rounded-circle bg-info-soft text-info-custom d-flex align-items-center justify-content-center me-3" 
+                                                     style="width: 45px; height: 45px; font-size: 1.2rem;">
+                                                    <i class="fas fa-tablets"></i>
+                                                </div>
+                                                <div>
+                                                    <span class="h5 mb-0 font-weight-bold text-dark d-block">{{ item.medicamento.nombre }}</span>
+                                                </div>
+                                            </div>
+                                        </td>
 
-                        <div class="d-grid">
-                            <button type="submit" class="btn btn-primary fw-bold">
-                                <i class="fa-solid fa-plus me-2"></i>Guardar Receta
-                            </button>
+                                        <td class="py-4">
+                                            <div class="d-flex align-items-center text-secondary">
+                                                <i class="fas fa-clock me-2 text-info-custom opacity-50"></i>
+                                                <span class="fw-bold">{{ item.dosis_frecuencia|default:"Según indicación médica" }}</span>
+                                            </div>
+                                        </td>
+
+                                        <td class="pe-4 text-end">
+                                            <a href="{% url 'gestion_medica:ruta_editar_medicamento_paciente' pk=ficha.id medicamento_id=item.id %}" 
+                                               class="btn btn-white btn-sm text-info-custom shadow-sm border me-1" 
+                                               data-bs-toggle="tooltip" title="Modificar dosis"
+                                               style="width: 35px; height: 35px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center;">
+                                                <i class="fas fa-pen"></i>
+                                            </a>
+
+                                            <form action="{% url 'gestion_medica:ruta_eliminar_medicamento_paciente' pk=ficha.id medicamento_id=item.id %}" method="POST" class="d-inline" onsubmit="return confirm('¿Retirar el medicamento {{ item.medicamento.nombre }}?');">
+                                                {% csrf_token %}
+                                                <button type="submit" class="btn btn-white btn-sm text-danger shadow-sm border" 
+                                                        data-bs-toggle="tooltip" title="Retirar asignación" 
+                                                        style="width: 35px; height: 35px; border-radius: 50%;">
+                                                    <i class="fas fa-trash-alt"></i>
+                                                </button>
+                                            </form>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
                         </div>
-                    </form>
+                    {% else %}
+                        <div class="text-center py-5">
+                            <div class="mb-3 p-4 rounded-circle bg-light d-inline-block">
+                                <i class="fas fa-prescription fa-3x text-info-custom opacity-50"></i>
+                            </div>
+                            <h4 class="text-gray-600 font-weight-bold mt-2">Sin Medicamentos</h4>
+                            <p class="text-muted mb-0">No hay tratamientos farmacológicos registrados actualmente.</p>
+                        </div>
+                    {% endif %}
                 </div>
             </div>
         </div>
@@ -114,36 +164,8 @@
 
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        // Elementos
-        const inputReal = document.querySelector('[name="dosis_frecuencia"]');
-        const dosisValor = document.getElementById('inputDosisValor');
-        const dosisUnidad = document.getElementById('selectDosisUnidad');
-        const freqValor = document.getElementById('inputFreqValor');
-        const freqUnidad = document.getElementById('selectFreqUnidad');
-        const vistaPrevia = document.getElementById('vistaPrevia');
-
-        // Función que une todo en un string
-        function actualizarTexto() {
-            const dosis = dosisValor.value;
-            const unidad = dosisUnidad.value;
-            const freq = freqValor.value;
-            const tiempo = freqUnidad.value;
-
-            if (dosis && freq) {
-                // Formato: "500 mg cada 8 horas"
-                const textoFinal = `${dosis} ${unidad} cada ${freq} ${tiempo}`;
-                inputReal.value = textoFinal;
-                vistaPrevia.textContent = textoFinal;
-            } else {
-                vistaPrevia.textContent = "Complete los campos...";
-            }
-        }
-
-        // Escuchamos cambios en todos los inputs
-        dosisValor.addEventListener('input', actualizarTexto);
-        dosisUnidad.addEventListener('change', actualizarTexto);
-        freqValor.addEventListener('input', actualizarTexto);
-        freqUnidad.addEventListener('change', actualizarTexto);
+        const inputs = document.querySelectorAll('input, select');
+        inputs.forEach(input => input.classList.add('form-control-clean'));
     });
 </script>
 {% endblock %}

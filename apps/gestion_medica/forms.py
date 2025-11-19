@@ -33,15 +33,61 @@ class FichaMedicaForm(forms.ModelForm):
         }
 
 # 2. Formulario de Contactos
+# En apps/gestion_medica/forms.py
+
 class ContactoEmergenciaForm(forms.ModelForm):
+    def __init__(self, *args, **kwargs):
+        # Extraemos el usuario que se pasa desde la vista (si existe)
+        self.usuario_dueno = kwargs.pop('usuario_dueno', None)
+        super().__init__(*args, **kwargs)
+
     class Meta:
         model = ContactoEmergencia
         fields = ['nombre_completo', 'parentesco', 'telefono']
         widgets = {
-            'nombre_completo': forms.TextInput(attrs={'class': 'form-control'}),
-            'parentesco': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Ej: Madre'}),
-            'telefono': forms.TextInput(attrs={'class': 'form-control'}),
+            'nombre_completo': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Nombre completo del contacto'}),
+            'parentesco': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Ej: Madre, Hermano, Vecino'}),
+            # El teléfono lo manejaremos con una clase especial para el JS
+            'telefono': forms.TextInput(attrs={
+                'class': 'form-control telefono-input', 
+                'placeholder': '9 1234 5678',
+                'maxlength': '9'
+            }),
         }
+
+    def clean_telefono(self):
+        """Valida que el teléfono tenga el formato correcto (9 dígitos en Chile)"""
+        telefono = self.cleaned_data.get('telefono')
+        
+        # 1. Limpiar espacios si el usuario los pone
+        telefono = telefono.replace(" ", "").strip()
+
+        # 2. Validar que sean solo números
+        if not telefono.isdigit():
+            raise forms.ValidationError("El teléfono solo debe contener números.")
+
+        # 3. Validar largo (Chile estándar móvil: 9 dígitos)
+        if len(telefono) != 9:
+            raise forms.ValidationError("El número debe tener 9 dígitos (Ej: 912345678).")
+
+        return telefono
+
+    def clean(self):
+        """Validación cruzada: Compara con el número del usuario"""
+        cleaned_data = super().clean()
+        telefono_emergencia = cleaned_data.get('telefono')
+
+        # Si tenemos al usuario dueño y su teléfono cargado
+        if self.usuario_dueno and self.usuario_dueno.phone:
+            telefono_usuario = self.usuario_dueno.phone.replace(" ", "").strip()
+            
+            # 4. Validar que no sea el mismo número
+            if telefono_emergencia == telefono_usuario:
+                # Agregamos el error al campo específico 'telefono'
+                self.add_error('telefono', "El número de emergencia no puede ser el mismo que el del voluntario.")
+        
+        return cleaned_data
+    
 
 # 3. Formulario de Alergias
 class FichaMedicaAlergiaForm(forms.ModelForm):

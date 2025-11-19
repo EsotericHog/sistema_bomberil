@@ -38,7 +38,7 @@ class MedicoNumEmergView(View):
         
         # OJO: Los contactos están en el voluntario, no en la ficha médica directa
         contactos = ficha.voluntario.contactos_emergencia.all()
-        form = ContactoEmergenciaForm()
+        form = ContactoEmergenciaForm(usuario_dueno=ficha.voluntario.usuario)
         return render(request, "gestion_medica/pages/contacto_emergencia.html", {
             'ficha': ficha,
             'contactos': contactos,
@@ -47,7 +47,7 @@ class MedicoNumEmergView(View):
     
     def post(self, request, pk):
         ficha = get_object_or_404(FichaMedica, pk=pk)
-        form = ContactoEmergenciaForm(request.POST)
+        form = ContactoEmergenciaForm(request.POST, usuario_dueno=ficha.voluntario.usuario)
         if form.is_valid():
             contacto = form.save(commit=False)
             contacto.voluntario = ficha.voluntario # Asignamos al voluntario
@@ -59,6 +59,39 @@ class MedicoNumEmergView(View):
             'ficha': ficha, 'contactos': contactos, 'form': form
         })
 
+# En apps/gestion_medica/views.py
+
+class EditarContactoView(View):
+    def get(self, request, pk, contacto_id):
+        ficha = get_object_or_404(FichaMedica, pk=pk)
+        contacto = get_object_or_404(ContactoEmergencia, id=contacto_id, voluntario=ficha.voluntario)
+        
+        # Pasamos usuario_dueno para que la validación del teléfono funcione igual
+        form = ContactoEmergenciaForm(instance=contacto, usuario_dueno=ficha.voluntario.usuario)
+        
+        return render(request, "gestion_medica/pages/editar_contacto.html", {
+            'ficha': ficha,
+            'form': form,
+            'contacto': contacto
+        })
+
+    def post(self, request, pk, contacto_id):
+        ficha = get_object_or_404(FichaMedica, pk=pk)
+        contacto = get_object_or_404(ContactoEmergencia, id=contacto_id, voluntario=ficha.voluntario)
+        
+        form = ContactoEmergenciaForm(request.POST, instance=contacto, usuario_dueno=ficha.voluntario.usuario)
+        
+        if form.is_valid():
+            form.save()
+            # Al guardar, volvemos a la lista de contactos
+            return redirect('gestion_medica:ruta_contacto_emergencia', pk=pk)
+            
+        return render(request, "gestion_medica/pages/editar_contacto.html", {
+            'ficha': ficha,
+            'form': form,
+            'contacto': contacto
+        })
+    
 class EliminarContactoView(View):
     def post(self, request, pk, contacto_id):
         ficha = get_object_or_404(FichaMedica, pk=pk)
@@ -99,6 +132,37 @@ class MedicoEnfermedadView(View):
             'ficha': ficha,
             'enfermedades': enfermedades,
             'form': form
+        })
+    
+class EditarEnfermedadPacienteView(View):
+    def get(self, request, pk, enfermedad_id):
+        ficha = get_object_or_404(FichaMedica, pk=pk)
+        # Buscamos la relación específica (la enfermedad asignada)
+        item = get_object_or_404(FichaMedicaEnfermedad, id=enfermedad_id, ficha_medica=ficha)
+        
+        form = FichaMedicaEnfermedadForm(instance=item)
+        
+        return render(request, "gestion_medica/pages/editar_enfermedad_paciente.html", {
+            'ficha': ficha,
+            'form': form,
+            'item': item
+        })
+
+    def post(self, request, pk, enfermedad_id):
+        ficha = get_object_or_404(FichaMedica, pk=pk)
+        item = get_object_or_404(FichaMedicaEnfermedad, id=enfermedad_id, ficha_medica=ficha)
+        
+        form = FichaMedicaEnfermedadForm(request.POST, instance=item)
+        
+        if form.is_valid():
+            form.save()
+            # Al guardar, volvemos a la lista de enfermedades
+            return redirect('gestion_medica:ruta_enfermedad_paciente', pk=pk)
+            
+        return render(request, "gestion_medica/pages/editar_enfermedad_paciente.html", {
+            'ficha': ficha,
+            'form': form,
+            'item': item
         })
 
 class EliminarEnfermedadPacienteView(View):
@@ -316,6 +380,35 @@ class MedicoMedicamentosView(View):
             'ficha': ficha,
             'medicamentos_paciente': medicamentos_paciente,
             'form': form
+        })
+    
+class EditarMedicamentoPacienteView(View):
+    def get(self, request, pk, medicamento_id):
+        ficha = get_object_or_404(FichaMedica, pk=pk)
+        item = get_object_or_404(FichaMedicaMedicamento, id=medicamento_id, ficha_medica=ficha)
+        
+        form = FichaMedicaMedicamentoForm(instance=item)
+        
+        return render(request, "gestion_medica/pages/editar_medicamento_paciente.html", {
+            'ficha': ficha,
+            'form': form,
+            'item': item
+        })
+
+    def post(self, request, pk, medicamento_id):
+        ficha = get_object_or_404(FichaMedica, pk=pk)
+        item = get_object_or_404(FichaMedicaMedicamento, id=medicamento_id, ficha_medica=ficha)
+        
+        form = FichaMedicaMedicamentoForm(request.POST, instance=item)
+        
+        if form.is_valid():
+            form.save()
+            return redirect('gestion_medica:ruta_medicamentos_paciente', pk=pk)
+            
+        return render(request, "gestion_medica/pages/editar_medicamento_paciente.html", {
+            'ficha': ficha,
+            'form': form,
+            'item': item
         })
 
 class EliminarMedicamentoPacienteView(View):
