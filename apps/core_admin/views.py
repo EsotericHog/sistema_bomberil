@@ -184,3 +184,25 @@ class EstacionEliminarView(SuperuserRequiredMixin, DeleteView):
         context = super().get_context_data(**kwargs)
         context['titulo_pagina'] = "Eliminar Estación"
         return context
+
+
+
+
+class EstacionSwitchView(SuperuserRequiredMixin, View):
+    """
+    Vista lógica para 'entrar' a una estación.
+    Establece la estación seleccionada como activa en la sesión y redirige al portal.
+    """
+    def get(self, request, pk):
+        estacion = get_object_or_404(Estacion, pk=pk)
+        
+        # 1. Configurar la variable de sesión crítica 
+        request.session['active_estacion_id'] = estacion.id
+        request.session['active_estacion_nombre'] = estacion.nombre
+        
+        # 2. Feedback al usuario
+        messages.success(request, f"Has ingresado a la gestión de: {estacion.nombre}")
+        
+        # 3. Redirigir al Dashboard operativo (Portal) [cite: 9]
+        # Asumiendo que el namespace de tu portal es 'portal' y la url 'ruta_inicio'
+        return redirect('portal:ruta_inicio')

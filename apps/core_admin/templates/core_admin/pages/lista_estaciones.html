@@ -98,6 +98,12 @@
 
                         <td class="text-end pe-4">
                             <div class="btn-group" role="group">
+                                <a href="{% url 'core_admin:ruta_acceder_estacion' estacion.pk %}" 
+                                   class="btn btn-sm btn-outline-success" 
+                                   data-bs-toggle="tooltip" 
+                                   title="Ingresar a gestionar">
+                                    <i class="fas fa-sign-in-alt"></i>
+                                </a>
                                 <a href="{% url 'core_admin:ruta_editar_estacion' estacion.pk %}" class="btn btn-sm btn-outline-secondary" data-bs-toggle="tooltip" title="Editar información">
                                     <i class="fas fa-pencil-alt"></i>
                                 </a>
