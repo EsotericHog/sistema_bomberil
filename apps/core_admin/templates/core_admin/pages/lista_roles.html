@@ -41,7 +41,7 @@
             <h5 class="mb-0 fw-bold text-secondary">Listado Maestro</h5>
             
             {# Placeholder para Crear Rol #}
-            <a href="#" class="btn btn-success">
+            <a href="{% url 'core_admin:ruta_crear_rol' %}" class="btn btn-success">
                 <i class="fas fa-plus-circle me-2"></i>Nuevo Rol Global
             </a>
         </div>
@@ -91,10 +91,10 @@
 
                         <td class="text-end pe-4">
                             <div class="btn-group">
-                                <a href="#" class="btn btn-sm btn-outline-secondary" title="Editar Permisos">
+                                <a href="{% url 'core_admin:ruta_editar_rol' rol.pk %}" class="btn btn-sm btn-outline-secondary" title="Editar Permisos">
                                     <i class="fas fa-key"></i>
                                 </a>
-                                <a href="#" class="btn btn-sm btn-outline-primary" title="Editar Nombre">
+                                <a href="{% url 'core_admin:ruta_editar_rol' rol.pk %}" class="btn btn-sm btn-outline-primary" title="Editar Nombre">
                                     <i class="fas fa-pencil-alt"></i>
                                 </a>
                                 <button class="btn btn-sm btn-outline-danger" title="Eliminar">

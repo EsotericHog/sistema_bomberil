@@ -18,7 +18,9 @@ from .views import (
     ApiRolesPorEstacionView,
     MembresiaCreateView,
     UsuarioFinalizarMembresiasView,
-    RolGlobalListView
+    RolGlobalListView,
+    RolGlobalCreateView,
+    RolGlobalUpdateView
 )
 
 app_name = 'core_admin'
@@ -45,6 +47,8 @@ urlpatterns = [
     # Acceder a una estación
     path('estaciones/<int:pk>/ingresar/', EstacionSwitchView.as_view(), name='ruta_acceder_estacion'),
 
+
+
     # Catálogo global de productos
     path('catalogo-global/', ProductoGlobalListView.as_view(), name='ruta_catalogo_global'),
 
@@ -56,6 +60,8 @@ urlpatterns = [
 
     # Eliminar producto global
     path('catalogo-global/<int:pk>/eliminar/', ProductoGlobalDeleteView.as_view(), name='ruta_eliminar_producto_global'),
+
+
 
     # Lista de usuarios
     path('usuarios/', UsuarioListView.as_view(), name='ruta_lista_usuarios'),
@@ -78,7 +84,15 @@ urlpatterns = [
     # Finalizar todas las membresías activas de un usuario
     path('usuarios/<int:pk>/finalizar-membresias/', UsuarioFinalizarMembresiasView.as_view(), name='ruta_finalizar_membresias_usuario'),
 
+
+
     # Lista de roles
     path('roles-globales/', RolGlobalListView.as_view(), name='ruta_lista_roles'),
+
+    # Crear rol global
+    path('roles-globales/crear/', RolGlobalCreateView.as_view(), name='ruta_crear_rol'),
+
+    # Editar rol global
+    path('roles-globales/<int:pk>/editar/', RolGlobalUpdateView.as_view(), name='ruta_editar_rol'),
 
 ]

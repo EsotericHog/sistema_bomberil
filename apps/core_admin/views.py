@@ -602,3 +602,73 @@ class RolGlobalListView(SuperuserRequiredMixin, ListView):
         mas_usado = self.object_list.order_by('-total_asignaciones').first()
         context['kpi_popular'] = mas_usado.nombre if mas_usado else "N/A"
         return context
+
+
+
+
+class RolGlobalCreateView(SuperuserRequiredMixin, PermisosMatrixMixin, CreateView):
+    model = Rol
+    form_class = RolGlobalForm
+    template_name = 'core_admin/pages/rol_form.html'
+    success_url = reverse_lazy('core_admin:ruta_lista_roles')
+
+    def form_valid(self, form):
+        # 1. Guardar el objeto Rol (sin M2M aún)
+        self.object = form.save(commit=False)
+        self.object.estacion = None # Forzar Global
+        self.object.save()
+        
+        # 2. GUARDADO EXPLÍCITO (La Solución)
+        # Obtenemos los permisos limpios del formulario (ya filtrados por el queryset)
+        permisos_seleccionados = form.cleaned_data['permisos']
+        
+        # Debug (Opcional: para ver en consola qué está llegando)
+        print(f"DEBUG: Guardando {permisos_seleccionados.count()} permisos para el rol {self.object.nombre}")
+        
+        # .set() reemplaza TODO lo que había con la nueva lista.
+        # Esto elimina automáticamente cualquier permiso basura (sys_, add_, etc.)
+        self.object.permisos.set(permisos_seleccionados)
+        
+        messages.success(self.request, f"Rol global '{self.object.nombre}' creado con {permisos_seleccionados.count()} permisos.")
+        return redirect(self.get_success_url())
+
+
+
+
+class RolGlobalUpdateView(SuperuserRequiredMixin, PermisosMatrixMixin, UpdateView):
+    model = Rol
+    form_class = RolGlobalForm
+    template_name = 'core_admin/pages/rol_form.html'
+    success_url = reverse_lazy('core_admin:ruta_lista_roles')
+
+    def get_queryset(self):
+        return Rol.objects.filter(estacion__isnull=True)
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['titulo_pagina'] = f"Editar Rol: {self.object.nombre}"
+        context['accion'] = "Actualizar Rol"
+        
+        # 1. Inyectar la matriz de permisos (del Mixin)
+        context['permissions_matrix'] = self.get_permissions_matrix()
+        
+        # 2. Inyectar los IDs actuales para que aparezcan marcados (checked)
+        context['rol_permissions_ids'] = set(self.object.permisos.values_list('id', flat=True))
+        
+        return context
+
+    def form_valid(self, form):
+        # 1. Guardar cambios básicos (nombre, descripción)
+        self.object = form.save(commit=False)
+        self.object.save()
+        
+        # 2. GUARDADO EXPLÍCITO (La Solución)
+        permisos_seleccionados = form.cleaned_data['permisos']
+        
+        print(f"DEBUG: Actualizando a {permisos_seleccionados.count()} permisos para {self.object.nombre}")
+        
+        # Limpieza total y reasignación
+        self.object.permisos.set(permisos_seleccionados)
+        
+        messages.success(self.request, f"Rol actualizado. Permisos activos: {permisos_seleccionados.count()}.")
+        return redirect(self.get_success_url())

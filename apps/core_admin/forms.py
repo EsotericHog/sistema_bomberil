@@ -1,6 +1,7 @@
 from django import forms
 from django.core.exceptions import ValidationError
 from django.db.models import Q
+from django.contrib.auth.models import Permission
 
 from apps.gestion_inventario.models import Estacion, Comuna, ProductoGlobal
 from apps.gestion_usuarios.models import Usuario, Rol, Membresia
@@ -219,3 +220,30 @@ class AsignarMembresiaForm(forms.ModelForm):
                 )
         
         return cleaned_data
+
+
+
+
+class RolGlobalForm(forms.ModelForm):
+    class Meta:
+        model = Rol
+        fields = ['nombre', 'descripcion', 'permisos']
+        widgets = {
+            'descripcion': forms.Textarea(attrs={'rows': 3}),
+            'permisos': forms.MultipleHiddenInput(),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        
+        self.fields['nombre'].widget.attrs['class'] = 'form-control'
+        self.fields['descripcion'].widget.attrs['class'] = 'form-control'
+        
+        # 1. FILTRO ESTRICTO: Solo 'acceso_' y 'accion_'
+        criterio_negocio = Q(codename__startswith='acceso_') | Q(codename__startswith='accion_')
+        
+        self.fields['permisos'].queryset = Permission.objects.filter(
+            criterio_negocio
+        ).select_related('content_type').order_by('content_type__app_label', 'codename')
+        
+        self.fields['permisos'].required = False
