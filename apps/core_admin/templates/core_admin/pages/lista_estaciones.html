@@ -105,7 +105,7 @@
                                     <i class="fas fa-users"></i>
                                 </a>
                                 {# Solo el superusuario debería ver el botón eliminar #}
-                                <a href="#" class="btn btn-sm btn-outline-danger" data-bs-toggle="tooltip" title="Eliminar Estación">
+                                <a href="{% url 'core_admin:ruta_eliminar_estacion' estacion.pk %}" class="btn btn-sm btn-outline-danger" data-bs-toggle="tooltip" title="Eliminar Estación">
                                     <i class="fas fa-trash"></i>
                                 </a>
                             </div>

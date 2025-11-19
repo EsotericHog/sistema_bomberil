@@ -1,8 +1,10 @@
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 from django.views import View
-from django.views.generic import ListView, DetailView, UpdateView, CreateView
-from django.db.models import Count, Q
+from django.views.generic import ListView, DetailView, UpdateView, CreateView, DeleteView
+from django.db.models import Count, Q, ProtectedError
 from django.urls import reverse_lazy
+from django.contrib import messages
+from django.http import HttpResponseRedirect
 
 from .mixins import SuperuserRequiredMixin
 from .forms import EstacionForm
@@ -124,4 +126,41 @@ class EstacionCrearView(SuperuserRequiredMixin, CreateView):
         context = super().get_context_data(**kwargs)
         context['titulo_pagina'] = "Registrar Nueva Estación"
         context['accion'] = "Crear Estación" # Texto del botón de submit
+        return context
+
+
+
+
+class EstacionEliminarView(SuperuserRequiredMixin, DeleteView):
+    model = Estacion
+    template_name = 'core_admin/pages/confirmar_eliminar_estacion.html'
+    context_object_name = 'estacion'
+    success_url = reverse_lazy('core_admin:ruta_lista_estaciones')
+
+    def post(self, request, *args, **kwargs):
+        """
+        Sobrescribimos el POST para capturar el error de protección (ProtectedError).
+        Si la estación tiene datos hijos (ubicaciones, productos, etc.), Django
+        lanzará este error debido a on_delete=models.PROTECT.
+        """
+        self.object = self.get_object()
+        success_url = self.get_success_url()
+
+        try:
+            self.object.delete()
+            messages.success(request, f"La estación '{self.object.nombre}' ha sido eliminada correctamente.")
+            return HttpResponseRedirect(success_url)
+        
+        except ProtectedError:
+            # Error: Hay datos vinculados
+            messages.error(request, 
+                "No se puede eliminar esta estación porque tiene registros asociados "
+                "(Ubicaciones, Inventario, Usuarios, etc.). Debe eliminar esos registros primero."
+            )
+            # Redirigimos al detalle para que el usuario vea qué tiene la estación
+            return redirect('core_admin:ruta_ver_estacion', pk=self.object.pk)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['titulo_pagina'] = "Eliminar Estación"
         return context
