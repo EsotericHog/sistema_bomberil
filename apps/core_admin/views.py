@@ -8,7 +8,7 @@ from django.http import HttpResponseRedirect
 from django.contrib.auth import get_user_model
 
 from .mixins import SuperuserRequiredMixin
-from .forms import EstacionForm, ProductoGlobalForm, UsuarioCreationForm
+from .forms import EstacionForm, ProductoGlobalForm, UsuarioCreationForm, UsuarioChangeForm
 from apps.gestion_inventario.models import Estacion, Ubicacion, Vehiculo, Prestamo, Compartimento, Categoria, Marca, ProductoGlobal, Producto, Activo, LoteInsumo, MovimientoInventario
 from apps.gestion_usuarios.models import Membresia
 
@@ -395,4 +395,23 @@ class UsuarioCreateView(SuperuserRequiredMixin, CreateView):
         context['titulo_pagina'] = "Registrar Nuevo Usuario"
         context['accion'] = "Crear Usuario"
         context['subtitulo'] = "Complete los datos de identidad y credenciales de acceso."
+        return context
+
+
+
+
+class UsuarioUpdateView(SuperuserRequiredMixin, UpdateView):
+    model = get_user_model()
+    form_class = UsuarioChangeForm
+    template_name = 'core_admin/pages/usuario_form.html' # Reutilizamos el template
+    success_url = reverse_lazy('core_admin:ruta_lista_usuarios')
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['titulo_pagina'] = f"Editar Usuario: {self.object.get_full_name}"
+        context['accion'] = "Guardar Cambios"
+        context['subtitulo'] = "Modifique los datos personales y niveles de acceso."
+        
+        # Bandera para ocultar sección de password en el template
+        context['is_edit_mode'] = True 
         return context

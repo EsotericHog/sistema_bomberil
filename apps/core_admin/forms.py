@@ -126,3 +126,34 @@ class UsuarioCreationForm(forms.ModelForm):
         if commit:
             user.save()
         return user
+
+
+
+
+class UsuarioChangeForm(forms.ModelForm):
+    """
+    Formulario para EDITAR usuarios existentes.
+    No maneja contraseñas, pero permite gestionar permisos sensibles.
+    """
+    class Meta:
+        model = Usuario
+        fields = ['rut', 'first_name', 'last_name', 'email', 'phone', 'is_active', 'is_staff', 'is_superuser']
+        widgets = {
+            'rut': forms.TextInput(attrs={'readonly': 'readonly'}), # El RUT suele ser inmutable, o editable con cuidado
+            'is_active': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+            'is_staff': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+            'is_superuser': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        
+        # Estilos Bootstrap
+        for field_name, field in self.fields.items():
+            if field_name not in ['is_active', 'is_staff', 'is_superuser']:
+                field.widget.attrs['class'] = 'form-control'
+
+        # Validar si el usuario que edita se está editando a sí mismo (para evitar auto-bloqueos)
+        # Esto se maneja mejor en la vista, pero aquí podemos poner warnings en los help_text
+        self.fields['is_superuser'].help_text = "<strong>¡Cuidado!</strong> Otorga acceso total al sistema y evita todas las restricciones de permisos."
+        self.fields['rut'].help_text = "El identificador (RUT) no se puede modificar libremente para mantener la integridad histórica."
