@@ -1,4 +1,4 @@
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.views import View
 from django.views.generic import ListView, DetailView, UpdateView, CreateView, DeleteView
 from django.db.models import Count, Q, ProtectedError
@@ -8,7 +8,8 @@ from django.http import HttpResponseRedirect
 
 from .mixins import SuperuserRequiredMixin
 from .forms import EstacionForm
-from apps.gestion_inventario.models import Estacion, Ubicacion, Vehiculo, Prestamo, Producto, Activo
+from apps.gestion_inventario.models import Estacion, Ubicacion, Vehiculo, Prestamo, Compartimento, Producto, Activo, LoteInsumo, MovimientoInventario
+from apps.gestion_usuarios.models import Membresia
 
 
 class AdministracionInicioView(View):
@@ -57,39 +58,58 @@ class EstacionDetalleView(SuperuserRequiredMixin, DetailView):
         context = super().get_context_data(**kwargs)
         estacion = self.object
 
-        # --- 1. MINI DASHBOARD (KPIs) ---
-        # Cantidad de SKUs (Productos únicos en el catálogo local)
+        # --- 1. KPIs DE INVENTARIO ---
+        # Catálogo
         context['kpi_total_productos'] = Producto.objects.filter(estacion=estacion).count()
-        # Cantidad de Activos Físicos (Equipos serializados reales)
+        # Activos (Equipos serializados)
         context['kpi_total_activos'] = Activo.objects.filter(estacion=estacion).count()
-        # Préstamos que están pendientes (En manos de terceros)
+        # Insumos (Lotes fungibles) - NUEVO
+        context['kpi_total_insumos'] = LoteInsumo.objects.filter(
+            compartimento__ubicacion__estacion=estacion
+        ).count()
+
+        # --- 2. KPIs OPERATIVOS ---
+        # Vehículos
+        vehiculos_qs = Vehiculo.objects.filter(ubicacion__estacion=estacion).select_related('ubicacion', 'tipo_vehiculo', 'marca')
+        context['vehiculos'] = vehiculos_qs # Para el listado
+        context['kpi_total_vehiculos'] = vehiculos_qs.count() # Para el KPI
+        
+        # Compartimentos (Total de gavetas/espacios de almacenaje) - NUEVO
+        context['kpi_total_compartimentos'] = Compartimento.objects.filter(
+            ubicacion__estacion=estacion
+        ).count()
+        
+        # Personal (Membresías activas) - NUEVO
+        # Asumimos que Membresia tiene un campo 'activo' o 'is_active'
+        context['kpi_total_usuarios'] = Membresia.objects.filter(
+            estacion=estacion
+            # Si tu modelo Membresia tiene un campo booleano de activo, úsalo aquí:
+            # , is_active=True 
+        ).count()
+
+        # Préstamos Pendientes
         context['kpi_prestamos_pendientes'] = Prestamo.objects.filter(
             estacion=estacion, 
             estado='PEN'
         ).count()
 
-        # --- 2. FLOTA VEHICULAR ---
-        # Obtenemos los vehículos a través de sus ubicaciones, optimizando la consulta
-        # Traemos la marca y el tipo para no hacer consultas extra en el template
-        context['vehiculos'] = Vehiculo.objects.filter(
-            ubicacion__estacion=estacion
-        ).select_related('ubicacion', 'tipo_vehiculo', 'marca').order_by('ubicacion__nombre')
+        # --- 3. INFO ROBUSTA ADICIONAL ---
+        # Últimos 5 movimientos de inventario en esta estación
+        context['ultimos_movimientos'] = MovimientoInventario.objects.filter(
+            estacion=estacion
+        ).select_related('usuario', 'activo', 'lote_insumo').order_by('-fecha_hora')[:5]
 
-        # --- 3. INFRAESTRUCTURA (ÁREAS) ---
-        # Obtenemos las ubicaciones que NO son vehículos (Bodegas, Oficinas, Pañoles)
-        # Usamos 'Vehículo' textualmente porque así está definido en tu modelo como string
+        # Ubicaciones físicas (Infraestructura)
         context['ubicaciones_fisicas'] = Ubicacion.objects.filter(
             estacion=estacion
         ).exclude(
             tipo_ubicacion__nombre='Vehículo'
         ).select_related('tipo_ubicacion').annotate(
-            # Opcional: Contar cuántos compartimentos tiene cada ubicación
             total_compartimentos=Count('compartimento')
         ).order_by('nombre')
 
         context['menu_activo'] = 'estaciones'
         return context
-
 
 
 
