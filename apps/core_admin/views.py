@@ -570,3 +570,33 @@ class UsuarioFinalizarMembresiasView(SuperuserRequiredMixin, View):
             )
             
         return redirect('core_admin:ruta_lista_usuarios')
+
+
+
+
+class RolGlobalListView(SuperuserRequiredMixin, ListView):
+    model = Rol
+    template_name = 'core_admin/pages/lista_roles.html'
+    context_object_name = 'roles'
+    
+    def get_queryset(self):
+        # CORRECCIÓN:
+        # Count acepta un argumento 'filter'. 
+        # Filtramos 'asignaciones' (el related_name de Membresia) por estado='ACTIVO'.
+        return Rol.objects.filter(estacion__isnull=True).annotate(
+            total_permisos=Count('permisos'),
+            total_asignaciones=Count(
+                'asignaciones', 
+                filter=Q(asignaciones__estado='ACTIVO')
+            )
+        ).order_by('nombre')
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['titulo_pagina'] = "Roles Maestros del Sistema"
+        # KPIs simples
+        context['kpi_total'] = self.object_list.count()
+        # Rol más usado (el que tiene más asignaciones)
+        mas_usado = self.object_list.order_by('-total_asignaciones').first()
+        context['kpi_popular'] = mas_usado.nombre if mas_usado else "N/A"
+        return context
