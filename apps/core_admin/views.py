@@ -5,6 +5,7 @@ from django.db.models import Count, Q, ProtectedError
 from django.urls import reverse_lazy
 from django.contrib import messages
 from django.http import HttpResponseRedirect
+from django.contrib.auth import get_user_model
 
 from .mixins import SuperuserRequiredMixin
 from .forms import EstacionForm, ProductoGlobalForm
@@ -335,4 +336,47 @@ class ProductoGlobalDeleteView(SuperuserRequiredMixin, DeleteView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['titulo_pagina'] = "Eliminar Producto Maestro"
+        return context
+
+
+
+
+class UsuarioListView(SuperuserRequiredMixin, ListView):
+    model = get_user_model()
+    template_name = 'core_admin/pages/lista_usuarios.html'
+    context_object_name = 'usuarios'
+    paginate_by = 20
+
+    def get_queryset(self):
+        User = get_user_model()
+        # Optimización: Traemos las membresías y las estaciones relacionadas
+        # para evitar consultas N+1 en el template.
+        queryset = User.objects.prefetch_related(
+            'membresias',
+            'membresias__estacion'
+        ).order_by('-created_at')
+
+        # --- FILTROS ---
+        q = self.request.GET.get('q')
+        if q:
+            queryset = queryset.filter(
+                Q(username__icontains=q) | 
+                Q(email__icontains=q) |
+                Q(first_name__icontains=q) | 
+                Q(last_name__icontains=q)
+            )
+        
+        return queryset
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['titulo_pagina'] = "Gestión de Usuarios del Sistema"
+        context['current_search'] = self.request.GET.get('q', '')
+        
+        # KPI Rápido
+        User = get_user_model()
+        context['kpi_total_usuarios'] = User.objects.count()
+        context['kpi_activos'] = User.objects.filter(is_active=True).count()
+        context['kpi_staff'] = User.objects.filter(is_staff=True).count()
+        
         return context
