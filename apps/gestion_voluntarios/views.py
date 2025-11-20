@@ -1,37 +1,34 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from django.views import View
-from django.db.models import Prefetch, Count, Q  # <--- Agregamos Q para búsquedas complejas
+from django.db.models import Prefetch, Count, Q
 from django.contrib import messages
-# --- ¡IMPORTACIONES DE PDF ACTUALIZADAS! ---
 import csv
 import json
-import io # Para manejar el PDF en memoria
+import io
 from django.http import HttpResponse, JsonResponse
 from django.template.loader import render_to_string 
 from django.utils import timezone
 from django.core import serializers
 import openpyxl
-from xhtml2pdf import pisa # <--- REEMPLAZA a weasyprint
-from .utils import link_callback # <--- Importamos la función auxiliar
-# -------------------------------------
+from xhtml2pdf import pisa
+from .utils import link_callback
 
-# Importamos los modelos de voluntarios
 from .models import (
     Voluntario, HistorialCargo, Cargo, TipoCargo, Profesion,
     HistorialReconocimiento, HistorialSancion
 )
-
-# Importamos Membresia desde la app gestion_usuarios
 from apps.gestion_usuarios.models import Membresia
-
-# Importamos el modelo Estacion de gestion_inventario
 from apps.gestion_inventario.models import Estacion
 
-# Importamos los formularios
+# Importamos TODOS los formularios
 try:
-    from .forms import ProfesionForm, CargoForm, UsuarioForm, VoluntarioForm
+    from .forms import (
+        ProfesionForm, CargoForm, UsuarioForm, VoluntarioForm,
+        HistorialCargoForm, HistorialReconocimientoForm, HistorialSancionForm
+    )
 except ImportError:
     ProfesionForm = CargoForm = UsuarioForm = VoluntarioForm = None
+    HistorialCargoForm = HistorialReconocimientoForm = HistorialSancionForm = None
 
 # Página Inicial
 class VoluntariosInicioView(View):
@@ -141,63 +138,154 @@ class VoluntariosListaView(View):
 # Ver voluntario
 class VoluntariosVerView(View):
     def get(self, request, id):
+        active_membresia_prefetch = Prefetch('usuario__membresias', queryset=Membresia.objects.filter(estado='ACTIVO').select_related('estacion'), to_attr='membresia_activa_list')
+        current_cargo_prefetch = Prefetch('historial_cargos', queryset=HistorialCargo.objects.filter(fecha_fin__isnull=True).select_related('cargo'), to_attr='cargo_actual_list')
+        cargos_prefetch = Prefetch('historial_cargos', queryset=HistorialCargo.objects.all().select_related('cargo', 'estacion_registra').order_by('-fecha_inicio'))
+        reconocimientos_prefetch = Prefetch('historial_reconocimientos', queryset=HistorialReconocimiento.objects.all().select_related('tipo_reconocimiento', 'estacion_registra').order_by('-fecha_evento'))
+        sanciones_prefetch = Prefetch('historial_sanciones', queryset=HistorialSancion.objects.all().select_related('estacion_registra', 'estacion_evento').order_by('-fecha_evento'))
         
-        # --- Prefetches para datos del Header ---
-        active_membresia_prefetch = Prefetch(
-            'usuario__membresias', # Sigue a 'usuario'
-            queryset=Membresia.objects.filter(estado='ACTIVO').select_related('estacion'),
-            to_attr='membresia_activa_list'
-        )
-        current_cargo_prefetch = Prefetch(
-            'historial_cargos', # Sigue a 'voluntario'
-            queryset=HistorialCargo.objects.filter(fecha_fin__isnull=True).select_related('cargo'),
-            to_attr='cargo_actual_list'
-        )
+        voluntario = get_object_or_404(Voluntario.objects.select_related('usuario', 'nacionalidad', 'profesion', 'domicilio_comuna').prefetch_related(active_membresia_prefetch, current_cargo_prefetch, cargos_prefetch, reconocimientos_prefetch, sanciones_prefetch), id=id)
         
-        # --- Prefetches para las Pestañas del Historial ---
-        cargos_prefetch = Prefetch(
-            'historial_cargos',
-            queryset=HistorialCargo.objects.all().select_related('cargo', 'estacion_registra').order_by('-fecha_inicio')
-        )
-        reconocimientos_prefetch = Prefetch(
-            'historial_reconocimientos',
-            queryset=HistorialReconocimiento.objects.all().select_related('tipo_reconocimiento', 'estacion_registra').order_by('-fecha_evento')
-        )
-        sanciones_prefetch = Prefetch(
-            'historial_sanciones',
-            queryset=HistorialSancion.objects.all().select_related('estacion_registra', 'estacion_evento').order_by('-fecha_evento')
-        )
+        membresia_activa = voluntario.usuario.membresia_activa_list[0] if voluntario.usuario.membresia_activa_list else None
+        cargo_actual = voluntario.cargo_actual_list[0] if voluntario.cargo_actual_list else None
         
-        # --- Query Principal ---
-        voluntario = get_object_or_404(
-            Voluntario.objects.select_related(
-                'usuario', 'nacionalidad', 'profesion', 'domicilio_comuna'
-            ).prefetch_related(
-                active_membresia_prefetch,
-                current_cargo_prefetch,
-                cargos_prefetch,
-                reconocimientos_prefetch,
-                sanciones_prefetch
-            ),
-            id=id
-        )
-
-        # === LÓGICA CORREGIDA ===
-        # Extraemos las listas de los atributos pre-cargados
-        membresia_list = voluntario.usuario.membresia_activa_list
-        cargo_list = voluntario.cargo_actual_list
-
-        # Asignamos el primer elemento (si la lista NO está vacía) o None
-        membresia_activa = membresia_list[0] if membresia_list else None
-        cargo_actual = cargo_list[0] if cargo_list else None
-        
-        # --- Preparar Contexto ---
+        # --- Enviamos los 3 formularios al template ---
         context = {
             'voluntario': voluntario,
-            'membresia': membresia_activa,    # <--- Variable corregida
-            'cargo_actual': cargo_actual,   # <--- Variable corregida
+            'membresia': membresia_activa,
+            'cargo_actual': cargo_actual,
+            'form_cargo': HistorialCargoForm(),
+            'form_reconocimiento': HistorialReconocimientoForm(),
+            'form_sancion': HistorialSancionForm(),
         }
         return render(request, "gestion_voluntarios/pages/ver_voluntario.html", context)
+
+
+# --- VISTAS PARA AGREGAR EVENTOS (BITÁCORA) ---
+
+class VoluntarioAgregarCargoView(View):
+    def post(self, request, id):
+        voluntario = get_object_or_404(Voluntario, id=id)
+        form = HistorialCargoForm(request.POST)
+        if form.is_valid():
+            try:
+                # Obtenemos la estación del usuario logueado
+                membresia_admin = request.user.membresias.filter(estado='ACTIVO').first()
+                estacion_registra = membresia_admin.estacion if membresia_admin else None
+                
+                # Lógica de Bitácora: Cerrar cargo anterior
+                fecha_inicio_nuevo = form.cleaned_data['fecha_inicio']
+                cargo_anterior = HistorialCargo.objects.filter(voluntario=voluntario, fecha_fin__isnull=True).first()
+
+                if cargo_anterior:
+                    if fecha_inicio_nuevo < cargo_anterior.fecha_inicio:
+                        messages.error(request, "La fecha del nuevo cargo no puede ser anterior al actual.")
+                        return redirect('gestion_voluntarios:ruta_ver_voluntario', id=id)
+                    cargo_anterior.fecha_fin = fecha_inicio_nuevo
+                    cargo_anterior.save()
+
+                # Crear nuevo cargo
+                nuevo_cargo = form.save(commit=False)
+                nuevo_cargo.voluntario = voluntario
+                nuevo_cargo.estacion_registra = estacion_registra
+                nuevo_cargo.es_historico = False
+                nuevo_cargo.save()
+                
+                messages.success(request, "Cargo registrado exitosamente.")
+            except Exception as e:
+                messages.error(request, f"Error: {e}")
+        else:
+            messages.error(request, "Error en el formulario de cargo.")
+        return redirect('gestion_voluntarios:ruta_ver_voluntario', id=id)
+
+
+class VoluntarioAgregarReconocimientoView(View):
+    def post(self, request, id):
+        voluntario = get_object_or_404(Voluntario, id=id)
+        form = HistorialReconocimientoForm(request.POST)
+        
+        if form.is_valid():
+            try:
+                membresia_admin = request.user.membresias.filter(estado='ACTIVO').first()
+                
+                nuevo_reco = form.save(commit=False)
+                nuevo_reco.voluntario = voluntario
+                nuevo_reco.estacion_registra = membresia_admin.estacion if membresia_admin else None
+                nuevo_reco.es_historico = False
+                nuevo_reco.save()
+                
+                messages.success(request, "Reconocimiento agregado exitosamente.")
+            except Exception as e:
+                messages.error(request, f"Error al guardar: {e}")
+        else:
+             messages.error(request, "Error en el formulario de reconocimiento.")
+             
+        return redirect('gestion_voluntarios:ruta_ver_voluntario', id=id)
+
+
+class VoluntarioAgregarSancionView(View):
+    def post(self, request, id):
+        voluntario = get_object_or_404(Voluntario, id=id)
+        # Nota: request.FILES para subir el documento adjunto
+        form = HistorialSancionForm(request.POST, request.FILES)
+        
+        if form.is_valid():
+            try:
+                membresia_admin = request.user.membresias.filter(estado='ACTIVO').first()
+                
+                nueva_sancion = form.save(commit=False)
+                nueva_sancion.voluntario = voluntario
+                nueva_sancion.estacion_registra = membresia_admin.estacion if membresia_admin else None
+                nueva_sancion.es_historico = False
+                nueva_sancion.save()
+                
+                messages.success(request, "Sanción registrada exitosamente.")
+            except Exception as e:
+                messages.error(request, f"Error al guardar: {e}")
+        else:
+             messages.error(request, "Error en el formulario de sanción.")
+             
+        return redirect('gestion_voluntarios:ruta_ver_voluntario', id=id)
+
+
+# ... (Resto de vistas Modificar, Configuración, Reportes... se mantienen igual) ...
+class VoluntariosModificarView(View):
+    
+    def get(self, request, id):
+        voluntario = get_object_or_404(Voluntario.objects.select_related('usuario'), id=id)
+        
+        usuario_form = UsuarioForm(instance=voluntario.usuario)
+        voluntario_form = VoluntarioForm(instance=voluntario)
+
+        context = {
+            'voluntario': voluntario,
+            'usuario_form': usuario_form,
+            'voluntario_form': voluntario_form
+        }
+        return render(request, "gestion_voluntarios/pages/modificar_voluntario.html", context)
+
+    def post(self, request, id):
+        voluntario = get_object_or_404(Voluntario.objects.select_related('usuario'), id=id)
+        
+        # ¡IMPORTANTE! Agregamos request.FILES para procesar la imagen del avatar
+        usuario_form = UsuarioForm(request.POST, request.FILES, instance=voluntario.usuario)
+        voluntario_form = VoluntarioForm(request.POST, instance=voluntario)
+
+        if usuario_form.is_valid() and voluntario_form.is_valid():
+            usuario_form.save()
+            voluntario_form.save()
+            
+            messages.success(request, f'Se han guardado los cambios de {voluntario.usuario.get_full_name}.')
+            return redirect('gestion_voluntarios:ruta_ver_voluntario', id=voluntario.id)
+        
+        context = {
+            'voluntario': voluntario,
+            'usuario_form': usuario_form,
+            'voluntario_form': voluntario_form
+        }
+        messages.error(request, 'Error al guardar. Por favor, revisa los campos.')
+        return render(request, "gestion_voluntarios/pages/modificar_voluntario.html", context)
+     
 
 # Editar voluntario
 class VoluntariosModificarView(View):

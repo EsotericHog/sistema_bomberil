@@ -49,7 +49,9 @@ urlpatterns = [
     # Modificar información de un voluntario
     path('voluntario/<int:id>/editar', VoluntariosModificarView.as_view(), name="ruta_modificar_voluntario"),
 
-
+    path('voluntario/<int:id>/agregar_cargo/', VoluntarioAgregarCargoView.as_view(), name="ruta_agregar_cargo"),
+    path('voluntario/<int:id>/agregar_reconocimiento/', VoluntarioAgregarReconocimientoView.as_view(), name="ruta_agregar_reconocimiento"),
+    path('voluntario/<int:id>/agregar_sancion/', VoluntarioAgregarSancionView.as_view(), name="ruta_agregar_sancion"),
 
     # Lista de cargos y profesiones
     path('cargos_lista/', CargosListaView.as_view(), name="ruta_cargos_lista"),
