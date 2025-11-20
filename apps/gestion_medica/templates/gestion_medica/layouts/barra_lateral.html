@@ -6,17 +6,17 @@
     <section class="barra_lateral__seccion">
         <div class="barra_lateral__modulo" data-toggle="modulo">
             <a href="{% url 'gestion_medica:ruta_inicio' %}" class="barra_lateral__modulo_nombre fs_nav_seccion color_primario scale">
-                <i class="fa-solid fa-house-medical"></i>
+                <i class="fa-solid fa-house me-2"></i>
                 <span>Inicio</span>
             </a>
         </div>
     </section>
 
-    {# SECCIÓN 2: Gestión #}
+    {# SECCIÓN 2: Gestión Principal #}
     <section class="barra_lateral__seccion">
         <div class="barra_lateral__modulo" data-toggle="modulo">
             <a href="{% url 'gestion_medica:ruta_lista_paciente' %}" class="barra_lateral__modulo_nombre fs_nav_seccion color_primario scale">
-                <i class="fa-solid fa-users-medical"></i>
+                <i class="fa-solid fa-file-medical me-2"></i>
                 <span>Fichas Médicas</span>
             </a>
         </div>
@@ -26,34 +26,38 @@
     <section class="barra_lateral__seccion">
         <div class="barra_lateral__modulo" data-toggle="modulo">
             <a href="#" class="barra_lateral__modulo_nombre fs_nav_seccion color_primario scale">
-                <i class="fa-solid fa-book-medical"></i>
+                <i class="fa-solid fa-book-open me-2"></i>
                 <span>Catálogos</span>
             </a>
             <i class="fa-solid fa-chevron-down color_primario fs_nav_seccion barra_lateral__flecha_modulo"></i>
         </div>
 
         <ul class="barra_lateral__lista_opciones oculto">
+            
             <li class="fondo_opcion_nav hover_color">
                 <a class="color_primario fs_pequena fs_nav_opcion" href="{% url 'gestion_medica:ruta_lista_medicamentos' %}">
-                    Medicamentos
+                    <i class="fa-solid fa-pills me-2"></i> Medicamentos
                 </a>
             </li>
+
             <li class="fondo_opcion_nav hover_color">
                 <a class="color_primario fs_pequena fs_nav_opcion" href="{% url 'gestion_medica:ruta_lista_enfermedades' %}">
-                    Enfermedades
+                    <i class="fa-solid fa-heartbeat me-2"></i> Enfermedades
                 </a>
             </li>
+
             <li class="fondo_opcion_nav hover_color">
                 <a class="color_primario fs_pequena fs_nav_opcion" href="{% url 'gestion_medica:ruta_lista_alergias' %}">
-                    Alergias
+                    <i class="fa-solid fa-allergies me-2"></i> Alergias
                 </a>
             </li>
 
             <li class="fondo_opcion_nav hover_color">
                 <a class="color_primario fs_pequena fs_nav_opcion" href="{% url 'gestion_medica:ruta_lista_cirugias' %}">
-                    Operaciones / Cirugías
+                    <i class="fa-solid fa-syringe me-2"></i> Operaciones
                 </a>
             </li>
+
         </ul>
     </section>
 </nav>
