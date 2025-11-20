@@ -50,7 +50,7 @@
             <div class="section-title">Información Personal</div>
             <div class="data-row"><span class="label">Fecha Nac.:</span> {{ voluntario.fecha_nacimiento|date:"d/m/Y" }} ({{ edad }} años)</div>
             <div class="data-row"><span class="label">Dirección:</span> {{ voluntario.direccion|default:"No registrada" }}</div>
-            <div class="data-row"><span class="label">Teléfono:</span> {{ voluntario.telefono|default:"--" }}</div>
+            <div class="data-row"><span class="label">Teléfono:</span> {{ voluntario.usuario.phone|default:"Sin teléfono" }}</div>
             <div class="data-row"><span class="label">Email:</span> {{ voluntario.usuario.email }}</div>
         </div>
 

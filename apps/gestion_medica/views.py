@@ -4,20 +4,16 @@ from django.contrib import messages # Opcional, para mensajes bonitos
 from .models import Medicamento, FichaMedica, FichaMedicaMedicamento,FichaMedicaAlergia, FichaMedicaEnfermedad, FichaMedicaCirugia, ContactoEmergencia, Alergia,  Enfermedad, Cirugia
 from .forms import MedicamentoForm, FichaMedicaForm, FichaMedicaMedicamentoForm, FichaMedicaAlergiaForm, FichaMedicaEnfermedadForm, ContactoEmergenciaForm, FichaMedicaCirugiaForm, AlergiaForm, EnfermedadForm, CirugiaForm    
 from datetime import date  
-from django.db import IntegrityError  # <--- IMPORTANTE
+from django.db import IntegrityError
+
+# ==============================================================================
+# 1. VISTAS GENERALES Y DE PACIENTES (FICHA MÉDICA)
+# ==============================================================================
 
 class MedicoInicioView(View):
     '''Vista para ver la página principal del módulo'''
     def get(self, request):
         return render(request, "gestion_medica/pages/home.html")
-    
-
-
-class MedicoCrearView(View):
-    def get(self, request):
-        return render(request, "gestion_medica/pages/crear_voluntario.html")
-
-
 
 class MedicoListaView(View):
     def get(self, request):
@@ -25,12 +21,118 @@ class MedicoListaView(View):
         # Usamos 'select_related' para traer los datos del voluntario y usuario de una vez (optimización)
         pacientes = FichaMedica.objects.select_related('voluntario__usuario').all()
         return render(request, "gestion_medica/pages/lista_voluntarios.html", {'pacientes': pacientes})
-    
+
+class MedicoCrearView(View):
+    def get(self, request):
+        return render(request, "gestion_medica/pages/crear_voluntario.html")
+
 class MedicoDatosView(View):
     def get(self, request):
         return render(request, "gestion_medica/pages/datos_paciente.html")
-    #def get(self, request, id):
-        #return HttpResponse("mostrar datos")
+
+class MedicoVerView(View):
+    def get(self, request):
+        return render(request, "gestion_medica/pages/ver_voluntario.html")
+
+class MedicoInfoView(View):
+    def get(self, request, pk):
+        # Buscamos la ficha por el ID (pk). Si no existe, da error 404.
+        ficha = get_object_or_404(FichaMedica, pk=pk)
+        # 2. Buscamos al voluntario
+        voluntario = ficha.voluntario
+
+        # --- CORRECCIÓN AQUÍ: Usamos voluntario.usuario ---
+        usuario = voluntario.usuario  # Accedemos a la cuenta de usuario real
+        
+        edad = "S/I"
+        if usuario.birthdate: # <--- Aquí estaba el error, se llama birthdate
+            today = date.today()
+            nac = usuario.birthdate
+            # Calculamos la edad exacta
+            edad = today.year - nac.year - ((today.month, today.day) < (nac.month, nac.day))
+
+        qr_url = request.build_absolute_uri()
+
+        return render(request, "gestion_medica/pages/informacion_paciente.html", {
+            'ficha': ficha,
+            'voluntario': voluntario,
+            'edad': edad, # Enviamos la edad calculada
+            'qr_url': qr_url,  # Enviamos la URL para el QR
+            # Relaciones directas desde la ficha (usando related_name del models.py)
+            'alergias': ficha.alergias.all(),
+            'enfermedades': ficha.enfermedades.all(),
+            'medicamentos': ficha.medicamentos.all(),
+            'cirugias': ficha.cirugias.all(),
+            # Relación desde el voluntario
+            'contactos': voluntario.contactos_emergencia.all()
+        })
+
+class MedicoModificarView(View):
+    def get(self, request, pk):
+        # 1. Buscar la ficha médica por su ID (pk)
+        ficha = get_object_or_404(FichaMedica, pk=pk)
+        # 2. Llenar el formulario con los datos existentes
+        form = FichaMedicaForm(instance=ficha)
+        return render(request, "gestion_medica/pages/modificar_voluntario.html", {
+            'form': form,
+            'ficha': ficha  # Para mostrar el nombre del paciente si quieres
+        })
+    
+    def post(self, request, pk):
+        # 1. Recuperar la ficha
+        ficha = get_object_or_404(FichaMedica, pk=pk)
+
+        # 2. Cargar el formulario con los datos nuevos que envió el usuario
+        form = FichaMedicaForm(request.POST, instance=ficha)
+
+        if form.is_valid():
+            form.save() # ¡Guardar cambios!
+            # Redirigir a la lista o al detalle (ajusta la ruta según prefieras)
+            return redirect('gestion_medica:ruta_lista_paciente')
+
+        # Si hay error, volver a mostrar el formulario con errores
+        return render(request, "gestion_medica/pages/modificar_voluntario.html", {'form': form, 'ficha': ficha})
+
+class MedicoImprimirView(View):
+    def get(self, request, pk):
+        # 1. Optimización y consulta de datos relacionados (One-to-One)
+        ficha = get_object_or_404(
+            FichaMedica.objects.select_related(
+                'voluntario', 
+                'voluntario__usuario', # Para acceder a la fecha de nacimiento y nombre
+                'grupo_sanguineo', 
+                'sistema_salud'
+            ), pk=pk
+        )
+        voluntario = ficha.voluntario
+        usuario = voluntario.usuario  # Accedemos a la cuenta de usuario real
+        
+        # 2. CORRECCIÓN DE LA EDAD: Usando el campo 'birthdate' (Fecha Nacimiento)
+        edad = "S/I"
+        if usuario.birthdate: 
+            today = date.today()
+            nac = usuario.birthdate
+            # Calcula la edad exacta
+            edad = today.year - nac.year - ((today.month, today.day) < (nac.month, nac.day))
+
+        # 3. Prepara el contexto para el template
+        return render(request, "gestion_medica/pages/imprimir_ficha.html", {
+            'ficha': ficha,
+            'voluntario': voluntario,
+            'edad': edad,
+            # Optimizamos las listas Many-to-Many también
+            'alergias': ficha.alergias.all().select_related('alergia'),
+            'enfermedades': ficha.enfermedades.all().select_related('enfermedad'),
+            'medicamentos': ficha.medicamentos.all().select_related('medicamento'),
+            'cirugias': ficha.cirugias.all().select_related('cirugia'),
+            'contactos': voluntario.contactos_emergencia.all(),
+            'fecha_reporte': date.today()
+        })
+
+
+# ==============================================================================
+# 2. GESTIÓN DE CONTACTOS DE EMERGENCIA
+# ==============================================================================
 
 class MedicoNumEmergView(View):
     def get(self, request, pk):
@@ -58,8 +160,6 @@ class MedicoNumEmergView(View):
         return render(request, "gestion_medica/pages/contacto_emergencia.html", {
             'ficha': ficha, 'contactos': contactos, 'form': form
         })
-
-# En apps/gestion_medica/views.py
 
 class EditarContactoView(View):
     def get(self, request, pk, contacto_id):
@@ -97,8 +197,12 @@ class EliminarContactoView(View):
         ficha = get_object_or_404(FichaMedica, pk=pk)
         contacto = get_object_or_404(ContactoEmergencia, id=contacto_id, voluntario=ficha.voluntario)
         contacto.delete()
-        return redirect('gestion_medica:ruta_contacto_emergencia', pk=pk)#def get(self, request, id):
-        #return HttpResponse("mostrar datos")
+        return redirect('gestion_medica:ruta_contacto_emergencia', pk=pk)
+
+
+# ==============================================================================
+# 3. GESTIÓN DE ENFERMEDADES (DEL PACIENTE)
+# ==============================================================================
 
 class MedicoEnfermedadView(View):
     def get(self, request,pk):
@@ -133,7 +237,7 @@ class MedicoEnfermedadView(View):
             'enfermedades': enfermedades,
             'form': form
         })
-    
+
 class EditarEnfermedadPacienteView(View):
     def get(self, request, pk, enfermedad_id):
         ficha = get_object_or_404(FichaMedica, pk=pk)
@@ -171,7 +275,12 @@ class EliminarEnfermedadPacienteView(View):
         item = get_object_or_404(FichaMedicaEnfermedad, id=enfermedad_id, ficha_medica=ficha)
         item.delete()
         return redirect('gestion_medica:ruta_enfermedad_paciente', pk=pk)
-    
+
+
+# ==============================================================================
+# 4. GESTIÓN DE ALERGIAS (DEL PACIENTE)
+# ==============================================================================
+
 class MedicoAlergiasView(View):
     def get(self, request, pk):
         ficha = get_object_or_404(FichaMedica, pk=pk)
@@ -215,137 +324,11 @@ class EliminarAlergiaPacienteView(View):
         item.delete()
         return redirect('gestion_medica:ruta_alergias_paciente', pk=pk)
 
-class MedicoInfoView(View):
-    def get(self, request, pk):
-        # Buscamos la ficha por el ID (pk). Si no existe, da error 404.
-        ficha = get_object_or_404(FichaMedica, pk=pk)
-        # 2. Buscamos al voluntario
-        voluntario = ficha.voluntario
 
-        # --- CORRECCIÓN AQUÍ: Usamos voluntario.usuario ---
-        usuario = voluntario.usuario  # Accedemos a la cuenta de usuario real
-        
-        edad = "S/I"
-        if usuario.birthdate: # <--- Aquí estaba el error, se llama birthdate
-            today = date.today()
-            nac = usuario.birthdate
-            # Calculamos la edad exacta
-            edad = today.year - nac.year - ((today.month, today.day) < (nac.month, nac.day))
+# ==============================================================================
+# 5. GESTIÓN DE MEDICAMENTOS (DEL PACIENTE)
+# ==============================================================================
 
-        qr_url = request.build_absolute_uri()
-
-        return render(request, "gestion_medica/pages/informacion_paciente.html", {
-            'ficha': ficha,
-            'voluntario': voluntario,
-            'edad': edad, # Enviamos la edad calculada
-            'qr_url': qr_url,  # Enviamos la URL para el QR
-            # Relaciones directas desde la ficha (usando related_name del models.py)
-            'alergias': ficha.alergias.all(),
-            'enfermedades': ficha.enfermedades.all(),
-            'medicamentos': ficha.medicamentos.all(),
-            'cirugias': ficha.cirugias.all(),
-            # Relación desde el voluntario
-            'contactos': voluntario.contactos_emergencia.all()
-        })
-    
-    #def get(self, request, id):
-        #return HttpResponse("mostrar datos")
-
-class MedicoVerView(View):
-    def get(self, request):
-        return render(request, "gestion_medica/pages/ver_voluntario.html")
-
-
-
-class MedicoModificarView(View):
-    def get(self, request, pk):
-        # 1. Buscar la ficha médica por su ID (pk)
-        ficha = get_object_or_404(FichaMedica, pk=pk)
-        # 2. Llenar el formulario con los datos existentes
-        form = FichaMedicaForm(instance=ficha)
-        return render(request, "gestion_medica/pages/modificar_voluntario.html", {
-            'form': form,
-            'ficha': ficha  # Para mostrar el nombre del paciente si quieres
-        })
-    
-    def post(self, request, pk):
-        # 1. Recuperar la ficha
-        ficha = get_object_or_404(FichaMedica, pk=pk)
-
-        # 2. Cargar el formulario con los datos nuevos que envió el usuario
-        form = FichaMedicaForm(request.POST, instance=ficha)
-
-        if form.is_valid():
-            form.save() # ¡Guardar cambios!
-            # Redirigir a la lista o al detalle (ajusta la ruta según prefieras)
-            return redirect('gestion_medica:ruta_lista_paciente')
-
-        # Si hay error, volver a mostrar el formulario con errores
-        return render(request, "gestion_medica/pages/modificar_voluntario.html", {'form': form, 'ficha': ficha})
-    
-class MedicamentoCrearView(View):
-    def get(self, request):
-        
-        form = MedicamentoForm()
-        return render(request, "gestion_medica/pages/crear_medicamento.html", {'form': form})
-    def post(self, request):
-        form = MedicamentoForm(request.POST)
-        if form.is_valid():
-            form.save() # ¡Guarda en la BD!
-            return redirect('gestion_medica:ruta_lista_medicamentos')
-        return render(request, "gestion_medica/pages/crear_medicamento.html", {'form': form})
-    
-class MedicamentoListView(View):
-    def get(self, request):
-        # Recupera los datos REALES de la base de datos
-        medicamentos = Medicamento.objects.all().order_by('nombre')
-        return render(request, "gestion_medica/pages/lista_medicamentos.html", {'object_list': medicamentos})
-    
-class MedicamentoUpdateView(View):
-    def get(self, request, pk):
-        medicamento = get_object_or_404(Medicamento, pk=pk)
-        form = MedicamentoForm(instance=medicamento)
-        return render(request, "gestion_medica/pages/crear_medicamento.html", {'form': form})
-
-    def post(self, request, pk):
-        medicamento = get_object_or_404(Medicamento, pk=pk)
-        form = MedicamentoForm(request.POST, instance=medicamento)
-        if form.is_valid():
-            form.save() # ¡Actualiza en la BD!
-            return redirect('gestion_medica:ruta_lista_medicamentos')
-        return render(request, "gestion_medica/pages/crear_medicamento.html", {'form': form})
-
-class MedicamentoDeleteView(View):
-    def post(self, request, pk):
-        medicamento = get_object_or_404(Medicamento, pk=pk)
-        medicamento.delete() # ¡Borra de la BD!
-        return redirect('gestion_medica:ruta_lista_medicamentos')
-    
-class MedicoImprimirView(View):
-    def get(self, request, pk):
-        ficha = get_object_or_404(FichaMedica, pk=pk)
-        voluntario = ficha.voluntario
-        # --- CORRECCIÓN AQUÍ: Usamos voluntario.usuario ---
-        usuario = voluntario.usuario  # Accedemos a la cuenta de usuario real
-        
-        edad = "S/I"
-        # Verificamos si el USUARIO tiene la fecha, no el voluntario
-        if hasattr(usuario, 'fecha_nacimiento') and usuario.fecha_nacimiento:
-            today = date.today()
-            edad = today.year - usuario.fecha_nacimiento.year - ((today.month, today.day) < (usuario.fecha_nacimiento.month, usuario.fecha_nacimiento.day))
-
-        return render(request, "gestion_medica/pages/imprimir_ficha.html", {
-            'ficha': ficha,
-            'voluntario': voluntario,
-            'edad': edad,
-            'alergias': ficha.alergias.all(),
-            'enfermedades': ficha.enfermedades.all(),
-            'medicamentos': ficha.medicamentos.all(),
-            'cirugias': ficha.cirugias.all(),
-            'contactos': voluntario.contactos_emergencia.all(),
-            'fecha_reporte': date.today()
-        })
-    
 class MedicoMedicamentosView(View):
     def get(self, request, pk):
         ficha = get_object_or_404(FichaMedica, pk=pk)
@@ -381,7 +364,7 @@ class MedicoMedicamentosView(View):
             'medicamentos_paciente': medicamentos_paciente,
             'form': form
         })
-    
+
 class EditarMedicamentoPacienteView(View):
     def get(self, request, pk, medicamento_id):
         ficha = get_object_or_404(FichaMedica, pk=pk)
@@ -417,47 +400,12 @@ class EliminarMedicamentoPacienteView(View):
         item = get_object_or_404(FichaMedicaMedicamento, id=medicamento_id, ficha_medica=ficha)
         item.delete()
         return redirect('gestion_medica:ruta_medicamentos_paciente', pk=pk)
-    
-# --- GESTIÓN CATÁLOGO ALERGIAS ---
 
-class AlergiaListView(View):
-    def get(self, request):
-        alergias = Alergia.objects.all().order_by('nombre')
-        return render(request, "gestion_medica/pages/lista_alergias.html", {'object_list': alergias})
-class AlergiaCrearView(View):
-    def get(self, request):
-        form = AlergiaForm()
-        return render(request, "gestion_medica/pages/crear_alergia.html", {'form': form})
 
-    def post(self, request):
-        form = AlergiaForm(request.POST)
-        if form.is_valid():
-            form.save()
-            # Opcional: Mensaje de éxito si usas 'messages'
-            return redirect('gestion_medica:ruta_lista_alergias')
-        
-        # Si no es válido (ej: ya existe), volvemos al HTML con el formulario y sus errores
-        return render(request, "gestion_medica/pages/crear_alergia.html", {'form': form})
-class AlergiaUpdateView(View):
-    def get(self, request, pk):
-        alergia = get_object_or_404(Alergia, pk=pk)
-        form = AlergiaForm(instance=alergia)
-        return render(request, "gestion_medica/pages/crear_alergia.html", {'form': form})
+# ==============================================================================
+# 6. GESTIÓN DE CIRUGÍAS (DEL PACIENTE)
+# ==============================================================================
 
-    def post(self, request, pk):
-        alergia = get_object_or_404(Alergia, pk=pk)
-        form = AlergiaForm(request.POST, instance=alergia)
-        if form.is_valid():
-            form.save()
-            return redirect('gestion_medica:ruta_lista_alergias')
-        return render(request, "gestion_medica/pages/crear_alergia.html", {'form': form})
-
-class AlergiaDeleteView(View):
-    def post(self, request, pk):
-        alergia = get_object_or_404(Alergia, pk=pk)
-        alergia.delete()
-        return redirect('gestion_medica:ruta_lista_alergias')
-    
 class MedicoCirugiasView(View):
     def get(self, request, pk):
         ficha = get_object_or_404(FichaMedica, pk=pk)
@@ -511,12 +459,89 @@ class EliminarCirugiaPacienteView(View):
         item = get_object_or_404(FichaMedicaCirugia, id=item_id, ficha_medica=ficha)
         item.delete()
         return redirect('gestion_medica:ruta_cirugias_paciente', pk=pk)
+
+
+# ==============================================================================
+# 7. GESTIÓN DE CATÁLOGOS (GLOBALES)
+# ==============================================================================
+
+# --- MEDICAMENTOS ---
+class MedicamentoCrearView(View):
+    def get(self, request):
+        form = MedicamentoForm()
+        return render(request, "gestion_medica/pages/crear_medicamento.html", {'form': form})
+    def post(self, request):
+        form = MedicamentoForm(request.POST)
+        if form.is_valid():
+            form.save() # ¡Guarda en la BD!
+            return redirect('gestion_medica:ruta_lista_medicamentos')
+        return render(request, "gestion_medica/pages/crear_medicamento.html", {'form': form})
     
-# Asegúrate de que en tus imports al principio tengas:
-# from .forms import ..., CirugiaForm
+class MedicamentoListView(View):
+    def get(self, request):
+        # Recupera los datos REALES de la base de datos
+        medicamentos = Medicamento.objects.all().order_by('nombre')
+        return render(request, "gestion_medica/pages/lista_medicamentos.html", {'object_list': medicamentos})
+    
+class MedicamentoUpdateView(View):
+    def get(self, request, pk):
+        medicamento = get_object_or_404(Medicamento, pk=pk)
+        form = MedicamentoForm(instance=medicamento)
+        return render(request, "gestion_medica/pages/crear_medicamento.html", {'form': form})
 
-# --- GESTIÓN CATÁLOGO CIRUGÍAS ---
+    def post(self, request, pk):
+        medicamento = get_object_or_404(Medicamento, pk=pk)
+        form = MedicamentoForm(request.POST, instance=medicamento)
+        if form.is_valid():
+            form.save() # ¡Actualiza en la BD!
+            return redirect('gestion_medica:ruta_lista_medicamentos')
+        return render(request, "gestion_medica/pages/crear_medicamento.html", {'form': form})
 
+class MedicamentoDeleteView(View):
+    def post(self, request, pk):
+        medicamento = get_object_or_404(Medicamento, pk=pk)
+        medicamento.delete() # ¡Borra de la BD!
+        return redirect('gestion_medica:ruta_lista_medicamentos')
+
+# --- ALERGIAS ---
+class AlergiaListView(View):
+    def get(self, request):
+        alergias = Alergia.objects.all().order_by('nombre')
+        return render(request, "gestion_medica/pages/lista_alergias.html", {'object_list': alergias})
+
+class AlergiaCrearView(View):
+    def get(self, request):
+        form = AlergiaForm()
+        return render(request, "gestion_medica/pages/crear_alergia.html", {'form': form})
+
+    def post(self, request):
+        form = AlergiaForm(request.POST)
+        if form.is_valid():
+            form.save()
+            return redirect('gestion_medica:ruta_lista_alergias')
+        return render(request, "gestion_medica/pages/crear_alergia.html", {'form': form})
+
+class AlergiaUpdateView(View):
+    def get(self, request, pk):
+        alergia = get_object_or_404(Alergia, pk=pk)
+        form = AlergiaForm(instance=alergia)
+        return render(request, "gestion_medica/pages/crear_alergia.html", {'form': form})
+
+    def post(self, request, pk):
+        alergia = get_object_or_404(Alergia, pk=pk)
+        form = AlergiaForm(request.POST, instance=alergia)
+        if form.is_valid():
+            form.save()
+            return redirect('gestion_medica:ruta_lista_alergias')
+        return render(request, "gestion_medica/pages/crear_alergia.html", {'form': form})
+
+class AlergiaDeleteView(View):
+    def post(self, request, pk):
+        alergia = get_object_or_404(Alergia, pk=pk)
+        alergia.delete()
+        return redirect('gestion_medica:ruta_lista_alergias')
+
+# --- CIRUGÍAS ---
 class CirugiaListView(View):
     def get(self, request):
         cirugias = Cirugia.objects.all().order_by('nombre')
@@ -553,11 +578,13 @@ class CirugiaDeleteView(View):
         item = get_object_or_404(Cirugia, pk=pk)
         item.delete()
         return redirect('gestion_medica:ruta_lista_cirugias')
-    
+
+# --- ENFERMEDADES ---
 class EnfermedadListView(View):
     def get(self, request):
         enfermedades = Enfermedad.objects.all().order_by('nombre')
         return render(request, "gestion_medica/pages/lista_enfermedades.html", {'object_list': enfermedades})
+
 class EnfermedadCrearView(View):
     def get(self, request):
         form = EnfermedadForm()
@@ -588,9 +615,3 @@ class EnfermedadDeleteView(View):
         item.delete()
         return redirect('gestion_medica:ruta_lista_enfermedades')
 
-class EnfermedadDeleteView(View):
-    def post(self, request, pk):
-        item = get_object_or_404(Enfermedad, pk=pk)
-        item.delete()
-        return redirect('gestion_medica:ruta_lista_enfermedades')
- 

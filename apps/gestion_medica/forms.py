@@ -13,8 +13,12 @@ from .models import (
     Enfermedad
 )
 
-# 1. Formulario de la Ficha Principal
+# ==============================================================================
+# 1. FORMULARIOS DE ENTIDAD (FICHA MÉDICA PRINCIPAL y CONTACTOS)
+# ==============================================================================
+
 class FichaMedicaForm(forms.ModelForm):
+    """1. Formulario de la Ficha Principal (Datos Fisiológicos, Grupos Sanguíneos)"""
     class Meta:
         model = FichaMedica
         fields = [
@@ -32,10 +36,8 @@ class FichaMedicaForm(forms.ModelForm):
             'observaciones_generales': forms.Textarea(attrs={'class': 'form-control', 'rows': 4}),
         }
 
-# 2. Formulario de Contactos
-# En apps/gestion_medica/forms.py
-
 class ContactoEmergenciaForm(forms.ModelForm):
+    """2. Formulario de Contactos de Emergencia (incluye validación de teléfono)"""
     def __init__(self, *args, **kwargs):
         # Extraemos el usuario que se pasa desde la vista (si existe)
         self.usuario_dueno = kwargs.pop('usuario_dueno', None)
@@ -87,10 +89,14 @@ class ContactoEmergenciaForm(forms.ModelForm):
                 self.add_error('telefono', "El número de emergencia no puede ser el mismo que el del voluntario.")
         
         return cleaned_data
-    
 
-# 3. Formulario de Alergias
+
+# ==============================================================================
+# 2. FORMULARIOS DE RELACIÓN (Asignación de antecedentes al Paciente)
+# ==============================================================================
+
 class FichaMedicaAlergiaForm(forms.ModelForm):
+    """3. Asignación de Alergias (Relación Many-to-Many)"""
     class Meta:
         model = FichaMedicaAlergia
         fields = ['alergia', 'observaciones']
@@ -99,26 +105,8 @@ class FichaMedicaAlergiaForm(forms.ModelForm):
             'observaciones': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Ej: Reacción grave'}),
         }
 
-# 4. Formulario para CREAR Medicamentos (Catálogo Global)
-class MedicamentoForm(forms.ModelForm):
-    class Meta:
-        model = Medicamento
-        fields = ['nombre']
-        widgets = {
-            'nombre': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Ej: Paracetamol 500mg'}),
-        }
-
-class AlergiaForm(forms.ModelForm):
-    """Crea una nueva alergia en el sistema"""
-    class Meta:
-        model = Alergia
-        fields = ['nombre']
-        widgets = {
-            'nombre': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Ej: Penicilina'}),
-        }
-
-# 5. Formulario para ASIGNAR Medicamentos (Al Paciente) - ¡ESTE FALTABA!
 class FichaMedicaMedicamentoForm(forms.ModelForm):
+    """4. Asignación de Medicamentos (Relación Many-to-Many)"""
     class Meta:
         model = FichaMedicaMedicamento
         fields = ['medicamento', 'dosis_frecuencia']
@@ -127,8 +115,8 @@ class FichaMedicaMedicamentoForm(forms.ModelForm):
             'dosis_frecuencia': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Ej: 500mg cada 8hrs'}),
         }
 
-# 6. Formulario de enfermedad
 class FichaMedicaEnfermedadForm(forms.ModelForm):
+    """5. Asignación de Enfermedades (Relación Many-to-Many)"""
     class Meta:
         model = FichaMedicaEnfermedad
         fields = ['enfermedad', 'observaciones']
@@ -137,25 +125,8 @@ class FichaMedicaEnfermedadForm(forms.ModelForm):
             'observaciones': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Ej: En tratamiento...'}),
         }
 
-class EnfermedadForm(forms.ModelForm):
-    class Meta:
-        model = Enfermedad
-        fields = ['nombre']
-        widgets = {
-            'nombre': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Ej: Diabetes Tipo 2'}),
-        }
-
-# 8. Formulario para CREAR nuevas Cirugías en el Catálogo
-class CirugiaForm(forms.ModelForm):
-    class Meta:
-        model = Cirugia
-        fields = ['nombre']
-        widgets = {
-            'nombre': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Ej: Apendicectomía'}),
-        }
-
-# 7. Formulario para Asignar Cirugías al Paciente ---
 class FichaMedicaCirugiaForm(forms.ModelForm):
+    """6. Asignación de Cirugías (Relación Many-to-Many)"""
     class Meta:
         model = FichaMedicaCirugia
         fields = ['cirugia', 'fecha_cirugia', 'observaciones']
@@ -163,4 +134,45 @@ class FichaMedicaCirugiaForm(forms.ModelForm):
             'cirugia': forms.Select(attrs={'class': 'form-select'}),
             'fecha_cirugia': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
             'observaciones': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Detalles...'}),
+        }
+
+
+# ==============================================================================
+# 3. FORMULARIOS DE CATÁLOGO (Mantenedores Globales)
+# ==============================================================================
+
+class MedicamentoForm(forms.ModelForm):
+    """7. Formulario para CREAR/EDITAR Medicamentos (Catálogo Global)"""
+    class Meta:
+        model = Medicamento
+        fields = ['nombre']
+        widgets = {
+            'nombre': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Ej: Paracetamol 500mg'}),
+        }
+
+class AlergiaForm(forms.ModelForm):
+    """8. Formulario para CREAR/EDITAR Alergias (Catálogo Global)"""
+    class Meta:
+        model = Alergia
+        fields = ['nombre']
+        widgets = {
+            'nombre': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Ej: Penicilina'}),
+        }
+
+class EnfermedadForm(forms.ModelForm):
+    """9. Formulario para CREAR/EDITAR Enfermedades (Catálogo Global)"""
+    class Meta:
+        model = Enfermedad
+        fields = ['nombre']
+        widgets = {
+            'nombre': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Ej: Diabetes Tipo 2'}),
+        }
+
+class CirugiaForm(forms.ModelForm):
+    """10. Formulario para CREAR/EDITAR Cirugías (Catálogo Global)"""
+    class Meta:
+        model = Cirugia
+        fields = ['nombre']
+        widgets = {
+            'nombre': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Ej: Apendicectomía'}),
         }
