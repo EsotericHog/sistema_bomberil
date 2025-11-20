@@ -97,9 +97,19 @@
                                 <a href="{% url 'core_admin:ruta_editar_rol' rol.pk %}" class="btn btn-sm btn-outline-primary" title="Editar Nombre">
                                     <i class="fas fa-pencil-alt"></i>
                                 </a>
-                                <button class="btn btn-sm btn-outline-danger" title="Eliminar">
-                                    <i class="fas fa-trash"></i>
-                                </button>
+                                {% if rol.total_historial > 0 %}
+                                    {# BLOQUEADO VISUALMENTE #}
+                                    <span class="d-inline-block" tabindex="0" data-bs-toggle="tooltip" title="No se puede eliminar: Tiene {{ rol.total_historial }} asignaciones históricas.">
+                                        <button class="btn btn-sm btn-outline-danger" disabled style="pointer-events: none;">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </span>
+                                {% else %}
+                                    {# HABILITADO #}
+                                    <a href="{% url 'core_admin:ruta_eliminar_rol' rol.pk %}" class="btn btn-sm btn-outline-danger" title="Eliminar">
+                                        <i class="fas fa-trash"></i>
+                                    </a>
+                                {% endif %}
                             </div>
                         </td>
                     </tr>

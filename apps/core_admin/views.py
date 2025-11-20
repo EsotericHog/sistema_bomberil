@@ -586,11 +586,9 @@ class RolGlobalListView(SuperuserRequiredMixin, ListView):
         filtro_activos = Q(asignaciones__estado='ACTIVO')
 
         return Rol.objects.filter(estacion__isnull=True).annotate(
-            # AGREGAR distinct=True AQUÍ
             total_permisos=Count('permisos', filter=filtro_negocio, distinct=True),
-            
-            # Y AQUÍ TAMBIÉN
-            total_asignaciones=Count('asignaciones', filter=filtro_activos, distinct=True)
+            total_asignaciones=Count('asignaciones', filter=filtro_activos, distinct=True),
+            total_historial=Count('asignaciones', distinct=True)
         ).order_by('nombre')
 
     def get_context_data(self, **kwargs):
@@ -672,3 +670,42 @@ class RolGlobalUpdateView(SuperuserRequiredMixin, PermisosMatrixMixin, UpdateVie
         
         messages.success(self.request, f"Rol actualizado. Permisos activos: {permisos_seleccionados.count()}.")
         return redirect(self.get_success_url())
+
+
+
+
+class RolGlobalDeleteView(SuperuserRequiredMixin, DeleteView):
+    model = Rol
+    template_name = 'core_admin/pages/confirmar_eliminar_rol.html'
+    success_url = reverse_lazy('core_admin:ruta_lista_roles')
+
+    def post(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        
+        # --- VALIDACIÓN MANUAL ESTRICTA ---
+        # Usamos 'asignaciones' (related_name en Membresia) para ver si se usó alguna vez.
+        # .exists() retorna True si hay CUALQUIER registro (Activo, Inactivo o Finalizado).
+        if self.object.asignaciones.exists():
+            cantidad = self.object.asignaciones.count()
+            messages.error(
+                request, 
+                f"BLOQUEADO: El rol '{self.object.nombre}' no se puede eliminar porque está vinculado "
+                f"a {cantidad} membresía(s) histórica(s) o activa(s). Esto dañaría la hoja de vida de los voluntarios."
+            )
+            return redirect('core_admin:rol_global_list')
+
+        # Si pasa la validación, procedemos con el borrado estándar
+        try:
+            self.object.delete()
+            messages.success(request, f"El rol '{self.object.nombre}' ha sido eliminado correctamente.")
+        except Exception as e:
+            messages.error(request, f"Error inesperado al eliminar: {e}")
+            
+        return redirect(self.success_url)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['titulo_pagina'] = "Eliminar Rol Global"
+        # Pasamos el conteo al template para advertir antes de que den clic
+        context['conteo_uso'] = self.object.asignaciones.count()
+        return context

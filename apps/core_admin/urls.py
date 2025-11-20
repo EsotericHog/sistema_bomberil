@@ -20,7 +20,8 @@ from .views import (
     UsuarioFinalizarMembresiasView,
     RolGlobalListView,
     RolGlobalCreateView,
-    RolGlobalUpdateView
+    RolGlobalUpdateView,
+    RolGlobalDeleteView
 )
 
 app_name = 'core_admin'
@@ -94,5 +95,8 @@ urlpatterns = [
 
     # Editar rol global
     path('roles-globales/<int:pk>/editar/', RolGlobalUpdateView.as_view(), name='ruta_editar_rol'),
+
+    # Eliminar rol
+    path('roles-globales/<int:pk>/eliminar/', RolGlobalDeleteView.as_view(), name='ruta_eliminar_rol'),
 
 ]
