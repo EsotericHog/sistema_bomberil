@@ -2,41 +2,44 @@
 {% load static %}
 
 {% block titulo_ventana %}Catálogo de Cirugías{% endblock %}
-{% block titulo_pagina %}Gestión de Tipos de Cirugías{% endblock %}
+{% block titulo_pagina %}Cirugías Registradas{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'gestion_medica/css/catalogos.css' %}">
+{% endblock %}
 
 {% block contenido %}
-<div class="container-fluid">
-    
-    <div class="d-flex justify-content-end mb-4">
-        <a href="{% url 'gestion_medica:ruta_crear_cirugia' %}" class="btn btn-primary-custom shadow-sm">
-            <i class="fa-solid fa-plus me-2"></i>Nueva Cirugía
-        </a>
-    </div>
+<div class="container mt-4">
 
-    <div class="tabla-contenedor">
-        <div class="table-responsive">
-            <table class="table table-custom">
+    <div class="card catalogo-card">
+        <div class="card-header header-cirugia d-flex justify-content-between align-items-center">
+            <h5 class="mb-0 fw-bold"><i class="fa-solid fa-heart-pulse me-2"></i>Cirugías</h5>
+
+            <a href="{% url 'gestion_medica:ruta_crear_cirugia' %}"
+               class="btn btn-cirugia btn-sm fw-bold">
+                <i class="fa-solid fa-plus me-1"></i> Nueva
+            </a>
+        </div>
+
+        <div class="card-body p-0">
+            <table class="table table-striped table-catalogo mb-0">
                 <thead>
                     <tr>
-                        <th>Nombre de la Cirugía</th>
-                        </tr>
+                        <th class="ps-4">Nombre</th>
+                    </tr>
                 </thead>
                 <tbody>
                     {% for item in object_list %}
                     <tr>
-                        <td class="fw-bold text-dark">{{ item.nombre }}</td>
-                        </tr>
-                    {% empty %}
-                    <tr>
-                        <td class="text-center py-5 text-muted">
-                            <i class="fa-solid fa-scalpel fs-1 mb-3 d-block opacity-50"></i>
-                            No hay cirugías registradas en el catálogo.
-                        </td>
+                        <td class="ps-4 fw-bold">{{ item.nombre }}</td>
                     </tr>
+                    {% empty %}
+                    <tr><td class="text-center py-3 text-muted">Sin registros</td></tr>
                     {% endfor %}
                 </tbody>
             </table>
         </div>
     </div>
+
 </div>
 {% endblock %}

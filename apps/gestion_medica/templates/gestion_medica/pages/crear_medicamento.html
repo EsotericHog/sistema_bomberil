@@ -1,136 +1,141 @@
 {% extends 'gestion_medica/layouts/base.html' %}
 {% load static %}
-{% block titulo_ventana %}Gestión Medicamento{% endblock %}
-{% block titulo_pagina %}Datos del Medicamento{% endblock %}
+
+{% block titulo_ventana %}Nuevo Medicamento{% endblock %}
+{% block titulo_pagina %}Agregar al Catálogo{% endblock %}
 
 {% block contenido %}
-<div class="container-fluid mt-4">
+<div class="container-fluid py-4">
     <div class="row justify-content-center">
-        <div class="col-lg-6">
-            <div class="card shadow-sm">
-                <div class="card-header bg-light">
-                    <h5 class="mb-0 text-success">Información del Medicamento</h5>
+        <div class="col-lg-6 col-md-8">
+
+            <!-- PANEL CATÁLOGO (color turquesa Medicamento) -->
+            <div class="panel catalog-form" style="--catalog-color: #20c997; --catalog-text-color: white;">
+
+                <!-- ENCABEZADO -->
+                <div class="panel-header">
+                    <i class="fa-solid fa-pills me-2"></i>
+                    <h3>Crear Nuevo Medicamento</h3>
                 </div>
-                <div class="card-body">
-                    
-                    <form method="post" id="formMedicamento">
+
+                <div class="panel-body">
+
+                    <form method="post" id="formMedicamento" class="form-container">
                         {% csrf_token %}
-                        
+
+                        <!-- INPUT REAL -->
                         <div class="d-none">
                             {{ form.nombre }}
                         </div>
 
-                        <div class="row g-3 mb-3">
-                            <div class="col-md-8">
-                                <label class="form-label fw-bold">Nombre del Medicamento *</label>
-                                <input type="text" id="visualNombre" class="form-control" required 
-                                       placeholder="Ej: Paracetamol">
+                        <!-- MENSAJE DE ERROR -->
+                        {% if form.nombre.errors %}
+                        <div class="alert-custom-error d-flex align-items-center mb-4">
+                            <i class="fa-solid fa-circle-exclamation fs-3 me-3"></i>
+                            <div>
+                                <strong class="d-block">No se pudo guardar el medicamento:</strong>
+                                <ul class="mb-0 ps-3 small">
+                                    <li>{{ form.nombre.errors.0 }}</li>
+                                </ul>
                             </div>
+                        </div>
+                        {% endif %}
 
-                            <div class="col-md-4">
-                                <label class="form-label fw-bold">Dosis / Gr *</label>
-                                <div class="input-group">
-                                    <input type="text" id="visualDosis" class="form-control" required 
-                                           placeholder="500">
-                                    <span class="input-group-text bg-light text-muted">mg</span>
-                                </div>
+                        <!-- CAMPOS -->
+                        <div class="form-group mb-3">
+                            <label class="form-label fw-bold">Nombre del Medicamento *</label>
+                            <input type="text" id="visualNombre" class="form-control" placeholder="Ej: Paracetamol" required>
+                        </div>
+
+                        <div class="form-group mb-3">
+                            <label class="form-label fw-bold">Dosis *</label>
+                            <div class="input-group">
+                                <input type="text" id="visualDosis" class="form-control" placeholder="500" required>
+                                <span class="input-group-text bg-light">mg</span>
                             </div>
                         </div>
 
-                        <div class="mb-4">
-                            <label class="form-label">Laboratorio / Marca (Opcional)</label>
-                            <input type="text" id="visualLab" class="form-control" 
-                                   placeholder="Ej: Chile, Bagó">
+                        <div class="form-group mb-4">
+                            <label class="form-label fw-bold">Laboratorio / Marca (Opcional)</label>
+                            <input type="text" id="visualLab" class="form-control" placeholder="Ej: Chile, Bagó">
                         </div>
 
+                        <!-- VISTA PREVIA -->
                         <div class="alert alert-light border small text-muted mb-4">
-                            <i class="fa-solid fa-eye me-1"></i> <strong>Se guardará como:</strong> 
+                            <i class="fa-solid fa-eye me-1"></i>
+                            <strong>Se guardará como:</strong>
                             <span id="vistaPrevia" class="fw-bold text-success">---</span>
                         </div>
 
-                        {% if form.nombre.errors %}
-                            <div class="alert alert-danger small p-2">
-                                {{ form.nombre.errors.0 }}
-                            </div>
-                        {% endif %}
+                        <!-- BOTONES -->
+                        <div class="form-actions text-end">
+                            <a href="{% url 'gestion_medica:ruta_lista_medicamentos' %}"
+                               class="btn btn-outline-secondary btn-lg catalog-btn me-2">
+                                <i class="fa-solid fa-times me-1"></i> Cancelar
+                            </a>
 
-                        <div class="d-flex justify-content-end gap-2">
-                            <a href="{% url 'gestion_medica:ruta_lista_medicamentos' %}" class="btn btn-outline-secondary">Cancelar</a>
-                            <button type="submit" class="btn btn-success">Guardar</button>
+                            <button type="submit" class="btn btn-catalog-turquoise btn-lg catalog-btn">
+                                <i class="fa-solid fa-save me-1"></i> Guardar
+                            </button>
                         </div>
+
                     </form>
+
                 </div>
             </div>
+
         </div>
     </div>
 </div>
 
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        // 1. Identificamos los elementos
-        const inputReal = document.querySelector('[name="nombre"]'); // El campo de Django (oculto)
-        const vNombre = document.getElementById('visualNombre');
-        const vDosis = document.getElementById('visualDosis');
-        const vLab = document.getElementById('visualLab');
-        const vistaPrevia = document.getElementById('vistaPrevia');
+document.addEventListener('DOMContentLoaded', function() {
 
-        // 2. Si estamos editando, intentamos separar el nombre guardado en las casillas visuales
-        if (inputReal.value) {
-            // Lógica simple: asumimos "Nombre Dosis (Lab)"
-            let texto = inputReal.value;
-            
-            // Intentar sacar laboratorio (entre paréntesis)
-            if (texto.includes('(') && texto.includes(')')) {
-                const partesLab = texto.split('(');
-                vLab.value = partesLab[1].replace(')', '').trim();
-                texto = partesLab[0].trim();
-            }
+    const inputReal = document.querySelector('[name="nombre"]');
+    const vNombre = document.getElementById('visualNombre');
+    const vDosis = document.getElementById('visualDosis');
+    const vLab = document.getElementById('visualLab');
+    const vistaPrevia = document.getElementById('vistaPrevia');
 
-            // Intentar sacar dosis (última palabra si es número+unidad)
-            const partes = texto.split(' ');
-            if (partes.length > 1) {
-                const posibleDosis = partes.pop();
-                // Si parece una dosis (tiene números), la ponemos en dosis
-                if (/\d/.test(posibleDosis)) {
-                    vDosis.value = posibleDosis.replace('mg', '').replace('g', '');
-                    vNombre.value = partes.join(' ');
-                } else {
-                    vNombre.value = texto; // No pudimos separar, ponemos todo en nombre
-                }
+    if (inputReal.value) {
+        let texto = inputReal.value;
+
+        if (texto.includes("(")) {
+            const partesLab = texto.split("(");
+            vLab.value = partesLab[1].replace(")", "").trim();
+            texto = partesLab[0].trim();
+        }
+
+        const partes = texto.split(" ");
+        if (partes.length > 1) {
+            const posibleDosis = partes.pop();
+            if (/\d/.test(posibleDosis)) {
+                vDosis.value = posibleDosis.replace("mg", "").replace("g", "").trim();
+                vNombre.value = partes.join(" ");
             } else {
                 vNombre.value = texto;
             }
-            actualizarReal(); // Refrescar vista previa
+        } else {
+            vNombre.value = texto;
         }
 
-        // 3. Función para actualizar el campo real
-        function actualizarReal() {
-            let resultado = vNombre.value;
-            
-            if (vDosis.value) {
-                resultado += ' ' + vDosis.value;
-                // Si es solo número, agregamos 'mg' visualmente
-                if (!isNaN(vDosis.value) && vDosis.value.trim() !== '') {
-                    resultado += 'mg';
-                } else if (vDosis.value && !/[a-zA-Z]/.test(vDosis.value)) {
-                    // Si tiene caracteres raros pero no letras, asumimos unidad
-                    resultado += 'mg';
-                }
-            }
+        actualizarReal();
+    }
 
-            if (vLab.value) {
-                resultado += ' (' + vLab.value + ')';
-            }
+    function actualizarReal() {
+        let resultado = vNombre.value;
 
-            // ¡Aquí está la clave! Ponemos el texto unido en el input que Django va a guardar
-            inputReal.value = resultado;
-            vistaPrevia.textContent = resultado || "---";
-        }
+        if (vDosis.value) resultado += ` ${vDosis.value}mg`;
+        if (vLab.value) resultado += ` (${vLab.value})`;
 
-        // 4. Escuchar cambios
-        vNombre.addEventListener('input', actualizarReal);
-        vDosis.addEventListener('input', actualizarReal);
-        vLab.addEventListener('input', actualizarReal);
-    });
+        inputReal.value = resultado;
+        vistaPrevia.textContent = resultado || "---";
+    }
+
+    vNombre.addEventListener("input", actualizarReal);
+    vDosis.addEventListener("input", actualizarReal);
+    vLab.addEventListener("input", actualizarReal);
+});
 </script>
+
 {% endblock %}

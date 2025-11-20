@@ -60,3 +60,101 @@
     box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1) !important;
     transition: all 0.3s ease;
 }
+
+/* ================================================================= */
+/* FORMULARIOS DE CATÁLOGO (Alergia, Enfermedad, Cirugía, Medicamento) */
+/* ================================================================= */
+
+/* --- Estilos Base para Todos los Formularios de Catálogo --- */
+
+/* 1. Contenedor General (Panel) */
+/* La variable --catalog-color y --catalog-text-color se definen en el HTML de cada archivo. */
+.catalog-form {
+    border-radius: 12px;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+    border: 1px solid #e9ecef;
+    margin-top: 20px;
+    background-color: #ffffff;
+}
+
+/* 2. Encabezado Temático */
+.catalog-form .panel-header {
+    background-color: var(--catalog-color); /* Color dinámico (Rojo, Azul, Verde, Amarillo) */
+    color: var(--catalog-text-color); /* Color de texto dinámico */
+    padding: 20px 25px;
+    border-top-left-radius: 12px;
+    border-top-right-radius: 12px;
+    display: flex;
+    align-items: center;
+}
+
+.catalog-form .panel-header h3 {
+    margin: 0;
+    font-size: 1.5rem;
+    font-weight: 700;
+}
+
+.catalog-form .panel-header i {
+    font-size: 1.6rem;
+    margin-right: 15px;
+}
+
+/* 3. Cuerpo del Formulario */
+.catalog-form .panel-body {
+    padding: 30px 25px;
+}
+
+/* Estilo para el campo de input (robusto) */
+.catalog-form .form-control {
+    height: 48px;
+    font-size: 1.1rem;
+    padding: 10px 15px;
+    border: 1px solid #ced4da;
+    border-radius: 8px;
+    transition: border-color 0.3s, box-shadow 0.3s;
+}
+
+.catalog-form .form-control:focus {
+    border-color: var(--catalog-color);
+    /* Sombra de foco más suave (usando un color mezclado con transparencia) */
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--catalog-color) 40%, transparent); 
+}
+
+/* Estilo para la etiqueta */
+.catalog-form .form-group .form-label {
+    font-weight: 600;
+    color: #343a40;
+    margin-bottom: 5px;
+    display: block;
+}
+
+/* 4. Botones de Acción */
+.catalog-form .form-actions {
+    margin-top: 30px;
+    border-top: 1px solid #e9ecef;
+    padding-top: 20px;
+}
+
+/* Botón Guardar (con color temático) */
+.catalog-form .btn-primary {
+    background-color: var(--catalog-color) !important;
+    border-color: var(--catalog-color) !important;
+    color: var(--catalog-text-color) !important;
+    font-weight: 700;
+    padding: 10px 25px;
+    border-radius: 6px;
+    min-width: 120px;
+}
+
+.catalog-form .btn-primary:hover {
+    filter: brightness(110%);
+}
+
+/* Botón Cancelar */
+.catalog-form .btn-secondary {
+    background-color: #6c757d;
+    color: white;
+    font-weight: 600;
+    padding: 10px 25px;
+    border-radius: 6px;
+}

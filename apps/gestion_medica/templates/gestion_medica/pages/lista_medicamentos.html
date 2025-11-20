@@ -2,41 +2,44 @@
 {% load static %}
 
 {% block titulo_ventana %}Catálogo de Medicamentos{% endblock %}
-{% block titulo_pagina %}Gestión de Medicamentos{% endblock %}
+{% block titulo_pagina %}Medicamentos Registrados{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'gestion_medica/css/catalogos.css' %}">
+{% endblock %}
 
 {% block contenido %}
-<div class="container-fluid">
-    
-    <div class="d-flex justify-content-end mb-4">
-        <a href="{% url 'gestion_medica:ruta_crear_medicamento' %}" class="btn btn-primary-custom shadow-sm">
-            <i class="fa-solid fa-plus me-2"></i>Nuevo Medicamento
-        </a>
-    </div>
+<div class="container mt-4">
 
-    <div class="tabla-contenedor">
-        <div class="table-responsive">
-            <table class="table table-custom">
+    <div class="card catalogo-card">
+        <div class="card-header header-medicamento d-flex justify-content-between align-items-center">
+            <h5 class="mb-0 fw-bold"><i class="fa-solid fa-capsules me-2"></i>Medicamentos</h5>
+
+            <a href="{% url 'gestion_medica:ruta_crear_medicamento' %}"
+               class="btn btn-medicamento btn-sm fw-bold">
+                <i class="fa-solid fa-plus me-1"></i> Nuevo
+            </a>
+        </div>
+
+        <div class="card-body p-0">
+            <table class="table table-striped table-catalogo mb-0">
                 <thead>
                     <tr>
-                        <th>Nombre del Medicamento</th>
+                        <th class="ps-4">Nombre</th>
                     </tr>
                 </thead>
                 <tbody>
                     {% for item in object_list %}
                     <tr>
-                        <td class="fw-bold text-dark">{{ item.nombre }}</td>
+                        <td class="ps-4 fw-bold">{{ item.nombre }}</td>
                     </tr>
                     {% empty %}
-                    <tr>
-                        <td class="text-center py-5 text-muted">
-                            <i class="fa-solid fa-pills fs-1 mb-3 d-block opacity-50"></i>
-                            No hay medicamentos registrados.
-                        </td>
-                    </tr>
+                    <tr><td class="text-center py-3 text-muted">Sin registros</td></tr>
                     {% endfor %}
                 </tbody>
             </table>
         </div>
     </div>
+
 </div>
 {% endblock %}

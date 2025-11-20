@@ -1,0 +1,95 @@
+/* ==============================
+   ESTILO UNIFICADO PARA LISTAS
+   ============================== */
+
+/* Contenedor */
+.catalogo-card {
+    border: none;
+    border-radius: 12px;
+    box-shadow: 0 3px 10px rgba(0,0,0,0.12);
+    overflow: hidden;
+}
+
+/* Encabezados por color */
+.header-alergia {
+    background: #ff4d6d !important; /* rojo rosado */
+    color: #fff;
+}
+
+.header-cirugia {
+    background: #6a00f4 !important; /* morado */
+    color: #fff;
+}
+
+.header-medicamento {
+    background: #00bfa6 !important; /* turquesa */
+    color: #fff;
+}
+
+.header-enfermedad {
+    background: #f4b400 !important; /* amarillo */
+    color: #fff;
+}
+
+/* Tabla */
+.table-catalogo th {
+    background: #f8f9fa;
+    font-weight: bold;
+    color: #555;
+}
+
+.table-catalogo td {
+    padding-top: 0.7rem !important;
+    padding-bottom: 0.7rem !important;
+    font-size: 0.95rem;
+}
+
+/* Botones de acción */
+.btn-edit {
+    border-radius: 8px !important;
+    padding: 5px 10px !important;
+}
+
+.btn-delete {
+    border-radius: 8px !important;
+    padding: 5px 10px !important;
+}
+
+.btn-volver {
+    border-radius: 10px;
+    font-weight: bold;
+}
+
+/* Colores de botones según módulo */
+.btn-alergia { background: #ff4d6d; color: #fff; }
+.btn-cirugia { background: #6a00f4; color: #fff; }
+.btn-medicamento { background: #00bfa6; color: #fff; }
+.btn-enfermedad { background: #f4b400; color: #fff; }
+
+/* Hover */
+.btn-alergia:hover { background: #e63959; color: #fff; }
+.btn-cirugia:hover { background: #5800c8; color: #fff; }
+.btn-medicamento:hover { background: #009e8b; color: #fff; }
+.btn-enfermedad:hover { background: #d39c00; color: #fff; }
+
+/* ========================== */
+/*   ALERTA PERSONALIZADA     */
+/* ========================== */
+.alert-custom-error {
+    border: 2px solid #dc3545 !important;   /* borde rojo */
+    background-color: #fdf7f7 !important;   /* fondo blanco sucio */
+    color: #b30000 !important;              /* texto rojo elegante */
+    border-radius: 12px;
+    padding: 1rem 1.25rem;
+}
+
+.alert-custom-error ul {
+    padding-left: 1.2rem;
+    margin-bottom: 0;
+}
+
+.alert-custom-error li {
+    color: #b30000 !important;
+    font-weight: 500;
+}
+
