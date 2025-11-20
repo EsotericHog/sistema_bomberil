@@ -1,42 +1,109 @@
 {% extends 'gestion_medica/layouts/base.html' %}
 {% load static %}
 
-{% block titulo_ventana %}Módulo Fichas Médicas{% endblock %}
-{% block titulo_pagina %}Información Médica de Voluntarios: Página principal{% endblock %}
+{% block titulo_ventana %}Dashboard Médico{% endblock %}
+{% block titulo_pagina %}Panel de Gestión Médica{% endblock %}
 
 {% block contenido %}
+<div class="container-fluid">
 
-    <div class="contenedor_medico">
-        <div class="contenedor_tarjetas">
-            
-            <div class="tarjeta">
-                <img src="{% static 'imagenes/medico/lista.png' %}" alt="Lista Pacientes" 
-                     onerror="this.src='{% static 'imagenes/default_avatar.png' %}'">
-                
-                <a href="{% url 'gestion_medica:ruta_lista_paciente' %}" class="tarjeta_titulo">
-                    Lista de Pacientes
-                </a>
-            </div>
+    <div class="row">
 
-            <div class="tarjeta">
-                <img src="{% static 'imagenes/medico/medicamentos.png' %}" alt="Medicamentos"
-                     onerror="this.src='{% static 'imagenes/default_avatar.png' %}'">
-                
-                <a href="{% url 'gestion_medica:ruta_lista_medicamentos' %}" class="tarjeta_titulo">
-                    Catálogo Medicamentos
-                </a>
-            </div>
-            
-            <div class="tarjeta" style="opacity: 0.6;">
-                <img src="{% static 'imagenes/medico/lista_med.png' %}" alt="Enfermedades"
-                     onerror="this.src='{% static 'imagenes/default_avatar.png' %}'">
-                
-                <a href="#" class="tarjeta_titulo" title="En construcción">
-                    Enfermedades (Pronto)
-                </a>
-            </div>
-
+        <div class="col-xl-3 col-md-6 mb-4">
+            <a href="{% url 'gestion_medica:ruta_lista_paciente' %}" class="text-decoration-none">
+                <div class="card border-left-primary shadow h-100 py-2">
+                    <div class="card-body">
+                        <div class="row no-gutters align-items-center">
+                            <div class="col mr-2">
+                                <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                    Pacientes</div>
+                                <div class="h5 mb-0 font-weight-bold text-gray-800">Ver Fichas</div>
+                            </div>
+                            <div class="col-auto">
+                                <i class="fa-solid fa-file-medical fa-2x text-gray-300"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </a>
         </div>
-    </div>
 
+        <div class="col-xl-3 col-md-6 mb-4">
+            <a href="{% url 'gestion_medica:ruta_lista_medicamentos' %}" class="text-decoration-none">
+                <div class="card border-left-info shadow h-100 py-2">
+                    <div class="card-body">
+                        <div class="row no-gutters align-items-center">
+                            <div class="col mr-2">
+                                <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                                    Catálogo</div>
+                                <div class="h5 mb-0 font-weight-bold text-gray-800">Medicamentos</div>
+                            </div>
+                            <div class="col-auto">
+                                <i class="fa-solid fa-pills fa-2x text-gray-300"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </a>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <a href="{% url 'gestion_medica:ruta_lista_enfermedades' %}" class="text-decoration-none">
+                <div class="card border-left-warning shadow h-100 py-2">
+                    <div class="card-body">
+                        <div class="row no-gutters align-items-center">
+                            <div class="col mr-2">
+                                <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                                    Catálogo</div>
+                                <div class="h5 mb-0 font-weight-bold text-gray-800">Enfermedades</div>
+                            </div>
+                            <div class="col-auto">
+                                <i class="fa-solid fa-heartbeat fa-2x text-gray-300"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </a>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <a href="{% url 'gestion_medica:ruta_lista_alergias' %}" class="text-decoration-none">
+                <div class="card border-left-danger shadow h-100 py-2">
+                    <div class="card-body">
+                        <div class="row no-gutters align-items-center">
+                            <div class="col mr-2">
+                                <div class="text-xs font-weight-bold text-danger text-uppercase mb-1">
+                                    Catálogo</div>
+                                <div class="h5 mb-0 font-weight-bold text-gray-800">Alergias</div>
+                            </div>
+                            <div class="col-auto">
+                                <i class="fa-solid fa-allergies fa-2x text-gray-300"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </a>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <a href="{% url 'gestion_medica:ruta_lista_cirugias' %}" class="text-decoration-none">
+                <div class="card border-left-secondary shadow h-100 py-2">
+                    <div class="card-body">
+                        <div class="row no-gutters align-items-center">
+                            <div class="col mr-2">
+                                <div class="text-xs font-weight-bold text-secondary text-uppercase mb-1">
+                                    Catálogo</div>
+                                <div class="h5 mb-0 font-weight-bold text-gray-800">Cirugías</div>
+                            </div>
+                            <div class="col-auto">
+                                <i class="fa-solid fa-syringe fa-2x text-gray-300"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </a>
+        </div>
+
+    </div>
+</div>
 {% endblock %}

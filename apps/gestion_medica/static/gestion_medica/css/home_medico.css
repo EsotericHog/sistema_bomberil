@@ -48,12 +48,14 @@
 }
 
 .tarjeta_titulo {
-    font-size: 1.2rem;
-    font-weight: 600;
-    color: var(--color-texto-principal, #333);
+    font-size: 1.1rem; /* Un pelín más chico si usas mayúsculas */
+    font-weight: 700; /* Más gordita la letra */
+    color: var(--color-texto-principal, #5a5c69);
     text-decoration: none;
-    margin-top: 10px;
+    margin-top: 15px;
     display: block;
+    text-transform: uppercase; /* Todo mayúscula */
+    letter-spacing: 1px; /* Separación entre letras */
 }
 
 .tarjeta_titulo:hover {
