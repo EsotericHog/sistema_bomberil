@@ -220,9 +220,10 @@ class MedicoCompatibilidadView(View):
             
             recipients_by_type[blood_type].append({
                 'id': ficha.id,
-                # CORRECCIÓN: Se quitan los paréntesis ()
                 'nombre': ficha.voluntario.usuario.get_full_name,
                 'rut': ficha.voluntario.usuario.rut,
+                # AÑADIR LA URL DE LA IMAGEN
+                'avatar_url': ficha.voluntario.usuario.avatar.url if ficha.voluntario.usuario.avatar else None,
             })
         
         # 4. Generar la lista final de compatibilidad
@@ -246,12 +247,11 @@ class MedicoCompatibilidadView(View):
                     seen_ids.add(r['id'])
             
             compatibilidad_list.append({
-                'nombre': ficha.voluntario.usuario.get_full_name,
-                # CORRECCIÓN: Se quitan los paréntesis ()
+                'voluntario_id': ficha.id,
                 'nombre_donante': ficha.voluntario.usuario.get_full_name,
                 'tipo_sangre': donor_type,
                 'puede_donar_a_tipos': recipients_types,
-                'lista_compatibles': final_recipients
+                'lista_compatibles': final_recipients,
             })
             
         return render(request, "gestion_medica/pages/compatibilidad_sanguinea.html", {
