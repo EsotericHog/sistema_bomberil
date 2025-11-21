@@ -1,64 +1,215 @@
 /* ========================================================
-   ESTILOS DEL DASHBOARD (HOME)
+   DASHBOARD MÉDICO - ESTILOS MODERNOS
    ======================================================== */
 
-/* Estructura específica del Home */
-.contenedor_medico {
-    width: 100%;
-    display: flex;
-    flex-direction: column;
-    gap: 20px;
+:root {
+    --med-primary: #2554d5;
+    --med-success: #1cc88a;
+    --med-info: #36b9cc;
+    --med-warning: #f6c23e;
+    --med-danger: #e74a3b;
+    --med-dark: #5a5c69;
+    --med-light: #f8f9fc;
+    --med-bg-card: #ffffff;
 }
 
-.contenedor_tarjetas {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 20px;
-    justify-content: flex-start;
+/* --- Contenedor Principal --- */
+.dashboard-header {
+    margin-bottom: 1.5rem;
 }
 
-/* Tarjetas del Menú */
-.tarjeta {
-    background-color: var(--color-blanco, #ffffff);
-    border-radius: 10px;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-    padding: 20px;
-    width: 250px;
-    height: 250px;
+.dashboard-title {
+    font-weight: 700;
+    color: var(--med-dark);
+    border-left: 5px solid var(--med-primary);
+    padding-left: 15px;
+}
+
+/* --- Tarjetas Generales del Dashboard --- */
+.card-dashboard {
+    background: var(--med-bg-card);
+    border: none;
+    border-radius: 0.75rem; /* Bordes redondeados modernos */
+    box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.1); /* Sombra suave */
+    transition: all 0.3s ease;
+    height: 100%;
+    overflow: hidden;
+}
+
+.card-dashboard:hover {
+    transform: translateY(-3px); /* Efecto de elevación al pasar el mouse */
+}
+
+.card-header-custom {
+    background-color: transparent;
+    border-bottom: 1px solid #e3e6f0;
+    padding: 1rem 1.25rem;
     display: flex;
-    flex-direction: column;
     align-items: center;
-    justify-content: center;
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    justify-content: space-between;
+}
+
+.card-header-title {
+    margin: 0;
+    font-weight: 700;
+    color: var(--med-primary);
+    font-size: 1rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.card-body-custom {
+    padding: 1.25rem;
+}
+
+/* --- Secciones Específicas: Resumen Donación --- */
+.donation-card {
+    border-left: 0.25rem solid var(--med-danger) !important;
+}
+
+.stat-highlight {
     text-align: center;
-    border: 1px solid #e0e0e0;
-}
-
-.tarjeta:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 8px 15px rgba(0, 0, 0, 0.15);
-    border-color: var(--color-primario, #4e73df);
-}
-
-.tarjeta img {
-    width: 100px;
-    height: 100px;
-    object-fit: contain;
+    padding: 10px;
+    background-color: rgba(231, 74, 59, 0.1); /* Rojo muy suave */
+    border-radius: 10px;
     margin-bottom: 15px;
 }
 
-.tarjeta_titulo {
-    font-size: 1.1rem; /* Un pelín más chico si usas mayúsculas */
-    font-weight: 700; /* Más gordita la letra */
-    color: var(--color-texto-principal, #5a5c69);
-    text-decoration: none;
-    margin-top: 15px;
-    display: block;
-    text-transform: uppercase; /* Todo mayúscula */
-    letter-spacing: 1px; /* Separación entre letras */
+.stat-number {
+    font-size: 2rem;
+    font-weight: 800;
+    color: var(--med-danger);
+    line-height: 1;
 }
 
-.tarjeta_titulo:hover {
-    color: var(--color-primario, #4e73df);
-    text-decoration: underline;
+.stat-label {
+    font-size: 0.85rem;
+    color: var(--med-dark);
+    text-transform: uppercase;
+    font-weight: 600;
+}
+
+.list-stats .list-group-item {
+    border: none;
+    padding: 0.75rem 0;
+    border-bottom: 1px dashed #e3e6f0;
+}
+
+.list-stats .list-group-item:last-child {
+    border-bottom: none;
+}
+
+/* --- Barras de Progreso --- */
+.blood-type-row {
+    margin-bottom: 1rem;
+}
+
+.progress-label {
+    font-weight: 700;
+    font-size: 0.9rem;
+    margin-bottom: 0.3rem;
+    display: flex;
+    justify-content: space-between;
+}
+
+.progress-custom {
+    height: 1rem;
+    border-radius: 0.5rem;
+    background-color: #eaecf4;
+}
+
+/* --- Tarjetas de Acción Rápida (Catálogos) --- */
+.action-card {
+    text-align: center;
+    cursor: pointer;
+    border-bottom: 4px solid transparent; /* Prepara el borde inferior */
+}
+
+.action-card:hover {
+    background-color: #fdfdfe;
+}
+
+.action-card.border-success:hover { border-bottom-color: var(--med-success) !important; }
+.action-card.border-primary:hover { border-bottom-color: var(--med-primary) !important; }
+.action-card.border-warning:hover { border-bottom-color: var(--med-warning) !important; }
+.action-card.border-info:hover { border-bottom-color: var(--med-info) !important; }
+
+.action-icon-circle {
+    width: 70px;
+    height: 70px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 1rem auto;
+    font-size: 1.8rem;
+    transition: transform 0.2s;
+}
+
+.action-card:hover .action-icon-circle {
+    transform: scale(1.1) rotate(5deg); /* Animación del icono */
+}
+
+/* --- NUEVO: Banner de Bienvenida (Estilo Hero) --- */
+.welcome-banner {
+    /* Degradado azul médico elegante */
+    background: linear-gradient(135deg, #4e73df 0%, #224abe 100%);
+    border-radius: 1rem; /* Bordes bien redondeados */
+    padding: 2rem 2.5rem;
+    color: #ffffff;
+    position: relative;
+    overflow: hidden; /* Para que el icono de fondo no se salga */
+    box-shadow: 0 0.5rem 1rem rgba(78, 115, 223, 0.25);
+    display: flex;
+    align-items: center;
+    min-height: 120px;
+}
+
+.welcome-content {
+    position: relative;
+    z-index: 2; /* Asegura que el texto esté sobre el icono */
+    max-width: 70%;
+}
+
+.welcome-title {
+    font-size: 1.8rem;
+    font-weight: 800; /* Letra bien gruesa */
+    margin-bottom: 0.5rem;
+    letter-spacing: 0.5px;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.1); /* Sombra sutil al texto */
+}
+
+.welcome-subtitle {
+    font-size: 1rem;
+    font-weight: 400;
+    margin: 0;
+    opacity: 0.9; /* Un poco transparente para jerarquía */
+    line-height: 1.4;
+}
+
+.welcome-icon-bg {
+    position: absolute;
+    right: 1.5rem;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 7rem; /* Icono gigante */
+    color: #ffffff;
+    opacity: 0.15; /* Muy sutil */
+    z-index: 1;
+    pointer-events: none; /* Para que no moleste al click */
+}
+
+/* Colores de fondo suaves para los iconos */
+.bg-soft-success { background-color: rgba(28, 200, 138, 0.15); color: var(--med-success); }
+.bg-soft-primary { background-color: rgba(78, 115, 223, 0.15); color: var(--med-primary); }
+.bg-soft-warning { background-color: rgba(246, 194, 62, 0.15); color: var(--med-warning); }
+.bg-soft-info { background-color: rgba(54, 185, 204, 0.15); color: var(--med-info); }
+
+.btn-action {
+    border-radius: 50px;
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 0.75rem;
+    padding: 0.5rem 1.5rem;
+    letter-spacing: 1px;
 }

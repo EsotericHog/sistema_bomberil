@@ -27,43 +27,49 @@ BLOOD_COMPATIBILITY = {
 # 1. VISTAS GENERALES Y DE PACIENTES (FICHA MÉDICA)
 # ==============================================================================
 
+# sistema_bomberil/apps/gestion_medica/views.py
+
 class MedicoInicioView(View):
     '''Vista para ver la página principal del módulo con resumen médico'''
     def get(self, request):
         # 1. Calcular la distribución de tipos de sangre
+        # CORRECCION: Usamos 'grupo_sanguineo__nombre' para obtener el texto (A+, O-, etc)
+        # en lugar del ID numérico.
         distribucion_qs = FichaMedica.objects.filter(
             grupo_sanguineo__isnull=False
-        ).values('grupo_sanguineo').annotate(
-            count=Count('grupo_sanguineo')
+        ).values('grupo_sanguineo__nombre').annotate(
+            count=Count('id') # Contamos por ID para ser más precisos
         ).order_by('-count')
 
+        # Calculamos el total sumando los conteos
         total_fichas_con_grupo = sum(item['count'] for item in distribucion_qs)
 
         # --- LÓGICA DE CÁLCULO DE PORCENTAJE (FINAL) ---
         distribucion_final = []
-        if total_fichas_con_grupo > 0:
-            for item in distribucion_qs:
-                # CÁLCULO DE PORCENTAJE USANDO PYTHON (CORRECTO)
-                percentage = round((item['count'] / total_fichas_con_grupo) * 100)
-                
-                # Lo agregamos al diccionario para que el template lo use directamente
-                item['percentage'] = percentage 
-                distribucion_final.append(item)
-        else:
-            distribucion_final = distribucion_qs
-        # ------------------------------------------------
-
-        # 2. Obtener conteo de Donante Universal (O-) y Receptor Universal (AB+)
+        
+        # Inicializamos contadores para las tarjetas de resumen
         donor_universal_count = 0
         receptor_universal_count = 0
-        
-        for item in distribucion_final:
-            # NOTA: str(item['grupo_sanguineo']) funcionará porque estás agrupando por la FK
-            blood_type = str(item['grupo_sanguineo']).upper().strip() 
-            if blood_type == 'O-':
-                donor_universal_count = item['count']
-            if blood_type == 'AB+':
-                receptor_universal_count = item['count']
+
+        if total_fichas_con_grupo > 0:
+            for item in distribucion_qs:
+                # CÁLCULO DE PORCENTAJE
+                percentage = round((item['count'] / total_fichas_con_grupo) * 100)
+                
+                # Mapeamos el nombre que viene de la base de datos a una clave simple
+                # para que el template (HTML) lo entienda sin cambios.
+                nombre_grupo = item['grupo_sanguineo__nombre']
+                item['grupo_sanguineo'] = nombre_grupo 
+                item['percentage'] = percentage 
+                
+                distribucion_final.append(item)
+
+                # Lógica para contar Donantes/Receptores universales usando el NOMBRE
+                blood_type = str(nombre_grupo).upper().strip()
+                if blood_type == 'O-':
+                    donor_universal_count = item['count']
+                if blood_type == 'AB+':
+                    receptor_universal_count = item['count']
         
         context = {
             'total_fichas_con_grupo': total_fichas_con_grupo,
