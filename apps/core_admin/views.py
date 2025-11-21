@@ -11,7 +11,7 @@ from django.db import transaction
 from django.utils import timezone
 
 from .mixins import SuperuserRequiredMixin, PermisosMatrixMixin
-from .forms import EstacionForm, ProductoGlobalForm, UsuarioCreationForm, UsuarioChangeForm, AsignarMembresiaForm, RolGlobalForm
+from .forms import EstacionForm, ProductoGlobalForm, UsuarioCreationForm, UsuarioChangeForm, AsignarMembresiaForm, RolGlobalForm, MarcaForm
 from apps.gestion_inventario.models import Estacion, Ubicacion, Vehiculo, Prestamo, Compartimento, Categoria, Marca, ProductoGlobal, Producto, Activo, LoteInsumo, MovimientoInventario
 from apps.gestion_usuarios.models import Membresia, Rol
 
@@ -708,4 +708,99 @@ class RolGlobalDeleteView(SuperuserRequiredMixin, DeleteView):
         context['titulo_pagina'] = "Eliminar Rol Global"
         # Pasamos el conteo al template para advertir antes de que den clic
         context['conteo_uso'] = self.object.asignaciones.count()
+        return context
+
+
+
+
+# --- LISTAR MARCAS ---
+class MarcaListView(SuperuserRequiredMixin, ListView):
+    model = Marca
+    template_name = 'core_admin/pages/lista_marcas.html'
+    context_object_name = 'marcas'
+    paginate_by = 20
+
+    def get_queryset(self):
+        # Annotate: Contamos uso en Productos Globales y en Vehículos
+        return Marca.objects.annotate(
+            total_productos=Count('productoglobal', distinct=True),
+            total_vehiculos=Count('vehiculo', distinct=True)
+        ).order_by('nombre')
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['titulo_pagina'] = "Gestión de Marcas"
+        # KPI simple
+        context['kpi_total'] = self.object_list.count()
+        return context
+
+# --- CREAR MARCA ---
+class MarcaCreateView(SuperuserRequiredMixin, CreateView):
+    model = Marca
+    form_class = MarcaForm
+    template_name = 'core_admin/pages/marca_form.html'
+    success_url = reverse_lazy('core_admin:ruta_lista_marcas')
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['titulo_pagina'] = "Nueva Marca"
+        context['accion'] = "Crear Marca"
+        return context
+
+# --- EDITAR MARCA ---
+class MarcaUpdateView(SuperuserRequiredMixin, UpdateView):
+    model = Marca
+    form_class = MarcaForm
+    template_name = 'core_admin/pages/marca_form.html'
+    success_url = reverse_lazy('core_admin:ruta_lista_marcas')
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['titulo_pagina'] = f"Editar: {self.object.nombre}"
+        context['accion'] = "Guardar Cambios"
+        return context
+
+# --- ELIMINAR MARCA ---
+class MarcaDeleteView(SuperuserRequiredMixin, DeleteView):
+    model = Marca
+    template_name = 'core_admin/pages/confirmar_eliminar_marca.html'
+    success_url = reverse_lazy('core_admin:ruta_lista_marcas')
+
+    def post(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        
+        # --- VALIDACIÓN ESTRICTA DE NEGOCIO ---
+        # 1. Verificar uso en Productos Globales
+        if self.object.productoglobal_set.exists():
+            count = self.object.productoglobal_set.count()
+            messages.error(
+                request, 
+                f"BLOQUEADO: La marca '{self.object.nombre}' está asignada a {count} producto(s) del catálogo global."
+            )
+            return redirect('core_admin:ruta_lista_marcas')
+
+        # 2. Verificar uso en Vehículos
+        if self.object.vehiculo_set.exists():
+            count = self.object.vehiculo_set.count()
+            messages.error(
+                request, 
+                f"BLOQUEADO: La marca '{self.object.nombre}' está asignada a {count} vehículo(s) del sistema."
+            )
+            return redirect('core_admin:ruta_lista_marcas')
+
+        # Si pasa, borramos
+        try:
+            self.object.delete()
+            messages.success(request, f"Marca '{self.object.nombre}' eliminada correctamente.")
+        except Exception as e:
+            messages.error(request, f"Error de base de datos: {e}")
+            
+        return redirect(self.success_url)
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['titulo_pagina'] = "Eliminar Marca"
+        # Pasamos datos para advertencia visual
+        context['uso_productos'] = self.object.productoglobal_set.count()
+        context['uso_vehiculos'] = self.object.vehiculo_set.count()
         return context

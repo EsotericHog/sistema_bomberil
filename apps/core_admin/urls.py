@@ -21,7 +21,11 @@ from .views import (
     RolGlobalListView,
     RolGlobalCreateView,
     RolGlobalUpdateView,
-    RolGlobalDeleteView
+    RolGlobalDeleteView,
+    MarcaListView,
+    MarcaCreateView,
+    MarcaUpdateView,
+    MarcaDeleteView
 )
 
 app_name = 'core_admin'
@@ -89,14 +93,17 @@ urlpatterns = [
 
     # Lista de roles
     path('roles-globales/', RolGlobalListView.as_view(), name='ruta_lista_roles'),
-
     # Crear rol global
     path('roles-globales/crear/', RolGlobalCreateView.as_view(), name='ruta_crear_rol'),
-
     # Editar rol global
     path('roles-globales/<int:pk>/editar/', RolGlobalUpdateView.as_view(), name='ruta_editar_rol'),
-
     # Eliminar rol
     path('roles-globales/<int:pk>/eliminar/', RolGlobalDeleteView.as_view(), name='ruta_eliminar_rol'),
+
+    # Gestión de marcas
+    path('marcas/', MarcaListView.as_view(), name='ruta_lista_marcas'),
+    path('marcas/crear/', MarcaCreateView.as_view(), name='ruta_crear_marca'),
+    path('marcas/<int:pk>/editar/', MarcaUpdateView.as_view(), name='ruta_editar_marca'),
+    path('marcas/<int:pk>/eliminar/', MarcaDeleteView.as_view(), name='ruta_eliminar_marca'),
 
 ]

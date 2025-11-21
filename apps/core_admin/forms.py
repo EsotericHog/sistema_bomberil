@@ -3,7 +3,7 @@ from django.core.exceptions import ValidationError
 from django.db.models import Q
 from django.contrib.auth.models import Permission
 
-from apps.gestion_inventario.models import Estacion, Comuna, ProductoGlobal
+from apps.gestion_inventario.models import Estacion, Comuna, ProductoGlobal, Marca
 from apps.gestion_usuarios.models import Usuario, Rol, Membresia
 
 
@@ -247,3 +247,19 @@ class RolGlobalForm(forms.ModelForm):
         ).select_related('content_type').order_by('content_type__app_label', 'codename')
         
         self.fields['permisos'].required = False
+
+
+
+
+class MarcaForm(forms.ModelForm):
+    class Meta:
+        model = Marca
+        fields = ['nombre'] # Asumo que es el único campo relevante
+        widgets = {
+            'nombre': forms.TextInput(attrs={'placeholder': 'Ej: Rosenbauer, MSA, Motorola...'}),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['nombre'].widget.attrs['class'] = 'form-control'
+        self.fields['nombre'].label = "Nombre de la Marca"
