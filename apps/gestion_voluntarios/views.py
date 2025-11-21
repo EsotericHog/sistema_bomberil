@@ -290,16 +290,13 @@ class VoluntariosModificarView(View):
 # Editar voluntario
 class VoluntariosModificarView(View):
     
-    # Cuando se carga la página
     def get(self, request, id):
         voluntario = get_object_or_404(Voluntario.objects.select_related('usuario'), id=id)
         
-        # Comprobamos que los formularios se hayan importado
         if not UsuarioForm or not VoluntarioForm:
-            messages.error(request, 'Faltan archivos de formulario (forms.py).')
-            return redirect('gestion_voluntarios:ruta_ver_voluntario', id=id)
+             messages.error(request, 'Faltan archivos de formulario (forms.py).')
+             return redirect('gestion_voluntarios:ruta_ver_voluntario', id=id)
 
-        # Creamos instancias de los formularios con los datos del voluntario
         usuario_form = UsuarioForm(instance=voluntario.usuario)
         voluntario_form = VoluntarioForm(instance=voluntario)
 
@@ -310,12 +307,12 @@ class VoluntariosModificarView(View):
         }
         return render(request, "gestion_voluntarios/pages/modificar_voluntario.html", context)
 
-    # Cuando se presiona "Guardar Cambios"
     def post(self, request, id):
         voluntario = get_object_or_404(Voluntario.objects.select_related('usuario'), id=id)
         
+        # CAMBIO: request.FILES ahora va al voluntario_form (para el campo 'imagen')
         usuario_form = UsuarioForm(request.POST, instance=voluntario.usuario)
-        voluntario_form = VoluntarioForm(request.POST, instance=voluntario)
+        voluntario_form = VoluntarioForm(request.POST, request.FILES, instance=voluntario)
 
         if usuario_form.is_valid() and voluntario_form.is_valid():
             usuario_form.save()

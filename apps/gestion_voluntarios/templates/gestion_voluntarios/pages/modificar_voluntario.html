@@ -7,8 +7,18 @@
 
     <div class="container">
         <h1>Modificar Voluntario: {{ voluntario.usuario.get_full_name }}</h1>
-        <p>Ajuste la información del perfil del voluntario. El historial (cargos, reconocimientos) se gestiona desde la Hoja de Vida.</p>
+        <p>Ajuste la información del perfil del voluntario.</p>
         
+        <div style="text-align: center; margin-bottom: 20px;">
+            {% if voluntario.imagen %}
+                <img src="{{ voluntario.imagen.url }}" alt="Foto actual" style="width: 150px; height: 150px; object-fit: cover; border-radius: 50%; border: 3px solid #D72600;">
+                <p style="font-size: 0.9em; color: #666;">Foto actual</p>
+            {% else %}
+                 <img src="https://via.placeholder.com/150" alt="Sin foto" style="width: 150px; height: 150px; object-fit: cover; border-radius: 50%; border: 3px solid #ccc;">
+                 <p style="font-size: 0.9em; color: #666;">Sin foto de perfil</p>
+            {% endif %}
+        </div>
+
         <form id="modificar-form" method="POST" enctype="multipart/form-data">
             {% csrf_token %}
 
