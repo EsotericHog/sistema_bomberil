@@ -1,6 +1,6 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.views import View
-from django.views.generic import ListView, DetailView, UpdateView, CreateView, DeleteView
+from django.views.generic import ListView, DetailView, UpdateView, CreateView, DeleteView, TemplateView
 from django.db.models import Count, Q, ProtectedError
 from django.urls import reverse_lazy
 from django.contrib import messages
@@ -16,10 +16,66 @@ from apps.gestion_inventario.models import Estacion, Ubicacion, Vehiculo, Presta
 from apps.gestion_usuarios.models import Membresia, Rol
 
 
-class AdministracionInicioView(View):
-    template_name = "core_admin/pages/home.html"
-    def get(self, request):
-        return render(request, self.template_name)
+class AdministracionInicioView(SuperuserRequiredMixin, TemplateView):
+    template_name = 'core_admin/pages/home.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['titulo_pagina'] = "Panel de Control General"
+        
+        User = get_user_model()
+
+        # --- 1. KPIs SUPERIORES (Signos Vitales) ---
+        # Usuarios
+        context['kpi_usuarios_total'] = User.objects.count()
+        context['kpi_usuarios_activos'] = User.objects.filter(is_active=True).count()
+        
+        # Estaciones
+        context['kpi_estaciones_total'] = Estacion.objects.count()
+        context['kpi_estaciones_cias'] = Estacion.objects.filter(es_departamento=False).count()
+        
+        # Catálogo Global
+        context['kpi_productos_globales'] = ProductoGlobal.objects.count()
+        
+        # Roles Globales
+        context['kpi_roles_globales'] = Rol.objects.filter(estacion__isnull=True).count()
+
+        # --- 2. AUDITORÍA DE CALIDAD (Alertas) ---
+        # Productos incompletos (Sin imagen o sin marca)
+        context['audit_productos_incompletos'] = ProductoGlobal.objects.filter(
+            Q(imagen='') | Q(marca__isnull=True)
+        ).count()
+
+        # Estaciones Fantasma (Sin miembros asignados)
+        # Usamos annotate para contar miembros y filtramos los que tienen 0
+        context['audit_estaciones_vacias'] = Estacion.objects.annotate(
+            num_miembros=Count('miembros')
+        ).filter(num_miembros=0).count()
+
+        # Taxonomías Huérfanas (Sin uso)
+        # Marcas sin productos NI vehículos
+        marcas_huerfanas = Marca.objects.annotate(
+            uso_prod=Count('productoglobal'),
+            uso_veh=Count('vehiculo')
+        ).filter(uso_prod=0, uso_veh=0).count()
+        
+        # Categorías sin productos
+        cats_huerfanas = Categoria.objects.annotate(
+            uso_prod=Count('productoglobal')
+        ).filter(uso_prod=0).count()
+
+        context['audit_taxonomias_huerfanas'] = marcas_huerfanas + cats_huerfanas
+
+        # --- 3. ESTADÍSTICAS DE USO (Top 5) ---
+        context['top_categorias'] = Categoria.objects.annotate(
+            total=Count('productoglobal')
+        ).order_by('-total')[:5]
+
+        context['top_marcas'] = Marca.objects.annotate(
+            total=Count('productoglobal')
+        ).order_by('-total')[:5]
+
+        return context
     
 
 
