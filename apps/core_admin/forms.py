@@ -3,7 +3,7 @@ from django.core.exceptions import ValidationError
 from django.db.models import Q
 from django.contrib.auth.models import Permission
 
-from apps.gestion_inventario.models import Estacion, Comuna, ProductoGlobal, Marca
+from apps.gestion_inventario.models import Estacion, Comuna, ProductoGlobal, Marca, Categoria
 from apps.gestion_usuarios.models import Usuario, Rol, Membresia
 
 
@@ -263,3 +263,25 @@ class MarcaForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
         self.fields['nombre'].widget.attrs['class'] = 'form-control'
         self.fields['nombre'].label = "Nombre de la Marca"
+
+
+
+
+class CategoriaForm(forms.ModelForm):
+    class Meta:
+        model = Categoria
+        fields = ['nombre', 'codigo', 'descripcion']
+        widgets = {
+            'nombre': forms.TextInput(attrs={'placeholder': 'Ej: Protección Personal'}),
+            'codigo': forms.TextInput(attrs={'placeholder': 'Ej: EPP, MM, COM...'}),
+            'descripcion': forms.Textarea(attrs={'rows': 3, 'placeholder': 'Describa qué tipo de insumos agrupa esta categoría...'}),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Estilos Bootstrap
+        for field in self.fields.values():
+            field.widget.attrs['class'] = 'form-control'
+        
+        self.fields['codigo'].label = "Código Corto (Único)"
+        self.fields['codigo'].help_text = "Identificador breve para reportes y etiquetas."

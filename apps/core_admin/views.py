@@ -11,7 +11,7 @@ from django.db import transaction
 from django.utils import timezone
 
 from .mixins import SuperuserRequiredMixin, PermisosMatrixMixin
-from .forms import EstacionForm, ProductoGlobalForm, UsuarioCreationForm, UsuarioChangeForm, AsignarMembresiaForm, RolGlobalForm, MarcaForm
+from .forms import EstacionForm, ProductoGlobalForm, UsuarioCreationForm, UsuarioChangeForm, AsignarMembresiaForm, RolGlobalForm, MarcaForm, CategoriaForm
 from apps.gestion_inventario.models import Estacion, Ubicacion, Vehiculo, Prestamo, Compartimento, Categoria, Marca, ProductoGlobal, Producto, Activo, LoteInsumo, MovimientoInventario
 from apps.gestion_usuarios.models import Membresia, Rol
 
@@ -734,6 +734,9 @@ class MarcaListView(SuperuserRequiredMixin, ListView):
         context['kpi_total'] = self.object_list.count()
         return context
 
+
+
+
 # --- CREAR MARCA ---
 class MarcaCreateView(SuperuserRequiredMixin, CreateView):
     model = Marca
@@ -747,6 +750,9 @@ class MarcaCreateView(SuperuserRequiredMixin, CreateView):
         context['accion'] = "Crear Marca"
         return context
 
+
+
+
 # --- EDITAR MARCA ---
 class MarcaUpdateView(SuperuserRequiredMixin, UpdateView):
     model = Marca
@@ -759,6 +765,9 @@ class MarcaUpdateView(SuperuserRequiredMixin, UpdateView):
         context['titulo_pagina'] = f"Editar: {self.object.nombre}"
         context['accion'] = "Guardar Cambios"
         return context
+
+
+
 
 # --- ELIMINAR MARCA ---
 class MarcaDeleteView(SuperuserRequiredMixin, DeleteView):
@@ -803,4 +812,95 @@ class MarcaDeleteView(SuperuserRequiredMixin, DeleteView):
         # Pasamos datos para advertencia visual
         context['uso_productos'] = self.object.productoglobal_set.count()
         context['uso_vehiculos'] = self.object.vehiculo_set.count()
+        return context
+
+
+
+
+# --- LISTAR CATEGORÍAS ---
+class CategoriaListView(SuperuserRequiredMixin, ListView):
+    model = Categoria
+    template_name = 'core_admin/pages/lista_categorias.html'
+    context_object_name = 'categorias'
+    paginate_by = 20
+
+    def get_queryset(self):
+        # Annotate: Contamos cuántos productos globales usan esta categoría
+        return Categoria.objects.annotate(
+            total_productos=Count('productoglobal')
+        ).order_by('nombre')
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['titulo_pagina'] = "Gestión de Categorías"
+        context['kpi_total'] = self.object_list.count()
+        return context
+
+
+
+
+# --- CREAR CATEGORÍA ---
+class CategoriaCreateView(SuperuserRequiredMixin, CreateView):
+    model = Categoria
+    form_class = CategoriaForm
+    template_name = 'core_admin/pages/categoria_form.html'
+    success_url = reverse_lazy('core_admin:ruta_lista_categorias')
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['titulo_pagina'] = "Nueva Categoría"
+        context['accion'] = "Crear Categoría"
+        return context
+
+
+
+
+# --- EDITAR CATEGORÍA ---
+class CategoriaUpdateView(SuperuserRequiredMixin, UpdateView):
+    model = Categoria
+    form_class = CategoriaForm
+    template_name = 'core_admin/pages/categoria_form.html'
+    success_url = reverse_lazy('core_admin:ruta_lista_categorias')
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['titulo_pagina'] = f"Editar: {self.object.nombre}"
+        context['accion'] = "Guardar Cambios"
+        return context
+
+
+
+
+# --- ELIMINAR CATEGORÍA ---
+class CategoriaDeleteView(SuperuserRequiredMixin, DeleteView):
+    model = Categoria
+    template_name = 'core_admin/pages/confirmar_eliminar_categoria.html'
+    success_url = reverse_lazy('core_admin:ruta_lista_categorias')
+
+    def post(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        
+        # --- VALIDACIÓN ESTRICTA ---
+        # Si hay productos asociados, bloqueamos la eliminación
+        if self.object.productoglobal_set.exists():
+            count = self.object.productoglobal_set.count()
+            messages.error(
+                request, 
+                f"BLOQUEADO: La categoría '{self.object.nombre}' contiene {count} producto(s). "
+                "Debe reasignar o eliminar esos productos antes de borrar la categoría."
+            )
+            return redirect('core_admin:ruta_lista_categorias')
+
+        try:
+            self.object.delete()
+            messages.success(request, f"Categoría '{self.object.nombre}' eliminada correctamente.")
+        except Exception as e:
+            messages.error(request, f"Error de base de datos: {e}")
+            
+        return redirect(self.success_url)
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['titulo_pagina'] = "Eliminar Categoría"
+        context['uso_productos'] = self.object.productoglobal_set.count()
         return context

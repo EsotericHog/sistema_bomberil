@@ -25,7 +25,11 @@ from .views import (
     MarcaListView,
     MarcaCreateView,
     MarcaUpdateView,
-    MarcaDeleteView
+    MarcaDeleteView,
+    CategoriaListView,
+    CategoriaCreateView,
+    CategoriaUpdateView,
+    CategoriaDeleteView
 )
 
 app_name = 'core_admin'
@@ -106,4 +110,17 @@ urlpatterns = [
     path('marcas/<int:pk>/editar/', MarcaUpdateView.as_view(), name='ruta_editar_marca'),
     path('marcas/<int:pk>/eliminar/', MarcaDeleteView.as_view(), name='ruta_eliminar_marca'),
 
+    # Gestión de categorías
+    path('categorias/', CategoriaListView.as_view(), name='ruta_lista_categorias'),
+    path('categorias/crear/', CategoriaCreateView.as_view(), name='ruta_crear_categoria'),
+    path('categorias/<int:pk>/editar/', CategoriaUpdateView.as_view(), name='ruta_editar_categoria'),
+    path('categorias/<int:pk>/eliminar/', CategoriaDeleteView.as_view(), name='ruta_eliminar_categoria'),
 ]
+
+
+# PENDIENTE
+# - CRUD para los modelos de normalización: Nacionalidad, Profesion, TipoCargo, TipoReconocimiento.
+
+# - Área: Inteligencia y Auditoría (Logs)
+#   - Visor Global de Movimientos: Una tabla filtrable de MovimientoInventario de todas las estaciones. Permite detectar patrones anómalos (ej: una estación dando de baja masiva de equipos).
+#   - Auditoría de Bitácoras: Visualización de los registros firmados en las hojas de vida (HistorialSancion, HistorialCargo). Solo lectura, para resolver disputas entre estaciones o usuarios.
