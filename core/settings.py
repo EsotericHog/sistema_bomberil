@@ -46,6 +46,7 @@ THIRD_PARTY_APPS = [
     #'jazzmin',
     'storages',
     'rest_framework',
+    'django_cleanup.apps.CleanupConfig',
 ]
 INSTALLED_APPS = THIRD_PARTY_APPS + DJANGO_APPS + PROJECT_APPS
 
