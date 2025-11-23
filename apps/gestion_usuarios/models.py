@@ -1,3 +1,4 @@
+import uuid
 from django.db import models
 from django.conf import settings
 from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin, Permission
@@ -11,7 +12,7 @@ from apps.gestion_inventario.models import Estacion
 
 
 class Usuario(AbstractBaseUser, PermissionsMixin):
-    id = models.AutoField(primary_key=True)
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     rut = models.CharField(max_length=15, unique=True, blank=True, null=True)
     email = models.EmailField(max_length=100, blank=True, null=True, verbose_name="correo electrónico")
     first_name = models.CharField(max_length=100, verbose_name="Nombre")

@@ -35,7 +35,7 @@ urlpatterns = [
     path('usuarios/', UsuarioListaView.as_view(), name="ruta_lista_usuarios"),
 
     # Ver detalle de usuario
-    path('usuarios/<int:id>/', UsuarioObtenerView.as_view(), name="ruta_ver_usuario"),
+    path('usuarios/<uuid:id>/', UsuarioObtenerView.as_view(), name="ruta_ver_usuario"),
 
     # Agregar usuario (enlistarlo en la compañía)
     path('usuarios/agregar/', UsuarioAgregarView.as_view(), name="ruta_agregar_usuario"),
@@ -44,25 +44,25 @@ urlpatterns = [
     path('usuarios/crear/', UsuarioCrearView.as_view(), name="ruta_crear_usuario"),
 
     # Modificar usuario
-    path('usuarios/<int:id>/editar/', UsuarioEditarView.as_view(), name="ruta_editar_usuario"),
+    path('usuarios/<uuid:id>/editar/', UsuarioEditarView.as_view(), name="ruta_editar_usuario"),
 
     # Desactivar usuario (No puede acceder al sistema)
-    path('usuarios/<int:id>/desactivar/', UsuarioDesactivarView.as_view(), name="ruta_desactivar_usuario"),
+    path('usuarios/<uuid:id>/desactivar/', UsuarioDesactivarView.as_view(), name="ruta_desactivar_usuario"),
 
     # Activar usuario (Puede acceder al sistema)
-    path('usuarios/<int:id>/activar/', UsuarioActivarView.as_view(), name="ruta_activar_usuario"),
+    path('usuarios/<uuid:id>/activar/', UsuarioActivarView.as_view(), name="ruta_activar_usuario"),
 
     # Asignar roles al usuario
-    path('usuarios/<int:id>/asignar-roles/', UsuarioAsignarRolesView.as_view(), name='ruta_asignar_roles_usuario'),
+    path('usuarios/<uuid:id>/asignar-roles/', UsuarioAsignarRolesView.as_view(), name='ruta_asignar_roles_usuario'),
 
     # Restablecer contraseña a usuario
-    path('usuarios/<int:id>/restablecer-contrasena/', UsuarioRestablecerContrasena.as_view(), name='ruta_restablecer_contrasena'),
+    path('usuarios/<uuid:id>/restablecer-contrasena/', UsuarioRestablecerContrasena.as_view(), name='ruta_restablecer_contrasena'),
 
     # Ver permisos de usuario
-    path('usuarios/<int:id>/permisos/', UsuarioVerPermisos.as_view(), name='ruta_ver_permisos_usuario'),
+    path('usuarios/<uuid:id>/permisos/', UsuarioVerPermisos.as_view(), name='ruta_ver_permisos_usuario'),
 
     # Finalizar membresía de un usuario
-    path('usuarios/<int:id>/finalizar-membresia/', UsuarioFinalizarMembresiaView.as_view(), name='ruta_finalizar_membresia'),
+    path('usuarios/<uuid:id>/finalizar-membresia/', UsuarioFinalizarMembresiaView.as_view(), name='ruta_finalizar_membresia'),
 
     # Historial de membresías
     path('usuarios/historial/', HistorialMembresiasView.as_view(), name="ruta_historial_membresias"),
@@ -71,7 +71,7 @@ urlpatterns = [
     path('auditoria/actividad/', RegistroActividadView.as_view(), name="ruta_registro_actividad"),
 
     # Forzar cierre de sesión de usuario
-    path('usuarios/<int:id>/forzar-logout/', UsuarioForzarCierreSesionView.as_view(), name="ruta_forzar_logout"),
+    path('usuarios/<uuid:id>/forzar-logout/', UsuarioForzarCierreSesionView.as_view(), name="ruta_forzar_logout"),
 
 
 
@@ -95,7 +95,7 @@ urlpatterns = [
 
 
     # Impersonar (Convertirse en) usuario
-    path('usuarios/<int:id>/impersonar/', UsuarioImpersonarView.as_view(), name="ruta_impersonar_usuario"),
+    path('usuarios/<uuid:id>/impersonar/', UsuarioImpersonarView.as_view(), name="ruta_impersonar_usuario"),
     
     # Detener impersonación (Volver a ser admin)
     path('usuarios/detener-impersonacion/', UsuarioDetenerImpersonacionView.as_view(), name="ruta_detener_impersonacion"),

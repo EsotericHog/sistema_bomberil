@@ -374,7 +374,7 @@ class Proveedor(models.Model):
         related_name='+', # '+' evita crear una relación inversa innecesaria
         verbose_name="Contacto Principal"
     )
-    estacion_creadora = models.ForeignKey(Estacion, on_delete=models.PROTECT, verbose_name="Estación Origen")
+    estacion_creadora = models.ForeignKey(Estacion, on_delete=models.PROTECT, verbose_name="Estación Origen", null=True, blank=True)
     
     class Meta:
         verbose_name = "Proveedor"

@@ -79,10 +79,10 @@ urlpatterns = [
     path('usuarios/crear/', UsuarioCreateView.as_view(), name='ruta_crear_usuario'),
 
     # Editar usuario
-    path('usuarios/<int:pk>/editar/', UsuarioUpdateView.as_view(), name='ruta_editar_usuario'),
+    path('usuarios/<uuid:pk>/editar/', UsuarioUpdateView.as_view(), name='ruta_editar_usuario'),
 
     # Restablecer contraseña
-    path('usuarios/<int:pk>/reset-password/', UsuarioResetPasswordView.as_view(), name='ruta_restablecer_contraseña'),
+    path('usuarios/<uuid:pk>/reset-password/', UsuarioResetPasswordView.as_view(), name='ruta_restablecer_contraseña'),
 
     # API Roles por estación
     path('api/roles-estacion/', ApiRolesPorEstacionView.as_view(), name='api_roles_estacion'),
@@ -91,7 +91,7 @@ urlpatterns = [
     path('membresias/asignar/', MembresiaCreateView.as_view(), name='ruta_crear_membresia'),
 
     # Finalizar todas las membresías activas de un usuario
-    path('usuarios/<int:pk>/finalizar-membresias/', UsuarioFinalizarMembresiasView.as_view(), name='ruta_finalizar_membresias_usuario'),
+    path('usuarios/<uuid:pk>/finalizar-membresias/', UsuarioFinalizarMembresiasView.as_view(), name='ruta_finalizar_membresias_usuario'),
 
 
 
