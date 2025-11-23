@@ -2,7 +2,10 @@
 """Django's command-line utility for administrative tasks."""
 import os
 import sys
+import warnings
 
+# 1. Ignorar por el módulo que causa el ruido (user_sessions)
+warnings.filterwarnings("ignore", module="user_sessions")
 
 def main():
     """Run administrative tasks."""
