@@ -666,13 +666,26 @@ class RolGlobalCreateView(SuperuserRequiredMixin, PermisosMatrixMixin, CreateVie
     template_name = 'core_admin/pages/rol_form.html'
     success_url = reverse_lazy('core_admin:ruta_lista_roles')
 
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['titulo_pagina'] = "Crear Nuevo Rol Global"
+        context['accion'] = "Guardar Rol"
+        
+        # 1. Inyectar la matriz (Es vital para que el bucle del template funcione)
+        context['permissions_matrix'] = self.get_permissions_matrix()
+        
+        # 2. IDs vacíos (importante para que el template no falle al verificar 'checked')
+        context['rol_permissions_ids'] = []
+        
+        return context
+
     def form_valid(self, form):
         # 1. Guardar el objeto Rol (sin M2M aún)
         self.object = form.save(commit=False)
         self.object.estacion = None # Forzar Global
         self.object.save()
         
-        # 2. GUARDADO EXPLÍCITO (La Solución)
+        # 2. GUARDADO EXPLÍCITO
         # Obtenemos los permisos limpios del formulario (ya filtrados por el queryset)
         permisos_seleccionados = form.cleaned_data['permisos']
         
