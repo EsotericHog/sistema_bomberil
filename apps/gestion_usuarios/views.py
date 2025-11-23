@@ -146,7 +146,7 @@ class UsuarioListaView(BaseEstacionMixin, PermissionRequiredMixin, View):
     '''Vista para listar usuarios con membresías vigentes en la estación. Se excluyen membresías con el estado "FINALIZADO".'''
 
     template_name = "gestion_usuarios/pages/lista_usuarios.html"
-    permission_required = 'gestion_usuarios.accion_usuarios_ver_usuarios_compania'
+    permission_required = 'gestion_usuarios.accion_gestion_usuarios_ver_usuarios'
     model = Membresia
     paginate_by = 20
 
@@ -243,7 +243,7 @@ class UsuarioObtenerView(BaseEstacionMixin, PermissionRequiredMixin, MembresiaGe
     """
     # --- 1. Atributos de Configuración ---
     template_name = "gestion_usuarios/pages/ver_usuario.html"
-    permission_required = 'gestion_usuarios.accion_usuarios_ver_usuarios_compania'
+    permission_required = 'gestion_usuarios.accion_gestion_usuarios_ver_usuarios'
     model = Membresia
 
     # --- 2. Métodos Helper (Obtención y Contexto) ---
@@ -296,7 +296,7 @@ class UsuarioAgregarView(BaseEstacionMixin, PermissionRequiredMixin, View):
     """
     # --- 1. Atributos de Configuración ---
     template_name = "gestion_usuarios/pages/agregar_usuario.html"
-    permission_required = 'gestion_usuarios.accion_usuarios_crear_usuario'
+    permission_required = 'gestion_usuarios.accion_gestion_usuarios_crear_usuario'
     # URLs para redirección
     success_redirect_url = 'gestion_usuarios:ruta_lista_usuarios'
     fail_redirect_url = 'gestion_usuarios:ruta_agregar_usuario'
@@ -366,7 +366,7 @@ class UsuarioCrearView(BaseEstacionMixin, PermissionRequiredMixin, View):
     
     # --- 1. Atributos de Configuración ---
     template_name = "gestion_usuarios/pages/crear_usuario.html"
-    permission_required = 'gestion_usuarios.accion_usuarios_crear_usuario'
+    permission_required = 'gestion_usuarios.accion_gestion_usuarios_crear_usuario'
     form_class = FormularioCrearUsuario
     success_url = reverse_lazy('gestion_usuarios:ruta_lista_usuarios')
 
@@ -465,7 +465,7 @@ class UsuarioEditarView(BaseEstacionMixin, PermissionRequiredMixin, MembresiaGes
     
     # --- 1. Atributos de Configuración ---
     template_name = "gestion_usuarios/pages/editar_usuario.html"
-    permission_required = 'gestion_usuarios.accion_usuarios_modificar_info_personal'
+    permission_required = 'gestion_usuarios.accion_gestion_usuarios_modificar_info'
     form_class = FormularioEditarUsuario
     model = Usuario # El formulario edita un Usuario
     success_url = reverse_lazy('gestion_usuarios:ruta_lista_usuarios')
@@ -566,7 +566,7 @@ class UsuarioDesactivarView(BaseEstacionMixin, PermissionRequiredMixin, View):
     """
     
     # --- 1. Atributos de Configuración ---
-    permission_required = 'gestion_usuarios.accion_usuarios_desactivar_usuario'
+    permission_required = 'gestion_usuarios.accion_gestion_usuarios_desactivar_cuenta'
     success_url = reverse_lazy("gestion_usuarios:ruta_lista_usuarios")
 
 
@@ -630,7 +630,7 @@ class UsuarioActivarView(BaseEstacionMixin, PermissionRequiredMixin, View):
     (cambia su estado a 'ACTIVO').
     """
     # --- 1. Atributos de Configuración ---
-    permission_required = 'gestion_usuarios.accion_usuarios_desactivar_usuario'
+    permission_required = 'gestion_usuarios.accion_gestion_usuarios_desactivar_cuenta'
     
     success_url = reverse_lazy("gestion_usuarios:ruta_lista_usuarios")
     model = Membresia
@@ -698,7 +698,7 @@ class RolListaView(BaseEstacionMixin, PermissionRequiredMixin, View):
     
     # --- 1. Atributos de Configuración ---
     template_name = "gestion_usuarios/pages/lista_roles.html"
-    permission_required = 'gestion_usuarios.accion_usuarios_ver_roles'
+    permission_required = 'gestion_usuarios.accion_gestion_usuarios_ver_roles'
 
     # --- 2. Método de Consulta (El corazón de la vista) ---
     def get_queryset(self):
@@ -769,7 +769,7 @@ class RolObtenerView(BaseEstacionMixin, PermissionRequiredMixin, View):
     """
     
     template_name = "gestion_usuarios/pages/ver_rol.html"
-    permission_required = 'gestion_usuarios.accion_usuarios_ver_roles'
+    permission_required = 'gestion_usuarios.accion_gestion_usuarios_ver_roles'
 
 
     # --- 1. Método de Obtención (SEGURIDAD CRÍTICA) ---
@@ -904,7 +904,7 @@ class RolEditarView(BaseEstacionMixin, PermissionRequiredMixin, View):
     # --- 1. Atributos de Configuración ---
     template_name = "gestion_usuarios/pages/editar_rol.html"
     form_class = FormularioRol
-    permission_required = 'gestion_usuarios.accion_usuarios_gestionar_roles'
+    permission_required = 'gestion_usuarios.accion_gestion_usuarios_gestionar_roles'
     success_url = reverse_lazy('gestion_usuarios:ruta_lista_roles')
 
 
@@ -994,7 +994,7 @@ class RolCrearView(BaseEstacionMixin, PermissionRequiredMixin, View):
     form_class = FormularioRol
     template_name = 'gestion_usuarios/pages/crear_rol.html'
     success_url = reverse_lazy('gestion_usuarios:ruta_lista_roles')
-    permission_required = 'gestion_usuarios.accion_usuarios_gestionar_roles'
+    permission_required = 'gestion_usuarios.accion_gestion_usuarios_gestionar_roles'
 
     # --- 2. Métodos Helper (Formulario y Contexto) ---
     def get_form(self, data=None):
@@ -1058,7 +1058,7 @@ class RolAsignarPermisosView(BaseEstacionMixin, PermissionRequiredMixin, View):
     
     # --- 1. Configuración ---
     template_name = 'gestion_usuarios/pages/asignar_permisos.html'
-    permission_required = 'gestion_usuarios.accion_usuarios_gestionar_roles'
+    permission_required = 'gestion_usuarios.accion_gestion_usuarios_gestionar_roles'
     success_url = reverse_lazy('gestion_usuarios:ruta_lista_roles')
 
     # --- 2. Método de Obtención (Seguridad Idéntica a RolEditarView) ---
@@ -1181,7 +1181,7 @@ class RolEliminarView(BaseEstacionMixin, PermissionRequiredMixin, View):
 
     # --- 1. Atributos de Configuración ---
     template_name = 'gestion_usuarios/pages/eliminar_rol.html'
-    permission_required = 'gestion_usuarios.accion_usuarios_gestionar_roles'
+    permission_required = 'gestion_usuarios.accion_gestion_usuarios_gestionar_roles'
     success_url = reverse_lazy('gestion_usuarios:ruta_lista_roles')
 
     # --- 2. Método de Obtención (SEGURIDAD) ---
@@ -1238,7 +1238,7 @@ class UsuarioAsignarRolesView(BaseEstacionMixin, PermissionRequiredMixin, Membre
     """
     
     template_name = 'gestion_usuarios/pages/asignar_roles.html'
-    permission_required = 'gestion_usuarios.accion_usuarios_asignar_roles_usuario'
+    permission_required = 'gestion_usuarios.accion_gestion_usuarios_asignar_roles'
     
     # Mensaje específico si el mixin bloquea el acceso
     mensaje_no_gestiona = "No se pueden asignar roles porque la membresía del usuario no está vigente."
@@ -1358,7 +1358,7 @@ class UsuarioRestablecerContrasena(
     - Verifica que el usuario tenga una membresía ACTIVA/INACTIVA en la estación.
     """
     
-    permission_required = 'gestion_usuarios.accion_usuarios_restablecer_contrasena'
+    permission_required = 'gestion_usuarios.accion_gestion_usuarios_restablecer_pass'
     
     # --- 1. Configuración ---
     def get(self, request, *args, **kwargs):
@@ -1417,7 +1417,7 @@ class UsuarioVerPermisos(BaseEstacionMixin, PermissionRequiredMixin, MembresiaGe
     Muestra una lista consolidada de solo lectura de todos los permisos 
     que un usuario posee en la estación activa (suma de sus roles).
     """
-    permission_required = 'gestion_usuarios.accion_usuarios_ver_permisos_usuario'
+    permission_required = 'gestion_usuarios.accion_gestion_usuarios_ver_permisos'
     template_name = 'gestion_usuarios/pages/ver_permisos_usuario.html'
 
     # --- 1. Método de Obtención ---
@@ -1568,7 +1568,7 @@ class HistorialMembresiasView(BaseEstacionMixin, PermissionRequiredMixin, ListVi
     # --- 1. Configuración ---
     model = Membresia
     template_name = 'gestion_usuarios/pages/historial_membresias.html'
-    permission_required = 'gestion_usuarios.accion_usuarios_ver_usuarios_compania'
+    permission_required = 'gestion_usuarios.accion_gestion_usuarios_ver_auditoria'
     paginate_by = 20
     
     # Nombre de la variable en el template (ListView usa 'page_obj' para paginación 

@@ -180,7 +180,7 @@ class Membresia(models.Model):
             ("accion_gestion_usuarios_restablecer_pass", "Puede restablecer la contraseña de un usuario"),
             ("accion_gestion_usuarios_ver_roles", "Puede ver los roles y sus permisos"),
             ("accion_gestion_usuarios_gestionar_roles", "Puede crear, editar, eliminar y asignar permisos a los roles"),
-            ("accion_gestion_usuarios_ver_compania", "Puede ver a los usuarios de la compañía"),
+            ("accion_gestion_usuarios_ver_usuarios", "Puede ver a los usuarios de la compañía"),
             ("accion_gestion_usuarios_ver_permisos", "Puede ver los permisos de los usuarios"),
             ("accion_gestion_usuarios_asignar_roles", "Puede asignar y cambiar roles a un usuario"),
             ("accion_gestion_usuarios_desactivar_cuenta", "Puede desactivar o reactivar la cuenta de un usuario"),
