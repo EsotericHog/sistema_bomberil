@@ -6,6 +6,7 @@ from .models import (
     HistorialCargo, HistorialReconocimiento, HistorialSancion,
     TipoReconocimiento
 )
+from apps.common.mixins import ImageProcessingFormMixin
 
 # --- FORMULARIOS DE PERFIL ---
 class UsuarioForm(forms.ModelForm):
@@ -28,7 +29,12 @@ class UsuarioForm(forms.ModelForm):
             'phone': 'Teléfono',
         }
 
-class VoluntarioForm(forms.ModelForm):
+class VoluntarioForm(ImageProcessingFormMixin, forms.ModelForm):
+    """
+    Formulario para editar los campos del perfil Voluntario
+    (Datos personales y bomberiles)
+    """
+    # Hacemos que los campos de fecha usen el widget de Fecha de HTML5
     fecha_nacimiento = forms.DateField(
         widget=forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}),
         label="Fecha de Nacimiento",
@@ -46,7 +52,8 @@ class VoluntarioForm(forms.ModelForm):
         fields = [
             'imagen', 'nacionalidad', 'profesion', 'lugar_nacimiento', 'fecha_nacimiento',
             'genero', 'estado_civil', 'domicilio_comuna', 'domicilio_calle',
-            'domicilio_numero', 'fecha_primer_ingreso', 'numero_registro_bomberil'
+            'domicilio_numero', 'fecha_primer_ingreso', 'numero_registro_bomberil',
+            'imagen'
         ]
         widgets = {
             'imagen': forms.ClearableFileInput(attrs={'class': 'form-control'}), # Widget para la foto
@@ -59,12 +66,33 @@ class VoluntarioForm(forms.ModelForm):
             'domicilio_calle': forms.TextInput(attrs={'class': 'form-control'}),
             'domicilio_numero': forms.TextInput(attrs={'class': 'form-control'}),
             'numero_registro_bomberil': forms.TextInput(attrs={'class': 'form-control'}),
+            'imagen': forms.ClearableFileInput(attrs={'class': 'form-control'}),
         }
         labels = {
             'imagen': 'Foto de Perfil (Uniformado)',
         }
 
-# ... (El resto de formularios de Configuración y Bitácora se mantienen igual) ...
+    def save(self, commit=True):
+        voluntario = super().save(commit=False)
+        
+        self.process_image_upload(
+            instance=voluntario, 
+            field_name='imagen', 
+            max_dim=(1024, 1024), 
+            crop=True
+        )
+
+        if commit:
+            voluntario.save()
+        return voluntario
+    
+
+
+
+# ==========================================================
+# 2. FORMULARIOS PARA "MODIFICAR PROFESIÓN" Y "MODIFICAR RANGO"
+# ==========================================================
+
 class ProfesionForm(forms.ModelForm):
     class Meta:
         model = Profesion

@@ -2,6 +2,7 @@ from django import forms
 from django.contrib.auth.forms import UserCreationForm, UserChangeForm
 
 from .models import Usuario, Rol
+from apps.common.mixins import ImageProcessingFormMixin
 
 
 
@@ -77,7 +78,7 @@ class FormularioCrearUsuario(forms.Form):
 
 
 
-class FormularioEditarUsuario(forms.ModelForm):
+class FormularioEditarUsuario(ImageProcessingFormMixin, forms.ModelForm):
     
     # Campos de solo lectura
     rut = forms.CharField(
@@ -130,9 +131,26 @@ class FormularioEditarUsuario(forms.ModelForm):
             self.fields['rut'].initial = self.instance.rut
             self.fields['email'].initial = self.instance.email
 
+    def save(self, commit=True):
+        usuario = super().save(commit=False)
+        
+        self.process_image_upload(
+            instance=usuario, 
+            field_name='avatar',
+            max_dim=(1024, 1024), 
+            crop=False,
+            image_prefix='usuario'
+        )
+
+        if commit:
+            usuario.save()
+            
+        return usuario
 
 
 
+
+# FORMULARIO PARA DJANGO ADMIN
 class CustomUserCreationForm(UserCreationForm):
     """
     Formulario para crear nuevos usuarios. Hereda de UserCreationForm
@@ -175,6 +193,8 @@ class CustomUserCreationForm(UserCreationForm):
 
 
 
+
+# FORMULARIO PARA DJANGO ADMIN
 class CustomUserChangeForm(UserChangeForm):
     """
     Formulario para modificar usuarios existentes. Hereda de UserChangeForm

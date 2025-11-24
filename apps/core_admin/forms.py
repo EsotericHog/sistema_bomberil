@@ -5,9 +5,10 @@ from django.contrib.auth.models import Permission
 
 from apps.gestion_inventario.models import Estacion, Comuna, ProductoGlobal, Marca, Categoria
 from apps.gestion_usuarios.models import Usuario, Rol, Membresia
+from apps.common.mixins import ImageProcessingFormMixin
 
 
-class EstacionForm(forms.ModelForm):
+class EstacionForm(ImageProcessingFormMixin, forms.ModelForm):
     class Meta:
         model = Estacion
         fields = ['nombre', 'descripcion', 'es_departamento', 'direccion', 'comuna', 'logo', 'imagen']
@@ -30,11 +31,39 @@ class EstacionForm(forms.ModelForm):
         
         # 3. Etiquetas personalizadas si hacen falta
         self.fields['comuna'].empty_label = "Seleccione una Comuna..."
+    
+
+    def save(self, commit=True):
+        estacion = super().save(commit=False)
+        
+        # 1. Procesar IMAGEN (Foto del cuartel)
+        self.process_image_upload(
+            instance=estacion, 
+            field_name='imagen',
+            max_dim=(1024, 1024), 
+            crop=False,
+            image_prefix='estacion'
+        )
+
+        # 2. Procesar LOGO (Insignia)
+        self.process_image_upload(
+            instance=estacion, 
+            field_name='logo',
+            max_dim=(800, 800), 
+            crop=True,
+            image_prefix='estacion_logo'
+        )
+
+        # 3. Guardar
+        if commit:
+            estacion.save()
+            
+        return estacion
 
 
 
 
-class ProductoGlobalForm(forms.ModelForm):
+class ProductoGlobalForm(ImageProcessingFormMixin, forms.ModelForm):
     class Meta:
         model = ProductoGlobal
         fields = [
@@ -61,6 +90,28 @@ class ProductoGlobalForm(forms.ModelForm):
         
         # Etiquetas más claras para el admin
         self.fields['vida_util_recomendada_anos'].label = "Vida Útil Estándar (Años)"
+
+
+    def save(self, commit=True):
+        # 1. Obtener instancia sin guardar
+        producto = super().save(commit=False)
+        
+        # 2. USAR EL MIXIN
+        # Para productos: NO recortamos a cuadrado (crop=False) 
+        # y usamos 1024x1024 o lo que definas.
+        self.process_image_upload(
+            instance=producto, 
+            field_name='imagen', 
+            max_dim=(1024, 1024), 
+            crop=False,
+            image_prefix='producto'
+        )
+
+        # 3. Guardar
+        if commit:
+            producto.save()
+            
+        return producto
 
 
 

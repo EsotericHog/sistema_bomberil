@@ -28,6 +28,7 @@ from .models import (
 )
 from apps.gestion_usuarios.models import Usuario
 from apps.common.utils import procesar_imagen_en_memoria, generar_thumbnail_en_memoria
+from apps.common.mixins import ImageProcessingFormMixin
 
 
 class AreaForm(forms.ModelForm):
@@ -44,7 +45,8 @@ class AreaForm(forms.ModelForm):
 
 
 
-class AreaEditForm(forms.ModelForm):
+
+class AreaEditForm(ImageProcessingFormMixin, forms.ModelForm):
     class Meta:
         model = Ubicacion
         fields = ['nombre', 'descripcion', 'direccion', 'imagen']
@@ -54,6 +56,22 @@ class AreaEditForm(forms.ModelForm):
             'direccion': forms.TextInput(attrs={'class': 'form-control fs_normal color_primario fondo_secundario_variante border-0'}),
             'imagen': forms.FileInput(attrs={'class': 'form-control fs_normal color_primario fondo_secundario_variante border-0'}),
         }
+
+    def save(self, commit=True):
+        area = super().save(commit=False)
+        
+        self.process_image_upload(
+            instance=area, 
+            field_name='imagen',
+            max_dim=(1024, 1024), 
+            crop=False,
+            image_prefix='area'
+        )
+
+        if commit:
+            area.save()
+            
+        return area
 
 
 
@@ -135,7 +153,7 @@ class CompartimentoForm(forms.ModelForm):
 
 
 
-class CompartimentoEditForm(forms.ModelForm):
+class CompartimentoEditForm(ImageProcessingFormMixin, forms.ModelForm):
     """
     Formulario para editar los detalles de un compartimento.
     No permite cambiar la ubicación (Ubicacion) a la que pertenece.
@@ -156,10 +174,26 @@ class CompartimentoEditForm(forms.ModelForm):
             }),
         }
 
+    def save(self, commit=True):
+        compartimento = super().save(commit=False)
+        
+        self.process_image_upload(
+            instance=compartimento, 
+            field_name='imagen',
+            max_dim=(1024, 1024), 
+            crop=False,
+            image_prefix='compartimento'
+        )
+
+        if commit:
+            compartimento.save()
+            
+        return compartimento
 
 
 
-class ProductoGlobalForm(forms.ModelForm):
+
+class ProductoGlobalForm(ImageProcessingFormMixin, forms.ModelForm):
     """
     Formulario para la creación de un nuevo Producto Global.
     La validación de marca/modelo vs. genérico se hereda del método .clean()
@@ -201,54 +235,20 @@ class ProductoGlobalForm(forms.ModelForm):
     
 
     def save(self, commit=True):
-        # 1. Llama al 'save' padre pero con commit=False
-        # Esto nos da el objeto 'producto' sin guardarlo aún en la BD.
+        # 1. Obtener instancia sin guardar
         producto = super().save(commit=False)
         
-        # 2. Revisa si hay una imagen nueva en el formulario
-        image_file = self.cleaned_data.get('imagen')
+        # 2. USAR EL MIXIN
+        # Para productos: NO recortamos a cuadrado (crop=False) 
+        # y usamos 1024x1024 o lo que definas.
+        self.process_image_upload(
+            instance=producto, 
+            field_name='imagen', 
+            max_dim=(1024, 1024), 
+            crop=False
+        )
 
-        if image_file:
-            # 3. Generar un nombre base ÚNICO
-            ext = os.path.splitext(image_file.name)[1].lower()
-            if not ext:  # Por si no tiene extensión
-                ext = '.jpg' # Forzamos a .jpg porque procesamos a JPEG
-                
-            base_name = str(uuid.uuid4())
-            
-            # --- Definir nombres de archivo ---
-            main_name = f"{base_name}{ext}"
-            medium_name = f"{base_name}_medium.jpg"
-            small_name = f"{base_name}_small.jpg"
-
-            # 4. Procesar la imagen principal
-            # Redimensionamos a un máximo de, por ej., 1024x1024
-            producto.imagen = procesar_imagen_en_memoria(
-                image_file,
-                max_dimensions=(1024, 1024),
-                new_filename=main_name,
-                crop_to_square=False  # Los productos no suelen ser cuadrados
-            )
-            
-            # 5. Generar thumbnails desde el archivo original
-            # (Es mejor reabrir el original para no perder calidad)
-            image_file.seek(0) # Rebobinar el archivo
-            with Image.open(image_file) as img_obj:
-                producto.imagen_thumb_medium = generar_thumbnail_en_memoria(
-                    img_obj.copy(),
-                    (100, 100),
-                    medium_name
-                )
-                producto.imagen_thumb_small = generar_thumbnail_en_memoria(
-                    img_obj.copy(),
-                    (40, 40),
-                    small_name
-                )
-            
-            # (Opcional: Si esto fuera un update, aquí iría la lógica
-            # para borrar los archivos antiguos)
-        
-        # 6. Guardar el objeto 'producto' en la BD (si commit=True)
+        # 3. Guardar
         if commit:
             producto.save()
             
