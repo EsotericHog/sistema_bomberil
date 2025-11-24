@@ -1,11 +1,29 @@
 :root {
-    /* Tamaños de fuente de texto */
+    /* Tamaños de fuente de texto antiguos */
     --fs-small: 1.2rem;
     --fs-normal: 1.5rem;
     --fs-medium: 1.9rem;
     --fs-large: 2.3rem;
     --fs-x-large: 3.0rem;
     --fs-xx-large: 4.0rem;
+
+    /* --- TYPOGRAPHY SCALE (Modular: 1.25) --- */
+    /* Asumiendo base 1.6rem (16px) */
+    --font-xs:   1.2rem;
+    --font-sm:   1.4rem;
+    --font-base: 1.6rem;
+    --font-md:   2.0rem;
+    --font-lg:   2.5rem;
+    --font-xl:   3.1rem;
+    --font-2xl:  3.9rem;
+    --font-3xl:  4.8rem;
+
+    /* --- FONT WEIGHTS --- */
+    --weight-regular: 400;
+    --weight-medium:  500;
+    --weight-bold:    700;
+    --weight-black:   900;
+
 
     --fs-layout-icon: 3.0rem;
     --fs-header-title: 2.3rem;
@@ -104,7 +122,7 @@
         /* Tamaños de fuente de texto */
         --fs-small: 1.1rem;
         /*
-        --fs-normal: 1.4rem;
+        --font-base: 1.4rem;
         --fs-medium: 1.8rem;
         --fs-large: 2.2rem;
         --fs-x-large: 2.9rem;

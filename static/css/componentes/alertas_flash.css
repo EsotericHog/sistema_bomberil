@@ -22,7 +22,7 @@
 }
 
 .errorlist {
-    font-size: var(--fs-normal);
+    font-size: var(--font-base);
     color: var(--color-blanco);
 }
 

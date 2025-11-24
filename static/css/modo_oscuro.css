@@ -15,6 +15,16 @@ body.dark-mode {
     --color-secondary: rgb(54, 54, 54);
     --color-secondary-variant: rgb(34, 34, 34);
 
+    /* PALETA DE COLORES EXTENDIDA */
+    --text-color-base:       #e2e8f0;
+    --text-color-heading:    #f8fafc;
+    --text-color-muted:      #94a3b8;
+    --text-color-subtle:     #64748b;
+    --text-color-inverse:    #0f172a;
+    
+    --text-color-brand:      #f87171; /* Rojo más brillante para leerse en negro */
+    --text-color-link:       #60a5fa;
+
     /* Quitar sombras a los paneles */
     .panel_base {
         box-shadow: none;

@@ -204,3 +204,14 @@
 .color_amarillo {
     color: var(--color-amarillo);
 }
+
+
+
+
+/* Colores Semánticos (Se adaptan al modo oscuro solos) */
+.text-main      { color: var(--text-main) !important; }
+.text-secondary { color: var(--text-secondary) !important; }
+.text-brand     { color: var(--brand-primary) !important; }
+.text-success   { color: var(--success) !important; }
+.text-danger    { color: var(--danger) !important; }
+.text-white     { color: #ffffff !important; }
