@@ -135,7 +135,7 @@
                             <h3 class="section-title">
                                 <i class="fas fa-pills"></i> Medicamentos
                             </h3>
-                            <a href="..." class="btn-soft-add"><i class="fas fa-plus"></i></a>
+                            <a href="{% url 'gestion_medica:ruta_medicamentos_paciente' ficha.voluntario.usuario.id %}" class="btn-soft-add"><i class="fas fa-plus"></i></a>
                         </div>
                         <ul class="modern-list">
                             {% for item in medicamentos %}

@@ -95,19 +95,19 @@
                         </td>
 
                         <td class="text-center">
-                            <a href="{% url 'gestion_medica:ruta_informacion_paciente' ficha.voluntario.usuario.id %}" 
+                            <a href="{% url 'gestion_medica:ruta_informacion_paciente' paciente.voluntario.usuario.id %}" 
                                class="btn btn-action-icon text-info bg-light rounded-circle" 
                                data-bs-toggle="tooltip" title="Ver Ficha">
                                 <i class="fas fa-eye"></i>
                             </a>
 
-                            <a href="{% url 'gestion_medica:ruta_modificar_paciente' ficha.voluntario.usuario.id %}" 
+                            <a href="{% url 'gestion_medica:ruta_modificar_paciente' paciente.voluntario.usuario.id %}" 
                                class="btn btn-action-icon text-warning bg-light rounded-circle" 
                                data-bs-toggle="tooltip" title="Editar">
                                 <i class="fas fa-pen"></i>
                             </a>
 
-                            <a href="{% url 'gestion_medica:ruta_contacto_emergencia' ficha.voluntario.usuario.id %}" 
+                            <a href="{% url 'gestion_medica:ruta_contacto_emergencia' paciente.voluntario.usuario.id %}" 
                                class="btn btn-action-icon text-danger bg-light rounded-circle" 
                                data-bs-toggle="tooltip" title="Emergencia">
                                 <i class="fas fa-phone"></i>

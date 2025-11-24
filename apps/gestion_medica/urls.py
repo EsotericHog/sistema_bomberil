@@ -21,7 +21,7 @@ urlpatterns = [
     # Generar Documento de Impresión
     path('paciente/imprimir/<uuid:pk>/', MedicoImprimirView.as_view(), name="ruta_imprimir_ficha"),
 
-    path('paciente/qr/<int:pk>/', MedicoImprimirQRView.as_view(), name="ruta_imprimir_qr"),
+    path('paciente/qr/<uuid:pk>/', MedicoImprimirQRView.as_view(), name="ruta_imprimir_qr"),
 
     path('compatibilidad_sanguinea/', MedicoCompatibilidadView.as_view(), name="ruta_compatibilidad_sanguinea"),
 
