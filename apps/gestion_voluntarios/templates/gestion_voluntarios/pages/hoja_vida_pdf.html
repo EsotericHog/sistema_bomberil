@@ -7,163 +7,264 @@
     <style>
         @page {
             size: A4;
-            margin: 2.5cm 1.5cm;
+            margin: 2cm;
         }
+
         body {
-            font-family: Arial, sans-serif;
+            font-family: Helvetica, Arial, sans-serif;
             color: #333;
-            font-size: 11pt;
-        }
-        .header {
-            display: flex;
-            align-items: flex-start;
-            border-bottom: 2px solid #000;
-            padding-bottom: 20px;
-        }
-        .header img {
-            width: 120px;
-            height: 120px;
-            object-fit: cover;
-            border: 1px solid #ccc;
-            margin-right: 20px;
-        }
-        .header-info h1 {
-            margin: 0;
-            font-size: 2em;
-            color: #000;
-        }
-        .header-info p {
-            margin: 5px 0;
-            font-size: 1.1em;
-        }
-        .section {
-            margin-top: 25px;
-        }
-        .section h2 {
-            font-size: 1.4em;
-            color: #222;
-            border-bottom: 1px solid #ccc;
-            padding-bottom: 5px;
-            margin-bottom: 15px;
-        }
-        .info-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 10px;
-        }
-        .info-item {
-            font-size: 1em;
+            font-size: 10pt;
             line-height: 1.4;
         }
-        .history-list {
-            list-style: none;
-            padding-left: 0;
+
+        /* --- ENCABEZADO --- */
+        .header {
+            padding-bottom: 20px;
+            border-bottom: 3px solid #D72600; /* Rojo corporativo */
+            margin-bottom: 30px;
         }
-        .history-list li {
-            margin-bottom: 10px;
-            padding-bottom: 10px;
-            border-bottom: 1px dotted #eee;
+
+        .header h1 {
+            font-size: 24pt;
+            color: #2c3e50;
+            margin: 0;
+            text-transform: uppercase;
+            letter-spacing: 1px;
         }
-        .history-list strong {
-            font-size: 1.1em;
+
+        .header-subtitle {
+            font-size: 14pt;
+            color: #7f8c8d;
+            margin-top: 5px;
+            margin-bottom: 15px;
+        }
+
+        /* Tabla de metadatos del encabezado */
+        .meta-table {
+            width: 100%;
+            margin-top: 10px;
+        }
+        .meta-table td {
+            padding-right: 20px;
+            vertical-align: top;
+        }
+        .meta-label {
+            font-weight: bold;
+            color: #D72600;
+            font-size: 9pt;
+            text-transform: uppercase;
+            display: block;
+        }
+        .meta-value {
+            font-size: 11pt;
+            font-weight: normal;
+        }
+
+        /* --- SECCIONES --- */
+        h2 {
+            font-size: 14pt;
+            color: #2c3e50;
+            text-transform: uppercase;
+            border-bottom: 1px solid #ccc;
+            padding-bottom: 5px;
+            margin-top: 25px;
+            margin-bottom: 15px;
+        }
+
+        /* --- TABLA DE DATOS (Información Personal) --- */
+        .info-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .info-table td {
+            padding: 4px 0;
+            vertical-align: top;
+        }
+        .info-key {
+            font-weight: bold;
+            color: #555;
+            width: 35%;
+        }
+        .info-val {
             color: #000;
         }
-        .history-list .date-range {
+
+        /* --- TABLAS DE HISTORIAL --- */
+        .history-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 5px;
+        }
+        .history-table td {
+            padding: 8px 5px;
+            border-bottom: 1px dotted #ddd;
+            vertical-align: top;
+        }
+        .history-table tr:last-child td {
+            border-bottom: none;
+        }
+        
+        .hist-main {
+            font-size: 11pt;
+            font-weight: bold;
+            color: #333;
+        }
+        .hist-sub {
+            font-size: 9pt;
+            color: #666;
+            margin-top: 2px;
+        }
+        .hist-date {
+            font-weight: bold;
+            color: #D72600;
+            font-size: 9pt;
+            text-align: right;
+            white-space: nowrap;
+        }
+        .hist-desc {
             font-style: italic;
             color: #555;
-            margin-left: 10px;
+            font-size: 9pt;
+            margin-top: 2px;
         }
-        .history-list small {
-            display: block;
-            color: #777;
-            margin-top: 5px;
+
+        .empty-msg {
+            color: #888;
+            font-style: italic;
+            padding: 10px 0;
+        }
+        
+        /* Pie de página simple (al final del contenido) */
+        .footer-simple {
+            margin-top: 50px;
+            text-align: center;
+            font-size: 8pt;
+            color: #aaa;
+            border-top: 1px solid #eee;
+            padding-top: 10px;
         }
     </style>
 </head>
 <body>
 
     <div class="header">
-        {% if voluntario.usuario.avatar %}
-            <img src="{{ voluntario.usuario.avatar.url }}" alt="Foto de perfil">
-        {% else %}
-            {% endif %}
-
-        <div class="header-info">
-            <h1>{{ voluntario.usuario.get_full_name }}</h1>
-            <p><strong>RUT:</strong> {{ voluntario.usuario.rut | default:"No registrado" }}</p>
-            <p><strong>Estación Actual:</strong> {% if membresia %}{{ membresia.estacion.nombre }}{% else %}Sin Estación Activa{% endif %}</p>
-            <p><strong>Cargo Actual:</strong> {% if cargo_actual %}{{ cargo_actual.cargo.nombre }}{% else %}Sin Rango Asignado{% endif %}</p>
-        </div>
+        <h1>{{ voluntario.usuario.get_full_name|upper }}</h1>
+        <div class="header-subtitle">Hoja de Vida Institucional</div>
+        
+        <table class="meta-table">
+            <tr>
+                <td>
+                    <span class="meta-label">RUT / DNI</span>
+                    <span class="meta-value">{{ voluntario.usuario.rut|default:"No registrado" }}</span>
+                </td>
+                <td>
+                    <span class="meta-label">N° Registro</span>
+                    <span class="meta-value">{{ voluntario.numero_registro_bomberil|default:"-" }}</span>
+                </td>
+                <td>
+                    <span class="meta-label">Estación Actual</span>
+                    <span class="meta-value">{% if membresia %}{{ membresia.estacion.nombre }}{% else %}Sin Asignación{% endif %}</span>
+                </td>
+                <td>
+                    <span class="meta-label">Cargo Actual</span>
+                    <span class="meta-value">{% if cargo_actual %}{{ cargo_actual.cargo.nombre }}{% else %}Sin Rango{% endif %}</span>
+                </td>
+            </tr>
+        </table>
     </div>
 
-    <div class="section" id="info">
-        <h2>Datos Personales</h2>
-        <div class="info-grid">
-            <div class="info-item"><strong>Fecha de Nacimiento:</strong> {{ voluntario.fecha_nacimiento | date:"d/m/Y" | default:"No registrado" }}</div>
-            <div class="info-item"><strong>Nacionalidad:</strong> {{ voluntario.nacionalidad.gentilicio | default:"No registrada" }}</div>
-            <div class="info-item"><strong>Teléfono:</strong> {{ voluntario.usuario.phone | default:"No registrado" }}</div>
-            <div class="info-item"><strong>Correo:</strong> {{ voluntario.usuario.email | default:"No registrado" }}</div>
-            <div class="info-item"><strong>Profesión Civil:</strong> {{ voluntario.profesion.nombre | default:"No registrada" }}</div>
-            <div class="info-item"><strong>Estado Civil:</strong> {{ voluntario.get_estado_civil_display | default:"No registrado" }}</div>
-            <div class="info-item"><strong>Género:</strong> {{ voluntario.get_genero_display | default:"No registrado" }}</div>
-            <div class="info-item"><strong>Dirección:</strong> 
-                {{ voluntario.domicilio_calle | default:"" }} 
-                {{ voluntario.domicilio_numero | default:"" }}, 
-                {{ voluntario.domicilio_comuna.nombre | default:"-" }}
-            </div>
-        </div>
-    </div>
+    <h2>Información Personal</h2>
+    <table class="info-table">
+        <tr>
+            <td width="50%">
+                <table width="100%">
+                    <tr><td class="info-key">Fecha de Nacimiento:</td><td class="info-val">{{ voluntario.fecha_nacimiento|date:"d/m/Y"|default:"-" }}</td></tr>
+                    <tr><td class="info-key">Nacionalidad:</td><td class="info-val">{{ voluntario.nacionalidad.gentilicio|default:"-" }}</td></tr>
+                    <tr><td class="info-key">Estado Civil:</td><td class="info-val">{{ voluntario.get_estado_civil_display|default:"-" }}</td></tr>
+                    <tr><td class="info-key">Profesión Civil:</td><td class="info-val">{{ voluntario.profesion.nombre|default:"-" }}</td></tr>
+                </table>
+            </td>
+            <td width="50%">
+                <table width="100%">
+                    <tr><td class="info-key">Teléfono:</td><td class="info-val">{{ voluntario.usuario.phone|default:"-" }}</td></tr>
+                    <tr><td class="info-key">Correo:</td><td class="info-val">{{ voluntario.usuario.email|default:"-" }}</td></tr>
+                    <tr><td class="info-key">Domicilio:</td><td class="info-val">
+                        {{ voluntario.domicilio_calle|default:"" }} {{ voluntario.domicilio_numero|default:"" }}
+                        {% if voluntario.domicilio_comuna %}, {{ voluntario.domicilio_comuna.nombre }}{% endif %}
+                    </td></tr>
+                </table>
+            </td>
+        </tr>
+    </table>
 
-    <div class="section" id="experience">
-        <h2>Historial de Servicio (Cargos)</h2>
-        <ul class="history-list">
+    <h2>Historial de Servicio (Cargos)</h2>
+    {% if voluntario.historial_cargos.all %}
+        <table class="history-table">
             {% for cargo in voluntario.historial_cargos.all %}
-                <li>
-                    <strong>{{ cargo.cargo.nombre }}</strong> - {{ cargo.ambito }}
-                    <span class="date-range">
-                        ({{ cargo.fecha_inicio | date:"d/m/Y" }} - {% if cargo.fecha_fin %}{{ cargo.fecha_fin | date:"d/m/Y" }}{% else %}Actualidad{% endif %})
-                    </span>
-                    <small>Registrado por: {{ cargo.estacion_registra.nombre }}</small>
-                </li>
-            {% empty %}
-                <li>No hay historial de cargos registrados.</li>
+            <tr>
+                <td width="75%">
+                    <div class="hist-main">{{ cargo.cargo.nombre }}</div>
+                    <div class="hist-sub">Ámbito: {{ cargo.ambito }} | Registra: {{ cargo.estacion_registra.nombre }}</div>
+                </td>
+                <td width="25%" align="right">
+                    <div class="hist-date">
+                        {{ cargo.fecha_inicio|date:"d/m/Y" }} — 
+                        {% if cargo.fecha_fin %}{{ cargo.fecha_fin|date:"d/m/Y" }}{% else %}Actualidad{% endif %}
+                    </div>
+                </td>
+            </tr>
             {% endfor %}
-        </ul>
-    </div>
+        </table>
+    {% else %}
+        <div class="empty-msg">No se registran cargos en el historial.</div>
+    {% endif %}
 
-    <div class="section" id="recognitions">
-        <h2>Reconocimientos y Logros</h2>
-        <ul class="history-list">
+    <h2>Reconocimientos y Logros</h2>
+    {% if voluntario.historial_reconocimientos.all %}
+        <table class="history-table">
             {% for reco in voluntario.historial_reconocimientos.all %}
-                <li>
-                    <strong>{{ reco.tipo_reconocimiento.nombre | default:reco.descripcion_personalizada }}</strong>
-                    <span class="date-range">
-                        ({{ reco.fecha_evento | date:"d/m/Y" }})
-                    </span>
-                    <small>Otorga: {{ reco.ambito }} | Registra: {{ reco.estacion_registra.nombre }}</small>
-                </li>
-            {% empty %}
-                <li>No hay reconocimientos registrados.</li>
+            <tr>
+                <td width="75%">
+                    <div class="hist-main">{{ reco.tipo_reconocimiento.nombre }}</div>
+                    <div class="hist-sub">Otorgado por: {{ reco.ambito }} | Registra: {{ reco.estacion_registra.nombre }}</div>
+                    {% if reco.descripcion_personalizada %}
+                        <div class="hist-desc">"{{ reco.descripcion_personalizada }}"</div>
+                    {% endif %}
+                </td>
+                <td width="25%" align="right">
+                    <div class="hist-date">{{ reco.fecha_evento|date:"d/m/Y" }}</div>
+                </td>
+            </tr>
             {% endfor %}
-        </ul>
-    </div>
-    
-    <div class="section" id="sanctions">
-        <h2>Registro de Sanciones</h2>
-        <ul class="history-list">
+        </table>
+    {% else %}
+        <div class="empty-msg">No se registran reconocimientos.</div>
+    {% endif %}
+
+    <h2>Registro de Sanciones</h2>
+    {% if voluntario.historial_sanciones.all %}
+        <table class="history-table">
             {% for sancion in voluntario.historial_sanciones.all %}
-                 <li>
-                    <strong>{{ sancion.get_tipo_sancion_display }}</strong>
-                    <span class="date-range">
-                        ({{ sancion.fecha_evento | date:"d/m/Y" }})
-                    </span>
-                    <p style="margin: 5px 0 0 0;">{{ sancion.descripcion }}</p>
-                    <small>Emitida por: {{ sancion.estacion_evento.nombre }} | Registra: {{ sancion.estacion_registra.nombre }}</small>
-                </li>
-            {% empty %}
-                <li>No existen sanciones registradas para este voluntario.</li>
+            <tr>
+                <td width="75%">
+                    <div class="hist-main" style="color: #dc3545;">{{ sancion.get_tipo_sancion_display }}</div>
+                    <div class="hist-sub">Emitida por: {{ sancion.estacion_evento.nombre }}</div>
+                    {% if sancion.descripcion %}
+                        <div class="hist-desc">{{ sancion.descripcion }}</div>
+                    {% endif %}
+                </td>
+                <td width="25%" align="right">
+                    <div class="hist-date">{{ sancion.fecha_evento|date:"d/m/Y" }}</div>
+                </td>
+            </tr>
             {% endfor %}
-        </ul>
+        </table>
+    {% else %}
+        <div class="empty-msg">No existen sanciones registradas en la hoja de vida.</div>
+    {% endif %}
+
+    <div class="footer-simple">
+        Documento generado automáticamente por el Sistema de Gestión Bomberil - {% now "d/m/Y H:i" %}
     </div>
 
 </body>
