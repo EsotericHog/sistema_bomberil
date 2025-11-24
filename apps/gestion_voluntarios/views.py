@@ -527,10 +527,10 @@ class HojaVidaView(View):
         
         # 3. Creamos el PDF en memoria
         result = io.BytesIO()
-        pdf = pisa.CreatePDF(
-            html_string,                # El HTML a convertir
-            dest=result,                # El objeto "archivo" en memoria
-            link_callback=link_callback # La función para encontrar estáticos
+        pdf = pisa.pisaDocument(
+            src=io.BytesIO(html_string.encode("UTF-8")), # Convertimos string a bytes
+            dest=result,
+            link_callback=link_callback
         )
         
         # 4. Verificamos si hubo errores
