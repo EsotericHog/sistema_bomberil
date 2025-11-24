@@ -475,7 +475,7 @@
 
     <div id="modalAgregarCargo" class="modal">
         <div class="modal-header"><h3>Registrar Ascenso</h3><span class="close-btn" onclick="cerrarModal('modalAgregarCargo')">&times;</span></div>
-        <form method="POST" action="{% url 'gestion_voluntarios:ruta_agregar_cargo' id=voluntario.usuario.id %}">
+        <form method="POST" action="{% url 'gestion_voluntarios:ruta_agregar_cargo' voluntario.usuario.id %}">
             {% csrf_token %}
             {% for field in form_cargo %}
                 <div class="form-group">
