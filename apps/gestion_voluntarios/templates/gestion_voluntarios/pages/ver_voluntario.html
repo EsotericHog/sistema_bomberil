@@ -334,10 +334,10 @@
             min-width: 80px;
         }
     </style>
-
+<div class="container-fluid mt-4"> 
     <div class="container profile-container">
         <a href="{% url 'gestion_voluntarios:ruta_lista_voluntarios' %}" class="back-link">
-            <i class="fas fa-arrow-left"></i> Volver al Directorio
+            <i class="fas fa-arrow-left"></i> Volver al Listado
         </a>
 
         <div class="profile-header-main">
@@ -519,7 +519,7 @@
     </div>
     
     <div id="modalBackdrop" class="modal-backdrop"></div>
-
+</div>
 {% endblock %}
 
 {% block scripts %}

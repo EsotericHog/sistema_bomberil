@@ -3,12 +3,9 @@
 {# Título de la ventana #} {% block titulo_ventana %}Modificar a {{ voluntario.usuario.get_full_name }}{% endblock %}
 {# Título de la página #} {% block titulo_pagina %}Modificar Voluntario{% endblock %}
 
-{% block styles %}
-    <link rel="stylesheet" href="{% static 'gestion_voluntarios/css/estilo_modificar.css' %}">
-{% endblock %}
 
 {% block contenido %}
-
+<div class="container-fluid mt-4"> 
     <div class="container">
         <h1>Modificar Voluntario</h1>
         <p class="subtitle">Editando perfil de: <strong>{{ voluntario.usuario.get_full_name }}</strong></p>
@@ -86,5 +83,5 @@
             
         </form>
     </div>
-    
+</div>
 {% endblock  %}

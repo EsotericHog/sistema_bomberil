@@ -4,59 +4,67 @@
 {# Título de la página #} {% block titulo_pagina %}Exportar Listado de Voluntarios{% endblock %}
 
 {% block contenido %}
-<div class="container-fluid mt-4"> 
-<div class="panel">
-    <div class="panel-header">
-        <h1 class="titulo-pagina">Exportar Listado de Voluntarios</h1>
-    </div>
 
-    <div class="panel-body">
-        
-        <div class="card-reporte">
-            <h2 class="card-title-report">Filtros y Formato de Salida</h2>
-            <form action="{% url 'gestion_voluntarios:ruta_exportar_listado' %}" method="GET" target="_blank">
-                {# Usamos target="_blank" para que la descarga no "congele" la página #}
-                
-                <div class="form-row-report">
-                    
-                    <div class="form-group">
-                        <label for="filtro_estacion" class="label-custom">Filtrar por Estación:</label>
-                        <select id="filtro_estacion" name="estacion" class="form-control">
-                            <option value="global">Global (Todas)</option>
-                            {% for estacion in estaciones %}
-                            <option value="{{ estacion.id }}">{{ estacion.nombre }}</option>
-                            {% endfor %}
-                        </select>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="filtro_rango" class="label-custom">Filtrar por Rango:</label>
-                        <select id="filtro_rango" name="rango" class="form-control">
-                            <option value="global">Todos los Rangos</option>
-                            {% for cargo in cargos %}
-                            <option value="{{ cargo.id }}">{{ cargo.nombre }}</option>
-                            {% endfor %}
-                        </select>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="formato_export" class="label-custom">Formato de Exportación:</label>
-                        <select id="formato_export" name="format" class="form-control" required>
-                            <option value="csv">Valores Separados por Coma (.csv)</option>
-                            <option value="excel">Microsoft Excel (.xlsx)</option>
-                            <option value="pdf">Documento PDF (.pdf)</option>
-                            <option value="json">Datos (JSON)</option>
-                        </select>
-                    </div>
-                </div>
-                
-                <div class="form-actions-report">
-                    <button type="submit" class="btn btn-principal">Exportar Listado</button>
-                </div>
-            </form>
+<div class="container-fluid mt-4"> 
+    <div class="panel">
+        <div class="panel-header">
+            <h1 class="titulo-pagina">Exportar Listado de Voluntarios</h1>
         </div>
 
+        <div class="panel-body">
+            
+            <div class="card-reporte">
+                <h2 class="card-title-report">Filtros y Formato de Salida</h2>
+                <p class="text-muted-report">
+                    Seleccione los filtros deseados (Estación y Rango) para personalizar el reporte. Luego, elija el formato de archivo que mejor se adapte a sus necesidades.
+                </p>
+
+                <form action="{% url 'gestion_voluntarios:ruta_exportar_listado' %}" method="GET" target="_blank">
+                    {# Usamos target="_blank" para que la descarga no "congele" la página #}
+                    
+                    <div class="form-row-report">
+                        
+                        <div class="form-group">
+                            <label for="filtro_estacion" class="label-custom">Filtrar por Estación:</label>
+                            <select id="filtro_estacion" name="estacion" class="form-control">
+                                <option value="global">Global (Todas)</option>
+                                {% for estacion in estaciones %}
+                                <option value="{{ estacion.id }}">{{ estacion.nombre }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="filtro_rango" class="label-custom">Filtrar por Rango:</label>
+                            <select id="filtro_rango" name="rango" class="form-control">
+                                <option value="global">Todos los Rangos</option>
+                                {% for cargo in cargos %}
+                                <option value="{{ cargo.id }}">{{ cargo.nombre }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="formato_export" class="label-custom">Formato de Exportación:</label>
+                            <select id="formato_export" name="format" class="form-control" required>
+                                <option value="csv">Valores Separados por Coma (.csv)</option>
+                                <option value="excel">Microsoft Excel (.xlsx)</option>
+                                <option value="pdf">Documento PDF (.pdf)</option>
+                                <option value="json">Datos JSON (.json)</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="form-actions-report">
+                        <button type="submit" class="btn btn-principal">
+                            <i class="fas fa-file-export" style="margin-right: 8px;"></i> Exportar Listado
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+        </div>
     </div>
 </div>
-</div>
+
 {% endblock  %}

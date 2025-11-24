@@ -6,38 +6,64 @@
     <title>Listado de Voluntarios</title>
     <style>
         @page {
-            size: A4 landscape; /* Hoja horizontal para que quepa la tabla */
-            margin: 2cm;
+            size: A4 landscape;
+            margin: 1cm;
         }
         body {
-            font-family: Arial, sans-serif;
+            font-family: Helvetica, Arial, sans-serif;
             color: #333;
             font-size: 9pt;
         }
         h1 {
-            font-size: 1.5em;
+            font-size: 16pt;
             color: #000;
             text-align: center;
             border-bottom: 2px solid #000;
             padding-bottom: 10px;
+            margin-bottom: 20px;
         }
+        
         table {
             width: 100%;
             border-collapse: collapse;
-            margin-top: 20px;
+            table-layout: fixed; /* Mantiene las celdas fijas */
         }
+        
         th, td {
             border: 1px solid #ccc;
-            padding: 8px;
+            padding: 5px;
             text-align: left;
+            vertical-align: top;
+            
+            /* Comportamiento estándar para texto */
+            word-wrap: break-word;
+            overflow-wrap: break-word;
         }
+        
         thead {
             background-color: #f0f0f0;
             color: #000;
+            font-weight: bold;
         }
+        
         tr:nth-child(even) {
             background-color: #f9f9f9;
         }
+
+        /* --- ANCHOS DE COLUMNA --- */
+        th:nth-child(1) { width: 10%; } /* RUT */
+        th:nth-child(2) { width: 20%; } /* Nombre */
+        th:nth-child(3) { width: 22%; } /* Email */
+        th:nth-child(4) { width: 13%; } /* Teléfono */
+        th:nth-child(5) { width: 13%; } /* Estación */
+        th:nth-child(6) { width: 8%;  } /* Estado */
+        th:nth-child(7) { width: 14%; } /* Cargo */
+
+        /* --- CORRECCIÓN PARA TELÉFONO --- */
+        td:nth-child(4) {
+            word-break: break-all; 
+        }
+
     </style>
 </head>
 <body>
@@ -51,19 +77,23 @@
                 <th>Nombre Completo</th>
                 <th>Email</th>
                 <th>Teléfono</th>
-                <th>Estación Actual</th>
+                <th>Estación</th>
                 <th>Estado</th>
-                <th>Cargo Actual</th>
+                <th>Cargo</th>
             </tr>
         </thead>
         <tbody>
             {% for voluntario in voluntarios %}
                 {% with membresia=voluntario.usuario.membresia_activa_list|first cargo_actual=voluntario.cargo_actual_list|first %}
                 <tr>
-                    <td>{{ voluntario.usuario.rut|default:"" }}</td>
+                    {# Usamos |default:"-" para evitar celdas vacías que rompan el diseño #}
+                    <td>{{ voluntario.usuario.rut|default:"-" }}</td>
                     <td>{{ voluntario.usuario.get_full_name }}</td>
-                    <td>{{ voluntario.usuario.email|default:"" }}</td>
-                    <td>{{ voluntario.usuario.phone|default:"" }}</td>
+                    <td>{{ voluntario.usuario.email|default:"-" }}</td>
+                    
+                    {# AQUÍ ESTÁ LA CORRECCIÓN PRINCIPAL #}
+                    <td>{{ voluntario.usuario.phone|default:"-" }}</td>
+                    
                     <td>{% if membresia %}{{ membresia.estacion.nombre }}{% else %}Sin Estación{% endif %}</td>
                     <td>{% if membresia %}{{ membresia.get_estado_display }}{% else %}Inactivo{% endif %}</td>
                     <td>{% if cargo_actual %}{{ cargo_actual.cargo.nombre }}{% else %}Sin Cargo{% endif %}</td>
@@ -71,7 +101,7 @@
                 {% endwith %}
             {% empty %}
                 <tr>
-                    <td colspan="7" style="text-align: center;">No hay voluntarios registrados.</td>
+                    <td colspan="7" style="text-align: center; padding: 10px;">No hay voluntarios registrados.</td>
                 </tr>
             {% endfor %}
         </tbody>
