@@ -16,7 +16,9 @@
         <div id="profesiones" class="tab-content active">
             <div class="filter-controls-area">
                 <div class="add-new-item">
-                    <a href="{% url 'gestion_voluntarios:ruta_profesion_crear' %}" class="btn btn-primary">Agregar Profesión</a>
+                    <a href="{% url 'gestion_voluntarios:ruta_profesion_crear' %}" class="btn btn-primary">
+                        <i class="fas fa-plus" style="margin-right: 5px;"></i> Agregar Profesión
+                    </a>
                 </div>
                 <div class="data-table-controls">
                     <div class="search-box">
@@ -26,7 +28,7 @@
                 </div>
             </div>
 
-            <table class="data-table styled-table">
+            <table class="data-table">
                 <thead>
                     <tr>
                         <th>ID</th>
@@ -38,14 +40,16 @@
                     {% for profesion in profesiones %}
                     <tr>
                         <td>{{ profesion.id }}</td>
-                        <td>{{ profesion.nombre }}</td>
+                        <td><strong>{{ profesion.nombre }}</strong></td>
                         <td class="actions">
-                            <a href="{% url 'gestion_voluntarios:ruta_profesion_modificar' id=profesion.id %}" class="btn btn-warning btn-sm">Editar</a>
+                            <a href="{% url 'gestion_voluntarios:ruta_profesion_modificar' id=profesion.id %}" class="btn btn-warning btn-sm">
+                                <i class="fas fa-pen"></i> Editar
+                            </a>
                         </td>
                     </tr>
                     {% empty %}
                     <tr>
-                        <td colspan="3" style="text-align: center;">No hay profesiones registradas o que coincidan con la búsqueda.</td>
+                        <td colspan="3" style="text-align: center; padding: 30px;">No hay profesiones registradas.</td>
                     </tr>
                     {% endfor %}
                 </tbody>
@@ -55,10 +59,12 @@
         <div id="rangos" class="tab-content">
             <div class="filter-controls-area">
                 <div class="add-new-item">
-                    <a href="{% url 'gestion_voluntarios:ruta_cargos_crear' %}" class="btn btn-primary">Agregar Rango</a>
+                    <a href="{% url 'gestion_voluntarios:ruta_cargos_crear' %}" class="btn btn-primary">
+                        <i class="fas fa-plus" style="margin-right: 5px;"></i> Agregar Rango
+                    </a>
                 </div>
                 <div class="data-table-controls">
-                    <div class="entries-selector" style="margin-right: 15px;">
+                    <div class="entries-selector">
                         <span>Categoría:</span>
                         <select id="filter-tipo-cargo" class="form-control-sm">
                             <option value="global">Todas</option>
@@ -77,7 +83,7 @@
                 </div>
             </div>
 
-            <table class="data-table styled-table">
+            <table class="data-table">
                 <thead>
                     <tr>
                         <th>ID</th>
@@ -90,24 +96,29 @@
                     {% for cargo in cargos %}
                     <tr>
                         <td>{{ cargo.id }}</td>
-                        <td>{{ cargo.nombre }}</td>
-                        <td>{{ cargo.tipo_cargo.nombre | default:"Sin Categoría" }}</td>
+                        <td><strong>{{ cargo.nombre }}</strong></td>
+                        <td>
+                            <span class="badge">{{ cargo.tipo_cargo.nombre | default:"Sin Categoría" }}</span>
+                        </td>
                         <td class="actions">
-                            <a href="{% url 'gestion_voluntarios:ruta_cargos_modificar' id=cargo.id %}" class="btn btn-warning btn-sm">Editar</a>
+                            <a href="{% url 'gestion_voluntarios:ruta_cargos_modificar' id=cargo.id %}" class="btn btn-warning btn-sm">
+                                <i class="fas fa-pen"></i> Editar
+                            </a>
                         </td>
                     </tr>
                     {% empty %}
                     <tr>
-                        <td colspan="4" style="text-align: center;">No hay rangos registrados o que coincidan con la búsqueda.</td>
+                        <td colspan="4" style="text-align: center; padding: 30px;">No hay rangos registrados.</td>
                     </tr>
                     {% endfor %}
                 </tbody>
             </table>
         </div>
     </div>
-    
+
 {% endblock %}
 
+
 {% block scripts %}
-<script src="{% static 'gestion_voluntarios/js/ver.js' %}"></script>
-{% endblock  %}
+<script src="{% static 'gestion_voluntarios/js/profesion_rango.js' %}"></script>
+{% endblock %}

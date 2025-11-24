@@ -1,351 +1,205 @@
 /* ==================================== */
-/* Paleta de colores y Tipografía       */
+/* ESTILOS ROBUSTOS: CARGOS Y PROFESIONES
 /* ==================================== */
+
 :root {
     --font-family-base: 'Roboto', 'Helvetica Neue', Arial, sans-serif;
-    --color-primary-blue: #007bff;
-    --color-light-blue: #17a2b8; /* Para el botón 'Ver' */
-    --color-warning-yellow: #ffc107; /* Para el botón 'Editar' */
-    --color-danger-red: #dc3545; /* Para el botón 'Eliminar' */
-    --color-gray-dark: #343a40;
-    --color-gray-medium: #6c757d;
-    --color-gray-light: #f8f9fa;
-    --color-border: #dee2e6;
-    --color-white: #ffffff;
-    --color-background: #f4f6f9; /* Fondo general más claro */
+    --primary-color: #D72600;       /* Rojo Corporativo */
+    --secondary-color: #2c3e50;     /* Azul Oscuro */
+    --accent-color: #e67e22;        /* Naranja para acciones secundarias */
+    --success-color: #28a745;
+    --danger-color: #dc3545;
+    --text-muted: #6c757d;
+    --bg-light: #f8f9fa;
+    --border-color: #eef2f7;
+    --card-shadow: 0 4px 6px rgba(0,0,0,0.05);
+    --card-radius: 12px;
 }
 
-/* ==================================== */
-/* Estilos Globales                     */
-/* ==================================== */
-/*body {
-    font-family: var(--font-family-base);
-    background-color: var(--color-background);
-    margin: 0;
-    padding: 20px;
-    color: var(--color-gray-dark); /* Color de texto base 
-}*/
-
 .container {
-    max-width: 900px;
-    margin: 40px auto;
-    background-color: var(--color-white);
-    padding: 30px;
-    border-radius: 8px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08); /* Sombra más suave */
+    max-width: 1100px;
+    margin: 30px auto;
+    padding: 0 20px;
 }
 
 h1 {
-    color: var(--color-gray-dark);
     text-align: center;
-    margin-bottom: 25px;
-    font-weight: 500; /* Más robusto que el normal */
-    font-size: 2em;
+    color: var(--secondary-color);
+    margin-bottom: 30px;
+    font-weight: 700;
+    font-size: 2rem;
 }
 
-h2 { /* Estilo para el título dentro de cada pestaña */
-    color: var(--color-gray-dark);
-    font-size: 1.5em;
-    margin-bottom: 20px;
-    font-weight: 500;
-}
-
-/* ==================================== */
-/* Estilos de Pestañas                  */
-/* ==================================== */
+/* --- Pestañas (Tabs) --- */
 .tabs {
     display: flex;
-    margin-bottom: 20px;
-    border-bottom: 1px solid var(--color-border); /* Borde más fino */
+    justify-content: center;
+    margin-bottom: 30px;
+    gap: 10px;
 }
 
 .tab-button {
-    background-color: transparent; /* Fondo transparente por defecto */
-    border: none;
-    padding: 10px 20px;
+    background-color: #fff;
+    border: 1px solid var(--border-color);
+    padding: 12px 25px;
     cursor: pointer;
-    font-size: 1em;
-    font-weight: 500;
-    color: var(--color-gray-medium); /* Texto gris */
-    transition: all 0.2s ease-in-out;
-    border-radius: 4px 4px 0 0;
-    margin-right: 5px;
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    border-radius: 30px;
+    transition: all 0.3s ease;
+    box-shadow: var(--card-shadow);
 }
 
-.tab-button:hover:not(.active) {
-    color: var(--color-gray-dark);
-    background-color: var(--color-gray-light);
+.tab-button:hover {
+    color: var(--primary-color);
+    transform: translateY(-2px);
 }
 
 .tab-button.active {
-    color: var(--color-primary-blue);
-    border-bottom: 2px solid var(--color-primary-blue); /* Borde azul abajo para la activa */
-    background-color: var(--color-white); /* Fondo blanco para la activa */
-    font-weight: 700;
+    background-color: var(--primary-color);
+    color: #fff;
+    border-color: var(--primary-color);
+    box-shadow: 0 4px 10px rgba(215, 38, 0, 0.3);
 }
 
-/* ==================================== */
-/* Barra de Filtros y Agregar (de la imagen) */
-/* ==================================== */
+/* --- Contenido de la Pestaña --- */
+.tab-content {
+    display: none;
+    animation: fadeIn 0.4s ease;
+}
+.tab-content.active {
+    display: block;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* --- Área de Filtros y Controles --- */
 .filter-controls-area {
+    background-color: #fff;
+    padding: 20px;
+    border-radius: var(--card-radius);
+    box-shadow: var(--card-shadow);
+    margin-bottom: 25px;
     display: flex;
+    flex-wrap: wrap;
     justify-content: space-between;
     align-items: center;
-    padding: 15px;
-    margin-bottom: 20px;
-    background-color: var(--color-white); /* Fondo blanco */
-    border: 1px solid var(--color-border); /* Borde sutil */
-    border-radius: 4px;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05); /* Sombra ligera */
-    gap: 15px; /* Espacio entre las secciones */
-    flex-wrap: wrap; /* Para responsividad */
-}
-
-.add-new-item {
-    display: flex;
-    gap: 10px;
-    align-items: center;
-}
-
-.form-control { /* Estilo para inputs normales y selects */
-    padding: 8px 12px;
-    border: 1px solid #ced4da;
-    border-radius: 4px;
-    font-size: 0.9em;
-    color: var(--color-gray-dark);
-    transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
-}
-.form-control:focus {
-    border-color: #80bdff;
-    outline: 0;
-    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
-}
-
-.form-control-sm { /* Estilo para inputs y selects pequeños */
-    padding: 5px 8px;
-    border: 1px solid #ced4da;
-    border-radius: 4px;
-    font-size: 0.85em;
-    color: var(--color-gray-dark);
-}
-.form-control-sm:focus {
-    border-color: #80bdff;
-    outline: 0;
-    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+    border: 1px solid var(--border-color);
+    gap: 15px;
 }
 
 .data-table-controls {
     display: flex;
-    gap: 15px;
     align-items: center;
+    gap: 20px;
     flex-wrap: wrap;
 }
 
 .entries-selector, .search-box {
     display: flex;
     align-items: center;
-    gap: 5px;
-    font-size: 0.9em;
-    color: var(--color-gray-dark);
+    gap: 10px;
+    font-size: 0.9rem;
+    color: var(--secondary-color);
 }
 
-/* ==================================== */
-/* Tablas de Datos (de la imagen)      */
-/* ==================================== */
-.styled-table {
+.form-control-sm {
+    padding: 8px 12px;
+    border: 1px solid #ced4da;
+    border-radius: 6px;
+    font-size: 0.9rem;
+}
+
+/* --- Tabla Estilizada --- */
+.data-table {
     width: 100%;
-    border-collapse: collapse;
-    margin-top: 15px;
-    background-color: var(--color-white);
-    border: 1px solid var(--color-border);
-    border-radius: 4px;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    border-collapse: separate;
+    border-spacing: 0;
+    background-color: #fff;
+    border-radius: var(--card-radius);
+    overflow: hidden;
+    box-shadow: var(--card-shadow);
+    border: 1px solid var(--border-color);
 }
 
-.styled-table thead th {
-    background-color: var(--color-gray-light); /* Fondo de encabezado gris claro */
-    color: var(--color-gray-dark);
-    padding: 12px 15px;
-    font-size: 0.9em;
-    font-weight: 700; /* Negrita */
-    border-bottom: 2px solid var(--color-border);
-    border-top: none; /* Eliminar borde superior si existe */
+.data-table thead {
+    background-color: var(--bg-light);
+}
+
+.data-table th {
+    padding: 15px;
     text-align: left;
-}
-.styled-table tbody tr:nth-child(even) {
-    background-color: #fcfdfe; /* Un color muy sutil para filas pares */
-}
-.styled-table tbody tr:hover {
-    background-color: #e9f5ff; /* Resaltado azul suave al pasar el ratón */
-}
-.styled-table td {
-    padding: 12px 15px;
-    border-bottom: 1px solid var(--color-border);
-    text-align: left;
-    font-size: 0.88em;
-    color: var(--color-gray-dark);
-}
-.styled-table tbody tr:last-child td {
-    border-bottom: none; /* Eliminar borde inferior de la última fila */
+    font-weight: 700;
+    color: var(--secondary-color);
+    text-transform: uppercase;
+    font-size: 0.85rem;
+    border-bottom: 2px solid var(--border-color);
 }
 
+.data-table td {
+    padding: 15px;
+    border-bottom: 1px solid var(--border-color);
+    color: #555;
+    vertical-align: middle;
+}
 
-/* ==================================== */
-/* Botones de Acción (de la imagen)     */
-/* ==================================== */
-.btn { /* Estilo base para todos los botones */
-    padding: 8px 15px;
+.data-table tbody tr:hover {
+    background-color: #fffcfc; /* Tinte rojizo muy suave */
+}
+
+.data-table .actions {
+    display: flex;
+    gap: 8px;
+}
+
+/* --- Botones --- */
+.btn {
+    padding: 8px 16px;
+    border-radius: 6px;
     border: none;
-    border-radius: 4px;
-    cursor: pointer;
     font-weight: 600;
-    font-size: 0.9em;
-    transition: background-color 0.2s ease-in-out, border-color 0.2s ease-in-out, color 0.2s ease-in-out;
+    cursor: pointer;
+    text-decoration: none;
     display: inline-flex;
     align-items: center;
     justify-content: center;
-}
-.btn-sm { /* Botones pequeños para las acciones de tabla */
-    padding: 5px 10px;
-    font-size: 0.8em;
-    border-radius: 3px;
-    margin-right: 5px;
+    transition: all 0.2s;
+    font-size: 0.9rem;
 }
 
-/* Colores específicos de la imagen */
 .btn-primary {
-    background-color: var(--color-primary-blue);
-    color: var(--color-white);
+    background-color: var(--primary-color);
+    color: white;
 }
 .btn-primary:hover {
-    background-color: #0056b3;
+    background-color: #b01f00;
+    box-shadow: 0 4px 8px rgba(215, 38, 0, 0.3);
 }
 
-.btn-secondary { /* Para el botón Cancelar del modal */
-    background-color: var(--color-gray-medium);
-    color: var(--color-white);
-}
-.btn-secondary:hover {
-    background-color: #5a6268;
-}
-
-.btn-info { /* Para el botón 'Ver' */
-    background-color: var(--color-light-blue);
-    color: var(--color-white);
-}
-.btn-info:hover {
-    background-color: #138496;
-}
-
-.btn-warning { /* Para el botón 'Editar' */
-    background-color: var(--color-warning-yellow);
-    color: var(--color-gray-dark); /* Texto oscuro para visibilidad */
+.btn-warning {
+    background-color: #ffc107;
+    color: #212529;
 }
 .btn-warning:hover {
     background-color: #e0a800;
 }
 
-.btn-danger { /* Para el botón 'Eliminar' */
-    background-color: var(--color-danger-red);
-    color: var(--color-white);
-}
-.btn-danger:hover {
-    background-color: #c82333;
+.btn-sm {
+    padding: 5px 10px;
+    font-size: 0.85rem;
 }
 
-
-/* ==================================== */
-/* Estilos del Modal                    */
-/* ==================================== */
-.modal {
-    display: none;
-    position: fixed;
-    z-index: 1000;
-    left: 0;
-    top: 0;
-    width: 100%;
-    height: 100%;
-    overflow: auto;
-    background-color: rgba(0, 0, 0, 0.4);
-}
-.modal-content {
-    background-color: var(--color-white);
-    margin: 15% auto;
-    padding: 25px; /* Un poco más de padding */
-    border: 1px solid #888;
-    width: 90%;
-    max-width: 450px; /* Ancho máximo un poco mayor */
-    border-radius: 8px;
-    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
-    position: relative;
-}
-.modal-title {
-    color: var(--color-primary-blue);
-    font-size: 1.6em;
-    margin-top: 0;
-    border-bottom: 1px solid #eee;
-    padding-bottom: 10px;
-    margin-bottom: 20px;
-    font-weight: 500;
-}
-.close-button {
-    color: #aaa;
-    float: right;
-    font-size: 28px;
-    font-weight: bold;
-    cursor: pointer;
-}
-.close-button:hover, .close-button:focus {
-    color: #000;
-    text-decoration: none;
-}
-.form-group {
-    margin-bottom: 1rem;
-}
-.form-group label {
-    display: block;
-    font-weight: 500;
-    margin-bottom: 0.5rem;
-    color: var(--color-gray-dark);
-}
-/* Reutilizamos .form-control para el input dentro del modal */
-#edit-name {
-    width: 100%;
-}
-.modal-buttons {
-    display: flex;
-    justify-content: flex-end;
-    gap: 10px;
-    margin-top: 25px;
-}
-
-/* ==================================== */
-/* Responsividad básica                 */
-/* ==================================== */
-@media (max-width: 768px) {
-    .filter-controls-area {
-        flex-direction: column;
-        align-items: flex-start;
-    }
-    .data-table-controls {
-        flex-direction: column;
-        align-items: flex-start;
-        width: 100%;
-    }
-    .add-new-item {
-        width: 100%;
-    }
-    .add-new-item input {
-        flex-grow: 1;
-    }
-    .search-box {
-        width: 100%;
-    }
-    .search-box input {
-        flex-grow: 1;
-    }
-    .entries-selector {
-        width: 100%;
-        justify-content: space-between;
-    }
+/* Badge para Categoría */
+.badge {
+    padding: 5px 10px;
+    border-radius: 15px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    background-color: var(--bg-light);
+    color: var(--secondary-color);
+    border: 1px solid #ddd;
 }
