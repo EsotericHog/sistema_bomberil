@@ -1,6 +1,8 @@
 /* Login */
 @import url("login.css");
 
+@import url('seleccionar_estacion.css');
+
 /* Cuadrícula principal para el Portal */
 #portal_root {
     background-color: var(--color-base);
