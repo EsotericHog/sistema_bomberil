@@ -161,7 +161,6 @@
             font-size: 0.85rem; 
             padding: 6px 12px; 
             border-radius: 6px;
-            /* Ajuste al texto */
             width: fit-content;
             white-space: nowrap;
             display: inline-flex;
@@ -307,7 +306,7 @@
             font-size: 0.95rem;
         }
 
-        /* --- MODALES (Manteniendo lógica anterior, mejorando estética) --- */
+        /* --- MODALES --- */
         .modal-backdrop { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; display: none; backdrop-filter: blur(2px); }
         .modal { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; width: 90%; max-width: 500px; border-radius: 12px; z-index: 1050; display: none; padding: 25px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); max-height: 90vh; overflow-y: auto; }
         .modal.show, .modal-backdrop.show { display: block; }
@@ -322,27 +321,45 @@
         .form-control { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 6px; font-size: 1rem; box-sizing: border-box; }
         .form-control:focus { border-color: var(--primary-color); outline: none; box-shadow: 0 0 0 3px rgba(215, 38, 0, 0.1); }
         
-        .modal-footer { text-align: right; margin-top: 25px; padding-top: 15px; border-top: 1px solid #eee; display: flex; justify-content: flex-end; gap: 10px; }
-        
-        /* Ajuste para los botones del footer del modal */
-        .modal-footer .btn {
-            width: fit-content;
-            white-space: nowrap;
-            display: inline-flex;
+        /* Estilo especial para los Checkbox (Modo Histórico) */
+        .checkbox-row {
+            display: flex;
             align-items: center;
-            justify-content: center;
-            min-width: 80px;
+            gap: 15px;
+            background-color: #f1f3f5;
+            padding: 12px;
+            border-radius: 6px;
+            border: 1px dashed #ced4da;
+            margin-bottom: 20px;
         }
+        .checkbox-row input[type="checkbox"] { width: 20px; height: 20px; accent-color: var(--primary-color); }
+        .checkbox-row label { margin: 0; cursor: pointer; font-size: 0.95rem; color: #495057; }
+        
+        .modal-footer { text-align: right; margin-top: 25px; padding-top: 15px; border-top: 1px solid #eee; display: flex; justify-content: flex-end; gap: 10px; }
+        .modal-footer .btn { width: fit-content; white-space: nowrap; display: inline-flex; align-items: center; justify-content: center; min-width: 80px; }
     </style>
+
 <div class="container-fluid mt-4"> 
     <div class="container profile-container">
+        
+        {# --- MENSAJES DE ERROR/EXITO --- #}
+        {% if messages %}
+            <div class="messages-container" style="margin-bottom: 20px;">
+                {% for message in messages %}
+                    <div class="alert {% if message.tags %}alert-{{ message.tags }}{% endif %}">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+
         <a href="{% url 'gestion_voluntarios:ruta_lista_voluntarios' %}" class="back-link">
             <i class="fas fa-arrow-left"></i> Volver al Listado
         </a>
 
         <div class="profile-header-main">
             <div class="profile-image-container">
-                {# LÓGICA DE IMAGEN CORREGIDA #}
+                {# LÓGICA DE IMAGEN #}
                 {% if voluntario.imagen %}
                     <img src="{{ voluntario.imagen.url }}" alt="Foto de perfil">
                 {% else %}
@@ -402,6 +419,10 @@
                 <div class="info-item"><strong>Nacionalidad</strong><span>{{ voluntario.nacionalidad.gentilicio|default:"-" }}</span></div>
                 <div class="info-item"><strong>Género</strong><span>{{ voluntario.get_genero_display|default:"-" }}</span></div>
                 <div class="info-item"><strong>Estado Civil</strong><span>{{ voluntario.get_estado_civil_display|default:"-" }}</span></div>
+                
+                <div class="info-item"><strong>Fecha Primer Ingreso</strong><span>{{ voluntario.fecha_primer_ingreso|date:"d/m/Y"|default:"-" }}</span></div>
+                <div class="info-item"><strong>N° Registro General</strong><span>{{ voluntario.numero_registro_bomberil|default:"-" }}</span></div>
+
                 <div class="info-item full-width"><strong>Dirección</strong><span>{{ voluntario.domicilio_calle|default:"" }} {{ voluntario.domicilio_numero|default:"" }} {{ voluntario.domicilio_comuna.nombre|default:"" }}</span></div>
             </div>
         </div>
@@ -421,7 +442,9 @@
                             {{ cargo.fecha_inicio|date:"d/m/Y" }} — 
                             {% if cargo.fecha_fin %}{{ cargo.fecha_fin|date:"d/m/Y" }}{% else %}Actualidad{% endif %}
                         </span>
-                        <small>Ámbito: {{ cargo.ambito }} | Registrado por: {{ cargo.estacion_registra.nombre }}</small>
+                        <small>Ámbito: {{ cargo.ambito }} | Registrado por: {{ cargo.estacion_registra.nombre }}
+                            {% if cargo.es_historico %}<span style="color: #6c757d; margin-left:5px;">(Reg. Histórico)</span>{% endif %}
+                        </small>
                     </li>
                 {% empty %}
                     <p style="color:#888; font-style:italic;">No hay cargos registrados en el historial.</p>
@@ -442,7 +465,9 @@
                         <strong>{{ reco.tipo_reconocimiento.nombre }}</strong>
                         <span class="date-range">Fecha: {{ reco.fecha_evento|date:"d/m/Y" }}</span>
                         {% if reco.descripcion_personalizada %}<p>{{ reco.descripcion_personalizada }}</p>{% endif %}
-                        <small>Otorgado por: {{ reco.ambito }}</small>
+                        <small>Otorgado por: {{ reco.ambito }}
+                            {% if reco.es_historico %}<span style="color: #6c757d; margin-left:5px;">(Reg. Histórico)</span>{% endif %}
+                        </small>
                     </li>
                 {% empty %}
                     <p style="color:#888; font-style:italic;">No hay reconocimientos registrados.</p>
@@ -460,10 +485,12 @@
             <ul class="history-list">
                 {% for sancion in voluntario.historial_sanciones.all %}
                      <li>
-                        <strong style="color: var(--danger-color);">{{ sancion.get_tipo_sancion_display }}</strong>
+                        <strong style="color: var(--primary-color);">{{ sancion.get_tipo_sancion_display }}</strong>
                         <span class="date-range">Fecha: {{ sancion.fecha_evento|date:"d/m/Y" }}</span>
                         <p style="margin: 5px 0;">{{ sancion.descripcion }}</p>
-                        <small>Emitida por: {{ sancion.estacion_evento.nombre }}</small>
+                        <small>Emitida por: {{ sancion.estacion_evento.nombre }}
+                            {% if sancion.es_historico %}<span style="color: #6c757d; margin-left:5px;">(Reg. Histórico)</span>{% endif %}
+                        </small>
                     </li>
                 {% empty %}
                     <p style="color:#888; font-style:italic;">No existen sanciones registradas (¡Excelente!).</p>
@@ -475,14 +502,25 @@
 
     <div id="modalAgregarCargo" class="modal">
         <div class="modal-header"><h3>Registrar Ascenso</h3><span class="close-btn" onclick="cerrarModal('modalAgregarCargo')">&times;</span></div>
-        <form method="POST" action="{% url 'gestion_voluntarios:ruta_agregar_cargo' voluntario.usuario.id %}">
+        <form method="POST" action="{% url 'gestion_voluntarios:ruta_agregar_cargo' id=voluntario.usuario.id %}">
             {% csrf_token %}
+            
             {% for field in form_cargo %}
-                <div class="form-group">
-                    <label>{{ field.label }}</label>
-                    {{ field }}
-                </div>
+                {% if field.name == 'es_registro_antiguo' %}
+                    <div class="checkbox-row">
+                        {{ field }}
+                        <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                    </div>
+                {% else %}
+                    <div class="form-group">
+                        <label>{{ field.label }}</label>
+                        {{ field }}
+                        {% if field.help_text %}<small style="color:#777;">{{ field.help_text }}</small>{% endif %}
+                        {% if field.errors %}<small style="color:red;">{{ field.errors.0 }}</small>{% endif %}
+                    </div>
+                {% endif %}
             {% endfor %}
+
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" onclick="cerrarModal('modalAgregarCargo')">Cancelar</button>
                 <button type="submit" class="btn btn-principal">Guardar</button>
@@ -494,9 +532,21 @@
         <div class="modal-header"><h3>Agregar Reconocimiento</h3><span class="close-btn" onclick="cerrarModal('modalAgregarReconocimiento')">&times;</span></div>
         <form method="POST" action="{% url 'gestion_voluntarios:ruta_agregar_reconocimiento' id=voluntario.usuario.id %}">
             {% csrf_token %}
+            
             {% for field in form_reconocimiento %}
-                <div class="form-group"><label>{{ field.label }}</label>{{ field }}</div>
+                {% if field.name == 'es_registro_antiguo' %}
+                    <div class="checkbox-row">
+                        {{ field }}
+                        <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                    </div>
+                {% else %}
+                    <div class="form-group">
+                        <label>{{ field.label }}</label>
+                        {{ field }}
+                    </div>
+                {% endif %}
             {% endfor %}
+
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" onclick="cerrarModal('modalAgregarReconocimiento')">Cancelar</button>
                 <button type="submit" class="btn btn-principal">Guardar</button>
@@ -508,9 +558,22 @@
         <div class="modal-header"><h3>Registrar Sanción</h3><span class="close-btn" onclick="cerrarModal('modalAgregarSancion')">&times;</span></div>
         <form method="POST" action="{% url 'gestion_voluntarios:ruta_agregar_sancion' id=voluntario.usuario.id %}" enctype="multipart/form-data">
             {% csrf_token %}
+            
             {% for field in form_sancion %}
-                <div class="form-group"><label>{{ field.label }}</label>{{ field }}</div>
+                {% if field.name == 'es_registro_antiguo' %}
+                    <div class="checkbox-row">
+                        {{ field }}
+                        <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                    </div>
+                {% else %}
+                    <div class="form-group">
+                        <label>{{ field.label }}</label>
+                        {{ field }}
+                        {% if field.help_text %}<small style="color:#777;">{{ field.help_text }}</small>{% endif %}
+                    </div>
+                {% endif %}
             {% endfor %}
+
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" onclick="cerrarModal('modalAgregarSancion')">Cancelar</button>
                 <button type="submit" class="btn btn-principal">Guardar</button>
@@ -523,33 +586,55 @@
 {% endblock %}
 
 {% block scripts %}
+{# Mantenemos el script externo si existe, o usamos este bloque unificado #}
 <script src="{% static 'gestion_voluntarios/js/ver.js' %}"></script>
 <script>
-    // Lógica de pestañas y modales
-    const backdrop = document.getElementById('modalBackdrop');
+    // Lógica rápida para asegurar funcionamiento de modales y pestañas sin depender de caché externo
+    document.addEventListener('DOMContentLoaded', function() {
+        const backdrop = document.getElementById('modalBackdrop');
+        const modals = document.querySelectorAll('.modal');
+        const tabBtns = document.querySelectorAll('.tab-btn');
+        const tabContents = document.querySelectorAll('.tab-content');
 
-    function abrirModal(modalId) {
-        document.getElementById(modalId).classList.add('show');
-        backdrop.classList.add('show');
-    }
+        // --- FUNCIONES GLOBALES (para que funcionen los onclick del HTML) ---
+        window.abrirModal = function(modalId) {
+            document.getElementById(modalId).classList.add('show');
+            backdrop.classList.add('show');
+            document.body.style.overflow = 'hidden'; // Evitar scroll
+        }
 
-    function cerrarModal(modalId) {
-        document.getElementById(modalId).classList.remove('show');
-        backdrop.classList.remove('show');
-    }
+        window.cerrarModal = function(modalId) {
+            document.getElementById(modalId).classList.remove('show');
+            backdrop.classList.remove('show');
+            document.body.style.overflow = 'auto';
+        }
 
-    backdrop.addEventListener('click', function() {
-        document.querySelectorAll('.modal.show').forEach(modal => {
-            modal.classList.remove('show');
+        window.openTab = function(tabId) {
+            tabContents.forEach(tab => tab.style.display = 'none');
+            tabBtns.forEach(btn => btn.classList.remove('active'));
+            
+            const activeContent = document.getElementById(tabId);
+            const activeBtn = document.querySelector(`button[onclick="openTab('${tabId}')"]`);
+            
+            if(activeContent) activeContent.style.display = 'block';
+            if(activeBtn) activeBtn.classList.add('active');
+            
+            // Guardar en localStorage para persistencia al recargar
+            localStorage.setItem('activeTab', tabId);
+        }
+
+        // --- CERRAR AL CLICK EN BACKDROP ---
+        backdrop.addEventListener('click', function() {
+            modals.forEach(modal => modal.classList.remove('show'));
+            backdrop.classList.remove('show');
+            document.body.style.overflow = 'auto';
         });
-        backdrop.classList.remove('show');
-    });
 
-    function openTab(tabId) {
-        document.querySelectorAll('.tab-content').forEach(tab => tab.style.display = 'none');
-        document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
-        document.getElementById(tabId).style.display = 'block';
-        document.querySelector(`button[onclick="openTab('${tabId}')"]`).classList.add('active');
-    }
+        // --- RECUPERAR PESTAÑA ACTIVA ---
+        const savedTab = localStorage.getItem('activeTab');
+        if (savedTab) {
+            openTab(savedTab);
+        }
+    });
 </script>
 {% endblock %}

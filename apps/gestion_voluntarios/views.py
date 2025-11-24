@@ -200,36 +200,57 @@ class VoluntarioAgregarCargoView(View, EstacionActivaMixin):
         estacion_id = self.get_estacion_activa(request)
         if not estacion_id: return redirect('gestion_voluntarios:ruta_ver_voluntario', id=id)
 
-        # Validamos que el voluntario pertenezca a la estación antes de agregarle nada
         voluntario = get_object_or_404(Voluntario, usuario__id=id, usuario__membresias__estacion_id=estacion_id)
         
         form = HistorialCargoForm(request.POST)
         if form.is_valid():
             try:
                 estacion_registra = Estacion.objects.get(pk=estacion_id)
+                es_historico = form.cleaned_data.get('es_registro_antiguo') # <--- CAPTURAMOS EL CHECK
                 
-                fecha_inicio_nuevo = form.cleaned_data['fecha_inicio']
-                cargo_anterior = HistorialCargo.objects.filter(voluntario=voluntario, fecha_fin__isnull=True).first()
-
-                if cargo_anterior:
-                    if fecha_inicio_nuevo < cargo_anterior.fecha_inicio:
-                        messages.error(request, "La fecha del nuevo cargo no puede ser anterior al inicio del cargo actual.")
-                        return redirect('gestion_voluntarios:ruta_ver_voluntario', id=id)
-                    
-                    cargo_anterior.fecha_fin = fecha_inicio_nuevo
-                    cargo_anterior.save()
-
                 nuevo_cargo = form.save(commit=False)
                 nuevo_cargo.voluntario = voluntario
                 nuevo_cargo.estacion_registra = estacion_registra
-                nuevo_cargo.es_historico = False
-                nuevo_cargo.save()
                 
-                messages.success(request, "Cargo registrado exitosamente.")
+                # --- LÓGICA DIFERENCIADA ---
+                if es_historico:
+                    # MODO HISTÓRICO (CARGA DE PAPELES VIEJOS)
+                    # 1. Marcamos el flag del modelo
+                    nuevo_cargo.es_historico = True
+                    # 2. Guardamos la fecha fin que vino del formulario
+                    nuevo_cargo.fecha_fin = form.cleaned_data['fecha_fin']
+                    
+                    # 3. NO cerramos el cargo actual ni validamos cronología contra el presente
+                    nuevo_cargo.save()
+                    messages.success(request, "Cargo histórico registrado correctamente.")
+                    
+                else:
+                    # MODO EN VIVO (LO QUE PASA HOY)
+                    fecha_inicio_nuevo = form.cleaned_data['fecha_inicio']
+                    cargo_anterior = HistorialCargo.objects.filter(voluntario=voluntario, fecha_fin__isnull=True).first()
+
+                    # Validaciones estrictas solo para modo en vivo
+                    if cargo_anterior:
+                        if fecha_inicio_nuevo < cargo_anterior.fecha_inicio:
+                            messages.error(request, "Error: El nuevo cargo no puede ser anterior al actual. Si es un dato antiguo, marque la casilla '¿Es cargo antiguo?'.")
+                            return redirect('gestion_voluntarios:ruta_ver_voluntario', id=id)
+                        
+                        # Cerrar ciclo anterior
+                        cargo_anterior.fecha_fin = fecha_inicio_nuevo
+                        cargo_anterior.save()
+
+                    nuevo_cargo.es_historico = False
+                    nuevo_cargo.save()
+                    messages.success(request, "Nuevo cargo vigente registrado exitosamente.")
+
             except Exception as e:
                 messages.error(request, f"Error: {e}")
         else:
-            messages.error(request, "Error en el formulario de cargo.")
+            # Mostrar errores del formulario (ej: falta fecha fin en histórico)
+            for field, errors in form.errors.items():
+                for error in errors:
+                    messages.error(request, f"{field}: {error}")
+                    
         return redirect('gestion_voluntarios:ruta_ver_voluntario', id=id)
 
 
@@ -239,24 +260,35 @@ class VoluntarioAgregarReconocimientoView(View, EstacionActivaMixin):
         estacion_id = self.get_estacion_activa(request)
         if not estacion_id: return redirect('gestion_voluntarios:ruta_ver_voluntario', id=id)
 
+        # Validamos que el voluntario pertenezca a la estación activa
         voluntario = get_object_or_404(Voluntario, usuario__id=id, usuario__membresias__estacion_id=estacion_id)
+        
         form = HistorialReconocimientoForm(request.POST)
         
         if form.is_valid():
             try:
                 estacion_registra = Estacion.objects.get(pk=estacion_id)
+                es_historico_check = form.cleaned_data.get('es_registro_antiguo', False)
+                
                 nuevo_reco = form.save(commit=False)
                 nuevo_reco.voluntario = voluntario
                 nuevo_reco.estacion_registra = estacion_registra
-                nuevo_reco.es_historico = False
+                
+                # Guardamos si es histórico o "en vivo" según el checkbox
+                nuevo_reco.es_historico = es_historico_check
+                
                 nuevo_reco.save()
-                messages.success(request, "Reconocimiento agregado exitosamente.")
+                
+                if es_historico_check:
+                    messages.success(request, "Reconocimiento histórico agregado a la hoja de vida.")
+                else:
+                    messages.success(request, "Nuevo reconocimiento registrado exitosamente.")
+                    
             except Exception as e:
                 messages.error(request, f"Error al guardar: {e}")
         else:
-             messages.error(request, "Error en el formulario.")
+             messages.error(request, "Error en el formulario. Verifique las fechas.")
         return redirect('gestion_voluntarios:ruta_ver_voluntario', id=id)
-
 
 class VoluntarioAgregarSancionView(View, EstacionActivaMixin):
     def post(self, request, id):
@@ -264,59 +296,35 @@ class VoluntarioAgregarSancionView(View, EstacionActivaMixin):
         if not estacion_id: return redirect('gestion_voluntarios:ruta_ver_voluntario', id=id)
 
         voluntario = get_object_or_404(Voluntario, usuario__id=id, usuario__membresias__estacion_id=estacion_id)
+        
+        # OJO: request.FILES es necesario si suben PDF de la sanción
         form = HistorialSancionForm(request.POST, request.FILES)
         
         if form.is_valid():
             try:
                 estacion_registra = Estacion.objects.get(pk=estacion_id)
+                es_historico_check = form.cleaned_data.get('es_registro_antiguo', False)
+                
                 nueva_sancion = form.save(commit=False)
                 nueva_sancion.voluntario = voluntario
                 nueva_sancion.estacion_registra = estacion_registra
-                nueva_sancion.es_historico = False
+                
+                # Guardamos si es histórico o "en vivo"
+                nueva_sancion.es_historico = es_historico_check
+                
                 nueva_sancion.save()
-                messages.success(request, "Sanción registrada exitosamente.")
+                
+                if es_historico_check:
+                    messages.success(request, "Registro de sanción antigua agregado correctamente.")
+                else:
+                    messages.success(request, "Sanción disciplinaria registrada.")
+                    
             except Exception as e:
                 messages.error(request, f"Error al guardar: {e}")
         else:
-             messages.error(request, "Error en el formulario.")
+             messages.error(request, "Error en el formulario. Revise fechas y campos obligatorios.")
         return redirect('gestion_voluntarios:ruta_ver_voluntario', id=id)
-class VoluntariosModificarView(View):
     
-    def get(self, request, id):
-        voluntario = get_object_or_404(Voluntario.objects.select_related('usuario'), usuario__id=id)
-        
-        usuario_form = UsuarioForm(instance=voluntario.usuario)
-        voluntario_form = VoluntarioForm(instance=voluntario)
-
-        context = {
-            'voluntario': voluntario,
-            'usuario_form': usuario_form,
-            'voluntario_form': voluntario_form
-        }
-        return render(request, "gestion_voluntarios/pages/modificar_voluntario.html", context)
-
-    def post(self, request, id):
-        voluntario = get_object_or_404(Voluntario.objects.select_related('usuario'), id=id)
-        
-        # ¡IMPORTANTE! Agregamos request.FILES para procesar la imagen del avatar
-        usuario_form = UsuarioForm(request.POST, request.FILES, instance=voluntario.usuario)
-        voluntario_form = VoluntarioForm(request.POST, instance=voluntario)
-
-        if usuario_form.is_valid() and voluntario_form.is_valid():
-            usuario_form.save()
-            voluntario_form.save()
-            
-            messages.success(request, f'Se han guardado los cambios de {voluntario.usuario.get_full_name}.')
-            return redirect('gestion_voluntarios:ruta_ver_voluntario', id=voluntario.id)
-        
-        context = {
-            'voluntario': voluntario,
-            'usuario_form': usuario_form,
-            'voluntario_form': voluntario_form
-        }
-        messages.error(request, 'Error al guardar. Por favor, revisa los campos.')
-        return render(request, "gestion_voluntarios/pages/modificar_voluntario.html", context)
-     
 
 # Editar voluntario
 class VoluntariosModificarView(View, EstacionActivaMixin):

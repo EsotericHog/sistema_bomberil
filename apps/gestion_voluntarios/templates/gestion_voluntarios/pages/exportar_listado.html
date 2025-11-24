@@ -16,7 +16,7 @@
             <div class="card-reporte">
                 <h2 class="card-title-report">Filtros y Formato de Salida</h2>
                 <p class="text-muted-report">
-                    Seleccione los filtros deseados (Estación y Rango) para personalizar el reporte. Luego, elija el formato de archivo que mejor se adapte a sus necesidades.
+                    Seleccione el rango para personalizar el reporte. Luego, elija el formato de archivo que mejor se adapte a sus necesidades.
                 </p>
 
                 <form action="{% url 'gestion_voluntarios:ruta_exportar_listado' %}" method="GET" target="_blank">
@@ -24,15 +24,8 @@
                     
                     <div class="form-row-report">
                         
-                        <div class="form-group">
-                            <label for="filtro_estacion" class="label-custom">Filtrar por Estación:</label>
-                            <select id="filtro_estacion" name="estacion" class="form-control">
-                                <option value="global">Global (Todas)</option>
-                                {% for estacion in estaciones %}
-                                <option value="{{ estacion.id }}">{{ estacion.nombre }}</option>
-                                {% endfor %}
-                            </select>
-                        </div>
+                        {# --- ELIMINADO EL SELECTOR DE ESTACIÓN --- #}
+                        {# El backend ahora usa la sesión activa automáticamente #}
 
                         <div class="form-group">
                             <label for="filtro_rango" class="label-custom">Filtrar por Rango:</label>

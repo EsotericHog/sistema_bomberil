@@ -14,17 +14,7 @@
             </div>
             
             <div class="filters-container">
-                <div class="filter-group">
-                    <label for="estacion-filter">Compañía / Estación</label>
-                    <select id="estacion-filter" class="filter-select">
-                        <option value="global">Todas las estaciones</option>
-                        {% for estacion in estaciones %}
-                        <option value="{{ estacion.id }}" {% if request.GET.estacion == estacion.id|stringformat:"s" %}selected{% endif %}>
-                            {{ estacion.nombre }}
-                        </option>
-                        {% endfor %}
-                    </select>
-                </div>
+                {# --- ELIMINADO EL SELECTOR DE ESTACIÓN --- #}
                 
                 <div class="filter-group">
                     <label for="rango-filter">Rango / Cargo</label>
@@ -45,13 +35,12 @@
             {% for voluntario in voluntarios %}
 
                 {# LÓGICA DE DATOS #}
-                {# Accedemos a voluntario.usuario.membresia_activa_list para el estado #}
                 {% with membresia=voluntario.usuario.membresia_activa_list|first cargo_actual=voluntario.cargo_actual_list|first %}
                 
                 <div class="volunteer-card">
                     <div class="card-header">
                         <div class="avatar-wrapper">
-                            {# FOTO DEL VOLUNTARIO (Corregido para usar voluntario.imagen) #}
+                            {# FOTO DEL VOLUNTARIO #}
                             {% if voluntario.imagen %}
                                 <img src="{{ voluntario.imagen.url }}" alt="{{ voluntario.usuario.get_full_name }}">
                             {% else %}
@@ -61,7 +50,6 @@
                             {% endif %}
 
                             {# INDICADOR DE ESTADO #}
-                            {# Si existe membresia (activa), es verde. Si no, rojo. #}
                             {% if membresia %}
                                 <div class="status-badge active" title="Estado: Activo"></div>
                             {% else %}
@@ -106,7 +94,7 @@
                 <div class="empty-state">
                     <i class="fas fa-search"></i>
                     <h3>No se encontraron resultados</h3>
-                    <p>Intenta ajustar los filtros de búsqueda o estación.</p>
+                    <p>Intenta ajustar la búsqueda o el filtro de cargo.</p>
                 </div>
             {% endfor %}
             
