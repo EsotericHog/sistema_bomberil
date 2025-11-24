@@ -259,6 +259,14 @@ class EstacionSwitchView(SuperuserRequiredMixin, View):
         # 1. Configurar la variable de sesión crítica 
         request.session['active_estacion_id'] = estacion.id
         request.session['active_estacion_nombre'] = estacion.nombre
+
+        # Obtener el logo de la estación
+        if estacion.logo_thumb_small:
+            request.session['active_estacion_logo'] = estacion.logo_thumb_small.url
+        elif estacion.logo:
+            request.session['active_estacion_logo'] = estacion.logo.url
+        else:
+            request.session['active_estacion_logo'] = None
         
         # 2. Feedback al usuario
         messages.success(request, f"Has ingresado a la gestión de: {estacion.nombre}")
