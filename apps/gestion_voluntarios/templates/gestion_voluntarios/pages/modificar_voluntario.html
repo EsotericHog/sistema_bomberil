@@ -73,7 +73,7 @@
             </div>
 
             <div class="button-group">
-                <a href="{% url 'gestion_voluntarios:ruta_ver_voluntario' id=voluntario.id %}" class="btn btn-secondary">
+                <a href="{% url 'gestion_voluntarios:ruta_ver_voluntario' id=voluntario.usuario.id %}" class="btn btn-secondary">
                     <i class="fas fa-times" style="margin-right: 8px;"></i> Cancelar
                 </a>
                 <button type="submit" class="btn btn-primary">

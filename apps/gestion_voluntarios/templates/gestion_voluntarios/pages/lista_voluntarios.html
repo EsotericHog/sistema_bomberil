@@ -92,10 +92,10 @@
                     </div>
                     
                     <div class="card-footer">
-                        <a href="{% url 'gestion_voluntarios:ruta_ver_voluntario' id=voluntario.id %}" class="action-btn btn-view">
+                        <a href="{% url 'gestion_voluntarios:ruta_ver_voluntario' id=voluntario.usuario.id %}" class="action-btn btn-view">
                             <i class="fas fa-id-card"></i> Hoja de Vida
                         </a>
-                        <a href="{% url 'gestion_voluntarios:ruta_modificar_voluntario' id=voluntario.id %}" class="action-btn btn-edit">
+                        <a href="{% url 'gestion_voluntarios:ruta_modificar_voluntario' id=voluntario.usuario.id %}" class="action-btn btn-edit">
                             <i class="fas fa-pen"></i> Editar
                         </a>
                     </div>

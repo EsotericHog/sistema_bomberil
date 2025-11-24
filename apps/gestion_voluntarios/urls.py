@@ -44,10 +44,10 @@ urlpatterns = [
     path('lista/', VoluntariosListaView.as_view(), name="ruta_lista_voluntarios"),
 
     # Ver información de un voluntario
-    path('voluntario/<int:id>/', VoluntariosVerView.as_view(), name="ruta_ver_voluntario"),
+    path('voluntario/<uuid:id>/', VoluntariosVerView.as_view(), name="ruta_ver_voluntario"),
 
     # Modificar información de un voluntario
-    path('voluntario/<int:id>/editar', VoluntariosModificarView.as_view(), name="ruta_modificar_voluntario"),
+    path('voluntario/<uuid:id>/editar', VoluntariosModificarView.as_view(), name="ruta_modificar_voluntario"),
 
     path('voluntario/<int:id>/agregar_cargo/', VoluntarioAgregarCargoView.as_view(), name="ruta_agregar_cargo"),
     path('voluntario/<int:id>/agregar_reconocimiento/', VoluntarioAgregarReconocimientoView.as_view(), name="ruta_agregar_reconocimiento"),
@@ -71,7 +71,7 @@ urlpatterns = [
 
 
     # Generar hoja de vida
-    path('voluntario/<int:id>/generar_hoja_vida/', HojaVidaView.as_view(), name="ruta_hoja_vida"),
+    path('voluntario/<uuid:id>/generar_hoja_vida/', HojaVidaView.as_view(), name="ruta_hoja_vida"),
 
     # Generar exportar listado
     path('voluntario/exportar_listado', ExportarListadoView.as_view(), name="ruta_exportar_listado"),

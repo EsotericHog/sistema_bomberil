@@ -374,10 +374,10 @@
                 </div>
 
                 <div class="profile-actions">
-                    <a href="{% url 'gestion_voluntarios:ruta_hoja_vida' id=voluntario.id %}" target="_blank" class="btn btn-pdf">
+                    <a href="{% url 'gestion_voluntarios:ruta_hoja_vida' id=voluntario.usuario.id %}" target="_blank" class="btn btn-pdf">
                         <i class="fas fa-file-pdf"></i> Generar Hoja de Vida
                     </a>
-                    <a href="{% url 'gestion_voluntarios:ruta_modificar_voluntario' id=voluntario.id %}" class="btn btn-edit">
+                    <a href="{% url 'gestion_voluntarios:ruta_modificar_voluntario' id=voluntario.usuario.id %}" class="btn btn-edit">
                         <i class="fas fa-pen"></i> Modificar Perfil
                     </a>
                 </div>
@@ -475,7 +475,7 @@
 
     <div id="modalAgregarCargo" class="modal">
         <div class="modal-header"><h3>Registrar Ascenso</h3><span class="close-btn" onclick="cerrarModal('modalAgregarCargo')">&times;</span></div>
-        <form method="POST" action="{% url 'gestion_voluntarios:ruta_agregar_cargo' id=voluntario.id %}">
+        <form method="POST" action="{% url 'gestion_voluntarios:ruta_agregar_cargo' id=voluntario.usuario.id %}">
             {% csrf_token %}
             {% for field in form_cargo %}
                 <div class="form-group">
@@ -492,7 +492,7 @@
 
     <div id="modalAgregarReconocimiento" class="modal">
         <div class="modal-header"><h3>Agregar Reconocimiento</h3><span class="close-btn" onclick="cerrarModal('modalAgregarReconocimiento')">&times;</span></div>
-        <form method="POST" action="{% url 'gestion_voluntarios:ruta_agregar_reconocimiento' id=voluntario.id %}">
+        <form method="POST" action="{% url 'gestion_voluntarios:ruta_agregar_reconocimiento' id=voluntario.usuario.id %}">
             {% csrf_token %}
             {% for field in form_reconocimiento %}
                 <div class="form-group"><label>{{ field.label }}</label>{{ field }}</div>
@@ -506,7 +506,7 @@
 
     <div id="modalAgregarSancion" class="modal">
         <div class="modal-header"><h3>Registrar Sanción</h3><span class="close-btn" onclick="cerrarModal('modalAgregarSancion')">&times;</span></div>
-        <form method="POST" action="{% url 'gestion_voluntarios:ruta_agregar_sancion' id=voluntario.id %}" enctype="multipart/form-data">
+        <form method="POST" action="{% url 'gestion_voluntarios:ruta_agregar_sancion' id=voluntario.usuario.id %}" enctype="multipart/form-data">
             {% csrf_token %}
             {% for field in form_sancion %}
                 <div class="form-group"><label>{{ field.label }}</label>{{ field }}</div>

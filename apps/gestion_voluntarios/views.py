@@ -149,7 +149,30 @@ class VoluntariosVerView(View):
         membresia_activa = voluntario.usuario.membresia_activa_list[0] if voluntario.usuario.membresia_activa_list else None
         cargo_actual = voluntario.cargo_actual_list[0] if voluntario.cargo_actual_list else None
         
-        # --- Enviamos los 3 formularios al template ---
+        # --- Query Principal ---
+        voluntario = get_object_or_404(
+            Voluntario.objects.select_related(
+                'usuario', 'nacionalidad', 'profesion', 'domicilio_comuna'
+            ).prefetch_related(
+                active_membresia_prefetch,
+                current_cargo_prefetch,
+                cargos_prefetch,
+                reconocimientos_prefetch,
+                sanciones_prefetch
+            ),
+            usuario__id=id
+        )
+
+        # === LÓGICA CORREGIDA ===
+        # Extraemos las listas de los atributos pre-cargados
+        membresia_list = voluntario.usuario.membresia_activa_list
+        cargo_list = voluntario.cargo_actual_list
+
+        # Asignamos el primer elemento (si la lista NO está vacía) o None
+        membresia_activa = membresia_list[0] if membresia_list else None
+        cargo_actual = cargo_list[0] if cargo_list else None
+        
+        # --- Preparar Contexto ---
         context = {
             'voluntario': voluntario,
             'membresia': membresia_activa,
@@ -252,7 +275,7 @@ class VoluntarioAgregarSancionView(View):
 class VoluntariosModificarView(View):
     
     def get(self, request, id):
-        voluntario = get_object_or_404(Voluntario.objects.select_related('usuario'), id=id)
+        voluntario = get_object_or_404(Voluntario.objects.select_related('usuario'), usuario__id=id)
         
         usuario_form = UsuarioForm(instance=voluntario.usuario)
         voluntario_form = VoluntarioForm(instance=voluntario)
@@ -504,7 +527,7 @@ class HojaVidaView(View):
                 active_membresia_prefetch, current_cargo_prefetch,
                 cargos_prefetch, reconocimientos_prefetch, sanciones_prefetch
             ),
-            id=id
+            usuario__id=id
         )
         membresia_list = voluntario.usuario.membresia_activa_list
         cargo_list = voluntario.cargo_actual_list
