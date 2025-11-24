@@ -2981,180 +2981,80 @@
   "model": "gestion_inventario.estacion",
   "pk": 1,
   "fields": {
-    "nombre": "COMPAÑÍA DE BOMBEROS ESPAÑOLA N°1",
-    "descripcion": null,
-    "direccion": "LAS ROSAS #2398",
+    "nombre": "Compañía de Bomberos Española N°1",
+    "descripcion": "La Primera Compañía de Bomberos Española de Iquique es la primera del Cuerpo de Bomberos de Iquique, fundada el 3 de diciembre de 1870, y su lema es \"Primera en el Cuerpo, primera en el deber\". Nació como respuesta a los incendios que asolaban la ciudad y su objetivo es salvar vidas y bienes, además de prestar auxilio a la comunidad. Su historia está marcada por su origen durante la época en que la región pertenecía a Perú y por la Guerra del Pacífico, que cambió su denominación.",
+    "direccion": "Las Rosas 2398",
     "es_departamento": false,
-    "imagen": "",
-    "logo": "",
+    "imagen": "estaciones/imagen/main/estacion_c7e6dbd0-cf8a-4885-aa33-9387c8c9ade1.jpg",
+    "imagen_thumb_medium": "estaciones/imagen/medium/estacion_c7e6dbd0-cf8a-4885-aa33-9387c8c9ade1_medium.jpg",
+    "imagen_thumb_small": "estaciones/imagen/small/estacion_c7e6dbd0-cf8a-4885-aa33-9387c8c9ade1_small.jpg",
+    "logo": "estaciones/logo/estacion_logo_8a5dd074-af38-460f-9332-af2493612d8f.png",
+    "logo_thumb_medium": "estaciones/logo/medium/estacion_logo_8a5dd074-af38-460f-9332-af2493612d8f_medium.jpg",
+    "logo_thumb_small": "estaciones/logo/small/estacion_logo_8a5dd074-af38-460f-9332-af2493612d8f_small.jpg",
     "comuna": 5,
-    "created_at": "2025-11-07T20:36:09Z",
-    "updated_at": "2025-11-07T20:36:09Z"
+    "codigo": "E001",
+    "created_at": "2025-11-23T20:32:09.980Z",
+    "updated_at": "2025-11-24T02:15:13.763Z"
   }
 },
 {
   "model": "gestion_inventario.estacion",
   "pk": 2,
   "fields": {
-    "nombre": "COMPAÑIA DE BOMBEROS GERMANIA N°2",
-    "descripcion": null,
-    "direccion": "AV. TADEO HAENKE #1870",
+    "nombre": "Compañía de Bomberos Germania N°2",
+    "descripcion": "La Compañía de Bomberos Germania N°2 de Iquique es la Segunda Compañía Alemana, fundada el 18 de octubre de 1872 por inmigrantes alemanes. Su especialidad es el agua y el rescate vehicular y de desnivel.",
+    "direccion": "Av. Tadeo Haenke 1870",
     "es_departamento": false,
-    "imagen": "",
-    "logo": "",
+    "imagen": "estaciones/imagen/main/estacion_a91be643-e98e-4563-874d-bb7837dc68bf.jpg",
+    "imagen_thumb_medium": "estaciones/imagen/medium/estacion_a91be643-e98e-4563-874d-bb7837dc68bf_medium.jpg",
+    "imagen_thumb_small": "estaciones/imagen/small/estacion_a91be643-e98e-4563-874d-bb7837dc68bf_small.jpg",
+    "logo": "estaciones/logo/estacion_logo_8d201715-0d79-4ed0-ae67-9679924ca7db.png",
+    "logo_thumb_medium": "estaciones/logo/medium/estacion_logo_8d201715-0d79-4ed0-ae67-9679924ca7db_medium.jpg",
+    "logo_thumb_small": "estaciones/logo/small/estacion_logo_8d201715-0d79-4ed0-ae67-9679924ca7db_small.jpg",
     "comuna": 5,
-    "created_at": "2025-11-07T20:36:09Z",
-    "updated_at": "2025-11-07T20:36:09Z"
+    "codigo": "E002",
+    "created_at": "2025-11-23T20:35:16.240Z",
+    "updated_at": "2025-11-24T02:13:30.094Z"
   }
 },
 {
   "model": "gestion_inventario.estacion",
   "pk": 3,
   "fields": {
-    "nombre": "COMPAÑÍA DE BOMBEROS AUSONIA N°4",
-    "descripcion": null,
-    "direccion": "SAN MARTIN #525",
+    "nombre": "Compañía de Bomberos Ausonia N°4",
+    "descripcion": "La Compañía de Bomberos Ausonia N°4 de Iquique es la primera compañía de bomberos de origen italiano fundada en Chile en 1874, como agradecimiento a la acogida de la ciudad. Se especializa en la lucha contra materiales peligrosos (Hazmat), cuenta con un moderno cuartel en calle San Martín N° 520, y tiene una historia de servicio condecorada por los gobiernos de Perú e Italia.",
+    "direccion": "San Martín 525",
     "es_departamento": false,
-    "imagen": "",
-    "logo": "",
+    "imagen": "estaciones/imagen/main/estacion_5f4ae699-24e5-4fd7-a904-1f4b9ed66b46.jpg",
+    "imagen_thumb_medium": "estaciones/imagen/medium/estacion_5f4ae699-24e5-4fd7-a904-1f4b9ed66b46_medium.jpg",
+    "imagen_thumb_small": "estaciones/imagen/small/estacion_5f4ae699-24e5-4fd7-a904-1f4b9ed66b46_small.jpg",
+    "logo": "estaciones/logo/estacion_logo_08d5d2a0-9a7e-42b5-aa5b-b7db77a418d4.jpg",
+    "logo_thumb_medium": "estaciones/logo/medium/estacion_logo_08d5d2a0-9a7e-42b5-aa5b-b7db77a418d4_medium.jpg",
+    "logo_thumb_small": "estaciones/logo/small/estacion_logo_08d5d2a0-9a7e-42b5-aa5b-b7db77a418d4_small.jpg",
     "comuna": 5,
-    "created_at": "2025-11-07T20:36:09Z",
-    "updated_at": "2025-11-07T20:36:09Z"
+    "codigo": "E003",
+    "created_at": "2025-11-23T20:39:24.654Z",
+    "updated_at": "2025-11-23T20:39:24.654Z"
   }
 },
 {
   "model": "gestion_inventario.estacion",
   "pk": 4,
   "fields": {
-    "nombre": "COMPAÑÍA DE BOMBEROS DALMACIA N°5",
-    "descripcion": null,
-    "direccion": "AV. TADEO HAENKE #1850",
+    "nombre": "Compañía de Bomberos Dalmacia N°5",
+    "descripcion": "La Quinta Compañía de Bomberos de Iquique es una compañía de bomberos voluntarios con 150 años de historia, fundada en 1874 por inmigrantes croatas de las islas dálmatas. Es una institución comprometida con el servicio a la comunidad de Iquique, caracterizada por su disciplina, hermandad y vocación de servicio.",
+    "direccion": "Av. Tadeo Haenke 1850",
     "es_departamento": false,
-    "imagen": "",
-    "logo": "",
+    "imagen": "estaciones/imagen/main/estacion_b47ac903-29fb-4859-b3ca-930d0e9bc17a.jpg",
+    "imagen_thumb_medium": "estaciones/imagen/medium/estacion_b47ac903-29fb-4859-b3ca-930d0e9bc17a_medium.jpg",
+    "imagen_thumb_small": "estaciones/imagen/small/estacion_b47ac903-29fb-4859-b3ca-930d0e9bc17a_small.jpg",
+    "logo": "estaciones/logo/estacion_logo_621fbfd1-a208-461c-b4e0-3ec41d3d7de2.jpg",
+    "logo_thumb_medium": "estaciones/logo/medium/estacion_logo_621fbfd1-a208-461c-b4e0-3ec41d3d7de2_medium.jpg",
+    "logo_thumb_small": "estaciones/logo/small/estacion_logo_621fbfd1-a208-461c-b4e0-3ec41d3d7de2_small.jpg",
     "comuna": 5,
-    "created_at": "2025-11-07T20:36:09Z",
-    "updated_at": "2025-11-07T20:36:09Z"
-  }
-},
-{
-  "model": "gestion_inventario.estacion",
-  "pk": 5,
-  "fields": {
-    "nombre": "COMPAÑÍA DE BOMBEROS SARGENTO ALDEA N°6",
-    "descripcion": null,
-    "direccion": "BARROS ARANA #1050",
-    "es_departamento": false,
-    "imagen": "",
-    "logo": "",
-    "comuna": 5,
-    "created_at": "2025-11-07T20:36:09Z",
-    "updated_at": "2025-11-07T20:36:09Z"
-  }
-},
-{
-  "model": "gestion_inventario.estacion",
-  "pk": 6,
-  "fields": {
-    "nombre": "COMPAÑÍA DE BOMBEROS TARAPACÁ N°7",
-    "descripcion": null,
-    "direccion": "O'HIGGINS #407",
-    "es_departamento": false,
-    "imagen": "",
-    "logo": "",
-    "comuna": 5,
-    "created_at": "2025-11-07T20:36:09Z",
-    "updated_at": "2025-11-07T20:36:09Z"
-  }
-},
-{
-  "model": "gestion_inventario.estacion",
-  "pk": 7,
-  "fields": {
-    "nombre": "COMPAÑÍA DE BOMBEROS VICTORIA N°11",
-    "descripcion": null,
-    "direccion": "JUAN MARTINEZ #550",
-    "es_departamento": false,
-    "imagen": "",
-    "logo": "",
-    "comuna": 5,
-    "created_at": "2025-11-07T20:36:09Z",
-    "updated_at": "2025-11-07T20:36:09Z"
-  }
-},
-{
-  "model": "gestion_inventario.estacion",
-  "pk": 8,
-  "fields": {
-    "nombre": "COMPAÑÍA DE BOMBEROS IQUIQUE N°12",
-    "descripcion": null,
-    "direccion": "ORELLA #787",
-    "es_departamento": false,
-    "imagen": "",
-    "logo": "",
-    "comuna": 5,
-    "created_at": "2025-11-07T20:36:09Z",
-    "updated_at": "2025-11-07T20:36:09Z"
-  }
-},
-{
-  "model": "gestion_inventario.estacion",
-  "pk": 9,
-  "fields": {
-    "nombre": "GUARDIA MARINA E. RIQUELME VENEGAS N°14",
-    "descripcion": null,
-    "direccion": "PLAYA EL AGUILA #2396",
-    "es_departamento": false,
-    "imagen": "",
-    "logo": "",
-    "comuna": 5,
-    "created_at": "2025-11-07T20:36:09Z",
-    "updated_at": "2025-11-07T20:36:09Z"
-  }
-},
-{
-  "model": "gestion_inventario.estacion",
-  "pk": 10,
-  "fields": {
-    "nombre": "COMPAÑÍA DE BOMBEROS GILBERTO MOLINA GAHONA N°16",
-    "descripcion": null,
-    "direccion": "CALLE SAN ANTONIO SITIO 11 MANZANA A",
-    "es_departamento": false,
-    "imagen": "",
-    "logo": "",
-    "comuna": 5,
-    "created_at": "2025-11-07T20:36:09Z",
-    "updated_at": "2025-11-07T20:36:09Z"
-  }
-},
-{
-  "model": "gestion_inventario.estacion",
-  "pk": 11,
-  "fields": {
-    "nombre": "CUERPO DE BOMBEROS DE IQUIQUE",
-    "descripcion": null,
-    "direccion": "SIMÓN BOLÍVAR #414",
-    "es_departamento": true,
-    "imagen": "",
-    "logo": "",
-    "comuna": 5,
-    "created_at": "2025-11-07T20:36:09Z",
-    "updated_at": "2025-11-07T20:36:09Z"
-  }
-},
-{
-  "model": "gestion_inventario.estacion",
-  "pk": 12,
-  "fields": {
-    "nombre": "SEGUNDA COMPAÑÍA DE BOMBEROS DE ANTOFAGASTA",
-    "descripcion": null,
-    "direccion": "21 DE MAYO #400",
-    "es_departamento": false,
-    "imagen": "",
-    "logo": "",
-    "comuna": 5,
-    "created_at": "2025-11-07T20:36:09Z",
-    "updated_at": "2025-11-07T20:36:09Z"
+    "codigo": "E004",
+    "created_at": "2025-11-23T20:43:54.164Z",
+    "updated_at": "2025-11-23T20:43:54.164Z"
   }
 },
 {
@@ -3179,90 +3079,6 @@
   "fields": {
     "nombre": "ADMINISTRATIVA",
     "descripcion": null
-  }
-},
-{
-  "model": "gestion_inventario.ubicacion",
-  "pk": 1,
-  "fields": {
-    "nombre": "Patio Principal",
-    "descripcion": null,
-    "direccion": null,
-    "tipo_ubicacion": 1,
-    "estacion": 2,
-    "imagen": "",
-    "created_at": "2025-11-07T20:36:09Z",
-    "updated_at": "2025-11-07T20:36:09Z"
-  }
-},
-{
-  "model": "gestion_inventario.ubicacion",
-  "pk": 2,
-  "fields": {
-    "nombre": "Pañol",
-    "descripcion": null,
-    "direccion": null,
-    "tipo_ubicacion": 1,
-    "estacion": 2,
-    "imagen": "",
-    "created_at": "2025-11-07T20:36:09Z",
-    "updated_at": "2025-11-07T20:36:09Z"
-  }
-},
-{
-  "model": "gestion_inventario.ubicacion",
-  "pk": 3,
-  "fields": {
-    "nombre": "Bodega",
-    "descripcion": null,
-    "direccion": null,
-    "tipo_ubicacion": 1,
-    "estacion": 2,
-    "imagen": "",
-    "created_at": "2025-11-07T20:36:09Z",
-    "updated_at": "2025-11-07T20:36:09Z"
-  }
-},
-{
-  "model": "gestion_inventario.ubicacion",
-  "pk": 4,
-  "fields": {
-    "nombre": "Sala",
-    "descripcion": null,
-    "direccion": null,
-    "tipo_ubicacion": 1,
-    "estacion": 2,
-    "imagen": "",
-    "created_at": "2025-11-07T20:36:09Z",
-    "updated_at": "2025-11-07T20:36:09Z"
-  }
-},
-{
-  "model": "gestion_inventario.ubicacion",
-  "pk": 5,
-  "fields": {
-    "nombre": "Unidad B2",
-    "descripcion": null,
-    "direccion": null,
-    "tipo_ubicacion": 2,
-    "estacion": 2,
-    "imagen": "",
-    "created_at": "2025-11-07T20:36:09Z",
-    "updated_at": "2025-11-07T20:36:09Z"
-  }
-},
-{
-  "model": "gestion_inventario.ubicacion",
-  "pk": 6,
-  "fields": {
-    "nombre": "Unidad R2",
-    "descripcion": null,
-    "direccion": null,
-    "tipo_ubicacion": 2,
-    "estacion": 2,
-    "imagen": "",
-    "created_at": "2025-11-07T20:36:09Z",
-    "updated_at": "2025-11-07T20:36:09Z"
   }
 },
 {
@@ -3418,260 +3234,6 @@
   }
 },
 {
-  "model": "gestion_inventario.vehiculo",
-  "pk": 1,
-  "fields": {
-    "patente": null,
-    "marca": null,
-    "modelo": null,
-    "chasis": null,
-    "anho": null,
-    "tipo_vehiculo": 1,
-    "ubicacion": 5
-  }
-},
-{
-  "model": "gestion_inventario.vehiculo",
-  "pk": 2,
-  "fields": {
-    "patente": null,
-    "marca": null,
-    "modelo": null,
-    "chasis": null,
-    "anho": null,
-    "tipo_vehiculo": 4,
-    "ubicacion": 6
-  }
-},
-{
-  "model": "gestion_inventario.compartimento",
-  "pk": 1,
-  "fields": {
-    "nombre": "Repisa Blanca",
-    "descripcion": null,
-    "imagen": "",
-    "ubicacion": 1,
-    "created_at": "2025-11-07T20:36:09Z",
-    "updated_at": "2025-11-07T20:36:09Z"
-  }
-},
-{
-  "model": "gestion_inventario.compartimento",
-  "pk": 2,
-  "fields": {
-    "nombre": "Casillero 1",
-    "descripcion": null,
-    "imagen": "",
-    "ubicacion": 1,
-    "created_at": "2025-11-07T20:36:09Z",
-    "updated_at": "2025-11-07T20:36:09Z"
-  }
-},
-{
-  "model": "gestion_inventario.compartimento",
-  "pk": 3,
-  "fields": {
-    "nombre": "Caja N°5",
-    "descripcion": null,
-    "imagen": "",
-    "ubicacion": 1,
-    "created_at": "2025-11-07T20:36:09Z",
-    "updated_at": "2025-11-07T20:36:09Z"
-  }
-},
-{
-  "model": "gestion_inventario.compartimento",
-  "pk": 4,
-  "fields": {
-    "nombre": "Cabina",
-    "descripcion": null,
-    "imagen": "",
-    "ubicacion": 5,
-    "created_at": "2025-11-07T20:36:09Z",
-    "updated_at": "2025-11-07T20:36:09Z"
-  }
-},
-{
-  "model": "gestion_inventario.compartimento",
-  "pk": 5,
-  "fields": {
-    "nombre": "Gaveta 1",
-    "descripcion": null,
-    "imagen": "",
-    "ubicacion": 5,
-    "created_at": "2025-11-07T20:36:09Z",
-    "updated_at": "2025-11-07T20:36:09Z"
-  }
-},
-{
-  "model": "gestion_inventario.compartimento",
-  "pk": 6,
-  "fields": {
-    "nombre": "Gaveta 2",
-    "descripcion": null,
-    "imagen": "",
-    "ubicacion": 5,
-    "created_at": "2025-11-07T20:36:09Z",
-    "updated_at": "2025-11-07T20:36:09Z"
-  }
-},
-{
-  "model": "gestion_inventario.compartimento",
-  "pk": 7,
-  "fields": {
-    "nombre": "Gaveta 3",
-    "descripcion": null,
-    "imagen": "",
-    "ubicacion": 5,
-    "created_at": "2025-11-07T20:36:09Z",
-    "updated_at": "2025-11-07T20:36:09Z"
-  }
-},
-{
-  "model": "gestion_inventario.compartimento",
-  "pk": 8,
-  "fields": {
-    "nombre": "Gaveta 4",
-    "descripcion": null,
-    "imagen": "",
-    "ubicacion": 5,
-    "created_at": "2025-11-07T20:36:09Z",
-    "updated_at": "2025-11-07T20:36:09Z"
-  }
-},
-{
-  "model": "gestion_inventario.compartimento",
-  "pk": 9,
-  "fields": {
-    "nombre": "Gaveta 5",
-    "descripcion": null,
-    "imagen": "",
-    "ubicacion": 5,
-    "created_at": "2025-11-07T20:36:09Z",
-    "updated_at": "2025-11-07T20:36:09Z"
-  }
-},
-{
-  "model": "gestion_inventario.compartimento",
-  "pk": 10,
-  "fields": {
-    "nombre": "Gaveta 6",
-    "descripcion": null,
-    "imagen": "",
-    "ubicacion": 5,
-    "created_at": "2025-11-07T20:36:09Z",
-    "updated_at": "2025-11-07T20:36:09Z"
-  }
-},
-{
-  "model": "gestion_inventario.compartimento",
-  "pk": 11,
-  "fields": {
-    "nombre": "Techo",
-    "descripcion": null,
-    "imagen": "",
-    "ubicacion": 1,
-    "created_at": "2025-11-07T20:36:09Z",
-    "updated_at": "2025-11-07T20:36:09Z"
-  }
-},
-{
-  "model": "gestion_inventario.compartimento",
-  "pk": 12,
-  "fields": {
-    "nombre": "Cabina",
-    "descripcion": null,
-    "imagen": "",
-    "ubicacion": 6,
-    "created_at": "2025-11-07T20:36:09Z",
-    "updated_at": "2025-11-07T20:36:09Z"
-  }
-},
-{
-  "model": "gestion_inventario.compartimento",
-  "pk": 13,
-  "fields": {
-    "nombre": "Gaveta 1",
-    "descripcion": null,
-    "imagen": "",
-    "ubicacion": 6,
-    "created_at": "2025-11-07T20:36:09Z",
-    "updated_at": "2025-11-07T20:36:09Z"
-  }
-},
-{
-  "model": "gestion_inventario.compartimento",
-  "pk": 14,
-  "fields": {
-    "nombre": "Gaveta 2",
-    "descripcion": null,
-    "imagen": "",
-    "ubicacion": 6,
-    "created_at": "2025-11-07T20:36:09Z",
-    "updated_at": "2025-11-07T20:36:09Z"
-  }
-},
-{
-  "model": "gestion_inventario.compartimento",
-  "pk": 15,
-  "fields": {
-    "nombre": "Gaveta 3",
-    "descripcion": null,
-    "imagen": "",
-    "ubicacion": 6,
-    "created_at": "2025-11-07T20:36:09Z",
-    "updated_at": "2025-11-07T20:36:09Z"
-  }
-},
-{
-  "model": "gestion_inventario.compartimento",
-  "pk": 16,
-  "fields": {
-    "nombre": "Gaveta 4",
-    "descripcion": null,
-    "imagen": "",
-    "ubicacion": 6,
-    "created_at": "2025-11-07T20:36:09Z",
-    "updated_at": "2025-11-07T20:36:09Z"
-  }
-},
-{
-  "model": "gestion_inventario.compartimento",
-  "pk": 17,
-  "fields": {
-    "nombre": "Gaveta 5",
-    "descripcion": null,
-    "imagen": "",
-    "ubicacion": 6,
-    "created_at": "2025-11-07T20:36:09Z",
-    "updated_at": "2025-11-07T20:36:09Z"
-  }
-},
-{
-  "model": "gestion_inventario.compartimento",
-  "pk": 18,
-  "fields": {
-    "nombre": "Gaveta 6",
-    "descripcion": null,
-    "imagen": "",
-    "ubicacion": 6,
-    "created_at": "2025-11-07T20:36:09Z",
-    "updated_at": "2025-11-07T20:36:09Z"
-  }
-},
-{
-  "model": "gestion_inventario.compartimento",
-  "pk": 19,
-  "fields": {
-    "nombre": "Techo",
-    "descripcion": null,
-    "imagen": "",
-    "ubicacion": 6,
-    "created_at": "2025-11-07T20:36:09Z",
-    "updated_at": "2025-11-07T20:36:09Z"
-  }
-},
-{
   "model": "gestion_inventario.proveedor",
   "pk": 1,
   "fields": {
@@ -3679,7 +3241,7 @@
     "rut": "14567178-1",
     "giro_comercial": null,
     "contacto_principal": 1,
-    "estacion_creadora": 2
+    "estacion_creadora": null
   }
 },
 {
@@ -3690,7 +3252,7 @@
     "rut": "14987297-K",
     "giro_comercial": null,
     "contacto_principal": 2,
-    "estacion_creadora": 2
+    "estacion_creadora": null
   }
 },
 {
@@ -3701,7 +3263,7 @@
     "rut": "20668925-2",
     "giro_comercial": null,
     "contacto_principal": 3,
-    "estacion_creadora": 2
+    "estacion_creadora": null
   }
 },
 {
@@ -3712,7 +3274,7 @@
     "rut": "81816400-9",
     "giro_comercial": null,
     "contacto_principal": 4,
-    "estacion_creadora": 2
+    "estacion_creadora": null
   }
 },
 {
@@ -3886,430 +3448,6 @@
     "nombre": "Contenedores y Bolsos",
     "descripcion": "Elementos que almacenen insumos en su interior",
     "codigo": "CONT"
-  }
-},
-{
-  "model": "gestion_inventario.productoglobal",
-  "pk": 1,
-  "fields": {
-    "nombre_oficial": "Casco Estructural Heros-titan",
-    "descripcion_general": null,
-    "marca": 1,
-    "modelo": "Heros-titan",
-    "gtin": null,
-    "categoria": 1,
-    "vida_util_recomendada_anos": null,
-    "imagen": "",
-    "created_at": "2025-11-07T20:36:09Z",
-    "updated_at": "2025-11-07T20:36:09Z"
-  }
-},
-{
-  "model": "gestion_inventario.productoglobal",
-  "pk": 2,
-  "fields": {
-    "nombre_oficial": "Uniforme Estructural V-Force",
-    "descripcion_general": null,
-    "marca": 2,
-    "modelo": "V-Force",
-    "gtin": null,
-    "categoria": 1,
-    "vida_util_recomendada_anos": null,
-    "imagen": "",
-    "created_at": "2025-11-07T20:36:09Z",
-    "updated_at": "2025-11-07T20:36:09Z"
-  }
-},
-{
-  "model": "gestion_inventario.productoglobal",
-  "pk": 3,
-  "fields": {
-    "nombre_oficial": "Guantes Estructurales Fire-Dex",
-    "descripcion_general": null,
-    "marca": 3,
-    "modelo": "Fire-Dex",
-    "gtin": null,
-    "categoria": 1,
-    "vida_util_recomendada_anos": null,
-    "imagen": "",
-    "created_at": "2025-11-07T20:36:09Z",
-    "updated_at": "2025-11-07T20:36:09Z"
-  }
-},
-{
-  "model": "gestion_inventario.productoglobal",
-  "pk": 4,
-  "fields": {
-    "nombre_oficial": "Manguera de Incendio Hi-Combat II 45mm",
-    "descripcion_general": null,
-    "marca": 4,
-    "modelo": "Hi-Combat II",
-    "gtin": null,
-    "categoria": 3,
-    "vida_util_recomendada_anos": null,
-    "imagen": "",
-    "created_at": "2025-11-07T20:36:09Z",
-    "updated_at": "2025-11-07T20:36:09Z"
-  }
-},
-{
-  "model": "gestion_inventario.productoglobal",
-  "pk": 5,
-  "fields": {
-    "nombre_oficial": "Chaleco de Extricación K.E.D.",
-    "descripcion_general": null,
-    "marca": 5,
-    "modelo": "125 K.E.D.",
-    "gtin": null,
-    "categoria": 4,
-    "vida_util_recomendada_anos": null,
-    "imagen": "",
-    "created_at": "2025-11-07T20:36:09Z",
-    "updated_at": "2025-11-07T20:36:09Z"
-  }
-},
-{
-  "model": "gestion_inventario.productoglobal",
-  "pk": 6,
-  "fields": {
-    "nombre_oficial": "Ventilador Táctico a Batería",
-    "descripcion_general": null,
-    "marca": 6,
-    "modelo": "V18-BD",
-    "gtin": null,
-    "categoria": 8,
-    "vida_util_recomendada_anos": null,
-    "imagen": "",
-    "created_at": "2025-11-07T20:36:09Z",
-    "updated_at": "2025-11-07T20:36:09Z"
-  }
-},
-{
-  "model": "gestion_inventario.productoglobal",
-  "pk": 7,
-  "fields": {
-    "nombre_oficial": "Linterna de Ángulo Recto",
-    "descripcion_general": null,
-    "marca": 7,
-    "modelo": "L-3000",
-    "gtin": null,
-    "categoria": 7,
-    "vida_util_recomendada_anos": null,
-    "imagen": "",
-    "created_at": "2025-11-07T20:36:09Z",
-    "updated_at": "2025-11-07T20:36:09Z"
-  }
-},
-{
-  "model": "gestion_inventario.productoglobal",
-  "pk": 8,
-  "fields": {
-    "nombre_oficial": "Botiquín de Primeros Auxilios",
-    "descripcion_general": null,
-    "marca": 11,
-    "modelo": "Tipo A",
-    "gtin": null,
-    "categoria": 4,
-    "vida_util_recomendada_anos": null,
-    "imagen": "",
-    "created_at": "2025-11-07T20:36:09Z",
-    "updated_at": "2025-11-07T20:36:09Z"
-  }
-},
-{
-  "model": "gestion_inventario.productoglobal",
-  "pk": 9,
-  "fields": {
-    "nombre_oficial": "Bolso de Rescate Táctico",
-    "descripcion_general": null,
-    "marca": null,
-    "modelo": "Táctico Grande",
-    "gtin": null,
-    "categoria": 13,
-    "vida_util_recomendada_anos": null,
-    "imagen": "",
-    "created_at": "2025-11-07T20:36:09Z",
-    "updated_at": "2025-11-07T20:36:09Z"
-  }
-},
-{
-  "model": "gestion_inventario.productoglobal",
-  "pk": 10,
-  "fields": {
-    "nombre_oficial": "Equipo de Respiración Autónoma (ERA)",
-    "descripcion_general": null,
-    "marca": 8,
-    "modelo": "G1",
-    "gtin": null,
-    "categoria": 5,
-    "vida_util_recomendada_anos": null,
-    "imagen": "",
-    "created_at": "2025-11-07T20:36:09Z",
-    "updated_at": "2025-11-07T20:36:09Z"
-  }
-},
-{
-  "model": "gestion_inventario.productoglobal",
-  "pk": 11,
-  "fields": {
-    "nombre_oficial": "Herramienta de Corte Hidráulica (Quijada)",
-    "descripcion_general": null,
-    "marca": 9,
-    "modelo": "Serie Pentheon",
-    "gtin": null,
-    "categoria": 4,
-    "vida_util_recomendada_anos": null,
-    "imagen": "",
-    "created_at": "2025-11-07T20:36:09Z",
-    "updated_at": "2025-11-07T20:36:09Z"
-  }
-},
-{
-  "model": "gestion_inventario.productoglobal",
-  "pk": 12,
-  "fields": {
-    "nombre_oficial": "Casco de Rescate Técnico F2 X-TREM",
-    "descripcion_general": null,
-    "marca": 8,
-    "modelo": "F2 X-TREM",
-    "gtin": null,
-    "categoria": 1,
-    "vida_util_recomendada_anos": null,
-    "imagen": "",
-    "created_at": "2025-11-07T20:36:09Z",
-    "updated_at": "2025-11-07T20:36:09Z"
-  }
-},
-{
-  "model": "gestion_inventario.productoglobal",
-  "pk": 13,
-  "fields": {
-    "nombre_oficial": "Linterna de Escena Vulcan 180",
-    "descripcion_general": null,
-    "marca": 10,
-    "modelo": "Vulcan 180",
-    "gtin": null,
-    "categoria": 7,
-    "vida_util_recomendada_anos": null,
-    "imagen": "",
-    "created_at": "2025-11-07T20:36:09Z",
-    "updated_at": "2025-11-07T20:36:09Z"
-  }
-},
-{
-  "model": "gestion_inventario.producto",
-  "pk": 1,
-  "fields": {
-    "producto_global": 1,
-    "sku": null,
-    "es_serializado": true,
-    "proveedor_preferido": null,
-    "costo_compra": null,
-    "estacion": 2,
-    "es_expirable": false,
-    "created_at": "2025-11-07T20:36:09Z",
-    "updated_at": "2025-11-07T20:36:09Z"
-  }
-},
-{
-  "model": "gestion_inventario.producto",
-  "pk": 2,
-  "fields": {
-    "producto_global": 2,
-    "sku": null,
-    "es_serializado": true,
-    "proveedor_preferido": null,
-    "costo_compra": null,
-    "estacion": 2,
-    "es_expirable": false,
-    "created_at": "2025-11-07T20:36:09Z",
-    "updated_at": "2025-11-07T20:36:09Z"
-  }
-},
-{
-  "model": "gestion_inventario.producto",
-  "pk": 3,
-  "fields": {
-    "producto_global": 3,
-    "sku": null,
-    "es_serializado": false,
-    "proveedor_preferido": null,
-    "costo_compra": null,
-    "estacion": 2,
-    "es_expirable": false,
-    "created_at": "2025-11-07T20:36:09Z",
-    "updated_at": "2025-11-07T20:36:09Z"
-  }
-},
-{
-  "model": "gestion_inventario.producto",
-  "pk": 4,
-  "fields": {
-    "producto_global": 4,
-    "sku": null,
-    "es_serializado": true,
-    "proveedor_preferido": null,
-    "costo_compra": null,
-    "estacion": 2,
-    "es_expirable": false,
-    "created_at": "2025-11-07T20:36:09Z",
-    "updated_at": "2025-11-07T20:36:09Z"
-  }
-},
-{
-  "model": "gestion_inventario.producto",
-  "pk": 5,
-  "fields": {
-    "producto_global": 5,
-    "sku": null,
-    "es_serializado": true,
-    "proveedor_preferido": null,
-    "costo_compra": null,
-    "estacion": 2,
-    "es_expirable": false,
-    "created_at": "2025-11-07T20:36:09Z",
-    "updated_at": "2025-11-07T20:36:09Z"
-  }
-},
-{
-  "model": "gestion_inventario.producto",
-  "pk": 6,
-  "fields": {
-    "producto_global": 9,
-    "sku": null,
-    "es_serializado": false,
-    "proveedor_preferido": null,
-    "costo_compra": null,
-    "estacion": 2,
-    "es_expirable": true,
-    "created_at": "2025-11-07T20:36:09Z",
-    "updated_at": "2025-11-07T20:36:09Z"
-  }
-},
-{
-  "model": "gestion_inventario.activo",
-  "pk": 1,
-  "fields": {
-    "producto": 1,
-    "codigo_activo": "CASCO-EST-001",
-    "estacion": 2,
-    "numero_serie_fabricante": "HS-847291-A",
-    "horas_uso_totales": 0.00,
-    "notas_adicionales": null,
-    "estado": 1,
-    "compartimento": 2,
-    "proveedor": 1,
-    "asignado_a": null,
-    "fecha_fabricacion": "2022-01-15",
-    "fecha_recepcion": "2022-03-01",
-    "fecha_expiracion": null,
-    "created_at": "2025-11-07T20:36:09Z",
-    "updated_at": "2025-11-07T20:36:09Z"
-  }
-},
-{
-  "model": "gestion_inventario.activo",
-  "pk": 2,
-  "fields": {
-    "producto": 2,
-    "codigo_activo": "UNIF-EST-001",
-    "estacion": 2,
-    "numero_serie_fabricante": "LION-X-99120",
-    "horas_uso_totales": 0.00,
-    "notas_adicionales": null,
-    "estado": 1,
-    "compartimento": 2,
-    "proveedor": 2,
-    "asignado_a": null,
-    "fecha_fabricacion": "2023-05-20",
-    "fecha_recepcion": "2023-06-01",
-    "fecha_expiracion": null,
-    "created_at": "2025-11-07T20:36:09Z",
-    "updated_at": "2025-11-07T20:36:09Z"
-  }
-},
-{
-  "model": "gestion_inventario.activo",
-  "pk": 3,
-  "fields": {
-    "producto": 4,
-    "codigo_activo": "MANG-45-001",
-    "estacion": 2,
-    "numero_serie_fabricante": "GH-45-2021-098",
-    "horas_uso_totales": 0.00,
-    "notas_adicionales": null,
-    "estado": 1,
-    "compartimento": 5,
-    "proveedor": 3,
-    "asignado_a": null,
-    "fecha_fabricacion": "2021-11-01",
-    "fecha_recepcion": "2022-01-10",
-    "fecha_expiracion": null,
-    "created_at": "2025-11-07T20:36:10Z",
-    "updated_at": "2025-11-07T20:36:10Z"
-  }
-},
-{
-  "model": "gestion_inventario.activo",
-  "pk": 4,
-  "fields": {
-    "producto": 4,
-    "codigo_activo": "MANG-45-002",
-    "estacion": 2,
-    "numero_serie_fabricante": "GH-45-2021-099",
-    "horas_uso_totales": 0.00,
-    "notas_adicionales": null,
-    "estado": 1,
-    "compartimento": 5,
-    "proveedor": 3,
-    "asignado_a": null,
-    "fecha_fabricacion": "2021-11-01",
-    "fecha_recepcion": "2022-01-10",
-    "fecha_expiracion": null,
-    "created_at": "2025-11-07T20:36:10Z",
-    "updated_at": "2025-11-07T20:36:10Z"
-  }
-},
-{
-  "model": "gestion_inventario.activo",
-  "pk": 5,
-  "fields": {
-    "producto": 5,
-    "codigo_activo": "MANG-75-001",
-    "estacion": 2,
-    "numero_serie_fabricante": "GH-75-2022-150",
-    "horas_uso_totales": 0.00,
-    "notas_adicionales": null,
-    "estado": 1,
-    "compartimento": 6,
-    "proveedor": 3,
-    "asignado_a": null,
-    "fecha_fabricacion": "2022-08-10",
-    "fecha_recepcion": "2022-09-01",
-    "fecha_expiracion": null,
-    "created_at": "2025-11-07T20:36:10Z",
-    "updated_at": "2025-11-07T20:36:10Z"
-  }
-},
-{
-  "model": "gestion_inventario.activo",
-  "pk": 6,
-  "fields": {
-    "producto": 6,
-    "codigo_activo": "CHALECO-EXT-001",
-    "estacion": 2,
-    "numero_serie_fabricante": "KED-00129-US",
-    "horas_uso_totales": 0.00,
-    "notas_adicionales": null,
-    "estado": 1,
-    "compartimento": 7,
-    "proveedor": 2,
-    "asignado_a": null,
-    "fecha_fabricacion": "2020-02-25",
-    "fecha_recepcion": "2020-04-01",
-    "fecha_expiracion": null,
-    "created_at": "2025-11-07T20:36:10Z",
-    "updated_at": "2025-11-07T20:36:10Z"
   }
 }
 ]

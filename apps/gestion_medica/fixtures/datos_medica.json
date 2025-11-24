@@ -152,53 +152,5 @@
   "fields": {
     "nombre": "O-"
   }
-},
-{
-  "model": "gestion_medica.fichamedica",
-  "pk": 1,
-  "fields": {
-    "voluntario": 1,
-    "peso_kg": null,
-    "altura_mts": null,
-    "presion_arterial_sistolica": null,
-    "presion_arterial_diastolica": null,
-    "grupo_sanguineo": null,
-    "sistema_salud": null,
-    "observaciones_generales": null,
-    "fecha_creacion": "2025-11-18T18:55:06.635Z",
-    "fecha_modificacion": "2025-11-18T18:55:06.635Z"
-  }
-},
-{
-  "model": "gestion_medica.fichamedica",
-  "pk": 2,
-  "fields": {
-    "voluntario": 2,
-    "peso_kg": null,
-    "altura_mts": null,
-    "presion_arterial_sistolica": null,
-    "presion_arterial_diastolica": null,
-    "grupo_sanguineo": null,
-    "sistema_salud": null,
-    "observaciones_generales": null,
-    "fecha_creacion": "2025-11-18T18:55:06.639Z",
-    "fecha_modificacion": "2025-11-18T18:55:06.639Z"
-  }
-},
-{
-  "model": "gestion_medica.fichamedica",
-  "pk": 3,
-  "fields": {
-    "voluntario": 3,
-    "peso_kg": null,
-    "altura_mts": null,
-    "presion_arterial_sistolica": null,
-    "presion_arterial_diastolica": null,
-    "grupo_sanguineo": null,
-    "sistema_salud": null,
-    "observaciones_generales": null,
-    "fecha_creacion": "2025-11-18T18:55:06.641Z",
-    "fecha_modificacion": "2025-11-18T18:55:06.641Z"
-  }
 }
 ]

@@ -2492,11 +2492,11 @@
     "nombre": "Medalla Conmemorativa (Evento Específico)"
   }
 },
+
 {
   "model": "gestion_voluntarios.voluntario",
-  "pk": 1,
+  "pk": "78a43959-62d1-4797-a4d5-4c8640efbc27",
   "fields": {
-    "usuario": 1,
     "nacionalidad": null,
     "profesion": null,
     "lugar_nacimiento": null,
@@ -2508,14 +2508,16 @@
     "domicilio_numero": null,
     "fecha_primer_ingreso": null,
     "numero_registro_bomberil": null,
-    "fecha_creacion": "2025-11-09T23:47:40.627Z"
+    "imagen": "",
+    "imagen_thumb_medium": "",
+    "imagen_thumb_small": "",
+    "fecha_creacion": "2025-11-23T20:10:58.285Z"
   }
 },
 {
   "model": "gestion_voluntarios.voluntario",
-  "pk": 2,
+  "pk": "40d06476-db5d-4b32-9b17-2628077f8557",
   "fields": {
-    "usuario": 2,
     "nacionalidad": null,
     "profesion": null,
     "lugar_nacimiento": null,
@@ -2527,270 +2529,10 @@
     "domicilio_numero": null,
     "fecha_primer_ingreso": null,
     "numero_registro_bomberil": null,
-    "fecha_creacion": "2025-11-09T23:47:40.644Z"
-  }
-},
-{
-  "model": "gestion_voluntarios.voluntario",
-  "pk": 3,
-  "fields": {
-    "usuario": 3,
-    "nacionalidad": null,
-    "profesion": null,
-    "lugar_nacimiento": null,
-    "fecha_nacimiento": null,
-    "genero": null,
-    "estado_civil": null,
-    "domicilio_comuna": null,
-    "domicilio_calle": null,
-    "domicilio_numero": null,
-    "fecha_primer_ingreso": null,
-    "numero_registro_bomberil": null,
-    "fecha_creacion": "2025-11-09T23:47:40.651Z"
-  }
-},
-{
-  "model": "gestion_voluntarios.historialpertenencia",
-  "pk": 1,
-  "fields": {
-    "voluntario": 1,
-    "estacion": 2,
-    "estacion_registra": 2,
-    "es_historico": false,
-    "tipo_evento": "ingreso",
-    "fecha_evento": "2010-02-01",
-    "descripcion_adicional": "Ingreso a la Segunda Compañía"
-  }
-},
-{
-  "model": "gestion_voluntarios.historialpertenencia",
-  "pk": 2,
-  "fields": {
-    "voluntario": 2,
-    "estacion": 2,
-    "estacion_registra": 2,
-    "es_historico": false,
-    "tipo_evento": "ingreso",
-    "fecha_evento": "2012-07-30",
-    "descripcion_adicional": "Ingreso a la Segunda Compañía"
-  }
-},
-{
-  "model": "gestion_voluntarios.historialpertenencia",
-  "pk": 3,
-  "fields": {
-    "voluntario": 2,
-    "estacion": 2,
-    "estacion_registra": 2,
-    "es_historico": false,
-    "tipo_evento": "renuncia",
-    "fecha_evento": "2015-05-20",
-    "descripcion_adicional": "Renuncia por motivos personales"
-  }
-},
-{
-  "model": "gestion_voluntarios.historialpertenencia",
-  "pk": 4,
-  "fields": {
-    "voluntario": 3,
-    "estacion": 2,
-    "estacion_registra": 2,
-    "es_historico": false,
-    "tipo_evento": "ingreso",
-    "fecha_evento": "2018-03-12",
-    "descripcion_adicional": "Ingreso a la Segunda Compañía"
-  }
-},
-{
-  "model": "gestion_voluntarios.historialcargo",
-  "pk": 1,
-  "fields": {
-    "voluntario": 1,
-    "cargo": 1,
-    "estacion_registra": 2,
-    "ambito": "Compañía",
-    "es_historico": false,
-    "fecha_inicio": "2010-02-01",
-    "fecha_fin": "2019-12-31"
-  }
-},
-{
-  "model": "gestion_voluntarios.historialcargo",
-  "pk": 2,
-  "fields": {
-    "voluntario": 1,
-    "cargo": 9,
-    "estacion_registra": 2,
-    "ambito": "Compañía",
-    "es_historico": false,
-    "fecha_inicio": "2020-01-01",
-    "fecha_fin": null
-  }
-},
-{
-  "model": "gestion_voluntarios.historialcargo",
-  "pk": 3,
-  "fields": {
-    "voluntario": 2,
-    "cargo": 1,
-    "estacion_registra": 2,
-    "ambito": "Compañía",
-    "es_historico": false,
-    "fecha_inicio": "2012-07-30",
-    "fecha_fin": "2018-12-31"
-  }
-},
-{
-  "model": "gestion_voluntarios.historialcargo",
-  "pk": 4,
-  "fields": {
-    "voluntario": 2,
-    "cargo": 16,
-    "estacion_registra": 2,
-    "ambito": "Compañía",
-    "es_historico": false,
-    "fecha_inicio": "2019-01-01",
-    "fecha_fin": null
-  }
-},
-{
-  "model": "gestion_voluntarios.historialcargo",
-  "pk": 5,
-  "fields": {
-    "voluntario": 3,
-    "cargo": 1,
-    "estacion_registra": 2,
-    "ambito": "Compañía",
-    "es_historico": false,
-    "fecha_inicio": "2018-03-12",
-    "fecha_fin": null
-  }
-},
-{
-  "model": "gestion_voluntarios.historialreconocimiento",
-  "pk": 1,
-  "fields": {
-    "voluntario": 1,
-    "tipo_reconocimiento": 2,
-    "descripcion_personalizada": null,
-    "fecha_evento": "2020-02-01",
-    "estacion_registra": 2,
-    "ambito": "Cuerpo de Bomberos",
-    "es_historico": false
-  }
-},
-{
-  "model": "gestion_voluntarios.historialreconocimiento",
-  "pk": 2,
-  "fields": {
-    "voluntario": 1,
-    "tipo_reconocimiento": 16,
-    "descripcion_personalizada": "Por desempeño destacado en Incendio \"El Peral\"",
-    "fecha_evento": "2021-06-20",
-    "estacion_registra": 2,
-    "ambito": "Compañía",
-    "es_historico": false
-  }
-},
-{
-  "model": "gestion_voluntarios.historialreconocimiento",
-  "pk": 3,
-  "fields": {
-    "voluntario": 2,
-    "tipo_reconocimiento": 2,
-    "descripcion_personalizada": null,
-    "fecha_evento": "2022-07-30",
-    "estacion_registra": 2,
-    "ambito": "Cuerpo de Bomberos",
-    "es_historico": false
-  }
-},
-{
-  "model": "gestion_voluntarios.historialreconocimiento",
-  "pk": 4,
-  "fields": {
-    "voluntario": 3,
-    "tipo_reconocimiento": 1,
-    "descripcion_personalizada": null,
-    "fecha_evento": "2023-03-12",
-    "estacion_registra": 2,
-    "ambito": "Cuerpo de Bomberos",
-    "es_historico": false
-  }
-},
-{
-  "model": "gestion_voluntarios.historialsancion",
-  "pk": 1,
-  "fields": {
-    "voluntario": 3,
-    "tipo_sancion": "amonestacion_verbal",
-    "descripcion": "Amonestación verbal por atraso a formación.",
-    "documento_adjunto": "",
-    "fecha_evento": "2019-05-10",
-    "fecha_inicio_suspension": null,
-    "fecha_fin_suspension": null,
-    "estacion_registra": 2,
-    "estacion_evento": 2,
-    "es_historico": false
-  }
-},
-{
-  "model": "gestion_voluntarios.historialcurso",
-  "pk": 1,
-  "fields": {
-    "voluntario": 1,
-    "nombre_curso": "Curso Básico de Bomberos",
-    "institucion": "ANB",
-    "fecha_curso": "2010-04-15",
-    "estacion_registra": 2,
-    "es_historico": false
-  }
-},
-{
-  "model": "gestion_voluntarios.historialcurso",
-  "pk": 2,
-  "fields": {
-    "voluntario": 1,
-    "nombre_curso": "Rescate Vehicular Nivel I",
-    "institucion": "ANB",
-    "fecha_curso": "2013-11-01",
-    "estacion_registra": 2,
-    "es_historico": false
-  }
-},
-{
-  "model": "gestion_voluntarios.historialcurso",
-  "pk": 3,
-  "fields": {
-    "voluntario": 2,
-    "nombre_curso": "Curso Básico de Bomberos",
-    "institucion": "ANB",
-    "fecha_curso": "2012-09-20",
-    "estacion_registra": 2,
-    "es_historico": false
-  }
-},
-{
-  "model": "gestion_voluntarios.historialcurso",
-  "pk": 4,
-  "fields": {
-    "voluntario": 3,
-    "nombre_curso": "Curso Básico de Bomberos",
-    "institucion": "ANB",
-    "fecha_curso": "2018-05-30",
-    "estacion_registra": 2,
-    "es_historico": false
-  }
-},
-{
-  "model": "gestion_voluntarios.anotacionhojavida",
-  "pk": 1,
-  "fields": {
-    "voluntario": 2,
-    "descripcion": "Lideró la campaña de recolección de fondos \"Rifa Anual 2020\"",
-    "fecha_evento": "2020-12-01",
-    "estacion_registra": 2,
-    "es_historico": false
+    "imagen": "",
+    "imagen_thumb_medium": "",
+    "imagen_thumb_small": "",
+    "fecha_creacion": "2025-11-23T20:12:21.465Z"
   }
 }
 ]
