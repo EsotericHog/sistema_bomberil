@@ -70,7 +70,7 @@
                                 <i class="fas fa-save me-2"></i> GUARDAR CAMBIOS
                             </button>
                             
-                            <a href="{% url 'gestion_medica:ruta_enfermedad_paciente' pk=ficha.id %}" class="btn btn-light btn-lg rounded-pill border text-muted fw-bold py-3">
+                            <a href="{% url 'gestion_medica:ruta_enfermedad_paciente' pk=ficha.voluntario.usuario.id %}" class="btn btn-light btn-lg rounded-pill border text-muted fw-bold py-3">
                                 CANCELAR Y VOLVER
                             </a>
                         </div>

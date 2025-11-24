@@ -41,13 +41,13 @@
                     </div>
                 </div>
                 <div class="profile-actions">
-                    <a href="{% url 'gestion_medica:ruta_modificar_paciente' ficha.pk %}" class="btn btn-primary rounded-pill fw-bold py-2">
+                    <a href="{% url 'gestion_medica:ruta_modificar_paciente' ficha.voluntario.usuario.id %}" class="btn btn-primary rounded-pill fw-bold py-2">
                         <i class="fas fa-pen me-2"></i> Editar Ficha
                     </a>
-                    <a href="{% url 'gestion_medica:ruta_imprimir_ficha' ficha.pk %}" class="btn btn-outline-secondary rounded-pill fw-bold py-2" target="_blank">
+                    <a href="{% url 'gestion_medica:ruta_imprimir_ficha' ficha.voluntario.usuario.id %}" class="btn btn-outline-secondary rounded-pill fw-bold py-2" target="_blank">
                         <i class="fas fa-file-pdf me-2"></i> Generar PDF
                     </a>
-                    <a href="{% url 'gestion_medica:ruta_imprimir_qr' ficha.pk %}" class="btn-hero btn-secondary-hero" target="_blank">
+                    <a href="{% url 'gestion_medica:ruta_imprimir_qr' ficha.voluntario.usuario.id %}" class="btn-hero btn-secondary-hero" target="_blank">
                         <i class="fas fa-qrcode"></i> Ver QR
                     </a>
                 </div>
@@ -87,7 +87,7 @@
                             <h3 class="section-title">
                                 <i class="fas fa-exclamation-circle"></i> Alergias
                             </h3>
-                            <a href="{% url 'gestion_medica:ruta_alergias_paciente' ficha.pk %}" class="btn-soft-add"><i class="fas fa-plus"></i></a>
+                            <a href="{% url 'gestion_medica:ruta_alergias_paciente' ficha.voluntario.usuario.id %}" class="btn-soft-add"><i class="fas fa-plus"></i></a>
                         </div>
                         <ul class="modern-list">
                             {% for item in alergias %}
@@ -111,7 +111,7 @@
                             <h3 class="section-title">
                                 <i class="fas fa-notes-medical"></i> Enfermedades
                             </h3>
-                            <a href="{% url 'gestion_medica:ruta_enfermedad_paciente' ficha.pk %}" class="btn-soft-add"><i class="fas fa-plus"></i></a>
+                            <a href="{% url 'gestion_medica:ruta_enfermedad_paciente' ficha.voluntario.usuario.id %}" class="btn-soft-add"><i class="fas fa-plus"></i></a>
                         </div>
                         <ul class="modern-list">
                             {% for item in enfermedades %}
@@ -159,7 +159,7 @@
                             <h3 class="section-title">
                                 <i class="fas fa-phone-alt"></i> Emergencia
                             </h3>
-                            <a href="{% url 'gestion_medica:ruta_contacto_emergencia' ficha.pk %}" class="btn-soft-add"><i class="fas fa-plus"></i></a>
+                            <a href="{% url 'gestion_medica:ruta_contacto_emergencia' ficha.voluntario.usuario.id %}" class="btn-soft-add"><i class="fas fa-plus"></i></a>
                         </div>
                         <ul class="modern-list">
                             {% for contacto in contactos %}

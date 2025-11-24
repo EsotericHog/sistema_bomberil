@@ -21,7 +21,7 @@
                     </h1>
                 </div>
                 <div class="col-md-4 text-md-end mt-3 mt-md-0">
-                    <a href="{% url 'gestion_medica:ruta_informacion_paciente' pk=ficha.id %}" class="btn btn-light text-success fw-bold shadow-sm rounded-pill px-4">
+                    <a href="{% url 'gestion_medica:ruta_informacion_paciente' pk=ficha.voluntario.usuario.id %}" class="btn btn-light text-success fw-bold shadow-sm rounded-pill px-4">
                         <i class="fas fa-arrow-left me-2"></i> Volver a Ficha
                     </a>
                 </div>
@@ -120,12 +120,12 @@
 
                                         <td class="pe-4 text-end">
                                             <div class="btn-group shadow-sm rounded-3" role="group">
-                                                <a href="{% url 'gestion_medica:ruta_editar_contacto' pk=ficha.id contacto_id=contacto.id %}" 
+                                                <a href="{% url 'gestion_medica:ruta_editar_contacto' pk=ficha.voluntario.usuario.id contacto_id=contacto.id %}" 
                                                    class="btn btn-white btn-sm text-primary border-end" 
                                                    data-bs-toggle="tooltip" title="Editar">
                                                     <i class="fas fa-pen"></i>
                                                 </a>
-                                                <form action="{% url 'gestion_medica:ruta_eliminar_contacto' pk=ficha.id contacto_id=contacto.id %}" method="POST" class="d-inline" onsubmit="return confirm('¿Eliminar a {{ contacto.nombre_completo }}?');">
+                                                <form action="{% url 'gestion_medica:ruta_eliminar_contacto' pk=ficha.voluntario.usuario.id contacto_id=contacto.id %}" method="POST" class="d-inline" onsubmit="return confirm('¿Eliminar a {{ contacto.nombre_completo }}?');">
                                                     {% csrf_token %}
                                                     <button type="submit" class="btn btn-white btn-sm text-danger" title="Eliminar">
                                                         <i class="fas fa-trash-alt"></i>
