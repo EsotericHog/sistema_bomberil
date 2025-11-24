@@ -11,7 +11,7 @@
     <div class="col-lg-6 col-md-8">
         <div class="card shadow border-danger">
             <div class="card-header bg-danger text-white py-3">
-                <h5 class="mb-0 fw-bold"><i class="fas fa-trash-alt me-2"></i>Eliminar Rol Global</h5>
+                <h5 class="mb-0 font-bold text-md"><i class="fas fa-trash-alt me-2"></i>Eliminar Rol Global</h5>
             </div>
             <div class="card-body text-center p-5">
                 
@@ -19,30 +19,30 @@
                     <i class="fas fa-user-tag fa-5x"></i>
                 </div>
 
-                <h4 class="fw-bold text-dark mb-3">¿Eliminar "{{ object.nombre }}"?</h4>
+                <h4 class="font-bold text-dark mb-3 text-xl">¿Eliminar "{{ object.nombre }}"?</h4>
 
                 {% if conteo_uso > 0 %}
                     <div class="alert alert-danger text-start d-inline-block mb-4">
-                        <h6 class="fw-bold"><i class="fas fa-ban me-2"></i>Acción No Permitida</h6>
-                        <p class="mb-0 small">
-                            Este rol está asignado en <strong>{{ conteo_uso }}</strong> membresía(s) (activas o históricas).
+                        <h6 class="font-bold text-base"><i class="fas fa-ban me-2"></i>Acción No Permitida</h6>
+                        <p class="mb-0 text-sm">
+                            Este rol está asignado en <strong class="font-bold">{{ conteo_uso }}</strong> membresía(s) (activas o históricas).
                             <br><br>
                             Por reglas de integridad de datos y preservación de hoja de vida, 
-                            <strong>no se puede eliminar</strong>.
+                            <strong class="font-bold">no se puede eliminar</strong>.
                         </p>
                     </div>
                     
                     <div class="d-grid gap-2 d-sm-flex justify-content-sm-center">
-                        <a href="{% url 'core_admin:ruta_lista_roles' %}" class="btn btn-secondary px-4">
+                        <a href="{% url 'core_admin:ruta_lista_roles' %}" class="btn btn-secondary px-4 font-bold text-sm">
                             <i class="fas fa-arrow-left me-2"></i>Volver al Listado
                         </a>
                     </div>
 
                 {% else %}
-                    <p class="text-muted mb-4">
+                    <p class="text-muted mb-4 text-sm">
                         Esta acción eliminará permanentemente el rol y su configuración de permisos.
                         <br>
-                        <span class="badge bg-success bg-opacity-10 text-success mt-2">
+                        <span class="badge bg-success bg-opacity-10 text-success mt-2 text-xs font-medium">
                             <i class="fas fa-check-circle me-1"></i> El rol no tiene uso registrado. Es seguro eliminarlo.
                         </span>
                     </p>
@@ -50,10 +50,10 @@
                     <form method="post">
                         {% csrf_token %}
                         <div class="d-grid gap-2 d-sm-flex justify-content-sm-center">
-                            <a href="{% url 'core_admin:ruta_lista_roles' %}" class="btn btn-outline-secondary px-4">
+                            <a href="{% url 'core_admin:ruta_lista_roles' %}" class="btn btn-outline-secondary px-4 font-bold text-sm">
                                 Cancelar
                             </a>
-                            <button type="submit" class="btn btn-danger px-4">
+                            <button type="submit" class="btn btn-danger px-4 font-bold text-sm">
                                 <i class="fas fa-trash me-2"></i>Confirmar Eliminación
                             </button>
                         </div>

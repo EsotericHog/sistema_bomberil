@@ -98,8 +98,8 @@
                 <div class="col">
                     <div class="card h-100 shadow-sm product-card">
                         
-                        {% if producto.imagen %}
-                            <img src="{{ producto.imagen.url }}" class="card-img-top" alt="{{ producto.nombre_oficial }}">
+                        {% if producto.imagen_thumb_medium %}
+                            <img src="{{ producto.imagen_thumb_medium.url }}" class="card-img-top" alt="{{ producto.nombre_oficial }}">
                         {% else %}
                             <div class="card-img-top-placeholder d-flex align-items-center justify-content-center bg-light text-muted">
                                 <i class="fas fa-image fa-3x"></i>
@@ -318,11 +318,16 @@
 
 <style>
     .product-card .card-img-top {
-        height: 200px;
-        object-fit: cover;
+        height: 200px;           /* Mantiene la altura fija para uniformidad */
+        width: 100%;             /* Asegura que use el ancho disponible */
+        object-fit: contain;     /* <--- EL CAMBIO CLAVE: Muestra la imagen entera */
+        padding: 10px;           /* Añade "aire" para que el producto no toque los bordes */
+        background-color: #fff;  /* Fondo blanco por si la imagen es PNG transparente */
     }
+    
     .product-card .card-img-top-placeholder {
         height: 200px;
+        background-color: #f8f9fa; /* Un gris muy suave para cuando no hay imagen */
     }
 </style>
 {% endblock %}

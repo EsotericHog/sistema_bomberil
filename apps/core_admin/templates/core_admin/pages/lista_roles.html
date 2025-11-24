@@ -8,12 +8,13 @@
 <div class="container-fluid mt-4">
 
     <div class="row mb-4">
+        <!-- KPI: Roles Definidos -->
         <div class="col-md-6">
             <div class="card border-0 shadow-sm border-start border-4 border-primary">
                 <div class="card-body d-flex justify-content-between align-items-center">
                     <div>
-                        <h6 class="text-muted small text-uppercase fw-bold">Roles Definidos</h6>
-                        <h3 class="mb-0 fw-bold">{{ kpi_total }}</h3>
+                        <h6 class="text-muted text-uppercase text-xs font-bold">Roles Definidos</h6>
+                        <h3 class="mb-0 font-bold text-xl">{{ kpi_total }}</h3>
                     </div>
                     <div class="icon-shape bg-primary bg-opacity-10 text-primary rounded-circle p-3">
                         <i class="fas fa-user-tag fa-lg"></i>
@@ -21,12 +22,13 @@
                 </div>
             </div>
         </div>
+        <!-- KPI: Rol Más Asignado -->
         <div class="col-md-6">
             <div class="card border-0 shadow-sm border-start border-4 border-info">
                 <div class="card-body d-flex justify-content-between align-items-center">
                     <div>
-                        <h6 class="text-muted small text-uppercase fw-bold">Rol Más Asignado</h6>
-                        <h3 class="mb-0 fw-bold text-truncate" style="max-width: 200px;">{{ kpi_popular }}</h3>
+                        <h6 class="text-muted text-uppercase text-xs font-bold">Rol Más Asignado</h6>
+                        <h3 class="mb-0 font-bold text-truncate text-xl" style="max-width: 200px;">{{ kpi_popular }}</h3>
                     </div>
                     <div class="icon-shape bg-info bg-opacity-10 text-info rounded-circle p-3">
                         <i class="fas fa-users fa-lg"></i>
@@ -38,10 +40,10 @@
 
     <div class="card shadow-sm border-0">
         <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
-            <h5 class="mb-0 fw-bold text-secondary">Listado Maestro</h5>
+            <h5 class="mb-0 font-bold text-secondary text-lg">Listado Maestro</h5>
             
             {# Placeholder para Crear Rol #}
-            <a href="{% url 'core_admin:ruta_crear_rol' %}" class="btn btn-success">
+            <a href="{% url 'core_admin:ruta_crear_rol' %}" class="btn btn-success font-bold text-sm">
                 <i class="fas fa-plus-circle me-2"></i>Nuevo Rol Global
             </a>
         </div>
@@ -49,41 +51,41 @@
             <table class="table table-hover align-middle mb-0">
                 <thead class="bg-light">
                     <tr>
-                        <th class="ps-4">Nombre del Rol</th>
-                        <th>Descripción</th>
-                        <th class="text-center">Permisos</th>
-                        <th class="text-center">Usuarios (Impacto)</th>
-                        <th class="text-end pe-4">Acciones</th>
+                        <th class="ps-4 text-sm font-bold">Nombre del Rol</th>
+                        <th class="text-sm font-bold">Descripción</th>
+                        <th class="text-center text-sm font-bold">Permisos</th>
+                        <th class="text-center text-sm font-bold">Usuarios (Impacto)</th>
+                        <th class="text-end pe-4 text-sm font-bold">Acciones</th>
                     </tr>
                 </thead>
                 <tbody>
                     {% for rol in roles %}
                     <tr>
                         <td class="ps-4">
-                            <span class="fw-bold text-primary">{{ rol.nombre }}</span>
+                            <span class="font-bold text-primary text-base">{{ rol.nombre }}</span>
                         </td>
                         
                         <td>
                             {% if rol.descripcion %}
-                                <small class="text-muted">{{ rol.descripcion|truncatechars:60 }}</small>
+                                <div class="text-muted text-xs">{{ rol.descripcion|truncatechars:60 }}</div>
                             {% else %}
-                                <small class="text-muted fst-italic">Sin descripción</small>
+                                <div class="text-muted fst-italic text-xs">Sin descripción</div>
                             {% endif %}
                         </td>
 
                         <td class="text-center">
-                            <span class="badge bg-secondary bg-opacity-10 text-secondary border">
+                            <span class="badge bg-secondary bg-opacity-10 text-secondary border text-xs font-medium">
                                 {{ rol.total_permisos }} Permisos
                             </span>
                         </td>
 
                         <td class="text-center">
                             {% if rol.total_asignaciones > 0 %}
-                                <span class="badge rounded-pill bg-info text-dark">
+                                <span class="badge rounded-pill bg-info text-dark text-xs font-medium">
                                     {{ rol.total_asignaciones }} Asignaciones
                                 </span>
                             {% else %}
-                                <span class="badge rounded-pill bg-light text-muted border">
+                                <span class="badge rounded-pill bg-light text-muted border text-xs font-medium">
                                     Sin uso
                                 </span>
                             {% endif %}
@@ -91,22 +93,22 @@
 
                         <td class="text-end pe-4">
                             <div class="btn-group">
-                                <a href="{% url 'core_admin:ruta_editar_rol' rol.pk %}" class="btn btn-sm btn-outline-secondary" title="Editar Permisos">
+                                <a href="{% url 'core_admin:ruta_editar_rol' rol.pk %}" class="btn btn-sm btn-outline-secondary text-base" title="Editar Permisos">
                                     <i class="fas fa-key"></i>
                                 </a>
-                                <a href="{% url 'core_admin:ruta_editar_rol' rol.pk %}" class="btn btn-sm btn-outline-primary" title="Editar Nombre">
+                                <a href="{% url 'core_admin:ruta_editar_rol' rol.pk %}" class="btn btn-sm btn-outline-primary text-base" title="Editar Nombre">
                                     <i class="fas fa-pencil-alt"></i>
                                 </a>
                                 {% if rol.total_historial > 0 %}
                                     {# BLOQUEADO VISUALMENTE #}
                                     <span class="d-inline-block" tabindex="0" data-bs-toggle="tooltip" title="No se puede eliminar: Tiene {{ rol.total_historial }} asignaciones históricas.">
-                                        <button class="btn btn-sm btn-outline-danger" disabled style="pointer-events: none;">
+                                        <button class="btn btn-sm btn-outline-danger text-base" disabled style="pointer-events: none;">
                                             <i class="fas fa-trash"></i>
                                         </button>
                                     </span>
                                 {% else %}
                                     {# HABILITADO #}
-                                    <a href="{% url 'core_admin:ruta_eliminar_rol' rol.pk %}" class="btn btn-sm btn-outline-danger" title="Eliminar">
+                                    <a href="{% url 'core_admin:ruta_eliminar_rol' rol.pk %}" class="btn btn-sm btn-outline-danger text-base" title="Eliminar">
                                         <i class="fas fa-trash"></i>
                                     </a>
                                 {% endif %}
@@ -117,7 +119,7 @@
                     <tr>
                         <td colspan="5" class="text-center py-5 text-muted">
                             <i class="fas fa-user-tag fa-3x mb-3 opacity-50"></i>
-                            <p>No hay roles globales definidos en el sistema.</p>
+                            <p class="text-base">No hay roles globales definidos en el sistema.</p>
                         </td>
                     </tr>
                     {% endfor %}

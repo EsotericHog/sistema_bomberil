@@ -11,7 +11,7 @@
     <div class="col-lg-6 col-md-8">
         <div class="card shadow border-danger">
             <div class="card-header bg-danger text-white py-3">
-                <h5 class="mb-0 fw-bold"><i class="fas fa-exclamation-triangle me-2"></i>Zona de Peligro</h5>
+                <h5 class="mb-0 font-bold text-md"><i class="fas fa-exclamation-triangle me-2"></i>Zona de Peligro</h5>
             </div>
             <div class="card-body text-center p-5">
                 
@@ -19,30 +19,30 @@
                     <i class="fas fa-building-circle-xmark fa-5x"></i>
                 </div>
 
-                <h3 class="fw-bold text-dark mb-3">¿Estás seguro?</h3>
+                <h3 class="font-bold text-dark mb-3 text-xl">¿Estás seguro?</h3>
                 
-                <p class="text-muted mb-4">
+                <p class="text-muted mb-4 text-sm">
                     Estás a punto de eliminar permanentemente la estación:
                     <br>
-                    <span class="fw-bold text-dark fs-5">{{ estacion.nombre }}</span>
+                    <span class="font-bold text-dark text-lg">{{ estacion.nombre }}</span>
                 </p>
 
-                <div class="alert alert-warning text-start d-inline-block mb-4">
-                    <small>
+                <div class="alert alert-warning text-start d-inline-block mb-4 text-xs">
+                    <div>
                         <i class="fas fa-info-circle me-1"></i>
-                        <strong>Nota de Seguridad:</strong> El sistema impedirá la eliminación si esta estación 
+                        <strong class="font-bold">Nota de Seguridad:</strong> El sistema impedirá la eliminación si esta estación 
                         tiene historial, inventario, ubicaciones o usuarios vinculados. 
                         Esta acción solo procede si la estación está "limpia" o vacía.
-                    </small>
+                    </div>
                 </div>
 
                 <form method="post">
                     {% csrf_token %}
                     <div class="d-grid gap-2 d-sm-flex justify-content-sm-center">
-                        <a href="{% url 'core_admin:ruta_ver_estacion' estacion.pk %}" class="btn btn-outline-secondary px-4">
+                        <a href="{% url 'core_admin:ruta_ver_estacion' estacion.pk %}" class="btn btn-outline-secondary px-4 font-bold text-sm">
                             Cancelar
                         </a>
-                        <button type="submit" class="btn btn-danger px-4">
+                        <button type="submit" class="btn btn-danger px-4 font-bold text-sm">
                             <i class="fas fa-trash-alt me-2"></i>Confirmar Eliminación
                         </button>
                     </div>

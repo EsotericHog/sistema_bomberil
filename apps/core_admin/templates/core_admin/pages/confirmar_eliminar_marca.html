@@ -11,38 +11,38 @@
     <div class="col-lg-5 col-md-8">
         <div class="card shadow border-danger">
             <div class="card-header bg-danger text-white py-3">
-                <h5 class="mb-0 fw-bold"><i class="fas fa-trash-alt me-2"></i>Eliminar Marca</h5>
+                <h5 class="mb-0 font-bold text-md"><i class="fas fa-trash-alt me-2"></i>Eliminar Marca</h5>
             </div>
             <div class="card-body text-center p-5">
                 
-                <h3 class="fw-bold text-dark mb-3">"{{ object.nombre }}"</h3>
+                <h3 class="font-bold text-dark mb-3 text-xl">"{{ object.nombre }}"</h3>
 
                 {% if uso_productos > 0 or uso_vehiculos > 0 %}
                     <div class="alert alert-danger text-start d-inline-block mb-4">
-                        <h6 class="fw-bold"><i class="fas fa-ban me-2"></i>Acción Bloqueada</h6>
-                        <ul class="mb-0 small ps-3">
+                        <h6 class="font-bold text-base"><i class="fas fa-ban me-2"></i>Acción Bloqueada</h6>
+                        <ul class="mb-0 ps-3 text-sm">
                             {% if uso_productos > 0 %}
-                                <li>Asignada a <strong>{{ uso_productos }}</strong> producto(s) globales.</li>
+                                <li>Asignada a <strong class="font-bold">{{ uso_productos }}</strong> producto(s) globales.</li>
                             {% endif %}
                             {% if uso_vehiculos > 0 %}
-                                <li>Asignada a <strong>{{ uso_vehiculos }}</strong> vehículo(s).</li>
+                                <li>Asignada a <strong class="font-bold">{{ uso_vehiculos }}</strong> vehículo(s).</li>
                             {% endif %}
                         </ul>
                     </div>
                     
                     <div class="d-grid">
-                        <a href="{% url 'core_admin:ruta_lista_marcas' %}" class="btn btn-secondary">Volver</a>
+                        <a href="{% url 'core_admin:ruta_lista_marcas' %}" class="btn btn-secondary font-bold text-sm">Volver</a>
                     </div>
                 {% else %}
-                    <p class="text-muted mb-4">
+                    <p class="text-muted mb-4 text-sm">
                         ¿Estás seguro de eliminar esta marca permanentemente?
                     </p>
 
                     <form method="post">
                         {% csrf_token %}
                         <div class="d-grid gap-2 d-sm-flex justify-content-sm-center">
-                            <a href="{% url 'core_admin:ruta_lista_marcas' %}" class="btn btn-outline-secondary px-4">Cancelar</a>
-                            <button type="submit" class="btn btn-danger px-4">Confirmar</button>
+                            <a href="{% url 'core_admin:ruta_lista_marcas' %}" class="btn btn-outline-secondary px-4 font-bold text-sm">Cancelar</a>
+                            <button type="submit" class="btn btn-danger px-4 font-bold text-sm">Confirmar</button>
                         </div>
                     </form>
                 {% endif %}

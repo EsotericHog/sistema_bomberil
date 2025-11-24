@@ -7,6 +7,7 @@
 {% block contenido %}
 <div class="container-fluid mt-4">
 
+    <!-- Encabezado de la Estación -->
     <div class="card shadow-sm border-0 mb-4 overflow-hidden">
         <div class="card-body p-0">
             <div class="row g-0">
@@ -22,30 +23,30 @@
                     <div class="d-flex justify-content-between align-items-start">
                         <div>
                             {% if estacion.es_departamento %}
-                                <span class="badge bg-dark mb-2">Cuerpo de Bomberos / Admin</span>
+                                <span class="badge bg-dark mb-2 text-xs font-bold">Cuerpo de Bomberos / Admin</span>
                             {% else %}
-                                <span class="badge bg-danger mb-2">Compañía de Bomberos</span>
+                                <span class="badge bg-danger mb-2 text-xs font-bold">Compañía de Bomberos</span>
                             {% endif %}
-                            <h2 class="fw-bold text-primary mb-1">{{ estacion.nombre }}</h2>
-                            <p class="text-muted mb-2">{{ estacion.descripcion|default:"Sin descripción registrada." }}</p>
+                            <h2 class="font-bold text-primary mb-1 text-xl">{{ estacion.nombre }}</h2>
+                            <p class="text-muted mb-2 text-sm">{{ estacion.descripcion|default:"Sin descripción registrada." }}</p>
                             
-                            <div class="d-flex gap-3 text-secondary small">
+                            <div class="d-flex gap-3 text-secondary text-xs">
                                 <div><i class="fas fa-map-marker-alt me-1"></i> {{ estacion.direccion|default:"Dirección no informada" }}, {{ estacion.comuna.nombre }}</div>
-                                <div><i class="fas fa-calendar me-1"></i> Alta en sistema: {{ estacion.created_at|date:"d/m/Y" }}</div>
+                                <div><i class="fas fa-calendar me-1"></i> Alta en sistema: <span class="text-data-code">{{ estacion.created_at|date:"d/m/Y" }}</span></div>
                             </div>
                         </div>
                         
                         <div class="btn-group">
-                            <a href="{% url 'core_admin:ruta_lista_estaciones' %}" class="btn btn-outline-secondary">
+                            <a href="{% url 'core_admin:ruta_lista_estaciones' %}" class="btn btn-outline-secondary font-bold text-sm">
                                 <i class="fas fa-arrow-left me-2"></i>Volver
                             </a>
-                            <a href="{% url 'core_admin:ruta_acceder_estacion' estacion.pk %}" class="btn btn-success">
+                            <a href="{% url 'core_admin:ruta_acceder_estacion' estacion.pk %}" class="btn btn-success font-bold text-sm">
                                 <i class="fas fa-sign-in-alt me-2"></i>Gestionar Estación
                             </a>
-                            <a href="{% url 'core_admin:ruta_editar_estacion' pk=estacion.id %}" class="btn btn-primary">
+                            <a href="{% url 'core_admin:ruta_editar_estacion' pk=estacion.id %}" class="btn btn-primary font-bold text-sm">
                                 <i class="fas fa-edit me-2"></i>Editar
                             </a>
-                            <a href="{% url 'core_admin:ruta_eliminar_estacion' estacion.pk %}" class="btn btn-outline-danger" data-bs-toggle="tooltip" title="Eliminar Estación">
+                            <a href="{% url 'core_admin:ruta_eliminar_estacion' estacion.pk %}" class="btn btn-outline-danger font-bold text-sm" data-bs-toggle="tooltip" title="Eliminar Estación">
                                 <i class="fas fa-trash"></i>
                             </a>
                         </div>
@@ -55,17 +56,18 @@
         </div>
     </div>
 
-    <h5 class="mb-3 fw-bold text-secondary"><i class="fas fa-chart-pie me-2"></i>Resumen Operativo</h5>
+    <h5 class="mb-3 font-bold text-secondary text-lg"><i class="fas fa-chart-pie me-2"></i>Resumen Operativo</h5>
     
+    <!-- KPIs Primera Fila -->
     <div class="row mb-3">
         <div class="col-md-3 col-sm-6 mb-3">
             <div class="card border-0 shadow-sm h-100 border-start border-4 border-primary">
                 <div class="card-body">
                     <div class="d-flex align-items-center justify-content-between">
                         <div>
-                            <div class="text-muted small text-uppercase fw-bold">Catálogo Local</div>
-                            <div class="h2 mb-0 fw-bold text-dark">{{ kpi_total_productos }}</div>
-                            <small class="text-muted" style="font-size: 0.75rem;">Tipos de productos</small>
+                            <div class="text-muted text-uppercase text-xs font-bold">Catálogo Local</div>
+                            <div class="mb-0 font-bold text-dark text-2xl">{{ kpi_total_productos }}</div>
+                            <div class="text-muted text-xs">Tipos de productos</div>
                         </div>
                         <div class="icon-shape bg-primary bg-opacity-10 text-primary rounded p-3">
                             <i class="fas fa-boxes fa-lg"></i>
@@ -80,9 +82,9 @@
                 <div class="card-body">
                     <div class="d-flex align-items-center justify-content-between">
                         <div>
-                            <div class="text-muted small text-uppercase fw-bold">Activos Físicos</div>
-                            <div class="h2 mb-0 fw-bold text-dark">{{ kpi_total_activos }}</div>
-                            <small class="text-muted" style="font-size: 0.75rem;">Equipos serializados</small>
+                            <div class="text-muted text-uppercase text-xs font-bold">Activos Físicos</div>
+                            <div class="mb-0 font-bold text-dark text-2xl">{{ kpi_total_activos }}</div>
+                            <div class="text-muted text-xs">Equipos serializados</div>
                         </div>
                         <div class="icon-shape bg-success bg-opacity-10 text-success rounded p-3">
                             <i class="fas fa-barcode fa-lg"></i>
@@ -97,9 +99,9 @@
                 <div class="card-body">
                     <div class="d-flex align-items-center justify-content-between">
                         <div>
-                            <div class="text-muted small text-uppercase fw-bold">Stock Insumos</div>
-                            <div class="h2 mb-0 fw-bold text-dark">{{ kpi_total_insumos }}</div>
-                            <small class="text-muted" style="font-size: 0.75rem;">Lotes fungibles</small>
+                            <div class="text-muted text-uppercase text-xs font-bold">Stock Insumos</div>
+                            <div class="mb-0 font-bold text-dark text-2xl">{{ kpi_total_insumos }}</div>
+                            <div class="text-muted text-xs">Lotes fungibles</div>
                         </div>
                         <div class="icon-shape bg-success bg-opacity-10 text-success rounded p-3">
                             <i class="fas fa-first-aid fa-lg"></i>
@@ -114,9 +116,9 @@
                 <div class="card-body">
                     <div class="d-flex align-items-center justify-content-between">
                         <div>
-                            <div class="text-muted small text-uppercase fw-bold">Préstamos Pend.</div>
-                            <div class="h2 mb-0 fw-bold text-dark">{{ kpi_prestamos_pendientes }}</div>
-                            <small class="text-muted" style="font-size: 0.75rem;">Sin devolver</small>
+                            <div class="text-muted text-uppercase text-xs font-bold">Préstamos Pend.</div>
+                            <div class="mb-0 font-bold text-dark text-2xl">{{ kpi_prestamos_pendientes }}</div>
+                            <div class="text-muted text-xs">Sin devolver</div>
                         </div>
                         <div class="icon-shape bg-warning bg-opacity-10 text-warning rounded p-3">
                             <i class="fas fa-clock fa-lg"></i>
@@ -127,6 +129,7 @@
         </div>
     </div>
 
+    <!-- KPIs Segunda Fila -->
     <div class="row mb-4">
         <div class="col-md-4 col-sm-6 mb-3">
             <div class="card border-0 shadow-sm h-100 border-bottom border-4 border-secondary">
@@ -135,8 +138,8 @@
                         <i class="fas fa-truck-medical fa-lg"></i>
                     </div>
                     <div>
-                        <div class="h4 mb-0 fw-bold">{{ kpi_total_vehiculos }}</div>
-                        <div class="text-muted small text-uppercase fw-bold">Unidades / Vehículos</div>
+                        <div class="mb-0 font-bold text-xl">{{ kpi_total_vehiculos }}</div>
+                        <div class="text-muted text-uppercase text-xs font-bold">Unidades / Vehículos</div>
                     </div>
                 </div>
             </div>
@@ -149,8 +152,8 @@
                         <i class="fas fa-th-large fa-lg"></i>
                     </div>
                     <div>
-                        <div class="h4 mb-0 fw-bold">{{ kpi_total_compartimentos }}</div>
-                        <div class="text-muted small text-uppercase fw-bold">Compartimentos</div>
+                        <div class="mb-0 font-bold text-xl">{{ kpi_total_compartimentos }}</div>
+                        <div class="text-muted text-uppercase text-xs font-bold">Compartimentos</div>
                     </div>
                 </div>
             </div>
@@ -163,8 +166,8 @@
                         <i class="fas fa-users fa-lg"></i>
                     </div>
                     <div>
-                        <div class="h4 mb-0 fw-bold">{{ kpi_total_usuarios }}</div>
-                        <div class="text-muted small text-uppercase fw-bold">Personal Activo</div>
+                        <div class="mb-0 font-bold text-xl">{{ kpi_total_usuarios }}</div>
+                        <div class="text-muted text-uppercase text-xs font-bold">Personal Activo</div>
                     </div>
                 </div>
             </div>
@@ -172,10 +175,11 @@
     </div>
 
     <div class="row">
+        <!-- Flota Vehicular -->
         <div class="col-lg-7 mb-4">
             <div class="card shadow-sm border-0 mb-4">
                 <div class="card-header bg-white border-0 py-3">
-                    <h5 class="mb-0 fw-bold"><i class="fas fa-truck me-2 text-secondary"></i>Flota Vehicular</h5>
+                    <h5 class="mb-0 font-bold text-lg"><i class="fas fa-truck me-2 text-secondary"></i>Flota Vehicular</h5>
                 </div>
                 <div class="card-body bg-light">
                     <div class="row">
@@ -195,17 +199,17 @@
                                     <div class="col-md-9">
                                         <div class="card-body py-2">
                                             <div class="d-flex justify-content-between">
-                                                <h5 class="card-title fw-bold mb-1">{{ vehiculo.ubicacion.nombre }}</h5>
-                                                <span class="badge bg-dark">{{ vehiculo.tipo_vehiculo.nombre }}</span>
+                                                <h5 class="card-title font-bold text-base mb-1">{{ vehiculo.ubicacion.nombre }}</h5>
+                                                <span class="badge bg-dark text-xs font-bold">{{ vehiculo.tipo_vehiculo.nombre }}</span>
                                             </div>
-                                            <div class="small text-muted mb-2">
+                                            <div class="text-muted mb-2 text-sm">
                                                 {{ vehiculo.marca.nombre|default:"Marca desconocida" }} {{ vehiculo.modelo|default:"" }}
                                             </div>
-                                            <div class="d-flex gap-3 small">
-                                                <span class="bg-light border px-2 rounded text-dark font-monospace">
+                                            <div class="d-flex gap-3 text-xs">
+                                                <span class="bg-light border px-2 rounded text-dark text-data-code">
                                                     <i class="fas fa-hashtag me-1 text-muted"></i>{{ vehiculo.patente|default:"S/P" }}
                                                 </span>
-                                                <span class="bg-light border px-2 rounded text-dark font-monospace">
+                                                <span class="bg-light border px-2 rounded text-dark text-data-code">
                                                     <i class="fas fa-barcode me-1 text-muted"></i>{{ vehiculo.chasis|default:"S/Chasis" }}
                                                 </span>
                                             </div>
@@ -217,26 +221,27 @@
                         {% empty %}
                         <div class="col-12 text-center py-4 text-muted">
                             <i class="fas fa-truck-loading fa-2x mb-2 opacity-50"></i>
-                            <p>Esta estación no tiene vehículos registrados.</p>
+                            <p class="text-sm">Esta estación no tiene vehículos registrados.</p>
                         </div>
                         {% endfor %}
                     </div>
                 </div>
             </div>
 
+            <!-- Actividad Reciente -->
             <div class="card shadow-sm border-0">
                 <div class="card-header bg-white border-0 py-3 d-flex justify-content-between align-items-center">
-                    <h5 class="mb-0 fw-bold"><i class="fas fa-history me-2 text-secondary"></i>Actividad Reciente</h5>
-                    <small class="text-muted">Últimos 5 movimientos</small>
+                    <h5 class="mb-0 font-bold text-lg"><i class="fas fa-history me-2 text-secondary"></i>Actividad Reciente</h5>
+                    <small class="text-muted text-xs">Últimos 5 movimientos</small>
                 </div>
                 <div class="table-responsive">
                     <table class="table table-hover align-middle mb-0">
-                        <thead class="table-light small">
+                        <thead class="table-light">
                             <tr>
-                                <th class="text-muted">Tipo</th>
-                                <th class="text-muted">Ítem</th>
-                                <th class="text-muted">Usuario</th>
-                                <th class="text-end text-muted">Fecha</th>
+                                <th class="text-muted text-xs font-bold">Tipo</th>
+                                <th class="text-muted text-xs font-bold">Ítem</th>
+                                <th class="text-muted text-xs font-bold">Usuario</th>
+                                <th class="text-end text-muted text-xs font-bold">Fecha</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -244,30 +249,30 @@
                             <tr>
                                 <td>
                                     {% if mov.tipo_movimiento == 'ENT' %}
-                                        <span class="badge bg-success bg-opacity-10 text-success">Entrada</span>
+                                        <span class="badge bg-success bg-opacity-10 text-success text-xs font-medium">Entrada</span>
                                     {% elif mov.tipo_movimiento == 'SAL' %}
-                                        <span class="badge bg-danger bg-opacity-10 text-danger">Salida</span>
+                                        <span class="badge bg-danger bg-opacity-10 text-danger text-xs font-medium">Salida</span>
                                     {% else %}
-                                        <span class="badge bg-secondary bg-opacity-10 text-secondary">{{ mov.get_tipo_movimiento_display }}</span>
+                                        <span class="badge bg-secondary bg-opacity-10 text-secondary text-xs font-medium">{{ mov.get_tipo_movimiento_display }}</span>
                                     {% endif %}
                                 </td>
-                                <td class="small">
+                                <td class="text-xs">
                                     {% if mov.activo %}
                                         <i class="fas fa-barcode text-muted me-1"></i>{{ mov.activo.producto.producto_global.nombre_oficial|truncatechars:25 }}
                                     {% elif mov.lote_insumo %}
                                         <i class="fas fa-first-aid text-muted me-1"></i>{{ mov.lote_insumo.producto.producto_global.nombre_oficial|truncatechars:25 }}
                                     {% endif %}
                                 </td>
-                                <td class="small text-muted">
+                                <td class="text-muted text-xs">
                                     {{ mov.usuario.username|default:"Sistema" }}
                                 </td>
-                                <td class="text-end small text-muted">
+                                <td class="text-end text-muted text-data-code text-xs">
                                     {{ mov.fecha_hora|date:"d/m H:i" }}
                                 </td>
                             </tr>
                             {% empty %}
                             <tr>
-                                <td colspan="4" class="text-center py-3 text-muted small">
+                                <td colspan="4" class="text-center py-3 text-muted text-sm">
                                     Sin movimientos registrados.
                                 </td>
                             </tr>
@@ -278,11 +283,12 @@
             </div>
         </div>
 
+        <!-- Infraestructura -->
         <div class="col-lg-5 mb-4">
             <div class="card shadow-sm border-0 h-100">
                 <div class="card-header bg-white border-0 py-3 d-flex justify-content-between align-items-center">
-                    <h5 class="mb-0 fw-bold"><i class="fas fa-warehouse me-2 text-secondary"></i>Infraestructura</h5>
-                    <span class="badge bg-light text-dark border">{{ ubicaciones_fisicas|length }} Áreas</span>
+                    <h5 class="mb-0 font-bold text-lg"><i class="fas fa-warehouse me-2 text-secondary"></i>Infraestructura</h5>
+                    <span class="badge bg-light text-dark border text-xs font-medium">{{ ubicaciones_fisicas|length }} Áreas</span>
                 </div>
                 <div class="list-group list-group-flush">
                     {% for ubicacion in ubicaciones_fisicas %}
@@ -298,23 +304,23 @@
                                 {% endif %}
                             </div>
                             <div>
-                                <div class="fw-bold text-dark">{{ ubicacion.nombre }}</div>
-                                <div class="small text-muted">{{ ubicacion.tipo_ubicacion.nombre }}</div>
+                                <div class="font-bold text-dark text-sm">{{ ubicacion.nombre }}</div>
+                                <div class="text-muted text-xs">{{ ubicacion.tipo_ubicacion.nombre }}</div>
                             </div>
                         </div>
                         <div class="text-end">
                             {% if ubicacion.total_compartimentos > 0 %}
-                                <span class="badge bg-primary bg-opacity-10 text-primary rounded-pill">
+                                <span class="badge bg-primary bg-opacity-10 text-primary rounded-pill text-xs font-medium">
                                     {{ ubicacion.total_compartimentos }} Comp.
                                 </span>
                             {% else %}
-                                <span class="badge bg-light text-muted rounded-pill">Vacío</span>
+                                <span class="badge bg-light text-muted rounded-pill text-xs font-medium">Vacío</span>
                             {% endif %}
                         </div>
                     </div>
                     {% empty %}
                     <div class="text-center py-5 text-muted">
-                        <p>No hay bodegas u oficinas registradas.</p>
+                        <p class="text-sm">No hay bodegas u oficinas registradas.</p>
                     </div>
                     {% endfor %}
                 </div>

@@ -20,23 +20,23 @@ class EstacionForm(ImageProcessingFormMixin, forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         
-        # 1. Aplicar clases de Bootstrap a todos los campos visibles
+        # 1. Aplicar clases de Bootstrap + Tus clases de texto
         for field_name, field in self.fields.items():
             if field_name != 'es_departamento': # El checkbox tiene su propia clase
-                field.widget.attrs['class'] = 'form-control'
+                # Aplicamos text-sm para un tamaño de fuente cómodo en inputs (1.4rem)
+                field.widget.attrs['class'] = 'form-control text-sm'
         
         # 2. Optimizar el selector de Comunas (ordenar y mostrar región)
-        # [cite_start]Esto evita que salgan desordenadas. [cite: 11]
         self.fields['comuna'].queryset = Comuna.objects.select_related('region').order_by('region__nombre', 'nombre')
         
-        # 3. Etiquetas personalizadas si hacen falta
+        # 3. Etiquetas personalizadas
         self.fields['comuna'].empty_label = "Seleccione una Comuna..."
     
 
     def save(self, commit=True):
         estacion = super().save(commit=False)
         
-        # 1. Procesar IMAGEN (Foto del cuartel)
+        # 1. Procesar IMAGEN
         self.process_image_upload(
             instance=estacion, 
             field_name='imagen',
@@ -45,7 +45,7 @@ class EstacionForm(ImageProcessingFormMixin, forms.ModelForm):
             image_prefix='estacion'
         )
 
-        # 2. Procesar LOGO (Insignia)
+        # 2. Procesar LOGO
         self.process_image_upload(
             instance=estacion, 
             field_name='logo',
@@ -74,7 +74,8 @@ class ProductoGlobalForm(ImageProcessingFormMixin, forms.ModelForm):
             'descripcion_general': forms.Textarea(attrs={'rows': 4, 'placeholder': 'Describa las características técnicas principales...'}),
             'nombre_oficial': forms.TextInput(attrs={'placeholder': 'Ej: Hacha de Bombero Flathead'}),
             'modelo': forms.TextInput(attrs={'placeholder': 'Ej: G1, 4.5, AirPak...'}),
-            'gtin': forms.TextInput(attrs={'placeholder': 'Código de barras / EAN'}),
+            # GTIN es un código, le agregamos la clase especial text-data-code
+            'gtin': forms.TextInput(attrs={'placeholder': 'Código de barras / EAN', 'class': 'form-control text-sm text-data-code'}),
         }
 
     def __init__(self, *args, **kwargs):
@@ -82,23 +83,27 @@ class ProductoGlobalForm(ImageProcessingFormMixin, forms.ModelForm):
         
         # Aplicar estilos Bootstrap a todos los campos
         for field_name, field in self.fields.items():
-            field.widget.attrs['class'] = 'form-control'
+            # Si el widget ya tiene clases (como GTIN arriba), las conservamos y agregamos las generales si faltan
+            current_classes = field.widget.attrs.get('class', '')
+            
+            if 'form-control' not in current_classes:
+                # Si no tiene clase definida, aplicamos la estándar
+                field.widget.attrs['class'] = 'form-control text-sm'
+            else:
+                # Si ya tiene (ej: GTIN), nos aseguramos que tenga text-sm
+                if 'text-sm' not in current_classes:
+                    field.widget.attrs['class'] += ' text-sm'
 
         # Mejorar la UX de los selectores
         self.fields['categoria'].empty_label = "Seleccione Categoría..."
         self.fields['marca'].empty_label = "Sin Marca (Genérico)"
         
-        # Etiquetas más claras para el admin
         self.fields['vida_util_recomendada_anos'].label = "Vida Útil Estándar (Años)"
 
 
     def save(self, commit=True):
-        # 1. Obtener instancia sin guardar
         producto = super().save(commit=False)
         
-        # 2. USAR EL MIXIN
-        # Para productos: NO recortamos a cuadrado (crop=False) 
-        # y usamos 1024x1024 o lo que definas.
         self.process_image_upload(
             instance=producto, 
             field_name='imagen', 
@@ -107,7 +112,6 @@ class ProductoGlobalForm(ImageProcessingFormMixin, forms.ModelForm):
             image_prefix='producto'
         )
 
-        # 3. Guardar
         if commit:
             producto.save()
             
@@ -134,11 +138,12 @@ class UsuarioCreationForm(forms.ModelForm):
         model = Usuario
         fields = ['rut', 'first_name', 'last_name', 'email', 'phone', 'is_active', 'is_staff']
         widgets = {
-            'rut': forms.TextInput(attrs={'placeholder': '12.345.678-9'}),
+            # RUT es un identificador, usamos text-data-code
+            'rut': forms.TextInput(attrs={'placeholder': '12.345.678-9', 'class': 'form-control text-sm text-data-code'}),
             'first_name': forms.TextInput(attrs={'placeholder': 'Ej: Juan'}),
             'last_name': forms.TextInput(attrs={'placeholder': 'Ej: Pérez'}),
             'email': forms.EmailInput(attrs={'placeholder': 'juan.perez@bomberos.cl'}),
-            'phone': forms.TextInput(attrs={'placeholder': '9 1234 5678'}),
+            'phone': forms.TextInput(attrs={'placeholder': '9 1234 5678', 'class': 'form-control text-sm text-data-code'}), # Teléfono también es dato numérico
             'is_active': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
             'is_staff': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
         }
@@ -152,11 +157,15 @@ class UsuarioCreationForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
         # Estilos Bootstrap generales
         for field_name, field in self.fields.items():
-            if field_name not in ['is_active', 'is_staff']: # Checkboxes tienen su propia clase
-                field.widget.attrs['class'] = 'form-control'
+            if field_name not in ['is_active', 'is_staff']: 
+                # Preservar clases existentes (como en RUT o Phone)
+                current_classes = field.widget.attrs.get('class', '')
+                if 'form-control' not in current_classes:
+                    field.widget.attrs['class'] = 'form-control text-sm'
+                elif 'text-sm' not in current_classes:
+                     field.widget.attrs['class'] += ' text-sm'
 
     def clean_rut(self):
-        # Normalizar RUT (opcional: quitar puntos y guion si tu lógica lo requiere)
         rut = self.cleaned_data.get('rut')
         if Usuario.objects.filter(rut=rut).exists():
             raise ValidationError("Ya existe un usuario registrado con este RUT.")
@@ -173,7 +182,6 @@ class UsuarioCreationForm(forms.ModelForm):
         return cleaned_data
 
     def save(self, commit=True):
-        # Interceptamos el guardado para hashear la contraseña
         user = super().save(commit=False)
         user.set_password(self.cleaned_data["password"])
         if commit:
@@ -186,13 +194,13 @@ class UsuarioCreationForm(forms.ModelForm):
 class UsuarioChangeForm(forms.ModelForm):
     """
     Formulario para EDITAR usuarios existentes.
-    No maneja contraseñas, pero permite gestionar permisos sensibles.
     """
     class Meta:
         model = Usuario
         fields = ['rut', 'first_name', 'last_name', 'email', 'phone', 'is_active', 'is_staff', 'is_superuser']
         widgets = {
-            'rut': forms.TextInput(attrs={'readonly': 'readonly'}), # El RUT suele ser inmutable, o editable con cuidado
+            # RUT Readonly y con fuente de datos
+            'rut': forms.TextInput(attrs={'readonly': 'readonly', 'class': 'form-control text-sm text-data-code'}), 
             'is_active': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
             'is_staff': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
             'is_superuser': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
@@ -204,10 +212,16 @@ class UsuarioChangeForm(forms.ModelForm):
         # Estilos Bootstrap
         for field_name, field in self.fields.items():
             if field_name not in ['is_active', 'is_staff', 'is_superuser']:
-                field.widget.attrs['class'] = 'form-control'
+                current_classes = field.widget.attrs.get('class', '')
+                if 'form-control' not in current_classes:
+                    field.widget.attrs['class'] = 'form-control text-sm'
+                elif 'text-sm' not in current_classes:
+                    field.widget.attrs['class'] += ' text-sm'
+        
+        # Aplicar text-data-code al teléfono también si se desea consistencia
+        if 'phone' in self.fields:
+             self.fields['phone'].widget.attrs['class'] += ' text-data-code'
 
-        # Validar si el usuario que edita se está editando a sí mismo (para evitar auto-bloqueos)
-        # Esto se maneja mejor en la vista, pero aquí podemos poner warnings en los help_text
         self.fields['is_superuser'].help_text = "<strong>¡Cuidado!</strong> Otorga acceso total al sistema y evita todas las restricciones de permisos."
         self.fields['rut'].help_text = "El identificador (RUT) no se puede modificar libremente para mantener la integridad histórica."
 
@@ -215,10 +229,10 @@ class UsuarioChangeForm(forms.ModelForm):
 
 
 class AsignarMembresiaForm(forms.ModelForm):
-    # Campo extra para seleccionar roles (M2M) en el formulario
     roles_seleccionados = forms.ModelMultipleChoiceField(
-        queryset=Rol.objects.none(), # Se poblará dinámicamente
-        widget=forms.SelectMultiple(attrs={'class': 'form-select', 'size': '8'}),
+        queryset=Rol.objects.none(),
+        # Agregamos text-sm al select múltiple
+        widget=forms.SelectMultiple(attrs={'class': 'form-select text-sm', 'size': '8'}),
         label="Roles a Asignar",
         help_text="Mantén presionada la tecla Ctrl (o Cmd) para seleccionar múltiples roles."
     )
@@ -227,15 +241,15 @@ class AsignarMembresiaForm(forms.ModelForm):
         model = Membresia
         fields = ['usuario', 'estacion', 'fecha_inicio']
         widgets = {
-            'fecha_inicio': forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}),
-            'usuario': forms.Select(attrs={'class': 'form-select'}),
-            'estacion': forms.Select(attrs={'class': 'form-select'}),
+            # Fecha y Selects con text-sm
+            'fecha_inicio': forms.DateInput(attrs={'type': 'date', 'class': 'form-control text-sm text-data-code'}), # Fechas son datos
+            'usuario': forms.Select(attrs={'class': 'form-select text-sm'}),
+            'estacion': forms.Select(attrs={'class': 'form-select text-sm'}),
         }
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         
-        # Si hay datos (POST), cargamos los roles válidos para validar la entrada
         if 'estacion' in self.data:
             try:
                 estacion_id = int(self.data.get('estacion'))
@@ -243,26 +257,21 @@ class AsignarMembresiaForm(forms.ModelForm):
                     Q(estacion__isnull=True) | Q(estacion_id=estacion_id)
                 )
             except (ValueError, TypeError):
-                pass  # Entrada inválida, el clean lo manejará
+                pass
         elif self.instance.pk:
-            # Lógica para edición (si quisieras reutilizarlo)
-            self.fields['roles_seleccionados'].queryset = self.instance.estacion.roles.all() # Simplificado
+            self.fields['roles_seleccionados'].queryset = self.instance.estacion.roles.all()
 
     def clean(self):
         cleaned_data = super().clean()
         usuario = cleaned_data.get('usuario')
         
-        # --- VALIDACIÓN BLOQUEANTE ---
         if usuario:
-            # Buscamos si tiene CUALQUIER membresía activa
-            # Usamos .exclude(pk=self.instance.pk) por si en el futuro usas esto para editar
             otras_activas = Membresia.objects.filter(
                 usuario=usuario, 
                 estado='ACTIVO'
             ).exclude(pk=self.instance.pk)
 
             if otras_activas.exists():
-                # Obtenemos la estación actual para dar un mensaje claro
                 estacion_actual = otras_activas.first().estacion.nombre
                 
                 raise ValidationError(
@@ -287,10 +296,10 @@ class RolGlobalForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         
-        self.fields['nombre'].widget.attrs['class'] = 'form-control'
-        self.fields['descripcion'].widget.attrs['class'] = 'form-control'
+        # Aplicar text-sm explícitamente
+        self.fields['nombre'].widget.attrs['class'] = 'form-control text-sm'
+        self.fields['descripcion'].widget.attrs['class'] = 'form-control text-sm'
         
-        # 1. FILTRO ESTRICTO: Solo 'acceso_' y 'accion_'
         criterio_negocio = Q(codename__startswith='acceso_') | Q(codename__startswith='accion_')
         
         self.fields['permisos'].queryset = Permission.objects.filter(
@@ -305,14 +314,15 @@ class RolGlobalForm(forms.ModelForm):
 class MarcaForm(forms.ModelForm):
     class Meta:
         model = Marca
-        fields = ['nombre'] # Asumo que es el único campo relevante
+        fields = ['nombre'] 
         widgets = {
             'nombre': forms.TextInput(attrs={'placeholder': 'Ej: Rosenbauer, MSA, Motorola...'}),
         }
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.fields['nombre'].widget.attrs['class'] = 'form-control'
+        # Aplicar text-sm
+        self.fields['nombre'].widget.attrs['class'] = 'form-control text-sm'
         self.fields['nombre'].label = "Nombre de la Marca"
 
 
@@ -324,15 +334,22 @@ class CategoriaForm(forms.ModelForm):
         fields = ['nombre', 'codigo', 'descripcion']
         widgets = {
             'nombre': forms.TextInput(attrs={'placeholder': 'Ej: Protección Personal'}),
-            'codigo': forms.TextInput(attrs={'placeholder': 'Ej: EPP, MM, COM...'}),
+            # Código es un dato corto/técnico -> text-data-code
+            'codigo': forms.TextInput(attrs={'placeholder': 'Ej: EPP, MM, COM...', 'class': 'form-control text-sm text-data-code'}),
             'descripcion': forms.Textarea(attrs={'rows': 3, 'placeholder': 'Describa qué tipo de insumos agrupa esta categoría...'}),
         }
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        # Estilos Bootstrap
-        for field in self.fields.values():
-            field.widget.attrs['class'] = 'form-control'
+        # Estilos Bootstrap + Texto
+        for field_name, field in self.fields.items():
+            current_classes = field.widget.attrs.get('class', '')
+            
+            if 'form-control' not in current_classes:
+                field.widget.attrs['class'] = 'form-control text-sm'
+            else:
+                 if 'text-sm' not in current_classes:
+                    field.widget.attrs['class'] += ' text-sm'
         
         self.fields['codigo'].label = "Código Corto (Único)"
         self.fields['codigo'].help_text = "Identificador breve para reportes y etiquetas."

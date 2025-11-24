@@ -8,12 +8,13 @@
 <div class="container-fluid mt-4">
 
 <div class="row mb-4">
+    <!-- KPI Total -->
     <div class="col-md-4">
         <div class="card border-0 shadow-sm border-start border-4 border-primary">
             <div class="card-body d-flex justify-content-between align-items-center">
                 <div>
-                    <h6 class="text-muted small text-uppercase fw-bold">Total Registrados</h6>
-                    <h3 class="mb-0 fw-bold">{{ kpi_total_usuarios }}</h3>
+                    <h6 class="text-muted text-uppercase text-xs font-bold">Total Registrados</h6>
+                    <h3 class="mb-0 font-bold text-2xl">{{ kpi_total_usuarios }}</h3>
                 </div>
                 <div class="icon-shape bg-primary bg-opacity-10 text-primary rounded-circle p-3">
                     <i class="fas fa-users fa-lg"></i>
@@ -21,12 +22,13 @@
             </div>
         </div>
     </div>
+    <!-- KPI Activos -->
     <div class="col-md-4">
         <div class="card border-0 shadow-sm border-start border-4 border-success">
             <div class="card-body d-flex justify-content-between align-items-center">
                 <div>
-                    <h6 class="text-muted small text-uppercase fw-bold">Usuarios Activos</h6>
-                    <h3 class="mb-0 fw-bold">{{ kpi_activos }}</h3>
+                    <h6 class="text-muted text-uppercase text-xs font-bold">Usuarios Activos</h6>
+                    <h3 class="mb-0 font-bold text-2xl">{{ kpi_activos }}</h3>
                 </div>
                 <div class="icon-shape bg-success bg-opacity-10 text-success rounded-circle p-3">
                     <i class="fas fa-user-check fa-lg"></i>
@@ -34,12 +36,13 @@
             </div>
         </div>
     </div>
+    <!-- KPI Staff -->
     <div class="col-md-4">
         <div class="card border-0 shadow-sm border-start border-4 border-warning">
             <div class="card-body d-flex justify-content-between align-items-center">
                 <div>
-                    <h6 class="text-muted small text-uppercase fw-bold">Staff / Admins</h6>
-                    <h3 class="mb-0 fw-bold">{{ kpi_staff }}</h3>
+                    <h6 class="text-muted text-uppercase text-xs font-bold">Staff / Admins</h6>
+                    <h3 class="mb-0 font-bold text-2xl">{{ kpi_staff }}</h3>
                 </div>
                 <div class="icon-shape bg-warning bg-opacity-10 text-warning rounded-circle p-3">
                     <i class="fas fa-user-shield fa-lg"></i>
@@ -56,13 +59,13 @@
                 <div class="col-md-6">
                     <div class="input-group">
                         <span class="input-group-text bg-white border-end-0"><i class="fas fa-search text-muted"></i></span>
-                        <input type="text" name="q" class="form-control border-start-0" placeholder="Buscar por nombre, email o usuario..." value="{{ current_search }}">
-                        <button type="submit" class="btn btn-primary">Buscar</button>
+                        <input type="text" name="q" class="form-control border-start-0 text-sm" placeholder="Buscar por nombre, email o usuario..." value="{{ current_search }}">
+                        <button type="submit" class="btn btn-primary font-bold text-sm">Buscar</button>
                     </div>
                 </div>
                 <div class="col-md-6 text-end">
                     {# Placeholder para futura creación de usuario #}
-                    <a href="{% url 'core_admin:ruta_crear_usuario' %}" class="btn btn-success">
+                    <a href="{% url 'core_admin:ruta_crear_usuario' %}" class="btn btn-success font-bold text-sm">
                         <i class="fas fa-user-plus me-2"></i>Nuevo Usuario
                     </a>
                 </div>
@@ -76,11 +79,11 @@
         <table class="table table-hover align-middle mb-0">
             <thead class="bg-light">
                 <tr>
-                    <th class="ps-4">Usuario</th>
-                    <th>Estado</th>
-                    <th>Acceso / Membresías</th>
-                    <th>Registro</th>
-                    <th class="text-end pe-4">Acciones</th>
+                    <th class="ps-4 text-sm font-bold">Usuario</th>
+                    <th class="text-sm font-bold">Estado</th>
+                    <th class="text-sm font-bold">Acceso / Membresías</th>
+                    <th class="text-sm font-bold">Registro</th>
+                    <th class="text-end pe-4 text-sm font-bold">Acciones</th>
                 </tr>
             </thead>
             <tbody>
@@ -88,30 +91,30 @@
                 <tr>
                     <td class="ps-4">
                         <div class="d-flex align-items-center">
-                            <div class="rounded-circle bg-light d-flex align-items-center justify-content-center me-3 text-secondary fw-bold border" 
+                            <div class="rounded-circle bg-light d-flex align-items-center justify-content-center me-3 text-secondary font-bold border text-sm" 
                                  style="width: 40px; height: 40px;">
                                 {{ usuario.username|slice:":2"|upper }}
                             </div>
                             <div>
-                                <div class="fw-bold text-dark">
+                                <div class="font-bold text-dark text-base">
                                     {{ usuario.get_full_name|default:usuario.rut }}
                                 </div>
-                                <div class="small text-muted">{{ usuario.email }}</div>
+                                <div class="text-muted text-xs">{{ usuario.email }}</div>
                             </div>
                         </div>
                     </td>
                     
                     <td>
                         {% if usuario.is_superuser %}
-                            <span class="badge bg-dark border border-secondary">Superuser</span>
+                            <span class="badge bg-dark border border-secondary text-xs font-medium">Superuser</span>
                         {% elif usuario.is_staff %}
-                            <span class="badge bg-info text-dark">Staff</span>
+                            <span class="badge bg-info text-dark text-xs font-medium">Staff</span>
                         {% endif %}
 
                         {% if usuario.is_active %}
-                            <span class="badge bg-success bg-opacity-10 text-success">Activo</span>
+                            <span class="badge bg-success bg-opacity-10 text-success text-xs font-medium">Activo</span>
                         {% else %}
-                            <span class="badge bg-danger bg-opacity-10 text-danger">Inactivo</span>
+                            <span class="badge bg-danger bg-opacity-10 text-danger text-xs font-medium">Inactivo</span>
                         {% endif %}
                     </td>
 
@@ -122,7 +125,7 @@
                                 {% for membresia in membresias %}
                                     {# CORRECCIÓN 1: Solo mostrar membresías ACTIVAS #}
                                     {% if membresia.estado == 'ACTIVO' %}
-                                        <span class="badge bg-light text-secondary border" 
+                                        <span class="badge bg-light text-secondary border text-xs" 
                                               data-bs-toggle="tooltip" 
                                               {# CORRECCIÓN 2: Iterar sobre la relación ManyToMany de roles #}
                                               title="Roles: {% for r in membresia.roles.all %}{{ r.nombre }}{% if not forloop.last %}, {% endif %}{% endfor %}">
@@ -134,22 +137,22 @@
                             
                             {# Mensaje opcional si no tiene ninguna activa (requiere lógica extra o dejar en blanco) #}
                             {% if not membresias %}
-                                <small class="text-muted fst-italic">Sin asignación</small>
+                                <small class="text-muted fst-italic text-xs">Sin asignación</small>
                             {% endif %}
                         {% endwith %}
                     </td>
 
-                    <td class="small text-muted">
+                    <td class="text-muted text-xs">
                         {{ usuario.created_at|date:"d/m/Y" }}
                     </td>
 
                     <td class="text-end pe-4">
                         <div class="btn-group">
-                            <a href="{% url 'core_admin:ruta_editar_usuario' usuario.pk %}" class="btn btn-sm btn-outline-secondary" title="Editar Usuario">
+                            <a href="{% url 'core_admin:ruta_editar_usuario' usuario.pk %}" class="btn btn-sm btn-outline-secondary text-base" title="Editar Usuario">
                                 <i class="fas fa-pencil-alt"></i>
                             </a>
                             <button type="button" 
-                            class="btn btn-sm btn-outline-warning btn-reset-password" 
+                            class="btn btn-sm btn-outline-warning btn-reset-password text-base" 
                             data-bs-toggle="modal" 
                             data-bs-target="#modalResetPassword"
                             data-usuario-id="{{ usuario.pk }}"
@@ -161,14 +164,14 @@
 
                             <a 
                             href="{% url 'core_admin:ruta_crear_membresia' %}?usuario_id={{ usuario.pk }}" 
-                            class="btn btn-sm btn-outline-success" 
+                            class="btn btn-sm btn-outline-success text-base" 
                             title="Dar Acceso / Crear Membresía">
                                 <i class="fas fa-id-badge"></i>
                             </a>
 
                             <button 
                             type="button" 
-                            class="btn btn-sm btn-outline-danger" 
+                            class="btn btn-sm btn-outline-danger text-base" 
                             data-bs-toggle="modal" 
                             data-bs-target="#modalFinalizarMembresias"
                             data-usuario-id="{{ usuario.pk }}"
@@ -181,7 +184,7 @@
                 </tr>
                 {% empty %}
                 <tr>
-                    <td colspan="5" class="text-center py-5 text-muted">
+                    <td colspan="5" class="text-center py-5 text-muted text-base">
                         No se encontraron usuarios.
                     </td>
                 </tr>
@@ -197,11 +200,11 @@
         <nav>
             <ul class="pagination justify-content-center mb-0">
                 {% if page_obj.has_previous %}
-                    <li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}&q={{ current_search }}">Ant</a></li>
+                    <li class="page-item"><a class="page-link text-sm" href="?page={{ page_obj.previous_page_number }}&q={{ current_search }}">Ant</a></li>
                 {% endif %}
-                <li class="page-item disabled"><span class="page-link">{{ page_obj.number }} / {{ page_obj.paginator.num_pages }}</span></li>
+                <li class="page-item disabled"><span class="page-link text-sm font-bold">{{ page_obj.number }} / {{ page_obj.paginator.num_pages }}</span></li>
                 {% if page_obj.has_next %}
-                    <li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}&q={{ current_search }}">Sig</a></li>
+                    <li class="page-item"><a class="page-link text-sm" href="?page={{ page_obj.next_page_number }}&q={{ current_search }}">Sig</a></li>
                 {% endif %}
             </ul>
         </nav>
@@ -214,30 +217,30 @@
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header bg-warning bg-opacity-10">
-                <h5 class="modal-title text-dark fw-bold">
+                <h5 class="modal-title text-dark font-bold text-lg">
                     <i class="fas fa-key me-2"></i>Restablecer Contraseña
                 </h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-                <p>¿Está seguro de que desea forzar el restablecimiento de contraseña para el siguiente usuario?</p>
+                <p class="text-sm">¿Está seguro de que desea forzar el restablecimiento de contraseña para el siguiente usuario?</p>
                 
                 <div class="alert alert-light border text-center">
-                    <h5 class="fw-bold mb-1" id="modal_usuario_nombre"></h5>
-                    <small class="text-muted" id="modal_usuario_email"></small>
+                    <h5 class="font-bold text-base mb-1" id="modal_usuario_nombre"></h5>
+                    <small class="text-muted text-xs" id="modal_usuario_email"></small>
                 </div>
 
-                <p class="small text-muted mb-0">
+                <p class="text-muted mb-0 text-xs">
                     <i class="fas fa-info-circle me-1"></i>
                     El sistema enviará un correo electrónico a la dirección registrada con un enlace seguro para que el usuario defina una nueva clave.
                 </p>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-secondary font-bold text-sm" data-bs-dismiss="modal">Cancelar</button>
                 
                 <form method="post" id="formResetPassword" action="">
                     {% csrf_token %}
-                    <button type="submit" class="btn btn-warning">
+                    <button type="submit" class="btn btn-warning font-bold text-sm">
                         <i class="fas fa-paper-plane me-2"></i>Enviar Correo
                     </button>
                 </form>
@@ -251,29 +254,29 @@
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header bg-danger text-white">
-                <h5 class="modal-title fw-bold">
+                <h5 class="modal-title font-bold text-lg">
                     <i class="fas fa-user-slash me-2"></i>Revocar Accesos
                 </h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-                <p>¿Está seguro de que desea finalizar <strong>TODAS</strong> las membresías activas de este usuario?</p>
+                <p class="text-sm">¿Está seguro de que desea finalizar <strong>TODAS</strong> las membresías activas de este usuario?</p>
                 
-                <div class="alert alert-light border text-center fw-bold text-danger" id="modal_finalizar_usuario_nombre">
+                <div class="alert alert-light border text-center font-bold text-danger text-base" id="modal_finalizar_usuario_nombre">
                     </div>
 
-                <div class="alert alert-warning small mb-0">
+                <div class="alert alert-warning mb-0 text-xs">
                     <i class="fas fa-exclamation-triangle me-1"></i>
                     El usuario perderá el acceso inmediato a todas las estaciones donde esté activo actualmente. 
                     Esta acción no elimina el historial, solo cambia el estado a "Finalizado".
                 </div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-secondary font-bold text-sm" data-bs-dismiss="modal">Cancelar</button>
                 
                 <form method="post" id="formFinalizarMembresias" action="">
                     {% csrf_token %}
-                    <button type="submit" class="btn btn-danger">
+                    <button type="submit" class="btn btn-danger font-bold text-sm">
                         <i class="fas fa-check-circle me-2"></i>Confirmar Revocación
                     </button>
                 </form>

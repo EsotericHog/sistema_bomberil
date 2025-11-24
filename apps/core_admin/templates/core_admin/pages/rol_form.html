@@ -12,23 +12,23 @@
             <div class="col-lg-3 mb-4">
                 <div class="card shadow-sm border-0 position-sticky" style="top: 20px; z-index: 100;">
                     <div class="card-header bg-white py-3">
-                        <h5 class="mb-0 fw-bold text-primary"><i class="fas fa-tag me-2"></i>Datos del Rol</h5>
+                        <h5 class="mb-0 font-bold text-primary text-lg"><i class="fas fa-tag me-2"></i>Datos del Rol</h5>
                     </div>
                     <div class="card-body">
                         <div class="mb-3">
-                            <label class="form-label fw-bold">Nombre del Rol *</label>
+                            <label class="form-label font-bold text-sm">Nombre del Rol *</label>
                             {{ form.nombre }}
                             {% if form.nombre.errors %}
-                                <div class="text-danger small">{{ form.nombre.errors.0 }}</div>
+                                <div class="text-danger text-xs mt-1">{{ form.nombre.errors.0 }}</div>
                             {% endif %}
                         </div>
                         
                         <div class="mb-3">
-                            <label class="form-label fw-bold">Descripción</label>
+                            <label class="form-label font-bold text-sm">Descripción</label>
                             {{ form.descripcion }}
                         </div>
 
-                        <div class="alert alert-info small">
+                        <div class="alert alert-info text-xs color_blanco">
                             <i class="fas fa-info-circle me-1"></i>
                             Este rol estará disponible globalmente.
                         </div>
@@ -36,17 +36,17 @@
                         <hr>
                         
                         <div class="d-grid gap-2">
-                            <button type="submit" class="btn btn-primary">
+                            <button type="submit" class="btn btn-primary font-bold text-sm">
                                 <i class="fas fa-save me-2"></i>{{ accion }}
                             </button>
-                            <a href="{% url 'core_admin:ruta_lista_roles' %}" class="btn btn-outline-secondary">Cancelar</a>
+                            <a href="{% url 'core_admin:ruta_lista_roles' %}" class="btn btn-outline-secondary font-bold text-sm">Cancelar</a>
                         </div>
                     </div>
                 </div>
             </div>
 
             <div class="col-lg-9">
-                <h5 class="mb-3 fw-bold text-secondary"><i class="fas fa-shield-alt me-2"></i>Matriz de Permisos</h5>
+                <h5 class="mb-3 font-bold text-secondary text-lg"><i class="fas fa-shield-alt me-2"></i>Matriz de Permisos</h5>
                 
                 {% for group in permissions_matrix %}
                 <div class="card mb-3 shadow-sm border-0">
@@ -59,7 +59,7 @@
                                    id="module-{{ group.app_label }}"
                                    data-module="{{ group.app_label }}"
                                    {% if group.main_perm.id in rol_permissions_ids %}checked{% endif %}>
-                            <label class="form-check-label fw-bold text-dark ms-2" for="module-{{ group.app_label }}" style="cursor: pointer;">
+                            <label class="form-check-label font-bold text-dark text-sm ms-2" for="module-{{ group.app_label }}" style="cursor: pointer;">
                                 {{ group.verbose_name }}
                             </label>
                         </div>
@@ -76,7 +76,7 @@
                                            id="perm-{{ perm.id }}"
                                            data-module="{{ group.app_label }}"
                                            {% if perm.id in rol_permissions_ids %}checked{% endif %}>
-                                    <label class="form-check-label small text-muted" for="perm-{{ perm.id }}" style="cursor: pointer;">
+                                    <label class="form-check-label text-muted text-xs" for="perm-{{ perm.id }}" style="cursor: pointer;">
                                         {{ perm.name }}
                                     </label>
                                 </div>
