@@ -30,29 +30,47 @@ except ImportError:
     ProfesionForm = CargoForm = UsuarioForm = VoluntarioForm = None
     HistorialCargoForm = HistorialReconocimientoForm = HistorialSancionForm = None
 
+
+# Mixin de ayuda para validar estación (Opcional, pero recomendado para limpiar código)
+class EstacionActivaMixin:
+    def get_estacion_activa(self, request):
+        estacion_id = request.session.get('active_estacion_id')
+        if not estacion_id:
+            messages.error(request, "Debes seleccionar una estación de trabajo.")
+            return None
+        return estacion_id
+
 # Página Inicial
-class VoluntariosInicioView(View):
+class VoluntariosInicioView(View, EstacionActivaMixin):
     def get(self, request):
+        estacion_id = self.get_estacion_activa(request)
+        if not estacion_id:
+            return redirect('portal:home') # O donde corresponda si no hay sesión
+
+        # --- 1. Datos para las Tarjetas (SOLO ESTACIÓN ACTIVA) ---
+        # Filtramos membresías que pertenezcan a la estación activa
+        voluntarios_activos = Membresia.objects.filter(estacion_id=estacion_id, estado='ACTIVO').count()
+        voluntarios_inactivos = Membresia.objects.filter(estacion_id=estacion_id, estado='INACTIVO').count()
         
-        # --- 1. Datos para las Tarjetas (Cards) ---
-        voluntarios_activos = Membresia.objects.filter(estado='ACTIVO').count()
-        voluntarios_inactivos = Membresia.objects.filter(estado='INACTIVO').count()
-        total_voluntarios_general = Voluntario.objects.count() 
+        # Total de gente vinculada a esta estación (activa o inactiva)
+        total_voluntarios_general = Membresia.objects.filter(estacion_id=estacion_id).count()
 
         # --- 2. Datos para Gráfico de Rangos (Cargos) ---
-        rangos_data = HistorialCargo.objects.filter(fecha_fin__isnull=True) \
-                      .values('cargo__nombre') \
-                      .annotate(count=Count('cargo')) \
-                      .order_by('-count')
+        # Filtramos cargos vigentes de voluntarios que pertenecen a la estación activa
+        rangos_data = HistorialCargo.objects.filter(
+            fecha_fin__isnull=True,
+            voluntario__usuario__membresias__estacion_id=estacion_id, # JOIN CRITICO
+            voluntario__usuario__membresias__estado='ACTIVO'
+        ).values('cargo__nombre').annotate(count=Count('cargo')).order_by('-count')
 
         chart_rangos_labels = [item['cargo__nombre'] for item in rangos_data]
         chart_rangos_counts = [item['count'] for item in rangos_data]
 
         # --- 3. Datos para Gráfico de Profesiones (Top 5) ---
-        profesiones_data = Voluntario.objects.exclude(profesion__isnull=True) \
-                            .values('profesion__nombre') \
-                            .annotate(count=Count('profesion')) \
-                            .order_by('-count')[:5] 
+        profesiones_data = Voluntario.objects.filter(
+            usuario__membresias__estacion_id=estacion_id, # JOIN CRITICO
+            usuario__membresias__estado='ACTIVO'
+        ).exclude(profesion__isnull=True).values('profesion__nombre').annotate(count=Count('profesion')).order_by('-count')[:5] 
 
         chart_profes_labels = [item['profesion__nombre'] for item in profesiones_data]
         chart_profes_counts = [item['count'] for item in profesiones_data]
@@ -69,32 +87,32 @@ class VoluntariosInicioView(View):
         }
         
         return render(request, "gestion_voluntarios/pages/home.html", context)
-    
-
+  
 # Lista de voluntarios
-class VoluntariosListaView(View):
+class VoluntariosListaView(View, EstacionActivaMixin):
     def get(self, request):
-        
-        # 1. Capturamos los parámetros de la URL (Filtros)
-        estacion_id = request.GET.get('estacion')
+        estacion_id = self.get_estacion_activa(request)
+        if not estacion_id:
+            return redirect('portal:home')
+
+        # 1. Capturamos los parámetros de la URL (Filtros ADICIONALES)
+        # NOTA: Ya no leemos 'estacion' del GET porque forzamos la de la sesión.
         rango_id = request.GET.get('rango')
-        busqueda = request.GET.get('q') # Para la caja de búsqueda
+        busqueda = request.GET.get('q')
 
-        # 2. Iniciamos la consulta base
-        voluntarios_qs = Voluntario.objects.select_related('usuario')
+        # 2. Iniciamos la consulta base RESTRINGIDA A LA ESTACIÓN
+        voluntarios_qs = Voluntario.objects.select_related('usuario').filter(
+            usuario__membresias__estacion_id=estacion_id,
+            usuario__membresias__estado='ACTIVO'
+        )
 
-        # 3. Aplicamos Filtro de Estación (si existe y no es 'global')
-        if estacion_id and estacion_id != 'global':
-            voluntarios_qs = voluntarios_qs.filter(
-                usuario__membresias__estacion_id=estacion_id,
-                usuario__membresias__estado='ACTIVO'
-            )
+        # 3. (El filtro de estación por GET se elimina o se ignora por seguridad)
 
         # 4. Aplicamos Filtro de Rango (si existe y no es 'global')
         if rango_id and rango_id != 'global':
             voluntarios_qs = voluntarios_qs.filter(
                 historial_cargos__cargo_id=rango_id,
-                historial_cargos__fecha_fin__isnull=True # Solo cargo actual
+                historial_cargos__fecha_fin__isnull=True 
             )
 
         # 5. Aplicamos Búsqueda por Texto (Nombre o RUT)
@@ -105,10 +123,11 @@ class VoluntariosListaView(View):
                 Q(usuario__rut__icontains=busqueda)
             )
 
-        # 6. Prefetches (para optimizar la carga de datos relacionados en la tarjeta)
+        # 6. Prefetches (Optimizados para solo traer data relevante)
+        # Solo traemos la membresía de ESTA estación
         active_membresia_prefetch = Prefetch(
             'usuario__membresias',
-            queryset=Membresia.objects.filter(estado='ACTIVO').select_related('estacion'),
+            queryset=Membresia.objects.filter(estado='ACTIVO', estacion_id=estacion_id).select_related('estacion'),
             to_attr='membresia_activa_list'
         )
         current_cargo_prefetch = Prefetch(
@@ -117,39 +136,50 @@ class VoluntariosListaView(View):
             to_attr='cargo_actual_list'
         )
         
-        # Ejecutamos la consulta final con 'distinct' para evitar duplicados por los joins
         voluntarios = voluntarios_qs.prefetch_related(
             active_membresia_prefetch,
             current_cargo_prefetch
         ).distinct().all()
 
         # 7. Datos para llenar los selectores de filtro
-        estaciones = Estacion.objects.all().order_by('nombre')
+        # Ya no enviamos todas las estaciones, solo cargos
         cargos = Cargo.objects.all().order_by('nombre')
         
         context = {
             'voluntarios': voluntarios,
-            'estaciones': estaciones,
+            # 'estaciones': estaciones,  <-- ELIMINADO: El usuario no debe poder cambiar de estación aquí
             'cargos': cargos,
         }
         return render(request, "gestion_voluntarios/pages/lista_voluntarios.html", context)
 
-
 # Ver voluntario
-class VoluntariosVerView(View):
+class VoluntariosVerView(View, EstacionActivaMixin):
     def get(self, request, id):
-        active_membresia_prefetch = Prefetch('usuario__membresias', queryset=Membresia.objects.filter(estado='ACTIVO').select_related('estacion'), to_attr='membresia_activa_list')
+        estacion_id = self.get_estacion_activa(request)
+        if not estacion_id:
+            return redirect('portal:home')
+
+        # Prefetches
+        active_membresia_prefetch = Prefetch('usuario__membresias', queryset=Membresia.objects.filter(estado='ACTIVO', estacion_id=estacion_id).select_related('estacion'), to_attr='membresia_activa_list')
         current_cargo_prefetch = Prefetch('historial_cargos', queryset=HistorialCargo.objects.filter(fecha_fin__isnull=True).select_related('cargo'), to_attr='cargo_actual_list')
+        # Cargos históricos: ¿Quieres que vean cargos que tuvo en OTRAS estaciones? 
+        # Generalmente sí (es su hoja de vida), pero la edición está restringida. Dejamos query all para lectura.
         cargos_prefetch = Prefetch('historial_cargos', queryset=HistorialCargo.objects.all().select_related('cargo', 'estacion_registra').order_by('-fecha_inicio'))
         reconocimientos_prefetch = Prefetch('historial_reconocimientos', queryset=HistorialReconocimiento.objects.all().select_related('tipo_reconocimiento', 'estacion_registra').order_by('-fecha_evento'))
         sanciones_prefetch = Prefetch('historial_sanciones', queryset=HistorialSancion.objects.all().select_related('estacion_registra', 'estacion_evento').order_by('-fecha_evento'))
         
-        voluntario = get_object_or_404(Voluntario.objects.select_related('usuario', 'nacionalidad', 'profesion', 'domicilio_comuna').prefetch_related(active_membresia_prefetch, current_cargo_prefetch, cargos_prefetch, reconocimientos_prefetch, sanciones_prefetch), usuario__id=id)
+        # SEGURIDAD CRÍTICA: get_object_or_404 ahora incluye el filtro de membresía en la estación actual
+        # Si el ID existe pero es de otra estación, devolverá 404 (Not Found) protegiendo el dato.
+        voluntario = get_object_or_404(
+            Voluntario.objects.select_related('usuario', 'nacionalidad', 'profesion', 'domicilio_comuna')
+            .prefetch_related(active_membresia_prefetch, current_cargo_prefetch, cargos_prefetch, reconocimientos_prefetch, sanciones_prefetch), 
+            usuario__id=id,
+            usuario__membresias__estacion_id=estacion_id  # <--- RESTRICCION
+        )
         
         membresia_activa = voluntario.usuario.membresia_activa_list[0] if voluntario.usuario.membresia_activa_list else None
         cargo_actual = voluntario.cargo_actual_list[0] if voluntario.cargo_actual_list else None
 
-        # --- Enviamos los 3 formularios al template ---
         context = {
             'voluntario': voluntario,
             'membresia': membresia_activa,
@@ -162,33 +192,24 @@ class VoluntariosVerView(View):
 
 
 # --- VISTAS PARA AGREGAR EVENTOS (BITÁCORA) ---
+# En estas vistas ya tenías la validación de `request.session`, pero
+# agregamos la validación de que el voluntario destino pertenezca a la estación.
 
-class VoluntarioAgregarCargoView(View):
+class VoluntarioAgregarCargoView(View, EstacionActivaMixin):
     def post(self, request, id):
-        voluntario = get_object_or_404(Voluntario, usuario__id=id)
+        estacion_id = self.get_estacion_activa(request)
+        if not estacion_id: return redirect('gestion_voluntarios:ruta_ver_voluntario', id=id)
+
+        # Validamos que el voluntario pertenezca a la estación antes de agregarle nada
+        voluntario = get_object_or_404(Voluntario, usuario__id=id, usuario__membresias__estacion_id=estacion_id)
+        
         form = HistorialCargoForm(request.POST)
         if form.is_valid():
             try:
-                estacion_id = request.session.get('active_estacion_id')
-                
-                if not estacion_id:
-                    # Si no hay estación activa (ej: superuser entró directo sin "Switch"), 
-                    # detenemos el proceso para evitar el error de integridad.
-                    messages.error(request, "Error: Debes seleccionar una estación activa para registrar movimientos.")
-                    return redirect('gestion_voluntarios:ruta_ver_voluntario', id=id)
-                
                 estacion_registra = Estacion.objects.get(pk=estacion_id)
                 
-                # Lógica de Bitácora: Cerrar cargo anterior
                 fecha_inicio_nuevo = form.cleaned_data['fecha_inicio']
                 cargo_anterior = HistorialCargo.objects.filter(voluntario=voluntario, fecha_fin__isnull=True).first()
-
-                # Opcional: Validar que solo cerramos el cargo en la MISMA estación si la regla lo exige,
-                # pero generalmente el historial es lineal por persona.
-                cargo_anterior = HistorialCargo.objects.filter(
-                    voluntario=voluntario, 
-                    fecha_fin__isnull=True
-                ).first()
 
                 if cargo_anterior:
                     if fecha_inicio_nuevo < cargo_anterior.fecha_inicio:
@@ -198,7 +219,6 @@ class VoluntarioAgregarCargoView(View):
                     cargo_anterior.fecha_fin = fecha_inicio_nuevo
                     cargo_anterior.save()
 
-                # Crear nuevo cargo
                 nuevo_cargo = form.save(commit=False)
                 nuevo_cargo.voluntario = voluntario
                 nuevo_cargo.estacion_registra = estacion_registra
@@ -213,68 +233,53 @@ class VoluntarioAgregarCargoView(View):
         return redirect('gestion_voluntarios:ruta_ver_voluntario', id=id)
 
 
-class VoluntarioAgregarReconocimientoView(View):
+# (Hacer lo mismo con Reconocimiento y Sanción, agregando el filtro en el get_object_or_404)
+class VoluntarioAgregarReconocimientoView(View, EstacionActivaMixin):
     def post(self, request, id):
-        voluntario = get_object_or_404(Voluntario, usuario__id=id)
+        estacion_id = self.get_estacion_activa(request)
+        if not estacion_id: return redirect('gestion_voluntarios:ruta_ver_voluntario', id=id)
+
+        voluntario = get_object_or_404(Voluntario, usuario__id=id, usuario__membresias__estacion_id=estacion_id)
         form = HistorialReconocimientoForm(request.POST)
         
         if form.is_valid():
             try:
-                estacion_id = request.session.get('active_estacion_id')
-                
-                if not estacion_id:
-                    messages.error(request, "Error: Debes seleccionar una estación activa para registrar reconocimientos.")
-                    return redirect('gestion_voluntarios:ruta_ver_voluntario', id=id)
-                
                 estacion_registra = Estacion.objects.get(pk=estacion_id)
-                
                 nuevo_reco = form.save(commit=False)
                 nuevo_reco.voluntario = voluntario
                 nuevo_reco.estacion_registra = estacion_registra
                 nuevo_reco.es_historico = False
                 nuevo_reco.save()
-                
                 messages.success(request, "Reconocimiento agregado exitosamente.")
             except Exception as e:
                 messages.error(request, f"Error al guardar: {e}")
         else:
-             messages.error(request, "Error en el formulario de reconocimiento.")
-             
+             messages.error(request, "Error en el formulario.")
         return redirect('gestion_voluntarios:ruta_ver_voluntario', id=id)
 
 
-class VoluntarioAgregarSancionView(View):
+class VoluntarioAgregarSancionView(View, EstacionActivaMixin):
     def post(self, request, id):
-        voluntario = get_object_or_404(Voluntario, usuario__id=id)
-        # Nota: request.FILES para subir el documento adjunto
+        estacion_id = self.get_estacion_activa(request)
+        if not estacion_id: return redirect('gestion_voluntarios:ruta_ver_voluntario', id=id)
+
+        voluntario = get_object_or_404(Voluntario, usuario__id=id, usuario__membresias__estacion_id=estacion_id)
         form = HistorialSancionForm(request.POST, request.FILES)
         
         if form.is_valid():
             try:
-                estacion_id = request.session.get('active_estacion_id')
-                
-                if not estacion_id:
-                    messages.error(request, "Error: Debes seleccionar una estación activa para registrar reconocimientos.")
-                    return redirect('gestion_voluntarios:ruta_ver_voluntario', id=id)
-                
                 estacion_registra = Estacion.objects.get(pk=estacion_id)
-                
                 nueva_sancion = form.save(commit=False)
                 nueva_sancion.voluntario = voluntario
                 nueva_sancion.estacion_registra = estacion_registra
                 nueva_sancion.es_historico = False
                 nueva_sancion.save()
-                
                 messages.success(request, "Sanción registrada exitosamente.")
             except Exception as e:
                 messages.error(request, f"Error al guardar: {e}")
         else:
-             messages.error(request, "Error en el formulario de sanción.")
-             
+             messages.error(request, "Error en el formulario.")
         return redirect('gestion_voluntarios:ruta_ver_voluntario', id=id)
-
-
-# ... (Resto de vistas Modificar, Configuración, Reportes... se mantienen igual) ...
 class VoluntariosModificarView(View):
     
     def get(self, request, id):
@@ -314,15 +319,14 @@ class VoluntariosModificarView(View):
      
 
 # Editar voluntario
-class VoluntariosModificarView(View):
-    
+class VoluntariosModificarView(View, EstacionActivaMixin):
     def get(self, request, id):
-        voluntario = get_object_or_404(Voluntario.objects.select_related('usuario'), usuario__id=id)
-        
-        if not UsuarioForm or not VoluntarioForm:
-             messages.error(request, 'Faltan archivos de formulario (forms.py).')
-             return redirect('gestion_voluntarios:ruta_ver_voluntario', id=id)
+        estacion_id = self.get_estacion_activa(request)
+        if not estacion_id: return redirect('portal:home')
 
+        # Restricción: Solo puedo editar voluntarios de mi estación
+        voluntario = get_object_or_404(Voluntario.objects.select_related('usuario'), usuario__id=id, usuario__membresias__estacion_id=estacion_id)
+        
         usuario_form = UsuarioForm(instance=voluntario.usuario)
         voluntario_form = VoluntarioForm(instance=voluntario)
 
@@ -334,16 +338,15 @@ class VoluntariosModificarView(View):
         return render(request, "gestion_voluntarios/pages/modificar_voluntario.html", context)
 
     def post(self, request, id):
-        voluntario = get_object_or_404(Voluntario.objects.select_related('usuario'), usuario__id=id)
+        estacion_id = self.get_estacion_activa(request)
+        voluntario = get_object_or_404(Voluntario.objects.select_related('usuario'), usuario__id=id, usuario__membresias__estacion_id=estacion_id)
         
-        # CAMBIO: request.FILES ahora va al voluntario_form (para el campo 'imagen')
         usuario_form = UsuarioForm(request.POST, instance=voluntario.usuario)
         voluntario_form = VoluntarioForm(request.POST, request.FILES, instance=voluntario)
 
         if usuario_form.is_valid() and voluntario_form.is_valid():
             usuario_form.save()
             voluntario_form.save()
-            
             messages.success(request, f'Se han guardado los cambios de {voluntario.usuario.get_full_name}.')
             return redirect('gestion_voluntarios:ruta_ver_voluntario', id=voluntario.usuario.id)
         
@@ -352,7 +355,7 @@ class VoluntariosModificarView(View):
             'usuario_form': usuario_form,
             'voluntario_form': voluntario_form
         }
-        messages.error(request, 'Error al guardar. Por favor, revisa los campos.')
+        messages.error(request, 'Error al guardar.')
         return render(request, "gestion_voluntarios/pages/modificar_voluntario.html", context)
 
 
@@ -569,33 +572,36 @@ class HojaVidaView(View):
         return HttpResponse(f'Error al generar el PDF: {pdf.err}')
 
 # Exportar listado 
-class ExportarListadoView(View):
+class ExportarListadoView(View, EstacionActivaMixin):
     
     def _get_voluntarios_data(self, request):
         """
-        Obtiene el queryset de voluntarios, filtrado según los 
-        parámetros GET 'estacion' y 'rango'.
+        Obtiene los voluntarios filtrados estrictamente por la estación activa
+        y los filtros opcionales de rango.
         """
-        estacion_id = request.GET.get('estacion')
+        estacion_id = self.get_estacion_activa(request)
+        if not estacion_id: 
+            return Voluntario.objects.none()
+
         cargo_id = request.GET.get('rango')
         
-        voluntarios_qs = Voluntario.objects.select_related('usuario')
-
-        if estacion_id and estacion_id != 'global':
-            voluntarios_qs = voluntarios_qs.filter(
-                usuario__membresias__estacion_id=estacion_id, 
-                usuario__membresias__estado='ACTIVO'
-            )
+        # 1. Filtro BASE: Solo voluntarios de la estación activa
+        voluntarios_qs = Voluntario.objects.select_related('usuario').filter(
+            usuario__membresias__estacion_id=estacion_id, 
+            usuario__membresias__estado='ACTIVO'
+        )
         
+        # 2. Filtro Opcional: Rango
         if cargo_id and cargo_id != 'global':
             voluntarios_qs = voluntarios_qs.filter(
                 historial_cargos__cargo_id=cargo_id,
                 historial_cargos__fecha_fin__isnull=True
             )
 
+        # 3. Prefetches para optimizar la exportación
         active_membresia_prefetch = Prefetch(
             'usuario__membresias',
-            queryset=Membresia.objects.filter(estado='ACTIVO').select_related('estacion'),
+            queryset=Membresia.objects.filter(estado='ACTIVO', estacion_id=estacion_id).select_related('estacion'),
             to_attr='membresia_activa_list'
         )
         current_cargo_prefetch = Prefetch(
@@ -604,10 +610,7 @@ class ExportarListadoView(View):
             to_attr='cargo_actual_list'
         )
         
-        return voluntarios_qs.prefetch_related(
-            active_membresia_prefetch,
-            current_cargo_prefetch
-        ).distinct()
+        return voluntarios_qs.prefetch_related(active_membresia_prefetch, current_cargo_prefetch).distinct()
 
     def _export_csv(self, voluntarios):
         """Genera y devuelve una respuesta HTTP con un archivo CSV."""
@@ -627,7 +630,7 @@ class ExportarListadoView(View):
             cargo_actual = v.cargo_actual_list[0] if v.cargo_actual_list else None
             writer.writerow([
                 v.usuario.rut or '',
-                v.usuario.get_full_name, # Corregido (es propiedad)
+                v.usuario.get_full_name,
                 v.usuario.email or '',
                 v.usuario.phone or '',
                 membresia.estacion.nombre if membresia and membresia.estacion else 'Sin Estación',
@@ -656,7 +659,7 @@ class ExportarListadoView(View):
             cargo_actual = v.cargo_actual_list[0] if v.cargo_actual_list else None
             ws.append([
                 v.usuario.rut or '',
-                v.usuario.get_full_name, # Corregido (es propiedad)
+                v.usuario.get_full_name,
                 v.usuario.email or '',
                 v.usuario.phone or '',
                 membresia.estacion.nombre if membresia and membresia.estacion else 'Sin Estación',
@@ -673,7 +676,6 @@ class ExportarListadoView(View):
             'voluntarios': voluntarios,
             'request': request
         }
-        # (Asegúrate de que 'lista_voluntarios_pdf.html' existe)
         html_string = render_to_string(
             "gestion_voluntarios/pages/lista_voluntarios_pdf.html", 
             context
@@ -701,7 +703,7 @@ class ExportarListadoView(View):
             cargo_actual = v.cargo_actual_list[0] if v.cargo_actual_list else None
             data_list.append({
                 'rut': v.usuario.rut or '',
-                'nombre_completo': v.usuario.get_full_name, # Corregido (es propiedad)
+                'nombre_completo': v.usuario.get_full_name,
                 'email': v.usuario.email or '',
                 'telefono': v.usuario.phone or '',
                 'estacion': membresia.estacion.nombre if membresia and membresia.estacion else None,
@@ -714,29 +716,31 @@ class ExportarListadoView(View):
     
     # --- VISTA GET PRINCIPAL ---
     def get(self, request):
+        estacion_id = self.get_estacion_activa(request)
+        if not estacion_id:
+            return redirect('portal:home')
+
         # Leemos el formato de la URL (?format=...)
         formato = request.GET.get('format')
 
         if formato:
             # Si se pide un formato, generar el archivo
-            voluntarios = self._get_voluntarios_data(request) # Get filtered data
+            voluntarios = self._get_voluntarios_data(request)
             
             if formato == 'excel':
                 return self._export_excel(voluntarios)
             elif formato == 'pdf':
                 return self._export_pdf(request, voluntarios)
             elif formato == 'json':
-                return self._export_json(voluntarios)
+                return self._export_json(voluntarios) # <--- Ahora sí encontrará este método
             else: # Default to CSV
                 return self._export_csv(voluntarios)
         
         else:
             # Si no se pide formato, mostrar la página de opciones
-            estaciones = Estacion.objects.all().order_by('nombre')
             cargos = Cargo.objects.all().order_by('nombre')
             
             context = {
-                'estaciones': estaciones,
                 'cargos': cargos
             }
             return render(request, "gestion_voluntarios/pages/exportar_listado.html", context)
