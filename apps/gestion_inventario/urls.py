@@ -58,29 +58,29 @@ urlpatterns = [
     # Lista de compartimentos
     path('compartimentos/', CompartimentoListaView.as_view(), name='ruta_lista_compartimentos'),
     # Detalle de Compartimento
-    path('compartimentos/<int:compartimento_id>/detalle/', CompartimentoDetalleView.as_view(), name='ruta_detalle_compartimento'),
+    path('compartimentos/<uuid:compartimento_id>/detalle/', CompartimentoDetalleView.as_view(), name='ruta_detalle_compartimento'),
     # Editar Compartimento
-    path('compartimentos/<int:compartimento_id>/editar/', CompartimentoEditView.as_view(), name='ruta_editar_compartimento'),
+    path('compartimentos/<uuid:compartimento_id>/editar/', CompartimentoEditView.as_view(), name='ruta_editar_compartimento'),
     # Eliminar Compartimento
-    path('compartimentos/<int:compartimento_id>/eliminar/', CompartimentoDeleteView.as_view(), name='ruta_eliminar_compartimento'),
+    path('compartimentos/<uuid:compartimento_id>/eliminar/', CompartimentoDeleteView.as_view(), name='ruta_eliminar_compartimento'),
     # Crear área
     path('areas/crear/', AreaCrearView.as_view(), name="ruta_crear_area"),
     # Gestionar detalle de una ubicación
-    path('ubicaciones/<int:ubicacion_id>/gestionar/', UbicacionDetalleView.as_view(), name='ruta_gestionar_ubicacion'),
+    path('ubicaciones/<uuid:ubicacion_id>/gestionar/', UbicacionDetalleView.as_view(), name='ruta_gestionar_ubicacion'),
     # Crear compartimento para un área
-    path('ubicaciones/<int:ubicacion_id>/compartimentos/crear/', CompartimentoCrearView.as_view(), name='ruta_crear_compartimento'),
+    path('ubicaciones/<uuid:ubicacion_id>/compartimentos/crear/', CompartimentoCrearView.as_view(), name='ruta_crear_compartimento'),
     # Editar área
-    path('areas/<int:ubicacion_id>/editar/', AreaEditarView.as_view(), name='ruta_editar_area'),
+    path('areas/<uuid:ubicacion_id>/editar/', AreaEditarView.as_view(), name='ruta_editar_area'),
 
     # Lista de vehículos
     path('vehiculos/', VehiculoListaView.as_view(), name='ruta_lista_vehiculos'),
     # Crear vehículo
     path('vehiculos/crear/', VehiculoCrearView.as_view(), name='ruta_crear_vehiculo'),
     # Editar Vehículo
-    path('vehiculos/<int:ubicacion_id>/editar/', VehiculoEditarView.as_view(), name='ruta_editar_vehiculo'),
+    path('vehiculos/<uuid:ubicacion_id>/editar/', VehiculoEditarView.as_view(), name='ruta_editar_vehiculo'),
 
     # Eliminar ubicación
-    path('ubicaciones/<int:ubicacion_id>/eliminar/', UbicacionDeleteView.as_view(), name='ruta_eliminar_ubicacion'),
+    path('ubicaciones/<uuid:ubicacion_id>/eliminar/', UbicacionDeleteView.as_view(), name='ruta_eliminar_ubicacion'),
 
     # Catálogo global de productos
     path('catalogo-global/', CatalogoGlobalListView.as_view(), name='ruta_catalogo_global'),
@@ -113,20 +113,20 @@ urlpatterns = [
     # Recepción de stock
     path('recepcion-stock/', RecepcionStockView.as_view(), name='ruta_recepcion_stock'),
     # Añadir Stock a Compartimento
-    path('compartimentos/<int:compartimento_id>/añadir-stock/', AgregarStockACompartimentoView.as_view(), name='ruta_agregar_stock_compartimento'),
+    path('compartimentos/<uuid:compartimento_id>/añadir-stock/', AgregarStockACompartimentoView.as_view(), name='ruta_agregar_stock_compartimento'),
 
     # Anular existencia
-    path('existencia/<str:tipo_item>/<int:item_id>/anular/', AnularExistenciaView.as_view(), name='ruta_anular_existencia'),
+    path('existencia/<str:tipo_item>/<uuid:item_id>/anular/', AnularExistenciaView.as_view(), name='ruta_anular_existencia'),
     # Ajustar stock de existencia
-    path('lotes/<int:lote_id>/ajustar-stock/', AjustarStockLoteView.as_view(), name='ruta_ajustar_stock_lote'),
+    path('lotes/<uuid:lote_id>/ajustar-stock/', AjustarStockLoteView.as_view(), name='ruta_ajustar_stock_lote'),
     # Dar de baja existencia
-    path('existencia/<str:tipo_item>/<int:item_id>/dar-de-baja/', BajaExistenciaView.as_view(), name='ruta_dar_de_baja_existencia'),
+    path('existencia/<str:tipo_item>/<uuid:item_id>/dar-de-baja/', BajaExistenciaView.as_view(), name='ruta_dar_de_baja_existencia'),
     # Reportar extravío de existencia
-    path('existencia/<str:tipo_item>/<int:item_id>/extraviado/', ExtraviadoExistenciaView.as_view(), name='ruta_extraviado_existencia'),
+    path('existencia/<str:tipo_item>/<uuid:item_id>/extraviado/', ExtraviadoExistenciaView.as_view(), name='ruta_extraviado_existencia'),
     # Consumir stock (lotes de insumos)
-    path('lotes/<int:lote_id>/consumir/', ConsumirStockLoteView.as_view(), name='ruta_consumir_stock_lote'),
+    path('lotes/<uuid:lote_id>/consumir/', ConsumirStockLoteView.as_view(), name='ruta_consumir_stock_lote'),
     # Mover/Trasferir existencias (interno
-    path('existencia/<str:tipo_item>/<int:item_id>/mover/', TransferenciaExistenciaView.as_view(), name='ruta_mover_existencia'),
+    path('existencia/<str:tipo_item>/<uuid:item_id>/mover/', TransferenciaExistenciaView.as_view(), name='ruta_mover_existencia'),
 
     # Prestar existencias / Crear préstamo
     path('prestamos/crear/', CrearPrestamoView.as_view(), name='ruta_crear_prestamo'),
