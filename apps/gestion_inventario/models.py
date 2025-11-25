@@ -781,23 +781,29 @@ class LoteInsumo(models.Model):
         if not self.pk and not self.estado_id:
             try:
                 # Buscamos 'DISPONIBLE' y lo asignamos
-                estado_disponible = Estado.objects.get(nombre='DISPONIBLE')
-                self.estado = estado_disponible
+                self.estado = Estado.objects.get(nombre='DISPONIBLE')
             except Estado.DoesNotExist:
                 # Fallback por si 'DISPONIBLE' no existe
                 # (en un sistema real, aquí se debería loggear un error crítico)
                 pass
         
-        # Comprueba si es un objeto nuevo (not self.pk) y si el código aún no se ha generado
-        if not self.codigo_lote and not self.pk and self.compartimento:
+        # Verificamos solo si el código está vacío. (UUID siempre tiene valor en self.pk)
+        if not self.codigo_lote and self.compartimento:
             
-            # Obtenemos la estación a través de la relación (Compartimento -> Ubicacion -> Estacion)
+            # Navegamos a la estación
             estacion = self.compartimento.ubicacion.estacion
             
-            # Construye el prefijo usando 'E' y el ID de la estación
-            prefix = f"E{estacion.id}-LOT-" # Ej: "E1-LOT-", "E2-LOT-"
+            # Obtener el código oficial de la estación
+            estacion_code = estacion.codigo
 
-            # Busca el último lote de ESA estación que comience con el prefijo
+            # Fallback: Si la estación no tiene código asignado, generamos uno basado en ID
+            if not estacion_code:
+                estacion_code = f"E{str(estacion.id).zfill(3)}" # Ej: E001
+
+            # Construir prefijo estándar: "E001-LOT-"
+            prefix = f"{estacion_code}-LOT-"
+
+            # Buscar último correlativo con este prefijo en esta estación
             last_lote = LoteInsumo.objects.filter(
                 compartimento__ubicacion__estacion=estacion, 
                 codigo_lote__startswith=prefix
@@ -806,18 +812,15 @@ class LoteInsumo(models.Model):
             next_num = 1
             if last_lote and last_lote.codigo_lote:
                 try:
-                    # Intenta extraer el número del último código
                     last_num_str = last_lote.codigo_lote.split(prefix)[-1]
                     next_num = int(last_num_str) + 1
                 except (IndexError, ValueError):
-                    # Si falla (ej. código malformado), simplemente usa 1
                     pass 
 
-            # Asigna el nuevo código formateado (ej: "E1-LOT-00001")
+            # Asignar código final
             self.codigo_lote = f"{prefix}{next_num:05d}"
             
-            # Bucle de seguridad: verifica que el código sea realmente único
-            # (En caso de concurrencia o un ID borrado)
+            # Loop de seguridad anti-colisiones
             while LoteInsumo.objects.filter(
                 compartimento__ubicacion__estacion=estacion, 
                 codigo_lote=self.codigo_lote
@@ -825,9 +828,7 @@ class LoteInsumo(models.Model):
                  next_num += 1
                  self.codigo_lote = f"{prefix}{next_num:05d}"
             
-        # Llama al método save() original para guardar el objeto
         super().save(*args, **kwargs)
-
 
 
 
