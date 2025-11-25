@@ -14,8 +14,6 @@ from .views import (
     CompartimentoEditView,
     CompartimentoDeleteView,
     CatalogoGlobalListView,
-    ApiGetProductoGlobalSKU,
-    ApiAnadirProductoLocal,
     ProductoGlobalCrearView,
     ProductoLocalListView,
     ProductoLocalEditView,
@@ -84,10 +82,10 @@ urlpatterns = [
 
     # Catálogo global de productos
     path('catalogo-global/', CatalogoGlobalListView.as_view(), name='ruta_catalogo_global'),
-    path('api/producto-global-sku/<int:pk>/', ApiGetProductoGlobalSKU.as_view(), name='api_get_producto_global_sku'),
-    path('api/anadir-producto-local/', ApiAnadirProductoLocal.as_view(), name='api_anadir_producto_local'),
     # Crear nuevo producto global
     path('catalogo-global/crear/', ProductoGlobalCrearView.as_view(), name='ruta_crear_producto_global'),
+    # API para obtener detalle de producto global en apps.api (api:api_get_producto_global_sku)
+    # API para agregar producto al catálogo local en apps.api (api:api_anadir_producto_local)
 
     # Catálogo local de productos
     path('catalogo-local/', ProductoLocalListView.as_view(), name='ruta_catalogo_local'),

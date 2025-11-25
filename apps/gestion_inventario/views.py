@@ -1,12 +1,15 @@
 import json
 import datetime
+import qrcode
+import io
+import uuid
 from itertools import chain
 from django.utils import timezone
 from django.db import IntegrityError, transaction
 from django.shortcuts import render, redirect
 from django.views import View
-from django.views.generic import TemplateView
-from django.http import JsonResponse, HttpResponse
+from django.views.generic import TemplateView, DeleteView, UpdateView, ListView, DetailView, CreateView
+from django.http import JsonResponse, HttpResponse, HttpResponseRedirect
 from django.db import models
 from django.db.models import Count, Sum, Q, Subquery, OuterRef, ProtectedError, Value, Case, When, CharField, F
 from django.db.models.functions import Coalesce
@@ -15,12 +18,20 @@ from django.contrib import messages
 from django.shortcuts import get_object_or_404
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
-import qrcode
-import io
 from django.db.models.functions import Coalesce
 from dateutil.relativedelta import relativedelta
+from django.db.models.functions import Coalesce, Abs
+from django.utils.functional import cached_property
 
+from .utils import generar_sku_sugerido
+from core.settings import (
+    INVENTARIO_UBICACION_AREA_NOMBRE as AREA_NOMBRE, 
+    INVENTARIO_UBICACION_VEHICULO_NOMBRE as VEHICULO_NOMBRE, 
+)
 
+from apps.gestion_usuarios.models import Membresia
+from apps.common.mixins import ModuleAccessMixin, EstacionActivaRequiredMixin, BaseEstacionMixin
+from apps.gestion_inventario.mixins import UbicacionMixin
 
 from .models import (
     Estacion, 
@@ -45,6 +56,7 @@ from .models import (
     MovimientoInventario,
     TipoMovimiento
     )
+
 from .forms import (
     AreaForm, 
     AreaEditForm,
@@ -75,125 +87,94 @@ from .forms import (
     DestinatarioForm,
     EtiquetaFilterForm
     )
-from .utils import generar_sku_sugerido
-from core.settings import (
-    INVENTARIO_UBICACION_AREA_NOMBRE as AREA_NOMBRE, 
-    INVENTARIO_UBICACION_VEHICULO_NOMBRE as VEHICULO_NOMBRE, 
-)
-
-from apps.gestion_usuarios.models import Membresia
-from apps.common.mixins import ModuleAccessMixin, EstacionActivaRequiredMixin, BaseEstacionMixin
-from apps.gestion_inventario.mixins import UbicacionMixin
 
 
 class InventarioInicioView(BaseEstacionMixin, TemplateView):
     """
     Vista de inicio (Dashboard) del módulo de Gestión de Inventario.
-    Muestra KPIs, alertas y accesos directos.
+    Optimizada con agregaciones condicionales para reducir hits a la BD.
     """
     template_name = "gestion_inventario/pages/home.html"
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-
-        # 1. Definir filtros base por estación
-        # Filtro para Activos (tienen FK directo a estacion)
-        activos_estacion_qs = Activo.objects.filter(estacion_id=self.estacion_activa)
         
-        # Filtro para Lotes (vía compartimento -> ubicacion -> estacion)
-        lotes_estacion_qs = LoteInsumo.objects.filter(
-            compartimento__ubicacion__estacion_id=self.estacion_activa
-        )
-
-        # ======== KPIs DE LA FILA SUPERIOR ========
-
-        # KPI 1: Existencias Operativas
-        # Usamos el TipoEstado 'OPERATIVO'
-        count_activos_op = activos_estacion_qs.filter(estado__tipo_estado__nombre='OPERATIVO').count()
-        count_lotes_op = lotes_estacion_qs.filter(estado__tipo_estado__nombre='OPERATIVO').count()
-        context['kpi_total_operativas'] = count_activos_op + count_lotes_op
-
-        # KPI 2: Existencias No Operativas
-        # Usamos el TipoEstado 'NO OPERATIVO' (Ej: En Reparación, Extraviado)
-        count_activos_noop = activos_estacion_qs.filter(estado__tipo_estado__nombre='NO OPERATIVO').count()
-        count_lotes_noop = lotes_estacion_qs.filter(estado__tipo_estado__nombre='NO OPERATIVO').count()
-        context['kpi_total_no_operativas'] = count_activos_noop + count_lotes_noop
-
-        # KPI 3: Items en Préstamo Externo
-        # Basado en el Estado específico 'EN PRÉSTAMO EXTERNO'
-        count_activos_prestamo = activos_estacion_qs.filter(estado__nombre='EN PRÉSTAMO EXTERNO').count()
-        count_lotes_prestamo = lotes_estacion_qs.filter(estado__nombre='EN PRÉSTAMO EXTERNO').count()
-        context['kpi_total_prestamo'] = count_activos_prestamo + count_lotes_prestamo
-
-        # KPI 4: Próximos a Vencer (ej: en 60 días)
+        # Datos de fecha
         hoy = timezone.now().date()
         fecha_limite_vencimiento = hoy + relativedelta(days=60)
-        
-        # Activos: Revisa fecha_expiracion O fin_vida_util_calculada
-        activos_vencen = activos_estacion_qs.filter(
-            Q(fecha_expiracion__range=[hoy, fecha_limite_vencimiento]) |
-            Q(fin_vida_util_calculada__range=[hoy, fecha_limite_vencimiento])
-        ).distinct()
-        
-        # Lotes: Revisa solo fecha_expiracion
-        lotes_vencen = lotes_estacion_qs.filter(
-            fecha_expiracion__range=[hoy, fecha_limite_vencimiento]
-        )
-        
-        context['kpi_proximos_a_vencer'] = activos_vencen.count() + lotes_vencen.count()
 
-        # KPI 5: Stock Bajo
+        # 1. Definir Filtros Base (QuerySets reutilizables)
+        # Usamos self.estacion_activa_id provisto por EstacionActivaRequiredMixin
+        activos_qs = Activo.objects.filter(estacion_id=self.estacion_activa_id)
+        lotes_qs = LoteInsumo.objects.filter(compartimento__ubicacion__estacion_id=self.estacion_activa_id)
+
+        # 2. KPIs Numéricos: Agregación Condicional (1 consulta por modelo en lugar de N)
+        kpis_activos = activos_qs.aggregate(
+            operativos=Count('id', filter=Q(estado__tipo_estado__nombre='OPERATIVO')),
+            no_operativos=Count('id', filter=Q(estado__tipo_estado__nombre='NO OPERATIVO')),
+            prestamo=Count('id', filter=Q(estado__nombre='EN PRÉSTAMO EXTERNO')),
+            vencen=Count('id', filter=Q(fecha_expiracion__range=[hoy, fecha_limite_vencimiento]) | Q(fin_vida_util_calculada__range=[hoy, fecha_limite_vencimiento]))
+        )
+
+        kpis_lotes = lotes_qs.aggregate(
+            operativos=Count('id', filter=Q(estado__tipo_estado__nombre='OPERATIVO')),
+            no_operativos=Count('id', filter=Q(estado__tipo_estado__nombre='NO OPERATIVO')),
+            prestamo=Count('id', filter=Q(estado__nombre='EN PRÉSTAMO EXTERNO')),
+            vencen=Count('id', filter=Q(fecha_expiracion__range=[hoy, fecha_limite_vencimiento]))
+        )
+
+        # KPI: Stock Bajo
         # **NOTA:** El modelo Producto no tiene un campo 'stock_minimo'.
         # Si se añadiera, la consulta sería:
         # context['kpi_stock_bajo'] = Producto.objects.filter(estacion_id=estacion_activa_id, stock_actual__lt=F('stock_minimo')).count()
         # Por ahora, lo omitimos.
+
+        # Asignación de totales al contexto
+        context['kpi_total_operativas'] = kpis_activos['operativos'] + kpis_lotes['operativos']
+        context['kpi_total_no_operativas'] = kpis_activos['no_operativos'] + kpis_lotes['no_operativos']
+        context['kpi_total_prestamo'] = kpis_activos['prestamo'] + kpis_lotes['prestamo']
+        context['kpi_proximos_a_vencer'] = kpis_activos['vencen'] + kpis_lotes['vencen']
+
+        # 3. Listas para Alertas (Widgets)
+        # Optimizamos con select_related para evitar N+1 en el template
+        select_related_fields = ('producto__producto_global', 'compartimento')
         
-        # ======== WIDGET DE ALERTAS Y TAREAS ========
+        context['alerta_activos_vencen'] = activos_qs.select_related(*select_related_fields).filter(
+            Q(fecha_expiracion__range=[hoy, fecha_limite_vencimiento]) |
+            Q(fin_vida_util_calculada__range=[hoy, fecha_limite_vencimiento])
+        ).order_by('fecha_expiracion')[:5]
 
-        # Alerta 1: Vencimientos Próximos (Lista)
-        # Reutilizamos las consultas anteriores, limitando a 5
-        context['alerta_activos_vencen'] = activos_vencen.select_related('producto__producto_global', 'compartimento')[:5]
-        context['alerta_lotes_vencen'] = lotes_vencen.select_related('producto__producto_global', 'compartimento')[:5]
+        context['alerta_lotes_vencen'] = lotes_qs.select_related(*select_related_fields).filter(
+            fecha_expiracion__range=[hoy, fecha_limite_vencimiento]
+        ).order_by('fecha_expiracion')[:5]
 
-        # Alerta 2: Pendientes de Revisión
-        # Basado en el Estado 'PENDIENTE REVISIÓN'
-        context['alerta_activos_revision'] = activos_estacion_qs.filter(
+        context['alerta_activos_revision'] = activos_qs.select_related(*select_related_fields).filter(
             estado__nombre='PENDIENTE REVISIÓN'
-        ).select_related('producto__producto_global', 'compartimento')[:5]
+        )[:5]
         
-        context['alerta_lotes_revision'] = lotes_estacion_qs.filter(
+        context['alerta_lotes_revision'] = lotes_qs.select_related(*select_related_fields).filter(
             estado__nombre='PENDIENTE REVISIÓN'
-        ).select_related('producto__producto_global', 'compartimento')[:5]
+        )[:5]
 
-        # Alerta 3: Préstamos Atrasados
-        # Préstamos de la estación, vencidos (fecha < hoy) y aún 'Pendientes'
         context['alerta_prestamos_atrasados'] = Prestamo.objects.filter(
-            estacion_id=self.estacion_activa,
+            estacion_id=self.estacion_activa_id,
             fecha_devolucion_esperada__lt=hoy,
             estado=Prestamo.EstadoPrestamo.PENDIENTE
         ).select_related('destinatario')[:5]
 
-        # ======== WIDGET DE ACTIVIDAD RECIENTE ========
-
-        # Obtenemos los últimos 10 movimientos
-        movimientos = MovimientoInventario.objects.filter(
-            estacion_id=self.estacion_activa
+        # 4. Widget de Actividad Reciente
+        # Usamos Abs() en la DB para calcular el valor absoluto sin iterar en Python
+        context['actividad_reciente'] = MovimientoInventario.objects.filter(
+            estacion_id=self.estacion_activa_id
         ).select_related(
             'usuario', 
             'compartimento_origen', 
             'compartimento_destino',
             'activo__producto__producto_global',
             'lote_insumo__producto__producto_global'
+        ).annotate(
+            cantidad_abs=Abs('cantidad_movida')
         ).order_by('-fecha_hora')[:10]
-
-        # Iteramos para añadir el valor absoluto (es la forma limpia)
-        for mov in movimientos:
-            # Añadimos un nuevo atributo 'cantidad_abs' al objeto
-            # 'cantidad_movida' puede ser positiva o negativa
-            mov.cantidad_abs = abs(mov.cantidad_movida) 
-
-        # Pasamos la lista modificada al contexto
-        context['actividad_reciente'] = movimientos
 
         return context
 
@@ -781,510 +762,480 @@ class VehiculoEditarView(BaseEstacionMixin, PermissionRequiredMixin, UbicacionMi
 
 
 
-class CompartimentoListaView(LoginRequiredMixin, ModuleAccessMixin, PermissionRequiredMixin, View):
-    """Lista potente de compartimentos con filtros y búsqueda."""
+class CompartimentoListaView(BaseEstacionMixin, PermissionRequiredMixin, View):
+    """
+    Lista potente de compartimentos con filtros, búsqueda, paginación 
+    y conteo rápido de existencias.
+    """
     permission_required = "gestion_usuarios.accion_gestion_inventario_ver_ubicaciones"
+    template_name = 'gestion_inventario/pages/lista_compartimentos.html'
+    paginate_by = 20
 
-    def get(self, request):
-        estacion_id = request.session.get('active_estacion_id')
+    def get_queryset(self):
+        """
+        Construye el queryset filtrado por estación y parámetros GET.
+        """
+        # 1. Base: Filtrar por la estación activa del Mixin y optimizar relaciones
+        qs = Compartimento.objects.filter(
+            ubicacion__estacion_id=self.estacion_activa_id
+        ).select_related(
+            'ubicacion', 
+            'ubicacion__tipo_ubicacion'
+        ).annotate(
+            # 2. Optimización: Contar ítems para mostrar en la lista (opcional pero útil)
+            total_items=Count('activo', distinct=True) + Count('loteinsumo', distinct=True)
+        )
 
-        # Base queryset: todos los compartimentos pertenecientes a la estación
-        qs = Compartimento.objects.select_related('ubicacion', 'ubicacion__tipo_ubicacion', 'ubicacion__estacion')
-        if estacion_id:
-            qs = qs.filter(ubicacion__estacion_id=estacion_id)
-
-        # Filtros avanzados desde GET
-        ubicacion_id = request.GET.get('ubicacion')
-        nombre = request.GET.get('nombre')
-        descripcion_presente = request.GET.get('descripcion_presente')  # '1' para solo con descripción
+        # 3. Filtros dinámicos (GET)
+        ubicacion_id = self.request.GET.get('ubicacion')
+        nombre = self.request.GET.get('nombre')
+        descripcion_presente = self.request.GET.get('descripcion_presente')
 
         if ubicacion_id:
             try:
-                qs = qs.filter(ubicacion_id=int(ubicacion_id))
+                # Validamos que sea un UUID real antes de filtrar para evitar errores de DB
+                uuid.UUID(str(ubicacion_id))
+                qs = qs.filter(ubicacion_id=ubicacion_id)
             except ValueError:
-                pass
+                pass # Si el string no es un UUID válido, ignoramos el filtro
 
         if nombre:
             qs = qs.filter(nombre__icontains=nombre)
 
         if descripcion_presente == '1':
-            qs = qs.exclude(descripcion__isnull=True).exclude(descripcion__exact='')
+            qs = qs.exclude(Q(descripcion__isnull=True) | Q(descripcion__exact=''))
 
-        # Orden por sección y nombre
-        qs = qs.order_by('ubicacion__nombre', 'nombre')
+        # 4. Ordenamiento
+        return qs.order_by('ubicacion__nombre', 'nombre')
 
-        # Opciones para filtros
-        ubicaciones = Ubicacion.objects.filter(estacion_id=estacion_id).order_by('nombre') if estacion_id else Ubicacion.objects.order_by('nombre')
+
+    def get(self, request):
+        # Obtener queryset filtrado
+        qs = self.get_queryset()
+
+        # Paginación
+        paginator = Paginator(qs, self.paginate_by)
+        page_number = request.GET.get('page')
+        page_obj = paginator.get_page(page_number)
+
+        # Datos para los filtros (Select)
+        ubicaciones = Ubicacion.objects.filter(
+            estacion_id=self.estacion_activa_id
+        ).order_by('nombre')
 
         context = {
-            'compartimentos': qs,
+            'compartimentos': page_obj, # Objeto paginado
+            'paginator': paginator,
             'ubicaciones': ubicaciones,
+            # Mantenemos el estado de los filtros en la UI
+            'current_ubicacion': request.GET.get('ubicacion', ''),
+            'current_nombre': request.GET.get('nombre', ''),
+            'current_desc': request.GET.get('descripcion_presente', ''),
         }
-        return render(request, 'gestion_inventario/pages/lista_compartimentos.html', context)
+        return render(request, self.template_name, context)
 
 
 
 
-class CompartimentoCrearView(LoginRequiredMixin, ModuleAccessMixin, PermissionRequiredMixin, View):
-    """Crear un compartimento asociado a una ubicación (almacén)."""
+class CompartimentoCrearView(BaseEstacionMixin, PermissionRequiredMixin, CreateView):
+    """
+    Vista para crear un compartimento.
+    Utiliza CreateView y @cached_property para una gestión 
+    eficiente del objeto padre (Ubicacion) y el ciclo de vida del formulario.
+    """
+    model = Compartimento
+    form_class = CompartimentoForm
+    template_name = 'gestion_inventario/pages/crear_compartimento.html'
     permission_required = "gestion_usuarios.accion_gestion_inventario_gestionar_ubicaciones"
 
-    def get(self, request, ubicacion_id):
-        form = CompartimentoForm()
-        ubicacion = get_object_or_404(Ubicacion, id=ubicacion_id)
-        return render(request, 'gestion_inventario/pages/crear_compartimento.html', {'formulario': form, 'ubicacion': ubicacion})
+    @cached_property
+    def ubicacion(self):
+        """
+        Obtiene y cachea la ubicación padre, asegurando que pertenezca a la estación activa.
+        Se ejecuta una sola vez por petición, optimizando el rendimiento.
+        """
+        return get_object_or_404(
+            Ubicacion, 
+            id=self.kwargs['ubicacion_id'], 
+            estacion_id=self.estacion_activa_id
+        )
 
-    def post(self, request, ubicacion_id):
-        ubicacion = get_object_or_404(Ubicacion, id=ubicacion_id)
-        form = CompartimentoForm(request.POST)
-        if form.is_valid():
-            compartimento = form.save(commit=False)
-            compartimento.ubicacion = ubicacion
-            compartimento.save()
-            messages.success(request, f'Compartimento "{compartimento.nombre}" creado en {ubicacion.nombre}.')
-            return redirect(reverse('gestion_inventario:ruta_gestionar_ubicacion', kwargs={'ubicacion_id': ubicacion.id}))
-        return render(request, 'gestion_inventario/pages/crear_compartimento.html', {'formulario': form, 'ubicacion': ubicacion})
+    def get_context_data(self, **kwargs):
+        """
+        Override: Añade la ubicación al contexto y mantiene compatibilidad 
+        con el nombre 'formulario' que usa tu template.
+        """
+        context = super().get_context_data(**kwargs)
+        context['ubicacion'] = self.ubicacion
+        context['formulario'] = context.get('form') 
+        return context
+
+    def form_valid(self, form):
+        """
+        Override: Asigna la relación con la ubicación antes de guardar 
+        y añade el mensaje de éxito.
+        """
+        form.instance.ubicacion = self.ubicacion
+        response = super().form_valid(form)
+        
+        messages.success(
+            self.request, 
+            f'Compartimento "{self.object.nombre}" creado exitosamente en {self.ubicacion.nombre}.'
+        )
+        return response
+
+    def get_success_url(self):
+        """
+        Override: Redirige a la gestión de la ubicación padre.
+        """
+        return reverse('gestion_inventario:ruta_gestionar_ubicacion', kwargs={'ubicacion_id': self.ubicacion.id})
 
 
 
 
-class CompartimentoDetalleView(LoginRequiredMixin, ModuleAccessMixin, PermissionRequiredMixin, View):
+class CompartimentoDetalleView(BaseEstacionMixin, PermissionRequiredMixin, DetailView):
     """
-    Vista para ver el detalle de un compartimento: muestra detalles, 
-    resúmenes de stock y una lista detallada de todas las 
-    existencias en el compartimento.
+    Vista de detalle para un compartimento.
+    Implementa DetailView, separando la lógica de consulta (queryset)
+    de la lógica de presentación (context_data).
     """
-    permission_required = "gestion_usuarios.accion_gestion_inventario_ver_ubicaciones"
-    template_name = 'gestion_inventario/pages/detalle_compartimento.html'
-    login_url = '/acceso/login/'
     model = Compartimento
+    template_name = 'gestion_inventario/pages/detalle_compartimento.html'
+    permission_required = "gestion_usuarios.accion_gestion_inventario_ver_ubicaciones"
+    context_object_name = 'compartimento'
+    
+    # Indicamos a Django que busque el parámetro 'compartimento_id' en la URL en lugar de 'pk'
+    pk_url_kwarg = 'compartimento_id'
 
-    def get(self, request, compartimento_id):
-        estacion_id = request.session.get('active_estacion_id')
-        if not estacion_id:
-            messages.error(request, "No se ha seleccionado una estación activa.")
-            return redirect('gestion_inventario:ruta_inicio')
-        
-        # 1. Obtener el Compartimento principal
-        # Optimizamos la consulta trayendo la ubicación y su tipo de una vez
-        try:
-            compartimento = get_object_or_404(
-                Compartimento.objects.select_related(
-                    'ubicacion', 
-                    'ubicacion__tipo_ubicacion'
-                ),
-                id=compartimento_id,
-                ubicacion__estacion_id=estacion_id
-            )
-        except Compartimento.DoesNotExist:
-            messages.error(request, "El compartimento no existe o no pertenece a su estación.")
-            return redirect('gestion_inventario:ruta_lista_areas') # O a donde estimes
-
-        # 2. Obtener la lista detallada de todo el stock (Activos y Lotes)
-        activos_en_compartimento = Activo.objects.filter(compartimento=compartimento).select_related(
-            'producto__producto_global', 'compartimento', 'estado'
-        )
-        lotes_en_compartimento = LoteInsumo.objects.filter(compartimento=compartimento).select_related(
-            'producto__producto_global', 'compartimento'
+    def get_queryset(self):
+        """
+        Override: Define la consulta base para obtener el objeto principal.
+        Aquí aplicamos:
+        1. Seguridad: Filtro por estación activa.
+        2. Optimización: select_related y annotations para contadores.
+        """
+        return super().get_queryset().filter(
+            ubicacion__estacion_id=self.estacion_activa_id
+        ).select_related(
+            'ubicacion', 
+            'ubicacion__tipo_ubicacion'
+        ).annotate(
+            total_activos_calc=Count('activo', distinct=True),
+            total_insumos_calc=Coalesce(Sum('loteinsumo__cantidad'), 0)
         )
 
-        stock_items_list = list(chain(activos_en_compartimento, lotes_en_compartimento))
-        
-        # 3. Ordenar la lista detallada (p.ej. por nombre de producto)
+    def get_context_data(self, **kwargs):
+        """
+        Override: Agrega datos extra al contexto (lista combinada de stock).
+        """
+        context = super().get_context_data(**kwargs)
+        compartimento = self.object  # El objeto ya fue recuperado por get_object() usando get_queryset()
+
+        # 1. Obtener listas detalladas (Optimizadas)
+        activos_qs = Activo.objects.filter(compartimento=compartimento).select_related(
+            'producto__producto_global', 
+            'estado'
+        )
+        lotes_qs = LoteInsumo.objects.filter(compartimento=compartimento).select_related(
+            'producto__producto_global'
+        )
+
+        # 2. Combinar y Ordenar (Python-side)
+        stock_items_list = list(chain(activos_qs, lotes_qs))
         stock_items_list.sort(key=lambda x: x.producto.producto_global.nombre_oficial)
 
-        # 4. Calcular el resumen de stock para la tarjeta de información
-        resumen_activos = activos_en_compartimento.count()
-        resumen_insumos_obj = lotes_en_compartimento.aggregate(total=Coalesce(Sum('cantidad'), 0))
-        resumen_insumos = resumen_insumos_obj['total']
-        resumen_total = resumen_activos + resumen_insumos
-
-        # 5. Preparar el contexto completo
-        context = {
-            'compartimento': compartimento,
-            'stock_items': stock_items_list,       # Lista combinada para la tabla
+        # 3. Calcular totales finales usando los valores anotados en self.object
+        resumen_activos = compartimento.total_activos_calc
+        resumen_insumos = compartimento.total_insumos_calc
+        
+        context.update({
+            'stock_items': stock_items_list,
             'resumen_activos': resumen_activos,
             'resumen_insumos': resumen_insumos,
-            'resumen_total': resumen_total,
+            'resumen_total': resumen_activos + resumen_insumos,
             'today': timezone.now().date(),
-        }
-        return render(request, self.template_name, context)
+        })
+        return context
 
 
 
 
-class CompartimentoEditView(LoginRequiredMixin, ModuleAccessMixin, PermissionRequiredMixin, View):
+class CompartimentoEditView(BaseEstacionMixin, PermissionRequiredMixin, UpdateView):
     """
-    Vista para editar los detalles de un compartimento (nombre, descripción, imagen).
+    Vista para editar un compartimento.
+    Utiliza UpdateView para eliminar boilerplate, delegando 
+    la gestión del formulario y el ciclo de vida HTTP a Django.
     """
-    permission_required = "gestion_usuarios.accion_gestion_inventario_gestionar_ubicaciones"
-    template_name = 'gestion_inventario/pages/editar_compartimento.html'
-    login_url = '/acceso/login/'
     model = Compartimento
+    form_class = CompartimentoEditForm
+    template_name = 'gestion_inventario/pages/editar_compartimento.html'
+    permission_required = "gestion_usuarios.accion_gestion_inventario_gestionar_ubicaciones"
+    
+    # Definimos el nombre del parámetro en la URL (por defecto Django busca 'pk')
+    pk_url_kwarg = 'compartimento_id' 
+    
+    # Definimos cómo se llamará el objeto en el template (por defecto es 'object')
+    context_object_name = 'compartimento'
 
-    def get(self, request, compartimento_id):
-        estacion_id = request.session.get('active_estacion_id')
-        if not estacion_id:
-            messages.error(request, "No se ha seleccionado una estación activa.")
-            return redirect('gestion_inventario:ruta_inicio')
-        
-        # Obtenemos el compartimento asegurándonos que pertenece a la estación activa
-        compartimento = get_object_or_404(
-            Compartimento.objects.select_related('ubicacion'),
-            id=compartimento_id,
-            ubicacion__estacion_id=estacion_id
-        )
-        
-        form = CompartimentoEditForm(instance=compartimento)
-        
-        context = {
-            'form': form,
-            'compartimento': compartimento
-        }
-        return render(request, self.template_name, context)
+    def get_queryset(self):
+        """
+        Override: Filtra el QuerySet base para asegurar que solo se editen 
+        objetos de la estación activa y optimiza la consulta.
+        """
+        return super().get_queryset().filter(
+            ubicacion__estacion_id=self.estacion_activa_id
+        ).select_related('ubicacion')
 
-    def post(self, request, compartimento_id):
-        estacion_id = request.session.get('active_estacion_id')
-        if not estacion_id:
-            messages.error(request, "No se ha seleccionado una estación activa.")
-            return redirect('gestion_inventario:ruta_inicio')
+    def get_success_url(self):
+        """
+        Override: Define la redirección tras una edición exitosa.
+        """
+        return reverse('gestion_inventario:ruta_detalle_compartimento', kwargs={'compartimento_id': self.object.id})
 
-        compartimento = get_object_or_404(
-            Compartimento.objects.select_related('ubicacion'),
-            id=compartimento_id,
-            ubicacion__estacion_id=estacion_id
-        )
+    def form_valid(self, form):
+        """
+        Override: Hook para ejecutar lógica extra cuando el formulario es válido.
+        """
+        messages.success(self.request, f"El compartimento '{self.object.nombre}' se actualizó correctamente.")
+        return super().form_valid(form)
 
-        form = CompartimentoEditForm(request.POST, request.FILES, instance=compartimento)
-
-        if form.is_valid():
-            form.save()
-            messages.success(request, f"El compartimento '{compartimento.nombre}' se actualizó correctamente.")
-            # Redirigimos de vuelta al detalle del compartimento
-            return redirect('gestion_inventario:ruta_detalle_compartimento', compartimento_id=compartimento.id)
-        
-        messages.error(request, "Hubo un error al actualizar el compartimento. Por favor, revisa los campos.")
-        context = {
-            'form': form,
-            'compartimento': compartimento
-        }
-        return render(request, self.template_name, context)
+    def form_invalid(self, form):
+        """
+        Override: Hook para ejecutar lógica extra cuando el formulario falla.
+        """
+        messages.error(self.request, "Hubo un error al actualizar el compartimento. Por favor, revisa los campos.")
+        return super().form_invalid(form)
 
 
 
 
-class CompartimentoDeleteView(LoginRequiredMixin, ModuleAccessMixin, PermissionRequiredMixin, View):
+class CompartimentoDeleteView(BaseEstacionMixin, PermissionRequiredMixin, DeleteView):
     """
-    Vista para confirmar y ejecutar la eliminación de un Compartimento.
-    Maneja ProtectedError si el compartimento aún tiene existencias (Activos o Lotes).
+    Vista para eliminar un compartimento.
+    Utiliza DeleteView genérica, encapsulando la lógica de negocio
+    en get_object y form_valid para un manejo limpio de excepciones (ProtectedError).
     """
     permission_required = "gestion_usuarios.accion_gestion_inventario_gestionar_ubicaciones"
     template_name = 'gestion_inventario/pages/eliminar_compartimento.html'
-    login_url = '/acceso/login/'
-    model = Compartimento
+    context_object_name = 'compartimento' # Para usar {{ compartimento }} en el template
 
-    def get(self, request, compartimento_id):
-        estacion_id = request.session.get('active_estacion_id')
-        if not estacion_id:
-            messages.error(request, "No se ha seleccionado una estación activa.")
-            return redirect('gestion_inventario:ruta_inicio')
-        
-        compartimento = get_object_or_404(
+    def get_object(self, queryset=None):
+        """
+        Override: Obtiene el objeto asegurando que pertenezca a la estación activa
+        y optimizando la consulta con select_related.
+        """
+        compartimento_id = self.kwargs.get('compartimento_id')
+        return get_object_or_404(
             Compartimento.objects.select_related('ubicacion'),
             id=compartimento_id,
-            ubicacion__estacion_id=estacion_id
+            ubicacion__estacion_id=self.estacion_activa_id
         )
-        
-        context = { 'compartimento': compartimento }
-        return render(request, self.template_name, context)
 
-    def post(self, request, compartimento_id):
-        estacion_id = request.session.get('active_estacion_id')
-        if not estacion_id:
-            messages.error(request, "No se ha seleccionado una estación activa.")
-            return redirect('gestion_inventario:ruta_inicio')
-
-        compartimento = get_object_or_404(
-            Compartimento.objects.select_related('ubicacion'),
-            id=compartimento_id,
-            ubicacion__estacion_id=estacion_id
+    def get_success_url(self):
+        """
+        Override: Calcula la URL de éxito dinámicamente (volver a la ubicación padre).
+        """
+        return reverse_lazy(
+            'gestion_inventario:ruta_gestionar_ubicacion', 
+            kwargs={'ubicacion_id': self.object.ubicacion.id}
         )
-        
-        # Guardamos datos para la redirección y mensajes
-        ubicacion_padre_id = compartimento.ubicacion.id
-        compartimento_nombre = compartimento.nombre
-        
+
+    def form_valid(self, form):
+        """
+        Override: Maneja la confirmación de eliminación (POST).
+        Aquí capturamos ProtectedError para evitar crash si hay hijos.
+        """
         try:
-            # Intento de eliminación
-            compartimento.delete()
+            # El método delete() de Model retorna una tupla, no lo necesitamos aquí
+            self.object.delete()
             
-            messages.success(request, f"El compartimento '{compartimento_nombre}' ha sido eliminado exitosamente.")
-            
-            # Redirigir a la página de la ubicación padre
-            return redirect('gestion_inventario:ruta_gestionar_ubicacion', ubicacion_id=ubicacion_padre_id)
+            messages.success(self.request, f"El compartimento '{self.object.nombre}' ha sido eliminado exitosamente.")
+            return HttpResponseRedirect(self.get_success_url())
 
         except ProtectedError:
-            # Si falla (on_delete=PROTECT), capturamos el error
-            messages.error(request, f"No se puede eliminar '{compartimento_nombre}'. Asegúrese de que el compartimento esté completamente vacío (sin Activos ni Lotes).")
-            # Devolvemos al usuario a la página de detalle del compartimento
-            return redirect('gestion_inventario:ruta_detalle_compartimento', compartimento_id=compartimento.id)
-        
+            messages.error(
+                self.request, 
+                f"No se puede eliminar '{self.object.nombre}'. Asegúrese de que el compartimento esté vacío (sin Activos ni Lotes)."
+            )
+            # En caso de error, redirigimos al detalle del objeto que intentamos borrar
+            return redirect('gestion_inventario:ruta_detalle_compartimento', compartimento_id=self.object.id)
+
         except Exception as e:
-            messages.error(request, f"Ocurrió un error inesperado: {e}")
-            return redirect('gestion_inventario:ruta_detalle_compartimento', compartimento_id=compartimento.id)
+            messages.error(self.request, f"Ocurrió un error inesperado: {e}")
+            return redirect('gestion_inventario:ruta_detalle_compartimento', compartimento_id=self.object.id)
 
 
 
 
-class CatalogoGlobalListView(LoginRequiredMixin, ModuleAccessMixin, PermissionRequiredMixin, View):
+class CatalogoGlobalListView(BaseEstacionMixin, PermissionRequiredMixin, ListView):
     """
     Muestra el Catálogo Maestro Global de Productos con filtros avanzados
     de búsqueda, marca, categoría y asignación.
     """
+    model = ProductoGlobal
     template_name = 'gestion_inventario/pages/catalogo_global.html'
+    context_object_name = 'productos'
     paginate_by = 12
     permission_required = "gestion_usuarios.accion_gestion_inventario_ver_catalogos"
 
-    def get(self, request, *args, **kwargs):
-        
-        # 1. Obtener todos los parámetros de filtro de la URL
-        search_query = request.GET.get('q', None)
-        categoria_id_str = request.GET.get('categoria', None)
-        marca_id_str = request.GET.get('marca', None)
-        filtro_asignacion = request.GET.get('filtro', 'todos')
-        
-        view_mode = request.GET.get('view', 'gallery')
-        page_number = request.GET.get('page')
+    def get_queryset(self):
+        """
+        Construye el queryset aplicando filtros de búsqueda, categoría, marca y asignación.
+        """
+        # QuerySet Base Optimizado
+        qs = super().get_queryset().select_related('marca', 'categoria').order_by('nombre_oficial')
 
-        # 2. Empezar con el QuerySet base optimizado
-        queryset = ProductoGlobal.objects.select_related(
-            'marca', 
-            'categoria'
-        ).order_by('nombre_oficial')
+        # Filtros Básico (GET params)
+        search_query = self.request.GET.get('q')
+        categoria_id = self.request.GET.get('categoria')
+        marca_id = self.request.GET.get('marca')
+        filtro_asignacion = self.request.GET.get('filtro', 'todos')
 
-        # 3. Aplicar filtros dinámicamente
-        
-        # Filtro de Búsqueda (q)
+        # Filtro: Búsqueda
         if search_query:
-            queryset = queryset.filter(
+            qs = qs.filter(
                 Q(nombre_oficial__icontains=search_query) |
                 Q(modelo__icontains=search_query) |
                 Q(marca__nombre__icontains=search_query)
             )
-        
-        # Filtro de Categoría
-        categoria_id = None
-        if categoria_id_str and categoria_id_str.isdigit():
-            categoria_id = int(categoria_id_str)
-            queryset = queryset.filter(categoria_id=categoria_id)
 
-        # Filtro de Marca
-        marca_id = None
-        if marca_id_str and marca_id_str.isdigit():
-            marca_id = int(marca_id_str)
-            queryset = queryset.filter(marca_id=marca_id)
+        # Filtro: Categoría (Validación básica de dígito)
+        if categoria_id and categoria_id.isdigit():
+            qs = qs.filter(categoria_id=int(categoria_id))
 
-        # Filtro de Asignación (el que ya tenías, mejorado)
-        estacion_id = request.session.get('active_estacion_id')
-        productos_locales_ids = set()
-        if estacion_id:
-            productos_locales_ids = set(
-                Producto.objects.filter(estacion_id=estacion_id)
-                .values_list('producto_global_id', flat=True)
-            )
-            
+        # Filtro: Marca
+        if marca_id and marca_id.isdigit():
+            qs = qs.filter(marca_id=int(marca_id))
+
+        # Filtro: Asignación (Lógica de Negocio)
+        # Obtenemos los IDs locales una sola vez para filtrar
+        # Usamos self.estacion_activa_id del mixin
+        if filtro_asignacion in ['asignados', 'no_asignados']:
+            local_ids = Producto.objects.filter(
+                estacion_id=self.estacion_activa_id
+            ).values_list('producto_global_id', flat=True)
+
             if filtro_asignacion == 'no_asignados':
-                queryset = queryset.exclude(id__in=productos_locales_ids)
+                qs = qs.exclude(id__in=local_ids)
             elif filtro_asignacion == 'asignados':
-                queryset = queryset.filter(id__in=productos_locales_ids)
-        
-        # 4. Obtener datos para rellenar los <select> del formulario
-        all_categorias = Categoria.objects.order_by('nombre')
-        all_marcas = Marca.objects.order_by('nombre')
+                qs = qs.filter(id__in=local_ids)
 
-        # 5. Preparar parámetros para la paginación (para que conserve los filtros)
-        params = request.GET.copy()
+        return qs
+
+    def get_context_data(self, **kwargs):
+        """
+        Agrega datos auxiliares al contexto: opciones para filtros y estado actual.
+        """
+        context = super().get_context_data(**kwargs)
+        
+        # Obtenemos el set de IDs locales para pintar la UI (ej: botón "Añadido")
+        # Esto es ligero porque solo trae IDs, no objetos completos.
+        context['productos_locales_set'] = set(
+            Producto.objects.filter(
+                estacion_id=self.estacion_activa_id
+            ).values_list('producto_global_id', flat=True)
+        )
+
+        # Listas para los <select> de filtros
+        context['all_categorias'] = Categoria.objects.order_by('nombre')
+        context['all_marcas'] = Marca.objects.order_by('nombre')
+
+        # Mantenemos el estado de los filtros en la UI
+        context['current_search'] = self.request.GET.get('q', '')
+        context['current_categoria_id'] = self.request.GET.get('categoria', '')
+        context['current_marca_id'] = self.request.GET.get('marca', '')
+        context['current_filtro'] = self.request.GET.get('filtro', 'todos')
+        context['view_mode'] = self.request.GET.get('view', 'gallery')
+
+        # Preservar parámetros GET en la paginación
+        params = self.request.GET.copy()
         if 'page' in params:
             del params['page']
-        query_params = params.urlencode()
+        context['query_params'] = params.urlencode()
 
-        # 6. Paginación Manual
-        paginator = Paginator(queryset, self.paginate_by)
-        page_obj = paginator.get_page(page_number)
-
-        # 7. Construir el Contexto final
-        context = {
-            'productos': page_obj,
-            'page_obj': page_obj,
-            'paginator': paginator,
-            'view_mode': view_mode,
-            'query_params': query_params,
-            'productos_locales_set': productos_locales_ids,
-            
-            # Contexto para los filtros
-            'all_categorias': all_categorias,
-            'all_marcas': all_marcas,
-            'current_search': search_query or "",
-            'current_categoria_id': categoria_id_str or "",
-            'current_marca_id': marca_id_str or "",
-            'current_filtro': filtro_asignacion,
-        }
-        
-        return render(request, self.template_name, context)
+        return context
 
 
 
 
-# --- VISTA API 1: OBTENER DETALLES Y SKU ---
-class ApiGetProductoGlobalSKU(LoginRequiredMixin, ModuleAccessMixin, PermissionRequiredMixin, View):
+class ProductoGlobalCrearView(BaseEstacionMixin, PermissionRequiredMixin, CreateView):
     """
-    API (GET) para obtener los detalles de un ProductoGlobal y 
-    generar un SKU sugerido para el modal.
+    Vista para crear un Producto Global.
+    Utiliza CreateView y extrae la lógica de negocio compleja 
+    (creación dinámica de marcas) a un método helper encapsulado.
     """
-    permission_required = "gestion_usuarios.accion_gestion_inventario_ver_catalogos"
-    
-    def get(self, request, pk, *args, **kwargs):
-        try:
-            producto_global = ProductoGlobal.objects.select_related('categoria', 'marca').get(pk=pk)
-            
-            # Generar el SKU sugerido
-            sku_sugerido = generar_sku_sugerido(producto_global)
-            
-            data = {
-                'id': producto_global.id,
-                'nombre_oficial': producto_global.nombre_oficial,
-                'sku_sugerido': sku_sugerido,
-            }
-            return JsonResponse(data, status=200)
-            
-        except ProductoGlobal.DoesNotExist:
-            return JsonResponse({'error': 'Producto no encontrado'}, status=404)
-        except Exception as e:
-            return JsonResponse({'error': str(e)}, status=500)
-
-
-# --- VISTA API 2: CREAR EL PRODUCTO LOCAL ---
-class ApiAnadirProductoLocal(LoginRequiredMixin, ModuleAccessMixin, PermissionRequiredMixin, View):
-    """
-    API (POST) para crear un nuevo registro de Producto (catálogo local)
-    desde el modal del catálogo global.
-    """
-
+    model = ProductoGlobal
+    form_class = ProductoGlobalForm
+    template_name = 'gestion_inventario/pages/crear_producto_global.html'
     permission_required = "gestion_usuarios.accion_gestion_inventario_crear_producto_global"
+    success_url = reverse_lazy('gestion_inventario:ruta_catalogo_global')
 
-    def post(self, request, *args, **kwargs):
+
+    def _gestionar_creacion_marca(self, request):
+        """
+        Helper para detectar si se ingresó texto libre en 'marca' y crearla al vuelo.
+        Retorna (POST_DATA modificado, None) o (None, ErrorMessage).
+        """
+        marca_input = request.POST.get('marca')
+        
+        # Si no hay input o es un ID numérico, no hacemos nada especial
+        if not marca_input or marca_input.isdigit():
+            return request.POST, None
+
+        # Si llegamos aquí, es texto libre
         try:
-            # Obtener la estación activa
-            estacion_id = request.session.get('active_estacion_id')
-            if not estacion_id:
-                return JsonResponse({'error': 'No hay una estación activa en la sesión.'}, status=403)
-            
-            estacion = Estacion.objects.get(pk=estacion_id)
-            
-            # Cargar datos del POST (que viene como JSON)
-            data = json.loads(request.body)
-            
-            productoglobal_id = int(data.get('productoglobal_id'))
-            sku = data.get('sku')
-            es_serializado = bool(data.get('es_serializado'))
-            es_expirable = bool(data.get('es_expirable'))
-            
-            # Validaciones básicas
-            if not productoglobal_id or not sku:
-                return JsonResponse({'error': 'Faltan datos (ID de producto o SKU).'}, status=400)
-            
-            producto_global = ProductoGlobal.objects.get(pk=productoglobal_id)
-            
-            # Crear el nuevo Producto local
-            nuevo_producto = Producto.objects.create(
-                producto_global=producto_global,
-                estacion=estacion,
-                sku=sku,
-                es_serializado=es_serializado,
-                es_expirable=es_expirable
-                # Puedes añadir más campos aquí si los recopilas (costo, etc.)
+            marca_obj, created = Marca.objects.get_or_create(
+                nombre=marca_input.strip(), 
+                defaults={'descripcion': ''}
             )
             
-            return JsonResponse({
-                'success': True, 
-                'message': f'Producto "{nuevo_producto.producto_global.nombre_oficial}" añadido a tu estación.',
-                'productoglobal_id': nuevo_producto.producto_global_id
-            }, status=201)
+            if created:
+                messages.info(request, f'Se ha creado la nueva marca "{marca_obj.nombre}".')
+            
+            # Modificamos el POST para inyectar el ID real
+            post_data = request.POST.copy()
+            post_data['marca'] = str(marca_obj.id)
+            return post_data, None
 
-        except ProductoGlobal.DoesNotExist:
-            return JsonResponse({'error': 'El producto global no existe.'}, status=404)
-        except Estacion.DoesNotExist:
-            return JsonResponse({'error': 'La estación activa no es válida.'}, status=404)
         except IntegrityError:
-            # Error de 'unique_together' (el producto ya fue añadido)
-            return JsonResponse({'error': 'Este producto ya ha sido añadido a tu estación.'}, status=409)
+            return None, f'Error: La marca "{marca_input}" no se pudo crear (posible duplicado).'
         except Exception as e:
-            return JsonResponse({'error': f'Error inesperado: {str(e)}'}, status=500)
+            return None, f'Error inesperado creando marca: {str(e)}'
 
-
-
-
-class ProductoGlobalCrearView(LoginRequiredMixin, ModuleAccessMixin, PermissionRequiredMixin, View):
-    permission_required = "gestion_usuarios.accion_gestion_inventario_crear_producto_global"
-    template_name = 'gestion_inventario/pages/crear_producto_global.html'
-    form_class = ProductoGlobalForm
-
-    def get(self, request, *args, **kwargs):
-        form = self.form_class()
-        return render(request, self.template_name, {'form': form})
 
     def post(self, request, *args, **kwargs):
-        form = self.form_class(request.POST, request.FILES)
-        
-        # --- LÓGICA PARA MANEJAR LA CREACIÓN DE MARCA ---
-        marca_input = request.POST.get('marca')
-        marca_obj = None
+        """
+        Interceptamos POST para procesar la marca antes de validar el formulario.
+        """
+        try:
+            with transaction.atomic():
+                # 1. Gestionar Marca Dinámica
+                post_data_modificado, error_msg = self._gestionar_creacion_marca(request)
+                
+                if error_msg:
+                    messages.error(request, error_msg)
+                    # Renderizamos el form con los datos originales para no perder lo escrito
+                    form = self.get_form()
+                    return self.render_to_response(self.get_context_data(form=form))
 
-        if marca_input:
-            # Si el valor NO es un número, significa que el usuario escribió una nueva marca
-            if not marca_input.isdigit():
-                try:
-                    # Intenta obtener o crear la nueva marca
-                    # Usamos .strip() para quitar espacios al inicio/final
-                    marca_obj, created = Marca.objects.get_or_create(
-                        nombre=marca_input.strip(), 
-                        defaults={'descripcion': ''} # Puedes añadir valores por defecto si tu modelo Marca los necesita
-                    )
-                    if created:
-                        messages.info(request, f'Se ha creado la nueva marca "{marca_obj.nombre}".')
-                    
-                    # MODIFICAMOS request.POST TEMPORALMENTE para que el form.is_valid() funcione
-                    # Le decimos al formulario que use el ID de la marca recién creada/encontrada
-                    post_data = request.POST.copy()
-                    post_data['marca'] = str(marca_obj.id)
-                    form = self.form_class(post_data, request.FILES) # Re-inicializamos el form con los datos modificados
-                    
-                except IntegrityError:
-                    # Esto podría pasar si hay un 'unique=True' en Marca y algo falla
-                    messages.error(request, f'Error al intentar crear la marca "{marca_input}". Ya existe o hubo un problema.')
-                    return render(request, self.template_name, {'form': form})
-                except Exception as e:
-                    messages.error(request, f'Error inesperado al crear la marca: {e}')
-                    return render(request, self.template_name, {'form': form})
-            # Si era un número, el ModelForm lo manejará como un ID existente normalmente
-        # --- FIN DE LA LÓGICA DE CREACIÓN DE MARCA ---
+                # 2. Re-instanciar el form con los datos (posiblemente) modificados
+                form = self.get_form_class()(post_data_modificado, request.FILES)
 
-        if form.is_valid():
-            try:
-                # Ahora .save() funcionará porque el campo 'marca' tiene un ID válido
-                nuevo_producto_global = form.save()
-                messages.success(request, f'Producto Global "{nuevo_producto_global.nombre_oficial}" creado exitosamente.')
-                return redirect('gestion_inventario:ruta_catalogo_global')
-            
-            except IntegrityError as e:
-                # Captura errores de unicidad del ProductoGlobal
-                messages.error(request, f'Error al guardar: Ya existe un producto con esa marca y modelo, o un genérico con ese nombre.')
-            except Exception as e:
-                messages.error(request, f'Ha ocurrido un error inesperado al guardar el producto: {e}')
-        
-        # Si el form no es válido (o si la creación de marca falló antes de re-inicializar)
-        return render(request, self.template_name, {'form': form})
+                # 3. Validar y Guardar (Flow estándar de Django)
+                if form.is_valid():
+                    return self.form_valid(form)
+                else:
+                    return self.form_invalid(form)
 
+        except Exception as e:
+            messages.error(request, f"Error crítico: {e}")
+            form = self.get_form()
+            return self.render_to_response(self.get_context_data(form=form))
+
+
+    def form_valid(self, form):
+        messages.success(self.request, f'Producto Global "{form.instance.nombre_oficial}" creado exitosamente.')
+        return super().form_valid(form)
 
 
 
