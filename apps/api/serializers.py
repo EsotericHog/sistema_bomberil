@@ -9,3 +9,12 @@ class ComunaSerializer(serializers.ModelSerializer):
     class Meta:
         model = Comuna
         fields = ['id', 'nombre']
+
+
+
+
+class ProductoLocalInputSerializer(serializers.Serializer):
+    productoglobal_id = serializers.IntegerField(required=True)
+    sku = serializers.CharField(required=True, max_length=100)
+    es_serializado = serializers.BooleanField(default=False)
+    es_expirable = serializers.BooleanField(default=False)

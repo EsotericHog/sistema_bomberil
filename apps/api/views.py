@@ -1,7 +1,7 @@
 import uuid
-from django.shortcuts import redirect
+from django.shortcuts import redirect, get_object_or_404
 from django.http import JsonResponse
-from django.shortcuts import get_object_or_404
+from django.db import IntegrityError, transaction
 from django.db.models import Count, F, Sum
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -13,8 +13,10 @@ from PIL import Image
 from apps.gestion_usuarios.models import Usuario, Membresia
 from apps.common.permissions import CanUpdateUserProfile
 from apps.common.utils import procesar_imagen_en_memoria, generar_thumbnail_en_memoria
-from apps.gestion_inventario.models import Comuna, Activo, LoteInsumo
-from .serializers import ComunaSerializer
+from apps.gestion_inventario.models import Comuna, Activo, LoteInsumo, ProductoGlobal, Estacion, Producto
+from apps.gestion_inventario.utils import generar_sku_sugerido
+from .serializers import ComunaSerializer, ProductoLocalInputSerializer
+from .permissions import IsStationActiveAndHasPermission
 
 
 
@@ -314,3 +316,113 @@ class GraficoEstadosInventarioView(APIView):
             "labels": list(conteo_final.keys()),
             "values": list(conteo_final.values())
         })
+
+
+
+
+class ProductoGlobalSKUAPIView(APIView):
+    """
+    Endpoint para obtener detalles de producto y sugerencia de SKU.
+    Uso: Fetch desde modal de inventario o App Móvil.
+    """
+    permission_classes = [IsStationActiveAndHasPermission]
+    
+    # Definimos el permiso requerido para que nuestro validador lo lea
+    required_permission = "gestion_usuarios.accion_gestion_inventario_ver_catalogos"
+
+    def get(self, request, pk, format=None):
+        # get_object_or_404 maneja el error 404 automáticamente y DRF lo formatea a JSON
+        producto_global = get_object_or_404(
+            ProductoGlobal.objects.select_related('categoria', 'marca'), 
+            pk=pk
+        )
+
+        try:
+            sku_sugerido = generar_sku_sugerido(producto_global)
+            
+            # Respuesta limpia y directa
+            data = {
+                'id': producto_global.id,
+                'nombre_oficial': producto_global.nombre_oficial,
+                'sku_sugerido': sku_sugerido,
+                'marca': producto_global.marca.nombre if producto_global.marca else "Genérico"
+            }
+            return Response(data, status=status.HTTP_200_OK)
+
+        except Exception as e:
+            # Loguear el error real aquí si tienes logger
+            return Response(
+                {'error': 'Error interno al generar el SKU.'}, 
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
+
+
+
+class AnadirProductoLocalAPIView(APIView):
+    """
+    Endpoint (POST) para crear un Producto local en la estación activa.
+    Nivel Senior: Utiliza Serializers para validación de entrada, 
+    Manejo de Excepciones granular y Transacciones atómicas.
+    """
+    permission_classes = [IsStationActiveAndHasPermission]
+    required_permission = "gestion_usuarios.accion_gestion_inventario_crear_producto_global"
+
+    def post(self, request, format=None):
+        # 1. Validación de Entrada con Serializer
+        serializer = ProductoLocalInputSerializer(data=request.data)
+        if not serializer.is_valid():
+            return Response(
+                {'error': 'Datos inválidos', 'details': serializer.errors}, 
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        # Datos ya validados y limpios
+        data = serializer.validated_data
+
+        # 2. Obtención de Contexto (Estación)
+        # El permiso ya garantizó que existe 'active_estacion_id' en sesión
+        estacion_id = request.session['active_estacion_id']
+        estacion = get_object_or_404(Estacion, pk=estacion_id)
+
+        # 3. Obtención de Producto Global
+        try:
+            producto_global = ProductoGlobal.objects.get(pk=data['productoglobal_id'])
+        except ProductoGlobal.DoesNotExist:
+            return Response(
+                {'error': 'El producto global especificado no existe.'}, 
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        # 4. Creación del Registro (Con manejo de integridad)
+        try:
+            # Usamos transaction.atomic por si en el futuro añades más lógica aquí
+            with transaction.atomic():
+                nuevo_producto = Producto.objects.create(
+                    producto_global=producto_global,
+                    estacion=estacion,
+                    sku=data['sku'],
+                    es_serializado=data['es_serializado'],
+                    es_expirable=data['es_expirable']
+                )
+            
+            # 5. Respuesta Exitosa
+            return Response({
+                'success': True,
+                'message': f'Producto "{nuevo_producto.producto_global.nombre_oficial}" añadido a tu estación.',
+                'productoglobal_id': nuevo_producto.producto_global_id,
+                'producto_local_id': nuevo_producto.id # Dato útil para el frontend
+            }, status=status.HTTP_201_CREATED)
+
+        except IntegrityError:
+            # Captura el error unique_together (Estación + SKU o Estación + ProductoGlobal)
+            return Response(
+                {'error': f'Error de integridad: Ya existe un producto con el SKU "{data["sku"]}" o este producto global ya fue añadido.'}, 
+                status=status.HTTP_409_CONFLICT
+            )
+        except Exception as e:
+            # Loguear error real en servidor
+            return Response(
+                {'error': f'Error interno inesperado: {str(e)}'}, 
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
