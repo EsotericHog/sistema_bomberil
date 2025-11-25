@@ -455,7 +455,7 @@ class ContactoProveedorForm(forms.ModelForm):
 class RecepcionCabeceraForm(forms.Form):
     """ Formulario para los datos generales de la recepción """
     proveedor = forms.ModelChoiceField(
-        queryset=Proveedor.objects.none(), # Se poblará en la vista
+        queryset=Proveedor.objects.none(), # Se poblará en el __init__
         label="Proveedor",
         widget=forms.Select(attrs={'class': 'form-select form-select-sm fs_normal'})
     )
@@ -471,11 +471,12 @@ class RecepcionCabeceraForm(forms.Form):
     )
 
     def __init__(self, *args, **kwargs):
+        # Extraemos 'estacion' para evitar errores en super(), aunque ya no filtraremos por ella
         estacion = kwargs.pop('estacion', None)
         super().__init__(*args, **kwargs)
-        if estacion:
-            # Filtra proveedores por la estación activa
-            self.fields['proveedor'].queryset = Proveedor.objects.filter(estacion_creadora=estacion)
+        
+        # --- CORRECCIÓN: Mostrar todos los proveedores globales ---
+        self.fields['proveedor'].queryset = Proveedor.objects.all().order_by('nombre')
 
 
 
