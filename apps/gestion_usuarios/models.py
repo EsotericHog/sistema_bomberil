@@ -285,7 +285,7 @@ class RegistroActividad(models.Model):
         null=True,
         blank=True
     )
-    objetivo_object_id = models.PositiveIntegerField(null=True, blank=True)
+    objetivo_object_id = models.CharField(max_length=255, null=True, blank=True) 
     objetivo_generico = GenericForeignKey(
         'objetivo_content_type', 
         'objetivo_object_id'
@@ -301,6 +301,9 @@ class RegistroActividad(models.Model):
         null=True, 
         blank=True
     )
+
+    # Para data técnica (diffs, IPs, motivos ocultos)
+    detalles = models.JSONField(default=dict, blank=True, null=True)
     
     # El "CUÁNDO"
     fecha = models.DateTimeField(auto_now_add=True, db_index=True)

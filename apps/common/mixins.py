@@ -11,6 +11,7 @@ from django.urls import reverse_lazy
 
 from apps.gestion_inventario.models import Estacion
 from .utils import procesar_imagen_en_memoria, generar_thumbnail_en_memoria
+from .services import core_registrar_actividad
 
 
 class ModuleAccessMixin(AccessMixin):
@@ -228,3 +229,29 @@ class ImageProcessingFormMixin:
                     new_filename=small_name
                 )
                 setattr(instance, field_small_name, thumb_small)
+
+
+
+
+class AuditoriaMixin:
+    """
+    Mixin pasivo: No ejecuta nada automáticamente.
+    Provee el método self.auditar() para usarlo manualmente donde sea seguro.
+    """
+    
+    def auditar(self, verbo, objetivo=None, detalles=None, objetivo_repr=None):
+        """
+        Helper para registrar actividad usando el request de la vista.
+        """
+        # self.request siempre existe en las Class Based Views (CBV) de Django
+        if hasattr(self, 'request'):
+            core_registrar_actividad(
+                request=self.request,
+                verbo=verbo,
+                objetivo=objetivo,
+                detalles=detalles,
+                objetivo_repr=objetivo_repr
+            )
+        else:
+            # Fallback por si alguien usa el mixin fuera de una vista web
+            print("Error: AuditoriaMixin usado sin self.request")
