@@ -1920,7 +1920,7 @@ class UsuarioImpersonarView(BaseEstacionMixin, UserPassesTestMixin, MembresiaGes
         # 1. Guardamos datos clave antes de destruir la sesión
         estacion_id = self.estacion_activa_id
         estacion_nombre = self.estacion_activa.nombre
-        impersonator_id = usuario_original.id
+        impersonator_id = str(usuario_original.id)
 
         # 2. Login del objetivo (Destruye sesión anterior)
         usuario_objetivo.backend = 'apps.gestion_usuarios.backends.RolBackend'
@@ -1934,7 +1934,7 @@ class UsuarioImpersonarView(BaseEstacionMixin, UserPassesTestMixin, MembresiaGes
         request.session['impersonator_id'] = impersonator_id
         request.session['is_impersonating'] = True
         
-        messages.info(request, f"Estás navegando como {usuario_objetivo.get_full_name()} en {estacion_nombre}.")
+        messages.info(request, f"Estás navegando como {usuario_objetivo.get_full_name} en {estacion_nombre}.")
         return redirect('portal:ruta_inicio')
 
 
