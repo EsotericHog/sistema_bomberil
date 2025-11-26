@@ -7,6 +7,7 @@ from datetime import date
 from django.urls import reverse  
 from django.db import IntegrityError
 from django.db.models import Count
+from apps.gestion_usuarios.models import Membresia
 import qrcode
 from io import BytesIO
 import base64
@@ -36,39 +37,35 @@ BLOOD_COMPATIBILITY = {
 class MedicoInicioView(View):
     '''Vista para ver la página principal del módulo con resumen médico'''
     def get(self, request):
-        # 1. Calcular la distribución de tipos de sangre
-        # CORRECCION: Usamos 'grupo_sanguineo__nombre' para obtener el texto (A+, O-, etc)
-        # en lugar del ID numérico.
+        # 1. Recuperamos la estación actual de la sesión
+        estacion_id = request.session.get('active_estacion_id')
+        # Calcular la distribución de tipos de sangre
+        # 2. Filtramos SOLO las fichas de usuarios activos en esta estación
         distribucion_qs = FichaMedica.objects.filter(
-            grupo_sanguineo__isnull=False
+            grupo_sanguineo__isnull=False,
+            # --- FILTRO MÁGICO ---
+            voluntario__usuario__membresias__estacion_id=estacion_id,
+            voluntario__usuario__membresias__estado='ACTIVO'
         ).values('grupo_sanguineo__nombre').annotate(
             count=Count('pk') # Contamos por ID para ser más precisos
         ).order_by('-count')
 
         # Calculamos el total sumando los conteos
         total_fichas_con_grupo = sum(item['count'] for item in distribucion_qs)
-
         # --- LÓGICA DE CÁLCULO DE PORCENTAJE (FINAL) ---
         distribucion_final = []
-        
         # Inicializamos contadores para las tarjetas de resumen
         donor_universal_count = 0
         receptor_universal_count = 0
 
         if total_fichas_con_grupo > 0:
             for item in distribucion_qs:
-                # CÁLCULO DE PORCENTAJE
                 percentage = round((item['count'] / total_fichas_con_grupo) * 100)
-                
-                # Mapeamos el nombre que viene de la base de datos a una clave simple
-                # para que el template (HTML) lo entienda sin cambios.
                 nombre_grupo = item['grupo_sanguineo__nombre']
                 item['grupo_sanguineo'] = nombre_grupo 
                 item['percentage'] = percentage 
-                
                 distribucion_final.append(item)
 
-                # Lógica para contar Donantes/Receptores universales usando el NOMBRE
                 blood_type = str(nombre_grupo).upper().strip()
                 if blood_type == 'O-':
                     donor_universal_count = item['count']
@@ -85,9 +82,26 @@ class MedicoInicioView(View):
     
 class MedicoListaView(View):
     def get(self, request):
-        # 1. Buscamos todas las fichas médicas en la base de datos
-        # Usamos 'select_related' para traer los datos del voluntario y usuario de una vez (optimización)
-        pacientes = FichaMedica.objects.select_related('voluntario__usuario').all()
+        # Importación local para evitar conflictos
+        from apps.gestion_usuarios.models import Membresia
+        estacion_id = request.session.get('active_estacion_id')
+        # 1. Obtener IDs de los voluntarios ACTIVOS en esta estación
+        ids_usuarios_activos = Membresia.objects.filter(
+            estacion_id=estacion_id,
+            estado='ACTIVO'
+        ).values_list('usuario_id', flat=True)
+
+        # 2. Buscar las fichas usando esos IDs
+        pacientes = FichaMedica.objects.filter(
+            voluntario_id__in=ids_usuarios_activos
+        ).select_related(
+            'voluntario', 
+            'voluntario__usuario'
+        # --- SOLUCIÓN DEL ERROR ---
+        # Le decimos explícitamente a Django que NO intente leer 'telefono'
+        # de la tabla voluntario, evitando el error de columna inexistente.
+        ).defer('voluntario__telefono') 
+        
         return render(request, "gestion_medica/pages/lista_voluntarios.html", {'pacientes': pacientes})
 
 class MedicoCrearView(View):
@@ -239,16 +253,27 @@ class MedicoImprimirQRView(View):
 
 class MedicoCompatibilidadView(View):
     def get(self, request):
-        # 1. Obtener fichas con tipo de sangre definido (Soluciona el ValueError)
-        fichas = FichaMedica.objects.filter(
-            grupo_sanguineo__isnull=False
-        ).select_related(
-            'voluntario__usuario' 
-        ).all()
+        from apps.gestion_usuarios.models import Membresia
+        estacion_id = request.session.get('active_estacion_id')
         
-        # 2. Calcular la distribución de tipos de sangre
+        # 1. Obtener fichas con tipo de sangre definido (Soluciona el ValueError)
+        ids_usuarios_activos = Membresia.objects.filter(
+            estacion_id=estacion_id,
+            estado='ACTIVO'
+        ).values_list('usuario_id', flat=True)
+        # PASO 2: Filtrar las fichas médicas usando esos IDs
+        # Usamos 'voluntario_id__in' que es más directo y menos propenso a errores de JOIN
+        fichas = FichaMedica.objects.filter(
+            grupo_sanguineo__isnull=False,
+            voluntario_id__in=ids_usuarios_activos  # <--- CAMBIO CLAVE
+        ).select_related(
+            'voluntario', 
+            'voluntario__usuario'
+        ).defer('voluntario__telefono').all()
+
         distribucion_qs = FichaMedica.objects.filter(
-            grupo_sanguineo__isnull=False
+            grupo_sanguineo__isnull=False,
+            voluntario_id__in=ids_usuarios_activos # <--- CAMBIO CLAVE TAMBIÉN AQUÍ
         ).values('grupo_sanguineo').annotate(
             count=Count('grupo_sanguineo')
         ).order_by('-count')
@@ -258,29 +283,25 @@ class MedicoCompatibilidadView(View):
         # 3. Preparar datos de receptores y Donantes (CORRECCIÓN DE 'str' object is not callable)
         recipients_by_type = {}
         for ficha in fichas:
-            # El tipo de sangre es una FK, usamos str() para obtener el valor del campo 'nombre'
             blood_type = str(ficha.grupo_sanguineo).upper().strip() 
             
             if blood_type not in recipients_by_type:
                 recipients_by_type[blood_type] = []
             
             recipients_by_type[blood_type].append({
-                'id': ficha.pk,
+                'id': ficha.pk, # <--- IMPORTANTE: Usar .pk
                 'nombre': ficha.voluntario.usuario.get_full_name,
                 'rut': ficha.voluntario.usuario.rut,
-                # AÑADIR LA URL DE LA IMAGEN
                 'avatar_url': ficha.voluntario.usuario.avatar.url if ficha.voluntario.usuario.avatar else None,
             })
         
         # 4. Generar la lista final de compatibilidad
         compatibilidad_list = []
-        
         for ficha in fichas:
             donor_type = str(ficha.grupo_sanguineo).upper().strip()
             recipients_types = BLOOD_COMPATIBILITY.get(donor_type, [])
             
             possible_recipients = []
-            
             for recipient_type in recipients_types:
                 if recipient_type in recipients_by_type:
                     possible_recipients.extend(recipients_by_type[recipient_type])
@@ -288,12 +309,12 @@ class MedicoCompatibilidadView(View):
             final_recipients = []
             seen_ids = set()
             for r in possible_recipients:
-                if r['id'] != ficha.pk and r['id'] not in seen_ids:
+                if r['id'] != ficha.pk and r['id'] not in seen_ids: # <--- IMPORTANTE: Usar .pk
                     final_recipients.append(r)
                     seen_ids.add(r['id'])
             
             compatibilidad_list.append({
-                'voluntario_id': ficha.pk,
+                'voluntario_id': ficha.pk, # <--- IMPORTANTE: Usar .pk
                 'nombre_donante': ficha.voluntario.usuario.get_full_name,
                 'tipo_sangre': donor_type,
                 'puede_donar_a_tipos': recipients_types,
