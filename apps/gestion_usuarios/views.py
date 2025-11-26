@@ -24,9 +24,8 @@ from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from .models import Usuario, Membresia, Rol, RegistroActividad
 from .forms import FormularioCrearUsuario, FormularioEditarUsuario, FormularioRol
 from .mixins import UsuarioDeMiEstacionMixin, RolValidoParaEstacionMixin, MembresiaGestionableMixin
-from apps.common.mixins import ModuleAccessMixin, ObjectInStationRequiredMixin, BaseEstacionMixin
-from .utils import generar_contraseña_segura, registrar_actividad
-from apps.gestion_inventario.models import Estacion
+from apps.common.mixins import BaseEstacionMixin, AuditoriaMixin
+from .utils import generar_contraseña_segura
 
 
 
@@ -260,7 +259,7 @@ class UsuarioObtenerView(BaseEstacionMixin, PermissionRequiredMixin, MembresiaGe
                 usuario_id=usuario_id,
                 estacion_id=self.estacion_activa_id
             ).select_related('usuario', 'estacion'
-            ).prefetch_related('roles').latest('fecha_inicio')
+            ).prefetch_related('roles').latest('created_at')
             
             return membresia
             
@@ -289,7 +288,7 @@ class UsuarioObtenerView(BaseEstacionMixin, PermissionRequiredMixin, MembresiaGe
 
 
 
-class UsuarioAgregarView(BaseEstacionMixin, PermissionRequiredMixin, View):
+class UsuarioAgregarView(BaseEstacionMixin, PermissionRequiredMixin, AuditoriaMixin, View):
     """
     Vista para agregar un usuario existente (sin membresía activa)
     a la estación actual.
@@ -346,6 +345,11 @@ class UsuarioAgregarView(BaseEstacionMixin, PermissionRequiredMixin, View):
                     estado=Membresia.Estado.ACTIVO, # <-- Usamos el Enum
                     fecha_inicio=timezone.now().date()
                 )
+                # --- AUDITORÍA ---
+                self.auditar(
+                    verbo="agregó a la compañía a",
+                    objetivo=usuario
+                )
 
             messages.success(request, f'¡{usuario.get_full_name.title()} ha sido agregado a la estación exitosamente!')
             return redirect(self.success_redirect_url)
@@ -358,7 +362,7 @@ class UsuarioAgregarView(BaseEstacionMixin, PermissionRequiredMixin, View):
 
 
 
-class UsuarioCrearView(BaseEstacionMixin, PermissionRequiredMixin, View):
+class UsuarioCrearView(BaseEstacionMixin, PermissionRequiredMixin, AuditoriaMixin, View):
     """
     Vista para crear un nuevo Usuario y su Membresía inicial.
     Refactorizada con el patrón de helpers de CBV.
@@ -425,6 +429,13 @@ class UsuarioCrearView(BaseEstacionMixin, PermissionRequiredMixin, View):
                     fecha_inicio=timezone.now().date()
                 )
 
+                # --- AUDITORÍA ---
+                self.auditar(
+                    verbo="creó el perfil e incorporó a la estación a",
+                    objetivo=nuevo_usuario,
+                    detalles={'rut': datos_limpios.get('rut')}
+                )
+
             print(f"Contraseña para {nuevo_usuario.email}: {contrasena_plana}")
             messages.success(self.request, f"Usuario {nuevo_usuario.get_full_name.title()} creado y asignado a la estación exitosamente.")
             return redirect(self.success_url)
@@ -452,7 +463,7 @@ class UsuarioCrearView(BaseEstacionMixin, PermissionRequiredMixin, View):
 
 
 
-class UsuarioEditarView(BaseEstacionMixin, PermissionRequiredMixin, MembresiaGestionableMixin, View):
+class UsuarioEditarView(BaseEstacionMixin, PermissionRequiredMixin, MembresiaGestionableMixin, AuditoriaMixin, View):
     """
     Vista para editar la información personal de un Usuario.
     
@@ -491,7 +502,7 @@ class UsuarioEditarView(BaseEstacionMixin, PermissionRequiredMixin, MembresiaGes
             membresia = Membresia.objects.filter(
                 usuario_id=usuario_id,
                 estacion_id=self.estacion_activa_id
-            ).latest('fecha_inicio')
+            ).latest('created_at')
             
             return membresia
             
@@ -546,6 +557,15 @@ class UsuarioEditarView(BaseEstacionMixin, PermissionRequiredMixin, MembresiaGes
     # --- 6. Lógica de Formulario ---
     def form_valid(self, form):
         usuario = form.save()
+
+        # --- AUDITORÍA (Con Diff de campos) ---
+        if form.changed_data:
+            self.auditar(
+                verbo="modificó la información personal de",
+                objetivo=usuario,
+                detalles={'campos_modificados': form.changed_data}
+            )
+
         messages.success(self.request, f"Usuario {usuario.get_full_name.title()} actualizado exitosamente.")
         return redirect(self.get_success_url())
     
@@ -559,7 +579,7 @@ class UsuarioEditarView(BaseEstacionMixin, PermissionRequiredMixin, MembresiaGes
 
 
 
-class UsuarioDesactivarView(BaseEstacionMixin, PermissionRequiredMixin, View):
+class UsuarioDesactivarView(BaseEstacionMixin, PermissionRequiredMixin, AuditoriaMixin, View):
     """
     Vista (solo POST) para desactivar la membresía de un usuario
     (cambia su estado a 'INACTIVO').
@@ -587,7 +607,7 @@ class UsuarioDesactivarView(BaseEstacionMixin, PermissionRequiredMixin, View):
             membresia = Membresia.objects.filter(
                 usuario_id=usuario_id,
                 estacion_id=self.estacion_activa_id
-            ).latest('fecha_inicio')
+            ).latest('created_at')
         
         except Membresia.DoesNotExist:
             raise Http404("El usuario no tiene una membresía en esta estación.")
@@ -608,6 +628,13 @@ class UsuarioDesactivarView(BaseEstacionMixin, PermissionRequiredMixin, View):
             membresia.estado = Membresia.Estado.INACTIVO
             membresia.save()
 
+            # --- AUDITORÍA ---
+            self.auditar(
+                verbo="desactivó el acceso a la compañía de",
+                objetivo=membresia.usuario,
+                detalles={'motivo': 'Desactivación manual por administrador'}
+            )
+
             messages.success(request, f"El usuario '{membresia.usuario.get_full_name.title()}' ha sido desactivado correctamente.")
 
         except Http404 as e:
@@ -624,7 +651,7 @@ class UsuarioDesactivarView(BaseEstacionMixin, PermissionRequiredMixin, View):
 
 
 
-class UsuarioActivarView(BaseEstacionMixin, PermissionRequiredMixin, View):
+class UsuarioActivarView(BaseEstacionMixin, PermissionRequiredMixin, AuditoriaMixin, View):
     """
     Vista (solo POST) para activar la membresía de un usuario
     (cambia su estado a 'ACTIVO').
@@ -653,7 +680,7 @@ class UsuarioActivarView(BaseEstacionMixin, PermissionRequiredMixin, View):
             membresia = self.model.objects.filter(
                 usuario_id=usuario_id,
                 estacion_id=self.estacion_activa_id
-            ).latest('fecha_inicio')
+            ).latest('created_at')
         
         except self.model.DoesNotExist:
             raise Http404("El usuario no tiene una membresía en esta estación.")
@@ -673,6 +700,12 @@ class UsuarioActivarView(BaseEstacionMixin, PermissionRequiredMixin, View):
             # 2. Ejecutamos la acción
             membresia.estado = self.model.Estado.ACTIVO # <-- Usando Enum
             membresia.save()
+
+            # --- AUDITORÍA ---
+            self.auditar(
+                verbo="reactivó el acceso a la compañía de",
+                objetivo=membresia.usuario
+            )
 
             messages.success(request, f"El usuario '{membresia.usuario.get_full_name.title()}' ha sido activado correctamente.")
 
@@ -892,7 +925,7 @@ class RolObtenerView(BaseEstacionMixin, PermissionRequiredMixin, View):
 
 
 
-class RolEditarView(BaseEstacionMixin, PermissionRequiredMixin, View):
+class RolEditarView(BaseEstacionMixin, PermissionRequiredMixin, AuditoriaMixin, View):
     """
     Vista para editar roles (nombre y descripción).
     
@@ -972,8 +1005,17 @@ class RolEditarView(BaseEstacionMixin, PermissionRequiredMixin, View):
     def form_valid(self, form):
         """Guarda el rol y redirige."""
         rol = form.save()
+        # --- AUDITORÍA ---
+        if form.changed_data:
+            self.auditar(
+                verbo="modificó la información del rol",
+                objetivo=rol,
+                objetivo_repr=rol.nombre,
+                detalles={'campos_modificados': form.changed_data}
+            )
         messages.success(self.request, f"Rol '{rol.nombre}' actualizado exitosamente.")
         return redirect(self.get_success_url())
+
 
     def form_invalid(self, form):
         """Muestra errores de validación."""
@@ -984,7 +1026,7 @@ class RolEditarView(BaseEstacionMixin, PermissionRequiredMixin, View):
 
 
 
-class RolCrearView(BaseEstacionMixin, PermissionRequiredMixin, View):
+class RolCrearView(BaseEstacionMixin, PermissionRequiredMixin, AuditoriaMixin, View):
     """
     Vista para crear roles personalizados.
     Los roles se asocian automáticamente a la estación activa del usuario.
@@ -1037,7 +1079,14 @@ class RolCrearView(BaseEstacionMixin, PermissionRequiredMixin, View):
         El formulario se encarga de asignar la estación internamente
         porque se la pasamos en el __init__ (ver get_form).
         """
-        form.save()
+        rol = form.save()
+        # --- AUDITORÍA ---
+        self.auditar(
+            verbo="creó el rol personalizado",
+            objetivo=rol,
+            objetivo_repr=rol.nombre,
+            detalles={'nombre': rol.nombre}
+        )
         messages.success(self.request, "Rol creado correctamente.")
         return redirect(self.success_url)
 
@@ -1050,7 +1099,7 @@ class RolCrearView(BaseEstacionMixin, PermissionRequiredMixin, View):
 
 
 
-class RolAsignarPermisosView(BaseEstacionMixin, PermissionRequiredMixin, View):
+class RolAsignarPermisosView(BaseEstacionMixin, PermissionRequiredMixin, AuditoriaMixin, View):
     """
     Vista para asignar permisos a un rol.
     Muestra una lista de TODOS los permisos del sistema agrupados por módulo.
@@ -1162,6 +1211,14 @@ class RolAsignarPermisosView(BaseEstacionMixin, PermissionRequiredMixin, View):
         
         # Actualiza la relación ManyToMany
         self.object.permisos.set(selected_ids)
+
+        # --- AUDITORÍA ---
+        self.auditar(
+            verbo="actualizó los permisos del rol",
+            objetivo=self.object,
+            objetivo_repr=self.object.nombre,
+            detalles={'total_permisos_asignados': len(selected_ids)}
+        )
         
         messages.success(request, f"Permisos del rol '{self.object.nombre}' actualizados correctamente.")
         return redirect(self.success_url)
@@ -1169,7 +1226,7 @@ class RolAsignarPermisosView(BaseEstacionMixin, PermissionRequiredMixin, View):
 
 
 
-class RolEliminarView(BaseEstacionMixin, PermissionRequiredMixin, View):
+class RolEliminarView(BaseEstacionMixin, PermissionRequiredMixin, AuditoriaMixin, View):
     """
     Vista para eliminar un rol personalizado.
     
@@ -1216,6 +1273,16 @@ class RolEliminarView(BaseEstacionMixin, PermissionRequiredMixin, View):
         
         rol_nombre = self.object.nombre
         self.object.delete()
+
+        # --- AUDITORÍA ---
+        # Pasamos 'objetivo=None' porque ya no existe en BD, 
+        # pero usamos 'detalles' para persistir el nombre.
+        self.auditar(
+            verbo="eliminó permanentemente el rol",
+            objetivo=None, 
+            objetivo_repr=rol_nombre,
+            detalles={'nombre_rol_eliminado': rol_nombre}
+        )
         
         messages.success(request, f"El rol '{rol_nombre.title()}' ha sido eliminado exitosamente.")
         return redirect(self.success_url)
@@ -1223,7 +1290,7 @@ class RolEliminarView(BaseEstacionMixin, PermissionRequiredMixin, View):
 
 
 
-class UsuarioAsignarRolesView(BaseEstacionMixin, PermissionRequiredMixin, MembresiaGestionableMixin, View):
+class UsuarioAsignarRolesView(BaseEstacionMixin, PermissionRequiredMixin, MembresiaGestionableMixin, AuditoriaMixin, View):
     """
     Vista para gestionar los ROLES de un usuario dentro de la estación activa.
     
@@ -1256,7 +1323,7 @@ class UsuarioAsignarRolesView(BaseEstacionMixin, PermissionRequiredMixin, Membre
             return Membresia.objects.filter(
                 usuario_id=usuario_id,
                 estacion_id=self.estacion_activa_id # Del BaseEstacionMixin
-            ).latest('fecha_inicio')
+            ).latest('created_at')
         except Membresia.DoesNotExist:
             raise Http404("El usuario no pertenece a esta estación.")
 
@@ -1336,6 +1403,15 @@ class UsuarioAsignarRolesView(BaseEstacionMixin, PermissionRequiredMixin, Membre
         # --- GUARDADO ---
         # .set() reemplaza los roles anteriores con la nueva lista limpia
         self.object.roles.set(roles_para_guardar)
+
+        # --- AUDITORÍA ---
+        # Registramos sobre el usuario, no sobre la membresía (más legible)
+        self.auditar(
+            verbo="actualizó la asignación de roles de",
+            objetivo=self.object.usuario, 
+            objetivo_repr=self.object.usuario.get_full_name,
+            detalles={'cantidad_roles': len(roles_para_guardar)}
+        )
         
         messages.success(request, f"Roles de '{self.object.usuario.get_full_name.title()}' actualizados correctamente.")
         return redirect(self.get_success_url())
@@ -1343,12 +1419,7 @@ class UsuarioAsignarRolesView(BaseEstacionMixin, PermissionRequiredMixin, Membre
 
 
 
-class UsuarioRestablecerContrasena(
-    BaseEstacionMixin, 
-    PermissionRequiredMixin, 
-    MembresiaGestionableMixin, 
-    View
-):
+class UsuarioRestablecerContrasena(BaseEstacionMixin, PermissionRequiredMixin, MembresiaGestionableMixin, AuditoriaMixin, View):
     """
     Vista para que un administrador inicie el proceso de restablecimiento
     de contraseña para otro usuario de su estación.
@@ -1375,7 +1446,7 @@ class UsuarioRestablecerContrasena(
             return Membresia.objects.filter(
                 usuario_id=usuario_id,
                 estacion_id=self.estacion_activa_id
-            ).latest('fecha_inicio')
+            ).latest('created_at')
         except Membresia.DoesNotExist:
             raise Http404("El usuario no pertenece a esta estación.")
 
@@ -1405,6 +1476,15 @@ class UsuarioRestablecerContrasena(
                 subject_template_name='acceso/emails/password_reset_subject.txt',
                 # extra_email_context={'nombre_usuario': usuario_a_resetear.first_name}, # Útil si quieres personalizar el email
             )
+
+            # --- AUDITORÍA ---
+            self.auditar(
+                verbo="solicitó el restablecimiento de contraseña para",
+                objetivo=usuario_a_resetear,
+                objetivo_repr=usuario_a_resetear.get_full_name,
+                detalles={'metodo': 'email'}
+            )
+
             messages.success(request, f"Se ha enviado un correo para restablecer la contraseña a {usuario_a_resetear.email}.")
 
         return redirect(reverse('gestion_usuarios:ruta_ver_usuario', kwargs={'id': usuario_a_resetear.id}))
@@ -1431,7 +1511,7 @@ class UsuarioVerPermisos(BaseEstacionMixin, PermissionRequiredMixin, MembresiaGe
             return Membresia.objects.filter(
                 usuario_id=usuario_id,
                 estacion_id=self.estacion_activa_id
-            ).latest('fecha_inicio')
+            ).latest('created_at')
         except Membresia.DoesNotExist:
             raise Http404("El usuario no pertenece a esta estación.")
 
@@ -1491,7 +1571,7 @@ class UsuarioVerPermisos(BaseEstacionMixin, PermissionRequiredMixin, MembresiaGe
 
 
 
-class UsuarioFinalizarMembresiaView(BaseEstacionMixin, PermissionRequiredMixin, MembresiaGestionableMixin, View):
+class UsuarioFinalizarMembresiaView(BaseEstacionMixin, PermissionRequiredMixin, MembresiaGestionableMixin, AuditoriaMixin, View):
     """
     Muestra una página de confirmación y gestiona la finalización
     de la membresía de un usuario en la estación activa.
@@ -1522,7 +1602,7 @@ class UsuarioFinalizarMembresiaView(BaseEstacionMixin, PermissionRequiredMixin, 
             return Membresia.objects.filter(
                 usuario_id=usuario_id,
                 estacion_id=self.estacion_activa_id # De BaseEstacionMixin
-            ).latest('fecha_inicio')
+            ).latest('created_at')
             
         except Membresia.DoesNotExist:
             raise Http404("El usuario no pertenece a esta estación.")
@@ -1548,6 +1628,14 @@ class UsuarioFinalizarMembresiaView(BaseEstacionMixin, PermissionRequiredMixin, 
         membresia.estado = Membresia.Estado.FINALIZADO
         membresia.fecha_fin = timezone.now().date()
         membresia.save()
+
+        # --- AUDITORÍA (Mensaje Claro y Contundente) ---
+        self.auditar(
+            verbo="desvinculó permanentemente de la estación a",
+            objetivo=membresia.usuario,
+            objetivo_repr=membresia.usuario.get_full_name,
+            detalles={'razon': 'Finalización administrativa de membresía'}
+        )
         
         messages.success(request, f"La membresía de '{usuario_nombre}' ha sido finalizada correctamente.")
         return redirect(self.success_url)
@@ -1726,7 +1814,7 @@ class RegistroActividadView(BaseEstacionMixin, PermissionRequiredMixin, View):
 
 
 
-class UsuarioForzarCierreSesionView(BaseEstacionMixin, PermissionRequiredMixin, MembresiaGestionableMixin, View):
+class UsuarioForzarCierreSesionView(BaseEstacionMixin, PermissionRequiredMixin, MembresiaGestionableMixin, AuditoriaMixin, View):
     """
     Elimina todas las sesiones activas de un usuario específico
     usando 'django-user-sessions' para un rendimiento óptimo (O(1)).
@@ -1743,7 +1831,7 @@ class UsuarioForzarCierreSesionView(BaseEstacionMixin, PermissionRequiredMixin, 
             return Membresia.objects.filter(
                 usuario_id=usuario_id,
                 estacion_id=self.estacion_activa_id
-            ).latest('fecha_inicio')
+            ).latest('created_at')
         except Membresia.DoesNotExist:
             raise Http404("El usuario no pertenece a esta estación.")
 
@@ -1758,11 +1846,11 @@ class UsuarioForzarCierreSesionView(BaseEstacionMixin, PermissionRequiredMixin, 
         
         # --- AUDITORÍA Y MENSAJES ---
         if deleted_count > 0:
-            registrar_actividad(
-                actor=request.user,
-                verbo=f"forzó el cierre de {deleted_count} sesión(es) de",
+            self.auditar(
+                verbo=f"forzó el cierre remoto de {deleted_count} sesión(es) de",
                 objetivo=usuario_objetivo,
-                estacion=self.estacion_activa 
+                objetivo_repr=usuario_objetivo.get_full_name,
+                detalles={'sesiones_cerradas': deleted_count}
             )
             messages.success(request, f"Se han cerrado exitosamente {deleted_count} sesiones activas de {usuario_objetivo.get_full_name}.")
         else:
@@ -1773,7 +1861,7 @@ class UsuarioForzarCierreSesionView(BaseEstacionMixin, PermissionRequiredMixin, 
 
 
 
-class UsuarioImpersonarView(BaseEstacionMixin, UserPassesTestMixin, MembresiaGestionableMixin, View):
+class UsuarioImpersonarView(BaseEstacionMixin, UserPassesTestMixin, MembresiaGestionableMixin, AuditoriaMixin, View):
     """
     Inicia la suplantación de identidad.
     
@@ -1808,7 +1896,7 @@ class UsuarioImpersonarView(BaseEstacionMixin, UserPassesTestMixin, MembresiaGes
             return Membresia.objects.filter(
                 usuario_id=usuario_id,
                 estacion_id=self.estacion_activa_id
-            ).latest('fecha_inicio')
+            ).latest('created_at')
         except Membresia.DoesNotExist:
             raise Http404("El usuario no pertenece a esta estación.")
 
@@ -1819,12 +1907,13 @@ class UsuarioImpersonarView(BaseEstacionMixin, UserPassesTestMixin, MembresiaGes
         usuario_objetivo = membresia_objetivo.usuario
         usuario_original = request.user
         
-        # --- AUDITORÍA ---
-        registrar_actividad(
-            actor=usuario_original,
-            verbo="inició sesión como",
+        # --- AUDITORÍA DE SEGURIDAD ---
+        # Registramos que el admin (request.user actual) va a entrar como otro.
+        self.auditar(
+            verbo="asumió la identidad digital (Impersonación) de",
             objetivo=usuario_objetivo,
-            estacion=self.estacion_activa
+            objetivo_repr=usuario_objetivo.get_full_name,
+            detalles={'advertencia': 'Inicio de sesión simulada con permisos de superusuario'}
         )
 
         # --- IMPERSONACIÓN ---
@@ -1851,13 +1940,17 @@ class UsuarioImpersonarView(BaseEstacionMixin, UserPassesTestMixin, MembresiaGes
 
 
 
-class UsuarioDetenerImpersonacionView(LoginRequiredMixin, View):
+class UsuarioDetenerImpersonacionView(LoginRequiredMixin, AuditoriaMixin, View):
     """
     Restaura la sesión del administrador original.
     """
     def get(self, request):
         # 1. Obtener ID del impersonador
         impersonator_id = request.session.get('impersonator_id')
+
+        # 2. Capturar al usuario que estaba siendo suplantado (ANTES de perder la sesión)
+        #    En este punto, request.user sigue siendo el "Usuario Objetivo"
+        usuario_impersonado = request.user 
         
         if not impersonator_id:
             return redirect('portal:ruta_inicio')
@@ -1867,21 +1960,30 @@ class UsuarioDetenerImpersonacionView(LoginRequiredMixin, View):
         estacion_nombre_salida = request.session.get('active_estacion_nombre')
 
         try:
-            # 2. Recuperar al admin original
+            # 3. Recuperar al admin original
             admin_original = Usuario.objects.get(id=impersonator_id)
 
-            # 3. Validación de Seguridad: ¿Sigue siendo superusuario?
+            # 4. Validación de Seguridad: ¿Sigue siendo superusuario?
             if not admin_original.is_superuser:
                 raise PermissionDenied("El usuario original perdió sus privilegios.")
             
-            # 4. Restaurar sesión (Login destruye la sesión impersonada)
+            # 5. Restaurar sesión (Login destruye la sesión impersonada)
             admin_original.backend = 'apps.gestion_usuarios.backends.RolBackend'
             login(request, admin_original)
             
-            # 5. Restaurar contexto de estación (si existía)
+            # 6. Restaurar contexto de estación (si existía)
             if estacion_id_salida:
                 request.session['active_estacion_id'] = estacion_id_salida
                 request.session['active_estacion_nombre'] = estacion_nombre_salida
+
+            # 7. --- AUDITORÍA DE CIERRE ---
+            #    Se ejecuta YA como el Admin Original.
+            self.auditar(
+                verbo="finalizó la sesión simulada y retomó su identidad original",
+                objetivo=usuario_impersonado, # Guardamos referencia de quién era
+                objetivo_repr=usuario_impersonado.get_full_name,
+                detalles={'sesion_duracion': 'N/A'} # Se puede calcular duración si se guarda el timestamp de inicio
+            )
             
             messages.success(request, "Has vuelto a tu identidad original.")
             
