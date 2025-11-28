@@ -14,13 +14,46 @@ from PIL import Image
 from apps.gestion_usuarios.models import Usuario, Membresia
 from apps.gestion_mantenimiento.models import PlanMantenimiento, PlanActivoConfig, OrdenMantenimiento, RegistroMantenimiento
 from apps.gestion_mantenimiento.services import auditar_modificacion_incremental
-from apps.common.permissions import CanUpdateUserProfile
 from apps.common.utils import procesar_imagen_en_memoria, generar_thumbnail_en_memoria
 from apps.common.mixins import AuditoriaMixin
 from apps.gestion_inventario.models import Comuna, Activo, LoteInsumo, ProductoGlobal, Estacion, Producto, Estado
 from apps.gestion_inventario.utils import generar_sku_sugerido
 from .serializers import ComunaSerializer, ProductoLocalInputSerializer
-from .permissions import IsStationActiveAndHasPermission
+from .permissions import (
+    IsEstacionActiva, 
+    CanCrearUsuario,
+    CanVerCatalogos, 
+    CanCrearProductoGlobal,
+    CanGestionarPlanes,
+    CanGestionarOrdenes,
+    IsSelfOrStationAdmin
+)
+
+
+
+
+class AlternarTemaOscuroAPIView(APIView):
+    """
+    API robusta para alternar el modo oscuro.
+    Requiere autenticación y usa POST para cambios de estado seguros.
+    """
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        # Obtenemos el estado actual (False por defecto)
+        current = request.session.get('dark_mode', False)
+        
+        # Invertimos el estado
+        nuevo_estado = not current
+        request.session['dark_mode'] = nuevo_estado
+        request.session.modified = True # Forzamos el guardado de sesión
+        
+        return Response({
+            'status': 'ok',
+            'dark_mode': nuevo_estado,
+            'mensaje': 'Tema actualizado correctamente.'
+        })
+
 
 
 
@@ -30,7 +63,7 @@ class BuscarUsuarioAPIView(APIView):
     y devuelve su estado de membresía.
     """
 
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, CanCrearUsuario]
 
 
     def post(self, request, *args, **kwargs):
@@ -94,100 +127,56 @@ class BuscarUsuarioAPIView(APIView):
 
 
 
-def alternar_tema_oscuro(request):
-    current = request.session.get('dark_mode', False)
-    request.session['dark_mode'] = not current
-    return redirect(request.META.get('HTTP_REFERER', '/'))
 
-
-
-class ActualizarAvatarUsuarioView(APIView):
-    permission_classes = [IsAuthenticated, CanUpdateUserProfile]
+class ActualizarAvatarUsuarioAPIView(APIView):
+    """
+    Actualiza el avatar del usuario.
+    Permite acceso al dueño del perfil O a un administrador de la misma estación.
+    Usa IsSelfOrStationAdmin para validar la autorización.
+    """
+    permission_classes = [IsAuthenticated, IsSelfOrStationAdmin]
     parser_classes = [MultiPartParser, FormParser]
 
     def post(self, request, id, format=None):
+        # 1. Buscamos al usuario objetivo
         usuario = get_object_or_404(Usuario, pk=id)
+
+        # 2. Ejecutamos la validación de permisos de objeto explícitamente
+        # Esto dispara IsSelfOrStationAdmin.has_object_permission(request, view, usuario)
         self.check_object_permissions(request, usuario)
 
+        # 3. Validamos el archivo
         nuevo_avatar_file = request.FILES.get('nuevo_avatar')
-
         if not nuevo_avatar_file:
-            return Response(
-                {'error': 'No se proporcionó ningún archivo.'},
-                status=status.HTTP_400_BAD_REQUEST
-            )
+            return Response({'error': 'No se proporcionó ningún archivo.'}, status=status.HTTP_400_BAD_REQUEST)
 
         try:
-            # --- 1. Guardar referencias a los archivos antiguos ---
-            old_avatar = usuario.avatar
-            old_thumb_small = usuario.avatar_thumb_small
-            old_thumb_medium = usuario.avatar_thumb_medium
-
-            # --- 2. Generar nombres de archivo únicos con UUID ---
-            # Forzamos .jpg porque nuestras funciones convierten a JPEG
-            ext = '.jpg' 
+            # Procesamiento de Imágenes
             base_name = str(uuid.uuid4())
+            main_name = f"{base_name}.jpg"
             
-            main_name = f"{base_name}{ext}"
-            medium_name = f"{base_name}_medium.jpg"
-            small_name = f"{base_name}_small.jpg"
-
-            # --- 3. Procesar la nueva imagen y thumbnails ---
+            # Procesar principal (Cuadrada 500x500)
+            processed_avatar = procesar_imagen_en_memoria(nuevo_avatar_file, (500, 500), main_name, crop_to_square=True)
             
-            # Procesar la imagen principal (recortar a cuadrado 500x500)
-            processed_avatar_content = procesar_imagen_en_memoria(
-                nuevo_avatar_file,
-                max_dimensions=(500, 500),
-                new_filename=main_name,
-                crop_to_square=True  # Avatares sí van recortados
-            )
-            
-            # Rebobinar el archivo para leerlo de nuevo para los thumbs
-            nuevo_avatar_file.seek(0) 
-            
+            # Rebobinar para generar thumbs
+            nuevo_avatar_file.seek(0)
             with Image.open(nuevo_avatar_file) as img:
-                # Generar thumbnail mediano (100x100)
-                thumb_100_content = generar_thumbnail_en_memoria(
-                    img.copy(), 
-                    (100, 100), 
-                    medium_name
-                )
-                
-                # Generar thumbnail pequeño (40x40)
-                thumb_40_content = generar_thumbnail_en_memoria(
-                    img.copy(), 
-                    (40, 40), 
-                    small_name
-                )
+                thumb_100 = generar_thumbnail_en_memoria(img.copy(), (100, 100), f"{base_name}_medium.jpg")
+                thumb_40 = generar_thumbnail_en_memoria(img.copy(), (40, 40), f"{base_name}_small.jpg")
 
-            # --- 4. Borrar los archivos antiguos del almacenamiento (S3) ---
-            # (Tu lógica original estaba correcta)
-            if old_avatar and old_avatar.name:
-                old_avatar.delete(save=False)
-            if old_thumb_small and old_thumb_small.name:
-                old_thumb_small.delete(save=False)
-            if old_thumb_medium and old_thumb_medium.name:
-                old_thumb_medium.delete(save=False)
-
-            # --- 5. Asignar y guardar los nuevos archivos ---
-            usuario.avatar = processed_avatar_content
-            usuario.avatar_thumb_small = thumb_40_content
-            usuario.avatar_thumb_medium = thumb_100_content
+            # Asignación y Guardado
+            # django-cleanup se encargará de borrar los anteriores al guardar los nuevos
+            usuario.avatar = processed_avatar
+            usuario.avatar_thumb_small = thumb_40
+            usuario.avatar_thumb_medium = thumb_100
+            
             usuario.save()
-
-            # Refrescar la instancia es una buena práctica
             usuario.refresh_from_db()
 
-            return Response(
-                {'success': True, 'new_avatar_url': usuario.avatar.url},
-                status=status.HTTP_200_OK
-            )
-        
+            return Response({'success': True, 'new_avatar_url': usuario.avatar.url})
+            
         except Exception as e:
-            return Response(
-                {'error': f'Ocurrió un error inesperado: {str(e)}'},
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR
-            )
+            return Response({'error': f'Error interno: {str(e)}'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 
@@ -210,29 +199,23 @@ class ComunasPorRegionAPIView(APIView):
 
 
 
-class GraficoExistenciasCategoriaView(APIView):
+# --- VISTAS DE GRÁFICOS (Requieren Estación Activa) ---
+class InventarioGraficoExistenciasCategoriaAPIView(APIView):
     """
     API Endpoint para obtener datos del gráfico de existencias por categoría.
     Suma Activos y Lotes de Insumo de la estación activa.
     """
-    # Si usas autenticación por sesión de Django estándar, esto es suficiente.
-    # Si tu API usa tokens, necesitarás permission_classes = [IsAuthenticated]
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, IsEstacionActiva]
     
     def get(self, request, format=None):
         # 1. Obtener Estación Activa de la sesión
-        estacion_id = request.session.get('active_estacion_id')
-        if not estacion_id:
-            return Response(
-                {"error": "No hay estación activa en la sesión"}, 
-                status=status.HTTP_400_BAD_REQUEST
-            )
+        estacion = request.estacion_activa
 
         # 2. Agrupar Activos por Categoría
         # Ruta: Activo -> Producto -> ProductoGlobal -> Categoria -> nombre
         activos_por_categoria = (
             Activo.objects
-            .filter(estacion_id=estacion_id)
+            .filter(estacion=estacion)
             .values(nombre_categoria=F('producto__producto_global__categoria__nombre'))
             .annotate(total=Count('id'))
         )
@@ -243,10 +226,9 @@ class GraficoExistenciasCategoriaView(APIView):
         # Generalmente para inventario masivo se suman cantidades.
         # Si prefieres sumar cantidades, usa Sum('cantidad') en lugar de Count('id').
         # Por ahora usaremos Count('id') para ser consistentes con Activos (1 activo = 1 unidad).
-        from django.db.models import Sum
         lotes_por_categoria = (
             LoteInsumo.objects
-            .filter(compartimento__ubicacion__estacion_id=estacion_id)
+            .filter(compartimento__ubicacion__estacion=estacion)
             .values(nombre_categoria=F('producto__producto_global__categoria__nombre'))
             .annotate(total=Sum('cantidad')) # Sumamos la cantidad real de insumos
         )
@@ -280,29 +262,27 @@ class GraficoExistenciasCategoriaView(APIView):
 
 
 
-class GraficoEstadosInventarioView(APIView):
+class InventarioGraficoEstadosAPIView(APIView):
     """
     API Endpoint para obtener datos del gráfico de estado general del inventario.
     Agrupa por TipoEstado (OPERATIVO, NO OPERATIVO, ADMINISTRATIVO, etc.)
     """
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, IsEstacionActiva]
 
     def get(self, request, format=None):
-        estacion_id = request.session.get('active_estacion_id')
-        if not estacion_id:
-             return Response({"error": "Sin estación activa"}, status=status.HTTP_400_BAD_REQUEST)
+        estacion = request.estacion_activa
 
         # Agrupamos por Tipo de Estado
         # Ruta: Activo -> Estado -> TipoEstado -> nombre
         activos_por_estado = (
-            Activo.objects.filter(estacion_id=estacion_id)
+            Activo.objects.filter(estacion=estacion)
             .values(nombre_estado=F('estado__tipo_estado__nombre'))
             .annotate(total=Count('id'))
         )
 
         # Ruta: LoteInsumo -> Estado -> TipoEstado -> nombre
         lotes_por_estado = (
-            LoteInsumo.objects.filter(compartimento__ubicacion__estacion_id=estacion_id)
+            LoteInsumo.objects.filter(compartimento__ubicacion__estacion=estacion)
             .values(nombre_estado=F('estado__tipo_estado__nombre'))
             .annotate(total=Sum('cantidad'))
         )
@@ -324,17 +304,15 @@ class GraficoEstadosInventarioView(APIView):
 
 
 
-class ProductoGlobalSKUAPIView(APIView):
+class InventarioProductoGlobalSKUAPIView(APIView):
     """
     Endpoint para obtener detalles de producto y sugerencia de SKU.
     Uso: Fetch desde modal de inventario o App Móvil.
     """
-    permission_classes = [IsStationActiveAndHasPermission]
-    
-    # Definimos el permiso requerido para que nuestro validador lo lea
-    required_permission = "gestion_usuarios.accion_gestion_inventario_ver_catalogos"
+    permission_classes = [IsAuthenticated, IsEstacionActiva, CanVerCatalogos]
 
     def get(self, request, pk, format=None):
+        # IsEstacionActiva ya validó que tenemos sesión
         # get_object_or_404 maneja el error 404 automáticamente y DRF lo formatea a JSON
         producto_global = get_object_or_404(
             ProductoGlobal.objects.select_related('categoria', 'marca'), 
@@ -363,17 +341,17 @@ class ProductoGlobalSKUAPIView(APIView):
 
 
 
-class AnadirProductoLocalAPIView(AuditoriaMixin, APIView):
+class InventarioAnadirProductoLocalAPIView(AuditoriaMixin, APIView):
     """
     Endpoint (POST) para crear un Producto local en la estación activa.
     Utiliza Serializers para validación de entrada, 
     Manejo de Excepciones granular y Transacciones atómicas.
     """
-    permission_classes = [IsStationActiveAndHasPermission]
+    permission_classes = [IsAuthenticated, IsEstacionActiva, CanCrearProductoGlobal]
     required_permission = "gestion_usuarios.accion_gestion_inventario_crear_producto_global"
 
     def post(self, request, format=None):
-        # 1. Validación de Entrada con Serializer
+        # Validación de Entrada con Serializer
         serializer = ProductoLocalInputSerializer(data=request.data)
         if not serializer.is_valid():
             return Response(
@@ -383,13 +361,9 @@ class AnadirProductoLocalAPIView(AuditoriaMixin, APIView):
         
         # Datos ya validados y limpios
         data = serializer.validated_data
+        estacion = request.estacion_activa
 
-        # 2. Obtención de Contexto (Estación)
-        # El permiso ya garantizó que existe 'active_estacion_id' en sesión
-        estacion_id = request.session['active_estacion_id']
-        estacion = get_object_or_404(Estacion, pk=estacion_id)
-
-        # 3. Obtención de Producto Global
+        # Obtención de Producto Global
         try:
             producto_global = ProductoGlobal.objects.get(pk=data['productoglobal_id'])
         except ProductoGlobal.DoesNotExist:
@@ -443,30 +417,27 @@ class AnadirProductoLocalAPIView(AuditoriaMixin, APIView):
 
 
 # --- VISTAS DE GESTIÓN DE MANTENIMIENTO ---
-class ApiBuscarActivoParaPlanView(APIView):
+class MantenimientoBuscarActivoParaPlanAPIView(APIView):
     """
     API DRF: Busca activos de la estación que NO estén ya en el plan actual.
     GET params: q (búsqueda), plan_id
     """
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, IsEstacionActiva, CanGestionarPlanes]
 
     def get(self, request, *args, **kwargs):
         query = request.GET.get('q', '').strip()
         plan_id = request.GET.get('plan_id')
-        estacion_activa = request.session.get('active_estacion_id')
+        estacion = request.estacion_activa
 
         if not query or len(query) < 2:
             return Response({'results': []})
-        
-        if not estacion_activa:
-             return Response({'results': []}, status=status.HTTP_403_FORBIDDEN)
 
         # 1. Obtener plan
-        plan = get_object_or_404(PlanMantenimiento, id=plan_id, estacion_id=estacion_activa)
+        plan = get_object_or_404(PlanMantenimiento, id=plan_id, estacion=estacion)
         
         # 2. Filtrar
         activos = Activo.objects.filter(
-            estacion_id=estacion_activa
+            estacion=estacion
         ).filter(
             Q(codigo_activo__icontains=query) | 
             Q(producto__producto_global__nombre_oficial__icontains=query)
@@ -493,24 +464,21 @@ class ApiBuscarActivoParaPlanView(APIView):
 
 
 
-class ApiAnadirActivoEnPlanView(APIView):
+class MantenimientoAnadirActivoEnPlanAPIView(APIView):
     """
     API DRF: Añade un activo a un plan.
     """
-    permission_classes = [IsAuthenticated] # O tus permisos personalizados
+    permission_classes = [IsAuthenticated, IsEstacionActiva, CanGestionarPlanes]
 
     def post(self, request, plan_pk):
-        estacion_activa = request.session.get('active_estacion_id')
-        if not estacion_activa:
-             return Response({'error': 'No hay estación activa'}, status=status.HTTP_403_FORBIDDEN)
-
-        plan = get_object_or_404(PlanMantenimiento, pk=plan_pk, estacion_id=estacion_activa)
-        
+        estacion = request.estacion_activa
+        plan = get_object_or_404(PlanMantenimiento, pk=plan_pk, estacion=estacion)
         activo_id = request.data.get('activo_id')
+
         if not activo_id:
             return Response({'error': 'Falta activo_id'}, status=status.HTTP_400_BAD_REQUEST)
 
-        activo = get_object_or_404(Activo, pk=activo_id, estacion_id=estacion_activa)
+        activo = get_object_or_404(Activo, pk=activo_id, estacion=estacion)
 
         # Lógica de Negocio
         config, created = PlanActivoConfig.objects.get_or_create(
@@ -537,17 +505,17 @@ class ApiAnadirActivoEnPlanView(APIView):
 
 
 
-class ApiQuitarActivoDePlanView(APIView):
+class MantenimientoQuitarActivoDePlanAPIView(APIView):
     """
     API DRF: Quita un activo de un plan.
     """
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, IsEstacionActiva, CanGestionarPlanes]
 
     def delete(self, request, pk):
-        estacion_activa = request.session.get('active_estacion_id')
+        estacion = request.estacion_activa
         
         # Buscamos la configuración asegurando estación
-        config = get_object_or_404(PlanActivoConfig, pk=pk, plan__estacion_id=estacion_activa)
+        config = get_object_or_404(PlanActivoConfig, pk=pk, plan__estacion=estacion)
         
         plan = config.plan
         activo_codigo = config.activo.codigo_activo
@@ -566,17 +534,17 @@ class ApiQuitarActivoDePlanView(APIView):
 
 
 
-class ApiTogglePlanActivoView(AuditoriaMixin, APIView):
+class MantenimientoTogglePlanActivoAPIView(AuditoriaMixin, APIView):
     """
     API DRF: Cambia el estado 'activo_en_sistema' de un plan (On/Off).
     POST: plan_pk
     """
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, IsEstacionActiva, CanGestionarPlanes]
 
     def post(self, request, pk):
-        estacion_activa = request.session.get('active_estacion_id')
+        estacion = request.estacion_activa
         # Buscamos el plan
-        plan = get_object_or_404(PlanMantenimiento, pk=pk, estacion_id=estacion_activa)
+        plan = get_object_or_404(PlanMantenimiento, pk=pk, estacion=estacion)
         
         # Toggle
         plan.activo_en_sistema = not plan.activo_en_sistema
@@ -602,23 +570,26 @@ class ApiTogglePlanActivoView(AuditoriaMixin, APIView):
 
 
 
-class ApiCambiarEstadoOrdenView(APIView, AuditoriaMixin):
+class MantenimientoCambiarEstadoOrdenAPIView(AuditoriaMixin, APIView):
     """
     API DRF: Cambia el estado global de la orden (INICIAR / FINALIZAR / CANCELAR).
     POST: { accion: 'iniciar' | 'finalizar' | 'cancelar' }
     """
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, IsEstacionActiva, CanGestionarOrdenes]
 
     def post(self, request, pk):
-        estacion_activa = request.session.get('active_estacion_id')
-        orden = get_object_or_404(OrdenMantenimiento, pk=pk, estacion_id=estacion_activa)
-        
+        estacion = request.estacion_activa
+        orden = get_object_or_404(OrdenMantenimiento, pk=pk, estacion=estacion)
         accion = request.data.get('accion')
         verbo_auditoria = ""
         
         if accion == 'iniciar':
             if orden.estado != OrdenMantenimiento.EstadoOrden.PENDIENTE:
                 return Response({'message': 'La orden no está pendiente.'}, status=status.HTTP_400_BAD_REQUEST)
+            
+            # Validación de orden vacía
+            if orden.activos_afectados.count() == 0:
+                return Response({'status': 'error', 'message': 'No se puede iniciar una orden sin activos.'}, status=status.HTTP_400_BAD_REQUEST)
             
             orden.estado = OrdenMantenimiento.EstadoOrden.EN_CURSO
             orden.save()
@@ -664,15 +635,15 @@ class ApiCambiarEstadoOrdenView(APIView, AuditoriaMixin):
         return Response({'status': 'ok', 'message': 'Estado actualizado.'})
 
 
-class ApiRegistrarTareaMantenimientoView(APIView):
+class MantenimientoRegistrarTareaAPIView(APIView):
     """
     API DRF: Crea un RegistroMantenimiento para un activo.
     """
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, IsEstacionActiva, CanGestionarOrdenes]
 
     def post(self, request, pk):
-        estacion_activa = request.session.get('active_estacion_id')
-        orden = get_object_or_404(OrdenMantenimiento, pk=pk, estacion_id=estacion_activa)
+        estacion = request.estacion_activa
+        orden = get_object_or_404(OrdenMantenimiento, pk=pk, estacion=estacion)
         
         if orden.estado != OrdenMantenimiento.EstadoOrden.EN_CURSO:
             return Response({'message': 'Debe INICIAR la orden antes de registrar tareas.'}, status=status.HTTP_400_BAD_REQUEST)
@@ -681,7 +652,7 @@ class ApiRegistrarTareaMantenimientoView(APIView):
         notas = request.data.get('notas')
         fue_exitoso = request.data.get('exitoso', True)
 
-        activo = get_object_or_404(Activo, pk=activo_id, estacion_id=estacion_activa)
+        activo = get_object_or_404(Activo, pk=activo_id, estacion=estacion)
 
         registro, created = RegistroMantenimiento.objects.update_or_create(
             orden_mantenimiento=orden,
@@ -731,24 +702,24 @@ class ApiRegistrarTareaMantenimientoView(APIView):
         return Response({'status': 'ok', 'message': 'Registro guardado.'})
 
 
-class ApiBuscarActivoParaOrdenView(APIView):
+class MantenimientoBuscarActivoParaOrdenAPIView(APIView):
     """
     API DRF: Busca activos para agregar a una ORDEN específica.
     """
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, IsEstacionActiva, CanGestionarOrdenes]
 
     def get(self, request, *args, **kwargs):
         query = request.GET.get('q', '').strip()
         orden_id = request.GET.get('orden_id')
-        estacion_activa = request.session.get('active_estacion_id')
+        estacion = request.estacion_activa
 
         if not query or len(query) < 2:
             return Response({'results': []})
 
-        orden = get_object_or_404(OrdenMantenimiento, id=orden_id, estacion_id=estacion_activa)
+        orden = get_object_or_404(OrdenMantenimiento, id=orden_id, estacion=estacion)
         
         activos = Activo.objects.filter(
-            estacion_id=estacion_activa
+            estacion=estacion
         ).filter(
             Q(codigo_activo__icontains=query) | 
             Q(producto__producto_global__nombre_oficial__icontains=query)
@@ -773,21 +744,21 @@ class ApiBuscarActivoParaOrdenView(APIView):
         return Response({'results': results})
 
 
-class ApiAnadirActivoOrdenView(APIView):
+class MantenimientoAnadirActivoOrdenAPIView(APIView):
     """
     API DRF: Añade un activo a la lista de 'activos_afectados' de una orden.
     """
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, IsEstacionActiva, CanGestionarOrdenes]
 
     def post(self, request, pk):
-        estacion_activa = request.session.get('active_estacion_id')
-        orden = get_object_or_404(OrdenMantenimiento, pk=pk, estacion_id=estacion_activa)
+        estacion = request.estacion_activa
+        orden = get_object_or_404(OrdenMantenimiento, pk=pk, estacion=estacion)
         
         if orden.estado != OrdenMantenimiento.EstadoOrden.PENDIENTE:
             return Response({'message': 'Solo se pueden agregar activos a órdenes PENDIENTES.'}, status=status.HTTP_400_BAD_REQUEST)
 
         activo_id = request.data.get('activo_id')
-        activo = get_object_or_404(Activo, pk=activo_id, estacion_id=estacion_activa)
+        activo = get_object_or_404(Activo, pk=activo_id, estacion=estacion)
 
         orden.activos_afectados.add(activo)
         
@@ -801,21 +772,21 @@ class ApiAnadirActivoOrdenView(APIView):
         return Response({'status': 'ok', 'message': f"Activo {activo.codigo_activo} añadido."})
 
 
-class ApiQuitarActivoOrdenView(APIView):
+class MantenimientoQuitarActivoOrdenAPIView(APIView):
     """
     API DRF: Quita un activo de la orden.
     """
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, IsEstacionActiva, CanGestionarOrdenes]
 
     def post(self, request, pk):
-        estacion_activa = request.session.get('active_estacion_id')
-        orden = get_object_or_404(OrdenMantenimiento, pk=pk, estacion_id=estacion_activa)
+        estacion = request.estacion_activa
+        orden = get_object_or_404(OrdenMantenimiento, pk=pk, estacion=estacion)
         
         if orden.estado != OrdenMantenimiento.EstadoOrden.PENDIENTE:
             return Response({'message': 'Solo se pueden quitar activos de órdenes PENDIENTES.'}, status=status.HTTP_400_BAD_REQUEST)
 
         activo_id = request.data.get('activo_id')
-        activo = get_object_or_404(Activo, pk=activo_id, estacion_id=estacion_activa)
+        activo = get_object_or_404(Activo, pk=activo_id, estacion=estacion)
 
         orden.activos_afectados.remove(activo)
 

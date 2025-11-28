@@ -68,7 +68,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // URLs (se obtienen del template de Django)
     const defaultAvatarUrl = "{% static 'imagenes/default_avatar.png' %}";
     const crearUsuarioUrl = "{% url 'gestion_usuarios:ruta_crear_usuario' %}"; // URL para crear [cite: 3]
-    const buscarApiUrl = "{% url 'api:ruta_buscar_usuario' %}"; // URL de la API de búsqueda [cite: 3]
+    const buscarApiUrl = "{% url 'api:api_buscar_usuario' %}"; // URL de la API de búsqueda [cite: 3]
     const agregarUsuarioUrl = "{% url 'gestion_usuarios:ruta_agregar_usuario' %}"; // URL del POST de la vista [cite: 3]
 
     formularioBuscarUsuario.addEventListener('submit', async function(event) {

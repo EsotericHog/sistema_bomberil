@@ -15,7 +15,7 @@
                         {# --- SECCIÓN DEL AVATAR --- #}
                         <div id="avatar-container-perfil" 
                              class="position-relative me-3" 
-                             data-api-url="{% url 'api:ruta_editar_avatar_usuario' id=usuario.id %}">
+                             data-api-url="{% url 'api:api_editar_avatar_usuario' id=usuario.id %}">
                             
                             <img class="js-avatar-image rounded-circle" 
                                  src="{% if usuario.avatar %}{{ usuario.avatar.url }}{% else %}{% static 'imagenes/default_avatar.png' %}{% endif %}" 

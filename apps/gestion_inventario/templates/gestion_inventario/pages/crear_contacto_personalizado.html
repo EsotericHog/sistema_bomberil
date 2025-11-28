@@ -91,7 +91,7 @@
         const comunaSelect = document.getElementById('id_comuna');   
 
         if (regionSelect && comunaSelect) {
-            const comunasUrlTemplate = "{% url 'api:comunas_por_region' 0 %}";
+            const comunasUrlTemplate = "{% url 'api:api_comunas_por_region' 0 %}";
 
             regionSelect.addEventListener('change', async function() {
                 const regionId = this.value;

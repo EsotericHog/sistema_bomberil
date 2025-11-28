@@ -27,7 +27,7 @@
                     <div class="col-md-3">
                         <label for="region" class="form-label fw-bold fs_pequena">Región</label>
                         <select name="region" id="region" class="form-select form-select-sm fs_normal"
-                                data-comunas-url="{% url 'api:comunas_por_region' 0 %}">
+                                data-comunas-url="{% url 'api:api_comunas_por_region' 0 %}">
                             <option value="">Todas</option>
                             {% for region in all_regiones %}
                                 <option value="{{ region.id }}"

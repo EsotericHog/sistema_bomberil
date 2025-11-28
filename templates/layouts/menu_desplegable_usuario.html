@@ -10,16 +10,16 @@
 
         <li class="menu_desplegable_usuario__opcion">
             <a 
-            class="fs_normal color_primario_variante" 
-            href="{% url 'api:ruta_alternar_tema' %}"
+                id="btn-alternar-tema"
+                class="fs_normal color_primario_variante" 
+                href="javascript:void(0)"
+                data-url="{% url 'api:api_alternar_tema' %}"
             >
                 <i class="fa-solid fa-circle-half-stroke"></i>
                 Tema: 
-                {% if request.session.dark_mode|default:False %}
-                Oscuro
-                {% else %}
-                Claro
-                {% endif %}
+                <span id="texto-tema-actual">
+                    {% if request.session.dark_mode|default:False %}Oscuro{% else %}Claro{% endif %}
+                </span>
             </a>
         </li>
         

@@ -23,7 +23,7 @@
             {# Mantenemos toda la estructura de IDs y clases JS para tu script #}
             <div id="avatar-container-admin" 
                  class="card shadow-sm mb-4 {% if request.session.dark_mode %}dark-mode{% endif %}"
-                 data-api-url="{% url 'api:ruta_editar_avatar_usuario' id=membresia.usuario.id %}">
+                 data-api-url="{% url 'api:api_editar_avatar_usuario' id=membresia.usuario.id %}">
                 
                 <div class="card-body text-center position-relative p-4">
                     <img class="js-avatar-image rounded-circle img-fluid shadow-sm"
