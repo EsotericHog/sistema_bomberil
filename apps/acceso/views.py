@@ -1,5 +1,6 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.views import View
+from django.views.generic import FormView
 from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout, views as auth_views
 from django.urls import reverse, reverse_lazy
@@ -10,74 +11,80 @@ from apps.gestion_usuarios.models import Membresia
 from apps.gestion_inventario.models import Estacion
 
 
-class LoginView(View):
-
+class LoginView(FormView):
     template_name = "acceso/pages/login.html"
+    form_class = FormularioLogin
+    success_url = reverse_lazy('portal:ruta_inicio')
 
-    def get(self, request):
-        # Si el usuario ya está autenticado, redirige al inicio
+    def dispatch(self, request, *args, **kwargs):
+        # Redirección proactiva si ya está logueado
         if request.user.is_authenticated:
-            return redirect(reverse('portal:ruta_inicio'))
-        
-        formulario = FormularioLogin()
-        return render(request, self.template_name, {'formulario': formulario})
-    
+            return redirect(self.get_success_url())
+        return super().dispatch(request, *args, **kwargs)
 
-    def post(self, request):
-        formulario = FormularioLogin(request.POST)
+    def form_valid(self, form):
+        """
+        Se ejecuta solo si el formulario es válido.
+        Aquí realizamos la autenticación y la lógica de negocio de la sesión.
+        """
+        rut = form.cleaned_data.get('rut')
+        password = form.cleaned_data.get('password')
 
-        if not formulario.is_valid():
-            return render(request, self.template_name, {'formulario': formulario})
-
-        datos_limpios = formulario.cleaned_data
-        user = authenticate(
-            request, 
-            rut=datos_limpios.get('rut'), 
-            password=datos_limpios.get('password')
-        )
+        user = authenticate(self.request, rut=rut, password=password)
 
         if user is None:
-            messages.add_message(request, messages.WARNING, "Usuario y/o contraseña incorrectos")
-            return redirect(reverse('acceso:ruta_login'))
-            
+            messages.warning(self.request, "Usuario y/o contraseña incorrectos")
+            return self.form_invalid(form)
 
-        # Iniciar sesión
-        login(request, user)
+        # 1. Iniciar Sesión (Django Auth)
+        login(self.request, user)
 
-        # Obtener membresía activa (acceso)
-        membresia_activa = Membresia.objects.filter(usuario=user, estado='ACTIVO').select_related('estacion').first()
+        # 2. Lógica de Membresía y Sesión
+        return self._procesar_ingreso_usuario(user)
 
-        # Verificar membresía
-        if membresia_activa:
-            # Caso A: Usuario normal (o superuser con membresía). Flujo estándar.
-            request.session['active_estacion_id'] = membresia_activa.estacion.id
-            request.session['active_estacion_nombre'] = membresia_activa.estacion.nombre
+    def _procesar_ingreso_usuario(self, user):
+        """
+        Maneja la lógica específica de tu negocio: Membresías y variables de sesión.
+        """
+        # Buscamos membresía activa
+        membresia = Membresia.objects.filter(
+            usuario=user, 
+            estado='ACTIVO' # Ojo: Asegúrate que tu modelo usa 'ACTIVO' o el valor correcto del choices
+        ).select_related('estacion').first()
 
-            # Obtener el logo de la estación
-            if membresia_activa.estacion.logo_thumb_small:
-                request.session['active_estacion_logo'] = membresia_activa.estacion.logo_thumb_small.url
-            elif membresia_activa.estacion.logo:
-                request.session['active_estacion_logo'] = membresia_activa.estacion.logo.url
-            else:
-                request.session['active_estacion_logo'] = None
+        if membresia:
+            # CASO A: Usuario con estación. Configuramos sesión completa.
+            self._configurar_sesion_estacion(membresia.estacion)
+            messages.success(self.request, f"Bienvenido, {user.first_name.title()}!")
+            return redirect('portal:ruta_inicio')
 
-            messages.success(request, f"Bienvenido, {user.first_name.title()}!")
-            return redirect(reverse('portal:ruta_inicio'))
-        
         elif user.is_superuser:
-            # Caso B: Superusuario SIN membresía activa.
-            # No lo expulsamos. Lo enviamos a seleccionar estación.
-            messages.info(request, f"Bienvenido Administrador. Por favor selecciona una estación para gestionar.")
-            # Asegúrate de crear esta ruta y vista (la que hablamos antes)
+            # CASO B: Superusuario sin membresía.
+            messages.info(self.request, "Bienvenido Administrador. Selecciona una estación.")
+            # Asumo que esta ruta existe o existirá
             return redirect('acceso:ruta_seleccionar_estacion')
-        
+
         else:
-            # Caso C: Usuario normal sin membresía. Expulsado.
-            # FALLO: El usuario es válido, pero no tiene acceso activo.
-            # Se cierra su sesión y se le notifica.
-            logout(request)
-            messages.error(request, "No tienes una membresía activa en ninguna estación. Contacta a un administrador.")
-            return redirect(reverse('acceso:ruta_login'))
+            # CASO C: Usuario sin membresía (El cambio clave).
+            # NO cerramos sesión. Lo enviamos a su perfil para que pueda gestionar sus datos.
+            messages.warning(self.request, "Has ingresado sin una estación asignada. Solo puedes editar tu perfil.")
+            return redirect('perfil:ver') # Redirige al perfil en lugar de expulsarlo
+
+    def _configurar_sesion_estacion(self, estacion):
+        """
+        Helper para inyectar variables en la sesión. Mantiene tu lógica original limpia.
+        """
+        self.request.session['active_estacion_id'] = estacion.id
+        self.request.session['active_estacion_nombre'] = estacion.nombre
+
+        # Lógica de Logo (Mejorada con getattr para evitar errores si faltan campos)
+        logo_url = None
+        if hasattr(estacion, 'logo_thumb_small') and estacion.logo_thumb_small:
+            logo_url = estacion.logo_thumb_small.url
+        elif estacion.logo:
+            logo_url = estacion.logo.url
+            
+        self.request.session['active_estacion_logo'] = logo_url
 
 
 
