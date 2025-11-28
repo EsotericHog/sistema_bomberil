@@ -72,11 +72,11 @@ class CanCrearUsuario(permissions.BasePermission):
 # --- PERMISOS DE GESTIÓN DE INVENTARIO ---
 class CanVerCatalogos(permissions.BasePermission):
     def has_permission(self, request, view):
-        return request.user.has_perm('gestion_inventario.accion_gestion_inventario_ver_catalogos')
+        return request.user.has_perm('gestion_usuarios.accion_gestion_inventario_ver_catalogos')
 
 class CanCrearProductoGlobal(permissions.BasePermission):
     def has_permission(self, request, view):
-        return request.user.has_perm('gestion_inventario.accion_gestion_inventario_crear_producto_global')
+        return request.user.has_perm('gestion_usuarios.accion_gestion_inventario_crear_producto_global')
 
 
 
@@ -84,8 +84,8 @@ class CanCrearProductoGlobal(permissions.BasePermission):
 # --- PERMISOS DE GESTIÓN DE MANTENIMIENTO ---
 class CanGestionarPlanes(permissions.BasePermission):
     def has_permission(self, request, view):
-        return request.user.has_perm('gestion_mantenimiento.accion_gestion_mantenimiento_gestionar_planes')
+        return request.user.has_perm('gestion_usuarios.accion_gestion_mantenimiento_gestionar_planes')
 
 class CanGestionarOrdenes(permissions.BasePermission):
     def has_permission(self, request, view):
-        return request.user.has_perm('gestion_mantenimiento.accion_gestion_mantenimiento_gestionar_ordenes')
+        return request.user.has_perm('gestion_usuarios.accion_gestion_mantenimiento_gestionar_ordenes')
