@@ -6,18 +6,9 @@ from .views import (
     PlanMantenimientoGestionarView,
     PlanMantenimientoEditarView,
     PlanMantenimientoEliminarView,
-    ApiTogglePlanActivoView,
-    ApiBuscarActivoParaPlanView,
-    ApiAnadirActivoEnPlanView,
-    ApiQuitarActivoDePlanView,
     OrdenMantenimientoListView,
     OrdenCorrectivaCreateView,
-    OrdenMantenimientoDetalleView,
-    ApiCambiarEstadoOrdenView,
-    ApiRegistrarTareaMantenimientoView,
-    ApiBuscarActivoParaOrdenView,
-    ApiAnadirActivoOrdenView,
-    ApiQuitarActivoOrdenView,
+    OrdenMantenimientoDetalleView
 )
 
 app_name = 'gestion_mantenimiento'
@@ -25,7 +16,6 @@ app_name = 'gestion_mantenimiento'
 urlpatterns = [
     # Página Inicial de la gestión de inventario
     path('', MantenimientoInicioView.as_view(), name="ruta_inicio"),
-
 
 
     # --- Gestión de Planes ---
@@ -47,24 +37,6 @@ urlpatterns = [
     path('planes/<int:pk>/eliminar/', PlanMantenimientoEliminarView.as_view(), name='ruta_eliminar_plan'),
 
 
-    # --- API (Endpoints para gestionar planes de forma interactiva) ---
-    
-    # API para activar/desactivar el plan (cambia 'activo_en_sistema')
-    path('api/planes/<int:pk>/toggle-activo/', ApiTogglePlanActivoView.as_view(), name='api_toggle_plan_activo'),
-    
-    # API para buscar activos (ej. por SKU o nombre) para añadirlos al plan
-    # Se usaría en la vista 'ruta_gestionar_plan'
-    path('api/planes/buscar-activo/', ApiBuscarActivoParaPlanView.as_view(), name='api_buscar_activo_para_plan'),
-
-    # API para añadir un activo (POST) a un plan específico
-    path('api/planes/<int:plan_pk>/anadir-activo/', ApiAnadirActivoEnPlanView.as_view(), name='api_anadir_activo_plan'),
-
-    # API para quitar un activo de un plan (DELETE)
-    # El 'pk' aquí es el ID del registro 'PlanActivoConfig'
-    path('api/planes/configuracion/<int:pk>/quitar/', ApiQuitarActivoDePlanView.as_view(), name='api_quitar_activo_plan'),
-
-
-
     # === GESTIÓN DE ÓRDENES DE TRABAJO ===
 
     # 1. Listado de Órdenes (Dashboard Operativo)
@@ -76,19 +48,4 @@ urlpatterns = [
     # 3. Espacio de Trabajo / Ejecución
     # Usamos 'gestionar' para mantener consistencia con la nomenclatura de Planes
     path('ordenes/<int:pk>/gestionar/', OrdenMantenimientoDetalleView.as_view(), name='ruta_gestionar_orden'),
-
-
-    # --- APIs para el flujo de trabajo ---
-
-    # Cambiar estado global (Ej: Iniciar trabajo, Finalizar orden)
-    path('api/ordenes/<int:pk>/cambiar-estado/', ApiCambiarEstadoOrdenView.as_view(), name='api_cambiar_estado_orden'),
-
-    # Registrar tarea/mantenimiento de un activo específico
-    # Se llama cuando el usuario hace click en "Listo" o "Registrar" sobre un activo en la lista
-    path('api/ordenes/<int:pk>/registrar-tarea/', ApiRegistrarTareaMantenimientoView.as_view(), name='api_registrar_tarea_orden'),
-
-    # --- Gestión de Activos en Orden de mantenimiento ---
-    path('api/ordenes/buscar-activo/', ApiBuscarActivoParaOrdenView.as_view(), name='api_buscar_activo_para_orden'),
-    path('api/ordenes/<int:pk>/anadir-activo/', ApiAnadirActivoOrdenView.as_view(), name='api_anadir_activo_orden'),
-    path('api/ordenes/<int:pk>/quitar-activo/', ApiQuitarActivoOrdenView.as_view(), name='api_quitar_activo_orden'),
 ]
