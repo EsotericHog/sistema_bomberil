@@ -8,7 +8,7 @@ from apps.gestion_inventario.models import Estacion
 # (Opcional: una función para generar rutas de subida ordenadas)
 def ruta_archivo_historico(instance, filename):
     # El archivo se guardará en: MEDIA_ROOT/archivo_historico/<estacion_id>/<tipo_id>/<filename>
-    return f'archivo_historico/{instance.estacion.id}/{instance.tipo_documento.id}/{filename}'
+    return f'archivo_historico/{instance.estacion.id}/{instance.tipo_documento.nombre}/{filename}'
 
 
 class TipoDocumento(models.Model):
@@ -69,6 +69,26 @@ class DocumentoHistorico(models.Model):
         Estacion, 
         on_delete=models.PROTECT,
         help_text="Estación a la que pertenece este documento."
+    )
+
+    ubicacion_fisica = models.CharField(
+        max_length=255, 
+        blank=True, 
+        null=True, 
+        help_text="Referencia topográfica del original (Ej. Estante A, Caja 3)."
+    )
+    
+    palabras_clave = models.CharField(
+        max_length=255, 
+        blank=True, 
+        null=True, 
+        help_text="Términos clave separados por comas para mejorar la búsqueda."
+    )
+
+    es_confidencial = models.BooleanField(
+        default=False,
+        verbose_name="Confidencial",
+        help_text="Si se marca, el documento solo será visible para usuarios con permisos de gestión (Oficiales)."
     )
     
     usuario_registra = models.ForeignKey(
