@@ -9,7 +9,7 @@ urlpatterns = [
     # ==========================================================================
     path('', MedicoInicioView.as_view(), name="ruta_inicio"),
     path('lista/', MedicoListaView.as_view(), name="ruta_lista_paciente"),
-    path('pacientes/crear/', MedicoCrearView.as_view(), name="ruta_crear_paciente"), # Vista de creación (placeholder)
+    #path('pacientes/crear/', MedicoCrearView.as_view(), name="ruta_crear_paciente")
 
     # ==========================================================================
     # 2. FICHA MÉDICA PRINCIPAL (INFORMACIÓN, EDICIÓN, IMPRESIÓN, Compatibilidad)

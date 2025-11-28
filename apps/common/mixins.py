@@ -270,7 +270,7 @@ class AuditoriaMixin:
     Provee el método self.auditar() para usarlo manualmente donde sea seguro.
     """
     
-    def auditar(self, verbo, objetivo=None, detalles=None, objetivo_repr=None):
+    def auditar(self, verbo, objetivo=None, objetivo_repr=None, detalles=None):
         """
         Helper para registrar actividad usando el request de la vista.
         """

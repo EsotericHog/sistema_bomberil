@@ -1,66 +1,59 @@
-from django.shortcuts import render, redirect, get_object_or_404
-from django.views import View
-from django.contrib import messages # Opcional, para mensajes bonitos
-from .models import Medicamento, FichaMedica, FichaMedicaMedicamento,FichaMedicaAlergia, FichaMedicaEnfermedad, FichaMedicaCirugia, ContactoEmergencia, Alergia,  Enfermedad, Cirugia
-from .forms import MedicamentoForm, FichaMedicaForm, FichaMedicaMedicamentoForm, FichaMedicaAlergiaForm, FichaMedicaEnfermedadForm, ContactoEmergenciaForm, FichaMedicaCirugiaForm, AlergiaForm, EnfermedadForm, CirugiaForm    
-from datetime import date  
-from django.urls import reverse  
-from django.db import IntegrityError
-from django.db.models import Count
-from apps.gestion_usuarios.models import Membresia
+import base64
 import qrcode
 from io import BytesIO
-import base64
+from django.shortcuts import render, redirect, get_object_or_404
+from django.views import View
+from django.contrib import messages
+from django.contrib.auth.mixins import PermissionRequiredMixin
+from django.urls import reverse  
+from django.db import IntegrityError
+from django.db.models import Count, ProtectedError
+from datetime import date
 
-# ==============================================================================
-# LÓGICA DE COMPATIBILIDAD SANGUÍNEA (Donante -> Receptor)
-# Esta es la base para determinar quién puede donar a quién.
-# Se define como: {'TIPO_DONANTE': ['TIPO_RECEPTOR_1', 'TIPO_RECEPTOR_2', ...]}
-# ==============================================================================
-BLOOD_COMPATIBILITY = {
-    'O-': ['O-', 'O+', 'A-', 'A+', 'B-', 'B+', 'AB-', 'AB+'], # Donante Universal
-    'O+': ['O+', 'A+', 'B+', 'AB+'],
-    'A-': ['A-', 'A+', 'AB-', 'AB+'],
-    'A+': ['A+', 'AB+'],
-    'B-': ['B-', 'B+', 'AB-', 'AB+'],
-    'B+': ['B+', 'AB+'],
-    'AB-': ['AB-', 'AB+'],
-    'AB+': ['AB+'], # Receptor Universal (solo puede donar a su mismo tipo)
-}
+# --- Imports del Proyecto ---
+from .models import (
+    Medicamento, FichaMedica, FichaMedicaMedicamento, FichaMedicaAlergia, 
+    FichaMedicaEnfermedad, FichaMedicaCirugia, ContactoEmergencia, 
+    Alergia, Enfermedad, Cirugia
+)
+from .forms import (
+    MedicamentoForm, FichaMedicaForm, FichaMedicaMedicamentoForm, 
+    FichaMedicaAlergiaForm, FichaMedicaEnfermedadForm, ContactoEmergenciaForm, 
+    FichaMedicaCirugiaForm, AlergiaForm, EnfermedadForm, CirugiaForm
+)  
+from .utils import BLOOD_COMPATIBILITY
+from apps.common.mixins import BaseEstacionMixin, AuditoriaMixin
+from apps.gestion_usuarios.models import Membresia
+from apps.gestion_voluntarios.models import Voluntario
+
 
 # ==============================================================================
 # 1. VISTAS GENERALES Y DE PACIENTES (FICHA MÉDICA)
 # ==============================================================================
-
-# sistema_bomberil/apps/gestion_medica/views.py
-
-class MedicoInicioView(View):
-    '''Vista para ver la página principal del módulo con resumen médico'''
+class MedicoInicioView(BaseEstacionMixin, View):
+    """
+    Dashboard principal del módulo médico.
+    """
     def get(self, request):
-        # 1. Recuperamos la estación actual de la sesión
-        estacion_id = request.session.get('active_estacion_id')
-        # Calcular la distribución de tipos de sangre
-        # 2. Filtramos SOLO las fichas de usuarios activos en esta estación
+        estacion = self.estacion_activa
+
+        # Distribución de grupos sanguíneos en la estación
         distribucion_qs = FichaMedica.objects.filter(
             grupo_sanguineo__isnull=False,
-            # --- FILTRO MÁGICO ---
-            voluntario__usuario__membresias__estacion_id=estacion_id,
+            voluntario__usuario__membresias__estacion=estacion,
             voluntario__usuario__membresias__estado='ACTIVO'
         ).values('grupo_sanguineo__nombre').annotate(
-            count=Count('pk') # Contamos por ID para ser más precisos
+            count=Count('pk')
         ).order_by('-count')
 
-        # Calculamos el total sumando los conteos
-        total_fichas_con_grupo = sum(item['count'] for item in distribucion_qs)
-        # --- LÓGICA DE CÁLCULO DE PORCENTAJE (FINAL) ---
+        total_fichas = sum(item['count'] for item in distribucion_qs)
         distribucion_final = []
-        # Inicializamos contadores para las tarjetas de resumen
         donor_universal_count = 0
         receptor_universal_count = 0
 
-        if total_fichas_con_grupo > 0:
+        if total_fichas > 0:
             for item in distribucion_qs:
-                percentage = round((item['count'] / total_fichas_con_grupo) * 100)
+                percentage = round((item['count'] / total_fichas) * 100)
                 nombre_grupo = item['grupo_sanguineo__nombre']
                 item['grupo_sanguineo'] = nombre_grupo 
                 item['percentage'] = percentage 
@@ -73,237 +66,249 @@ class MedicoInicioView(View):
                     receptor_universal_count = item['count']
         
         context = {
-            'total_fichas_con_grupo': total_fichas_con_grupo,
+            'total_fichas_con_grupo': total_fichas,
             'distribucion_sumario': distribucion_final,
             'donor_universal_count': donor_universal_count,
             'receptor_universal_count': receptor_universal_count
         }
         return render(request, "gestion_medica/pages/home.html", context)
-    
-class MedicoListaView(View):
-    def get(self, request):
-        # Importación local para evitar conflictos
-        from apps.gestion_usuarios.models import Membresia
-        estacion_id = request.session.get('active_estacion_id')
-        # 1. Obtener IDs de los voluntarios ACTIVOS en esta estación
-        ids_usuarios_activos = Membresia.objects.filter(
-            estacion_id=estacion_id,
-            estado='ACTIVO'
-        ).values_list('usuario_id', flat=True)
 
-        # 2. Buscar las fichas usando esos IDs
-        pacientes = FichaMedica.objects.filter(
-            voluntario_id__in=ids_usuarios_activos
-        ).select_related(
+
+
+
+class MedicoListaView(BaseEstacionMixin, PermissionRequiredMixin, View):
+    """
+    Listado de personal con ficha médica disponible.
+    """
+    permission_required = 'gestion_medica.accion_gestion_medica_ver_fichas_medicas'
+
+    def get(self, request):
+        # 1. Filtramos usuarios activos de la estación
+        # Optimizamos la consulta para traer datos del voluntario y usuario de una vez
+        pacientes = FichaMedica.objects.select_related(
             'voluntario', 
             'voluntario__usuario'
-        # --- SOLUCIÓN DEL ERROR ---
-        # Le decimos explícitamente a Django que NO intente leer 'telefono'
-        # de la tabla voluntario, evitando el error de columna inexistente.
-        ).defer('voluntario__telefono') 
+        ).filter(
+            voluntario__usuario__membresias__estacion=self.estacion_activa,
+            voluntario__usuario__membresias__estado='ACTIVO'
+        ).defer('voluntario__telefono') # Evitamos cargar campos pesados si no se usan
         
         return render(request, "gestion_medica/pages/lista_voluntarios.html", {'pacientes': pacientes})
 
-class MedicoCrearView(View):
-    def get(self, request):
-        return render(request, "gestion_medica/pages/crear_voluntario.html")
 
-class MedicoDatosView(View):
-    def get(self, request):
-        return render(request, "gestion_medica/pages/datos_paciente.html")
 
-class MedicoVerView(View):
-    def get(self, request):
-        return render(request, "gestion_medica/pages/ver_voluntario.html")
 
-class MedicoInfoView(View):
+class MedicoInfoView(BaseEstacionMixin, PermissionRequiredMixin, AuditoriaMixin, View):
+    """
+    Ficha clínica detallada (Solo Lectura).
+    """
+    permission_required = 'gestion_medica.accion_gestion_medica_ver_fichas_medicas'
+
     def get(self, request, pk):
-        # 1. Buscamos la ficha y optimizamos consultas
+        # 1. Recuperación segura (pertenece a la estación)
         ficha = get_object_or_404(
             FichaMedica.objects.select_related(
                 'voluntario', 
                 'voluntario__usuario', 
                 'grupo_sanguineo', 
                 'sistema_salud'
-            ), pk=pk
+            ).prefetch_related(
+                'alergias__alergia',
+                'enfermedades__enfermedad',
+                'medicamentos__medicamento',
+                'cirugias__cirugia',
+                'voluntario__contactos_emergencia' # Relación inversa desde Voluntario
+            ), 
+            pk=pk,
+            voluntario__usuario__membresias__estacion=self.estacion_activa
         )
         voluntario = ficha.voluntario
         
-        # 2. CÁLCULO DE EDAD MEJORADO (Igual que en imprimir)
-        # Prioriza la fecha del voluntario, si no, usa la del usuario
+        # 2. Cálculo de Edad
         fecha_nac = voluntario.fecha_nacimiento or voluntario.usuario.birthdate
-        
         edad = "S/I"
         if fecha_nac: 
             today = date.today()
             edad = today.year - fecha_nac.year - ((today.month, today.day) < (fecha_nac.month, fecha_nac.day))
 
         qr_url = request.build_absolute_uri()
+        
+        # Auditoría de acceso (opcional, si es muy sensible)
+        # self.auditar('Consultar', voluntario.usuario, 'Visualización de ficha médica detallada', voluntario.usuario.get_full_name)
 
         return render(request, "gestion_medica/pages/informacion_paciente.html", {
             'ficha': ficha,
             'voluntario': voluntario,
-            'edad': edad, # Ahora sí lleva el cálculo correcto
+            'edad': edad,
             'qr_url': qr_url,
-            # Usamos select_related para optimizar las relaciones
-            'alergias': ficha.alergias.all().select_related('alergia'),
-            'enfermedades': ficha.enfermedades.all().select_related('enfermedad'),
-            'medicamentos': ficha.medicamentos.all().select_related('medicamento'),
-            'cirugias': ficha.cirugias.all().select_related('cirugia'),
+            'alergias': ficha.alergias.all(),
+            'enfermedades': ficha.enfermedades.all(),
+            'medicamentos': ficha.medicamentos.all(),
+            'cirugias': ficha.cirugias.all(),
             'contactos': voluntario.contactos_emergencia.all()
         })
 
-class MedicoModificarView(View):
+
+
+
+class MedicoModificarView(BaseEstacionMixin, AuditoriaMixin, PermissionRequiredMixin, View):
+    """
+    Edición de datos fisiológicos básicos (Peso, Altura, Grupo, etc.)
+    """
+    permission_required = 'gestion_medica.accion_gestion_medica_gestionar_fichas_medicas'
+
+    def get_ficha(self, pk):
+        return get_object_or_404(
+            FichaMedica, 
+            pk=pk, 
+            voluntario__usuario__membresias__estacion=self.estacion_activa
+        )
+
     def get(self, request, pk):
-        # 1. Buscar la ficha médica por su ID (pk)
-        ficha = get_object_or_404(FichaMedica, pk=pk)
-        # 2. Llenar el formulario con los datos existentes
+        ficha = self.get_ficha(pk)
         form = FichaMedicaForm(instance=ficha)
         return render(request, "gestion_medica/pages/modificar_voluntario.html", {
             'form': form,
-            'ficha': ficha  # Para mostrar el nombre del paciente si quieres
+            'ficha': ficha 
         })
     
     def post(self, request, pk):
-        # 1. Recuperar la ficha
-        ficha = get_object_or_404(FichaMedica, pk=pk)
-
-        # 2. Cargar el formulario con los datos nuevos que envió el usuario
+        ficha = self.get_ficha(pk)
         form = FichaMedicaForm(request.POST, instance=ficha)
 
         if form.is_valid():
-            form.save() # ¡Guardar cambios!
-            # Redirigir a la lista o al detalle (ajusta la ruta según prefieras)
-            return redirect('gestion_medica:ruta_lista_paciente')
+            form.save()
+            
+            self.auditar(
+                verbo="actualizó los datos médicos de",
+                objetivo=ficha.voluntario.usuario,
+                objetivo_repr=ficha.voluntario.usuario.get_full_name,
+                detalles={'cambios': 'Actualización de signos vitales/grupo sanguíneo'}
+            )
+            messages.success(request, f"Datos médicos de {ficha.voluntario.usuario.get_full_name} actualizados.")
+            return redirect('gestion_medica:ruta_informacion_paciente', pk=pk)
 
-        # Si hay error, volver a mostrar el formulario con errores
+        messages.error(request, "Error al actualizar la ficha. Verifique los datos.")
         return render(request, "gestion_medica/pages/modificar_voluntario.html", {'form': form, 'ficha': ficha})
 
-class MedicoImprimirView(View):
+
+
+
+# ==============================================================================
+# 2. REPORTES E IMPRESIÓN
+# ==============================================================================
+class MedicoImprimirView(BaseEstacionMixin, PermissionRequiredMixin, AuditoriaMixin, View):
+    permission_required = 'gestion_medica.accion_gestion_medica_generar_reportes'
+
     def get(self, request, pk):
-        # 1. Traemos la ficha con todos los datos necesarios
         ficha = get_object_or_404(
             FichaMedica.objects.select_related(
-                'voluntario', 
-                'voluntario__usuario',
-                'voluntario__domicilio_comuna', # <--- IMPORTANTE: Esto faltaba para la comuna
-                'grupo_sanguineo', 
-                'sistema_salud'
-            ), pk=pk
+                'voluntario', 'voluntario__usuario', 'voluntario__domicilio_comuna', 
+                'grupo_sanguineo', 'sistema_salud'
+            ).prefetch_related(
+                'alergias__alergia', 'enfermedades__enfermedad', 'medicamentos__medicamento', 
+                'cirugias__cirugia', 'voluntario__contactos_emergencia'
+            ), 
+            pk=pk,
+            voluntario__usuario__membresias__estacion=self.estacion_activa
         )
+        
+        # Auditoría de descarga
+        self.auditar(
+            verbo="generó reporte clínico impreso de",
+            objetivo=ficha.voluntario.usuario,
+            objetivo_repr=ficha.voluntario.usuario.get_full_name,
+            detalles={'accion': 'Impresión Ficha Clínica'}
+        )
+
         voluntario = ficha.voluntario
-        
-        # 2. CÁLCULO INTELIGENTE DE EDAD
-        # Si no hay fecha en Voluntario, intenta buscar en Usuario
         fecha_nac = voluntario.fecha_nacimiento or voluntario.usuario.birthdate
-        
-        edad = "S/I" # Sin Información por defecto
+        edad = "S/I"
         if fecha_nac: 
             today = date.today()
-            # Algoritmo preciso de edad
             edad = today.year - fecha_nac.year - ((today.month, today.day) < (fecha_nac.month, fecha_nac.day))
 
-        # 3. Enviamos todo al HTML
         return render(request, "gestion_medica/pages/imprimir_ficha.html", {
             'ficha': ficha,
             'voluntario': voluntario,
-            'edad': edad, # Aquí va la edad calculada
-            'alergias': ficha.alergias.all().select_related('alergia'),
-            'enfermedades': ficha.enfermedades.all().select_related('enfermedad'),
-            'medicamentos': ficha.medicamentos.all().select_related('medicamento'),
-            'cirugias': ficha.cirugias.all().select_related('cirugia'),
+            'edad': edad,
+            'alergias': ficha.alergias.all(),
+            'enfermedades': ficha.enfermedades.all(),
+            'medicamentos': ficha.medicamentos.all(),
+            'cirugias': ficha.cirugias.all(),
             'contactos': voluntario.contactos_emergencia.all(),
             'fecha_reporte': date.today()
         })
-    
-class MedicoImprimirQRView(View):
-    '''Genera una vista imprimible con el QR del paciente'''
+
+
+
+
+class MedicoImprimirQRView(BaseEstacionMixin, PermissionRequiredMixin, View):
+    permission_required = 'gestion_medica.accion_gestion_medica_generar_reportes'
+
     def get(self, request, pk):
-        ficha = get_object_or_404(FichaMedica, pk=pk)
-        voluntario = ficha.voluntario
+        ficha = get_object_or_404(FichaMedica, pk=pk, voluntario__usuario__membresias__estacion=self.estacion_activa)
         
-        # 1. Datos a codificar en el QR
-        # Puede ser la URL de la ficha o un JSON con datos vitales
-        # Para este caso, usaremos la URL absoluta de la ficha médica
         data_qr = request.build_absolute_uri(reverse('gestion_medica:ruta_informacion_paciente', args=[pk]))
         
-        # 2. Generar QR en memoria
-        qr = qrcode.QRCode(
-            version=1,
-            error_correction=qrcode.constants.ERROR_CORRECT_H,
-            box_size=10,
-            border=4,
-        )
+        qr = qrcode.QRCode(version=1, error_correction=qrcode.constants.ERROR_CORRECT_H, box_size=10, border=4)
         qr.add_data(data_qr)
         qr.make(fit=True)
         
         img = qr.make_image(fill_color="black", back_color="white")
-        
-        # 3. Convertir imagen a Base64 para incrustar en HTML
         buffer = BytesIO()
         img.save(buffer, format="PNG")
         img_str = base64.b64encode(buffer.getvalue()).decode()
         
-        # 4. Renderizar plantilla de impresión
         return render(request, "gestion_medica/pages/imprimir_qr.html", {
-            'voluntario': voluntario,
+            'voluntario': ficha.voluntario,
             'ficha': ficha,
             'qr_image': img_str,
             'fecha_impresion': date.today()
         })
 
-# En sistema_bomberil/apps/gestion_medica/views.py
 
-# ... (El diccionario BLOOD_COMPATIBILITY se mantiene igual)
 
-class MedicoCompatibilidadView(View):
+
+class MedicoCompatibilidadView(BaseEstacionMixin, PermissionRequiredMixin, View):
+    """
+    Matriz de compatibilidad sanguínea local.
+    """
+    permission_required = 'gestion_medica.accion_gestion_medica_ver_fichas_medicas'
+
     def get(self, request):
-        from apps.gestion_usuarios.models import Membresia
-        estacion_id = request.session.get('active_estacion_id')
+        estacion = self.estacion_activa
         
-        # 1. Obtener fichas con tipo de sangre definido (Soluciona el ValueError)
-        ids_usuarios_activos = Membresia.objects.filter(
-            estacion_id=estacion_id,
-            estado='ACTIVO'
-        ).values_list('usuario_id', flat=True)
-        # PASO 2: Filtrar las fichas médicas usando esos IDs
-        # Usamos 'voluntario_id__in' que es más directo y menos propenso a errores de JOIN
+        # 1. Obtenemos solo fichas con grupo sanguíneo y de la estación activa
         fichas = FichaMedica.objects.filter(
             grupo_sanguineo__isnull=False,
-            voluntario_id__in=ids_usuarios_activos  # <--- CAMBIO CLAVE
-        ).select_related(
-            'voluntario', 
-            'voluntario__usuario'
-        ).defer('voluntario__telefono').all()
+            voluntario__usuario__membresias__estacion=estacion,
+            voluntario__usuario__membresias__estado='ACTIVO'
+        ).select_related('voluntario', 'voluntario__usuario', 'grupo_sanguineo').defer('voluntario__telefono')
 
-        distribucion_qs = FichaMedica.objects.filter(
-            grupo_sanguineo__isnull=False,
-            voluntario_id__in=ids_usuarios_activos # <--- CAMBIO CLAVE TAMBIÉN AQUÍ
-        ).values('grupo_sanguineo').annotate(
-            count=Count('grupo_sanguineo')
-        ).order_by('-count')
+        # 2. Distribución para gráfico/resumen
+        distribucion = fichas.values('grupo_sanguineo__nombre').annotate(count=Count('grupo_sanguineo')).order_by('-count')
 
-        distribucion = list(distribucion_qs)
-
-        # 3. Preparar datos de receptores y Donantes (CORRECCIÓN DE 'str' object is not callable)
+        # 3. Mapeo de receptores en memoria
         recipients_by_type = {}
         for ficha in fichas:
-            blood_type = str(ficha.grupo_sanguineo).upper().strip() 
+            blood_type = str(ficha.grupo_sanguineo.nombre).upper().strip()
             
             if blood_type not in recipients_by_type:
                 recipients_by_type[blood_type] = []
             
             recipients_by_type[blood_type].append({
-                'id': ficha.pk, # <--- IMPORTANTE: Usar .pk
+                'id': ficha.pk,
                 'nombre': ficha.voluntario.usuario.get_full_name,
                 'rut': ficha.voluntario.usuario.rut,
                 'avatar_url': ficha.voluntario.usuario.avatar.url if ficha.voluntario.usuario.avatar else None,
             })
         
-        # 4. Generar la lista final de compatibilidad
+        # 4. Generar lista de match
         compatibilidad_list = []
         for ficha in fichas:
-            donor_type = str(ficha.grupo_sanguineo).upper().strip()
+            donor_type = str(ficha.grupo_sanguineo.nombre).upper().strip()
+            # Obtenemos a quiénes puede donar este usuario
             recipients_types = BLOOD_COMPATIBILITY.get(donor_type, [])
             
             possible_recipients = []
@@ -311,15 +316,11 @@ class MedicoCompatibilidadView(View):
                 if recipient_type in recipients_by_type:
                     possible_recipients.extend(recipients_by_type[recipient_type])
             
-            final_recipients = []
-            seen_ids = set()
-            for r in possible_recipients:
-                if r['id'] != ficha.pk and r['id'] not in seen_ids: # <--- IMPORTANTE: Usar .pk
-                    final_recipients.append(r)
-                    seen_ids.add(r['id'])
+            # Filtramos para no donarse a sí mismo
+            final_recipients = [r for r in possible_recipients if r['id'] != ficha.pk]
             
             compatibilidad_list.append({
-                'voluntario_id': ficha.pk, # <--- IMPORTANTE: Usar .pk
+                'voluntario_id': ficha.pk,
                 'nombre_donante': ficha.voluntario.usuario.get_full_name,
                 'tipo_sangre': donor_type,
                 'puede_donar_a_tipos': recipients_types,
@@ -328,122 +329,130 @@ class MedicoCompatibilidadView(View):
             
         return render(request, "gestion_medica/pages/compatibilidad_sanguinea.html", {
             'compatibilidad_list': compatibilidad_list,
-            'distribucion': distribucion,
+            'distribucion': list(distribucion),
             'compatibilidad_map': BLOOD_COMPATIBILITY
         })
-    
-# Nota: La definición de la lógica de compatibilidad (BLOOD_COMPATIBILITY) 
-# se debe mantener al inicio del archivo o en una ubicación accesible dentro de views.py.
+
+
+
 
 # ==============================================================================
-# 2. GESTIÓN DE CONTACTOS DE EMERGENCIA
+# 3. GESTIÓN DE SUB-ELEMENTOS (CRUDs ESPECÍFICOS)
 # ==============================================================================
 
-class MedicoNumEmergView(View):
+# --- HELPERS PARA MIXINS Y REPETICIÓN ---
+class SubElementoMedicoBaseView(BaseEstacionMixin, AuditoriaMixin, PermissionRequiredMixin, View):
+    """Clase base para Contactos, Alergias, Enfermedades, etc."""
+    permission_required = 'gestion_medica.accion_gestion_medica_gestionar_fichas_medicas'
+
+    def get_ficha(self, pk):
+        return get_object_or_404(
+            FichaMedica, 
+            pk=pk, 
+            voluntario__usuario__membresias__estacion=self.estacion_activa
+        )
+   
+
+
+
+# --- CONTACTOS DE EMERGENCIA ---
+class MedicoNumEmergView(SubElementoMedicoBaseView):
     def get(self, request, pk):
-        ficha = get_object_or_404(FichaMedica, pk=pk)
-        
-        # OJO: Los contactos están en el voluntario, no en la ficha médica directa
+        ficha = self.get_ficha(pk)
         contactos = ficha.voluntario.contactos_emergencia.all()
         form = ContactoEmergenciaForm(usuario_dueno=ficha.voluntario.usuario)
         return render(request, "gestion_medica/pages/contacto_emergencia.html", {
-            'ficha': ficha,
-            'contactos': contactos,
-            'form': form
+            'ficha': ficha, 'contactos': contactos, 'form': form
         })
     
     def post(self, request, pk):
-        ficha = get_object_or_404(FichaMedica, pk=pk)
+        ficha = self.get_ficha(pk)
         form = ContactoEmergenciaForm(request.POST, usuario_dueno=ficha.voluntario.usuario)
         if form.is_valid():
             contacto = form.save(commit=False)
-            contacto.voluntario = ficha.voluntario # Asignamos al voluntario
+            contacto.voluntario = ficha.voluntario
             contacto.save()
+            
+            self.auditar("agregó un contacto de emergencia a", ficha.voluntario.usuario, ficha.voluntario.usuario.get_full_name, {'contacto': contacto.nombre_completo})
+            messages.success(request, "Contacto de emergencia agregado.")
             return redirect('gestion_medica:ruta_contacto_emergencia', pk=pk)
 
-        contactos = ficha.voluntario.contactos_emergencia.all()
+        messages.error(request, "Error al guardar el contacto.")
         return render(request, "gestion_medica/pages/contacto_emergencia.html", {
-            'ficha': ficha, 'contactos': contactos, 'form': form
+            'ficha': ficha, 'contactos': ficha.voluntario.contactos_emergencia.all(), 'form': form
         })
 
-class EditarContactoView(View):
+
+
+
+class EditarContactoView(SubElementoMedicoBaseView):
     def get(self, request, pk, contacto_id):
-        ficha = get_object_or_404(FichaMedica, pk=pk)
+        ficha = self.get_ficha(pk)
         contacto = get_object_or_404(ContactoEmergencia, id=contacto_id, voluntario=ficha.voluntario)
-        
-        # Pasamos usuario_dueno para que la validación del teléfono funcione igual
         form = ContactoEmergenciaForm(instance=contacto, usuario_dueno=ficha.voluntario.usuario)
-        
-        return render(request, "gestion_medica/pages/editar_contacto.html", {
-            'ficha': ficha,
-            'form': form,
-            'contacto': contacto
-        })
+        return render(request, "gestion_medica/pages/editar_contacto.html", {'ficha': ficha, 'form': form, 'contacto': contacto})
 
     def post(self, request, pk, contacto_id):
-        ficha = get_object_or_404(FichaMedica, pk=pk)
+        ficha = self.get_ficha(pk)
         contacto = get_object_or_404(ContactoEmergencia, id=contacto_id, voluntario=ficha.voluntario)
-        
         form = ContactoEmergenciaForm(request.POST, instance=contacto, usuario_dueno=ficha.voluntario.usuario)
         
         if form.is_valid():
             form.save()
-            # Al guardar, volvemos a la lista de contactos
+            messages.success(request, "Contacto actualizado.")
             return redirect('gestion_medica:ruta_contacto_emergencia', pk=pk)
             
-        return render(request, "gestion_medica/pages/editar_contacto.html", {
-            'ficha': ficha,
-            'form': form,
-            'contacto': contacto
-        })
-    
-class EliminarContactoView(View):
+        return render(request, "gestion_medica/pages/editar_contacto.html", {'ficha': ficha, 'form': form, 'contacto': contacto})
+
+
+
+
+class EliminarContactoView(SubElementoMedicoBaseView):
     def post(self, request, pk, contacto_id):
-        ficha = get_object_or_404(FichaMedica, pk=pk)
+        ficha = self.get_ficha(pk)
         contacto = get_object_or_404(ContactoEmergencia, id=contacto_id, voluntario=ficha.voluntario)
+        nombre = contacto.nombre_completo
         contacto.delete()
+        
+        self.auditar("eliminó un contacto de emergencia de", ficha.voluntario.usuario, ficha.voluntario.usuario.get_full_name, {'contacto_eliminado': nombre})
+        messages.success(request, "Contacto eliminado correctamente.")
         return redirect('gestion_medica:ruta_contacto_emergencia', pk=pk)
 
 
-# ==============================================================================
-# 3. GESTIÓN DE ENFERMEDADES (DEL PACIENTE)
-# ==============================================================================
 
-class MedicoEnfermedadView(View):
-    def get(self, request,pk):
-        ficha = get_object_or_404(FichaMedica, pk=pk)
-        # Buscamos las enfermedades de ESTA ficha
-        enfermedad = ficha.enfermedades.all()
-        form = FichaMedicaEnfermedadForm() # Formulario vacío
+
+# --- ENFERMEDADES ---
+class MedicoEnfermedadView(SubElementoMedicoBaseView):
+    def get(self, request, pk):
+        ficha = self.get_ficha(pk)
         return render(request, "gestion_medica/pages/enfermedad_paciente.html", {
-            'ficha': ficha,  # Enviamos la ficha para poder volver
-            'enfermedades': enfermedad,
-            'form': form # Si quieres mostrar el formulario también
+            'ficha': ficha, 'enfermedades': ficha.enfermedades.select_related('enfermedad'), 'form': FichaMedicaEnfermedadForm()
         })
     
     def post(self, request, pk):
-        ficha = get_object_or_404(FichaMedica, pk=pk)
+        ficha = self.get_ficha(pk)
         form = FichaMedicaEnfermedadForm(request.POST)
         
         if form.is_valid():
-            nueva_enfermedad = form.save(commit=False)
-            nueva_enfermedad.ficha_medica = ficha
-            
+            item = form.save(commit=False)
+            item.ficha_medica = ficha
             try:
-                nueva_enfermedad.save()
+                item.save()
+                self.auditar("registró una enfermedad/condición a", ficha.voluntario.usuario, ficha.voluntario.usuario.get_full_name, {'enfermedad': item.enfermedad.nombre})
+                messages.success(request, "Enfermedad registrada en la ficha.")
                 return redirect('gestion_medica:ruta_enfermedad_paciente', pk=pk)
             except IntegrityError:
                 form.add_error('enfermedad', 'Esta enfermedad ya está registrada.')
         
-        # Si falla, recargar con errores
-        enfermedades = ficha.enfermedades.all()
+        messages.error(request, "Error al registrar enfermedad.")
         return render(request, "gestion_medica/pages/enfermedad_paciente.html", {
-            'ficha': ficha,
-            'enfermedades': enfermedades,
-            'form': form
+            'ficha': ficha, 'enfermedades': ficha.enfermedades.all(), 'form': form
         })
 
-class EditarEnfermedadPacienteView(View):
+
+
+
+class EditarEnfermedadPacienteView(View): # NO SE USA. PENDIENTE DE ELIMINAR
     def get(self, request, pk, enfermedad_id):
         ficha = get_object_or_404(FichaMedica, pk=pk)
         # Buscamos la relación específica (la enfermedad asignada)
@@ -474,103 +483,92 @@ class EditarEnfermedadPacienteView(View):
             'item': item
         })
 
-class EliminarEnfermedadPacienteView(View):
+
+
+
+class EliminarEnfermedadPacienteView(SubElementoMedicoBaseView):
     def post(self, request, pk, enfermedad_id):
-        ficha = get_object_or_404(FichaMedica, pk=pk)
+        ficha = self.get_ficha(pk)
         item = get_object_or_404(FichaMedicaEnfermedad, id=enfermedad_id, ficha_medica=ficha)
+        nombre = item.enfermedad.nombre
         item.delete()
+        
+        self.auditar("eliminó un registro de enfermedad de", ficha.voluntario.usuario, ficha.voluntario.usuario.get_full_name, {'enfermedad': nombre})
+        messages.warning(request, "Enfermedad eliminada de la ficha.")
         return redirect('gestion_medica:ruta_enfermedad_paciente', pk=pk)
 
 
-# ==============================================================================
-# 4. GESTIÓN DE ALERGIAS (DEL PACIENTE)
-# ==============================================================================
 
-class MedicoAlergiasView(View):
+
+# --- ALERGIAS ---
+class MedicoAlergiasView(SubElementoMedicoBaseView):
     def get(self, request, pk):
-        ficha = get_object_or_404(FichaMedica, pk=pk)
-        
-        # Buscamos las alergias de ESTA ficha
-        alergias = ficha.alergias.all()
-        form = FichaMedicaAlergiaForm()
+        ficha = self.get_ficha(pk)
         return render(request, "gestion_medica/pages/alergias_paciente.html", {
-            'ficha': ficha,  # Enviamos la ficha para poder volver
-            'alergias': alergias,
-            'form': form # Si quieres mostrar el formulario también
-        })
-    def post(self, request, pk):
-        ficha = get_object_or_404(FichaMedica, pk=pk)
-        form = FichaMedicaAlergiaForm(request.POST)
-        
-        if form.is_valid():
-            nueva_alergia = form.save(commit=False)
-            nueva_alergia.ficha_medica = ficha
-            
-            try:
-                nueva_alergia.save()
-                return redirect('gestion_medica:ruta_alergias_paciente', pk=pk)
-            except IntegrityError:
-                # Error amigable si ya existe la alergia
-                form.add_error('alergia', 'El paciente ya tiene registrada esta alergia.')
-        
-        # Si hay error, recargamos la página con el formulario lleno
-        alergias_paciente = ficha.alergias.all()
-        return render(request, "gestion_medica/pages/alergias_paciente.html", {
-            'ficha': ficha,
-            'alergias': alergias_paciente,
-            'form': form
+            'ficha': ficha, 'alergias': ficha.alergias.select_related('alergia'), 'form': FichaMedicaAlergiaForm()
         })
     
-class EliminarAlergiaPacienteView(View):
+    def post(self, request, pk):
+        ficha = self.get_ficha(pk)
+        form = FichaMedicaAlergiaForm(request.POST)
+        if form.is_valid():
+            item = form.save(commit=False)
+            item.ficha_medica = ficha
+            try:
+                item.save()
+                self.auditar("registró una alergia a", ficha.voluntario.usuario, ficha.voluntario.usuario.get_full_name, {'alergia': item.alergia.nombre})
+                messages.success(request, "Alergia registrada.")
+                return redirect('gestion_medica:ruta_alergias_paciente', pk=pk)
+            except IntegrityError:
+                form.add_error('alergia', 'El paciente ya tiene registrada esta alergia.')
+        
+        messages.error(request, "Error al registrar alergia.")
+        return render(request, "gestion_medica/pages/alergias_paciente.html", {'ficha': ficha, 'alergias': ficha.alergias.all(), 'form': form})
+
+
+
+
+class EliminarAlergiaPacienteView(SubElementoMedicoBaseView):
     def post(self, request, pk, alergia_id):
-        ficha = get_object_or_404(FichaMedica, pk=pk)
-        # Buscamos la relación específica para borrarla
+        ficha = self.get_ficha(pk)
         item = get_object_or_404(FichaMedicaAlergia, id=alergia_id, ficha_medica=ficha)
+        nombre = item.alergia.nombre
         item.delete()
+        self.auditar("eliminó un registro de alergia de", ficha.voluntario.usuario, ficha.voluntario.usuario.get_full_name, {'alergia': nombre})
+        messages.warning(request, "Alergia eliminada.")
         return redirect('gestion_medica:ruta_alergias_paciente', pk=pk)
 
 
-# ==============================================================================
-# 5. GESTIÓN DE MEDICAMENTOS (DEL PACIENTE)
-# ==============================================================================
 
-class MedicoMedicamentosView(View):
+
+# --- MEDICAMENTOS ---
+class MedicoMedicamentosView(SubElementoMedicoBaseView):
     def get(self, request, pk):
-        ficha = get_object_or_404(FichaMedica, pk=pk)
-        # Listamos los medicamentos que YA toma el paciente
-        medicamentos_paciente = ficha.medicamentos.all()
-        form = FichaMedicaMedicamentoForm()
-        
+        ficha = self.get_ficha(pk)
         return render(request, "gestion_medica/pages/medicamentos_paciente.html", {
-            'ficha': ficha,
-            'medicamentos_paciente': medicamentos_paciente,
-            'form': form
+            'ficha': ficha, 'medicamentos_paciente': ficha.medicamentos.select_related('medicamento'), 'form': FichaMedicaMedicamentoForm()
         })
 
     def post(self, request, pk):
-        ficha = get_object_or_404(FichaMedica, pk=pk)
+        ficha = self.get_ficha(pk)
         form = FichaMedicaMedicamentoForm(request.POST)
-
         if form.is_valid():
-            nuevo_medicamento = form.save(commit=False)
-            nuevo_medicamento.ficha_medica = ficha
-
+            item = form.save(commit=False)
+            item.ficha_medica = ficha
             try:
-                nuevo_medicamento.save() # Intentamos guardar
+                item.save()
+                self.auditar("asignó un medicamento permanente a", ficha.voluntario.usuario, ficha.voluntario.usuario.get_full_name, {'medicamento': item.medicamento.nombre, 'dosis': item.dosis_frecuencia})
+                messages.success(request, "Medicamento asignado.")
                 return redirect('gestion_medica:ruta_medicamentos_paciente', pk=pk)
             except IntegrityError:
-                # Si ya existe, agregamos un error al formulario en lugar de romper la página
-                form.add_error('medicamento', 'Este medicamento ya está asignado a este paciente.')
+                form.add_error('medicamento', 'Este medicamento ya está asignado.')
 
-        # Si falló (por duplicado o datos inválidos), volvemos a mostrar la página con el error
-        medicamentos_paciente = ficha.medicamentos.all()
-        return render(request, "gestion_medica/pages/medicamentos_paciente.html", {
-            'ficha': ficha,
-            'medicamentos_paciente': medicamentos_paciente,
-            'form': form
-        })
+        messages.error(request, "Error al asignar medicamento.")
+        return render(request, "gestion_medica/pages/medicamentos_paciente.html", {'ficha': ficha, 'medicamentos_paciente': ficha.medicamentos.all(), 'form': form})
 
-class EditarMedicamentoPacienteView(View):
+
+
+class EditarMedicamentoPacienteView(View): # NO SE USA. PENDIENTE DE ELIMINAR
     def get(self, request, pk, medicamento_id):
         ficha = get_object_or_404(FichaMedica, pk=pk)
         item = get_object_or_404(FichaMedicaMedicamento, id=medicamento_id, ficha_medica=ficha)
@@ -599,42 +597,48 @@ class EditarMedicamentoPacienteView(View):
             'item': item
         })
 
-class EliminarMedicamentoPacienteView(View):
+
+
+
+class EliminarMedicamentoPacienteView(SubElementoMedicoBaseView):
     def post(self, request, pk, medicamento_id):
-        ficha = get_object_or_404(FichaMedica, pk=pk)
+        ficha = self.get_ficha(pk)
         item = get_object_or_404(FichaMedicaMedicamento, id=medicamento_id, ficha_medica=ficha)
+        nombre = item.medicamento.nombre
         item.delete()
+        self.auditar("retiró un medicamento de la ficha de", ficha.voluntario.usuario, ficha.voluntario.usuario.get_full_name, {'medicamento': nombre})
+        messages.warning(request, "Medicamento eliminado.")
         return redirect('gestion_medica:ruta_medicamentos_paciente', pk=pk)
 
 
-# ==============================================================================
-# 6. GESTIÓN DE CIRUGÍAS (DEL PACIENTE)
-# ==============================================================================
 
-class MedicoCirugiasView(View):
+
+# --- CIRUGÍAS ---
+class MedicoCirugiasView(SubElementoMedicoBaseView):
     def get(self, request, pk):
-        ficha = get_object_or_404(FichaMedica, pk=pk)
-        cirugias = ficha.cirugias.all()
-        form = FichaMedicaCirugiaForm()
+        ficha = self.get_ficha(pk)
         return render(request, "gestion_medica/pages/gestionar_cirugias.html", {
-            'ficha': ficha, 'cirugias': cirugias, 'form': form
+            'ficha': ficha, 'cirugias': ficha.cirugias.select_related('cirugia'), 'form': FichaMedicaCirugiaForm()
         })
 
     def post(self, request, pk):
-        ficha = get_object_or_404(FichaMedica, pk=pk)
+        ficha = self.get_ficha(pk)
         form = FichaMedicaCirugiaForm(request.POST)
         if form.is_valid():
             item = form.save(commit=False)
             item.ficha_medica = ficha
             item.save()
+            self.auditar("registró antecedentes de cirugía a", ficha.voluntario.usuario, ficha.voluntario.usuario.get_full_name, {'cirugia': item.cirugia.nombre, 'fecha': str(item.fecha_cirugia)})
+            messages.success(request, "Cirugía registrada.")
             return redirect('gestion_medica:ruta_cirugias_paciente', pk=pk)
 
-        cirugias = ficha.cirugias.all()
-        return render(request, "gestion_medica/pages/gestionar_cirugias.html", {
-            'ficha': ficha, 'cirugias': cirugias, 'form': form
-        })
-    
-class EditarCirugiaPacienteView(View):
+        messages.error(request, "Error al registrar cirugía.")
+        return render(request, "gestion_medica/pages/gestionar_cirugias.html", {'ficha': ficha, 'cirugias': ficha.cirugias.all(), 'form': form})
+
+
+
+
+class EditarCirugiaPacienteView(View): # NO SE USA. PENDIENTE DE ELIMINAR
     def get(self, request, pk, cirugia_id):
         ficha = get_object_or_404(FichaMedica, pk=pk)
         item = get_object_or_404(FichaMedicaCirugia, id=cirugia_id, ficha_medica=ficha)
@@ -658,165 +662,172 @@ class EditarCirugiaPacienteView(View):
             'item': item
         })
 
-class EliminarCirugiaPacienteView(View):
+
+
+
+class EliminarCirugiaPacienteView(SubElementoMedicoBaseView):
     def post(self, request, pk, item_id):
-        ficha = get_object_or_404(FichaMedica, pk=pk)
+        ficha = self.get_ficha(pk)
         item = get_object_or_404(FichaMedicaCirugia, id=item_id, ficha_medica=ficha)
+        nombre = item.cirugia.nombre
         item.delete()
+        self.auditar("eliminó un registro de cirugía de", ficha.voluntario.usuario, ficha.voluntario.usuario.get_full_name, {'cirugia': nombre})
+        messages.warning(request, "Registro de cirugía eliminado.")
         return redirect('gestion_medica:ruta_cirugias_paciente', pk=pk)
 
 
-# ==============================================================================
-# 7. GESTIÓN DE CATÁLOGOS (GLOBALES)
-# ==============================================================================
 
-# --- MEDICAMENTOS ---
-class MedicamentoCrearView(View):
+
+# ==============================================================================
+# 4. GESTIÓN DE CATÁLOGOS GLOBALES (NORMALIZACIÓN)
+# ==============================================================================
+class CatalogoMedicoBaseView(BaseEstacionMixin, AuditoriaMixin, PermissionRequiredMixin, View):
+    """Base para CRUDs de catálogos globales (Medicamentos, Enfermedades, etc.)"""
+    permission_required = 'gestion_medica.accion_gestion_medica_gestionar_datos_normalizacion'
+
+    def get_context_data(self, **kwargs):
+        # Hook para personalizar contexto en hijos si fuera necesario
+        return kwargs
+
+
+
+
+# --- MEDICAMENTOS (CATÁLOGO) ---
+class MedicamentoListView(CatalogoMedicoBaseView):
     def get(self, request):
-        form = MedicamentoForm()
-        return render(request, "gestion_medica/pages/crear_medicamento.html", {'form': form})
+        return render(request, "gestion_medica/pages/lista_medicamentos.html", {'object_list': Medicamento.objects.all().order_by('nombre')})
+
+
+class MedicamentoCrearView(CatalogoMedicoBaseView):
+    def get(self, request):
+        return render(request, "gestion_medica/pages/crear_medicamento.html", {'form': MedicamentoForm()})
+    
     def post(self, request):
         form = MedicamentoForm(request.POST)
         if form.is_valid():
-            form.save() # ¡Guarda en la BD!
+            obj = form.save()
+            messages.success(request, f"Medicamento '{obj.nombre}' creado correctamente.")
             return redirect('gestion_medica:ruta_lista_medicamentos')
         return render(request, "gestion_medica/pages/crear_medicamento.html", {'form': form})
-    
-class MedicamentoListView(View):
-    def get(self, request):
-        # Recupera los datos REALES de la base de datos
-        medicamentos = Medicamento.objects.all().order_by('nombre')
-        return render(request, "gestion_medica/pages/lista_medicamentos.html", {'object_list': medicamentos})
-    
-class MedicamentoUpdateView(View):
+
+
+class MedicamentoUpdateView(CatalogoMedicoBaseView):
     def get(self, request, pk):
-        medicamento = get_object_or_404(Medicamento, pk=pk)
-        form = MedicamentoForm(instance=medicamento)
-        return render(request, "gestion_medica/pages/crear_medicamento.html", {'form': form})
-
+        obj = get_object_or_404(Medicamento, pk=pk)
+        return render(request, "gestion_medica/pages/crear_medicamento.html", {'form': MedicamentoForm(instance=obj)})
+    
     def post(self, request, pk):
-        medicamento = get_object_or_404(Medicamento, pk=pk)
-        form = MedicamentoForm(request.POST, instance=medicamento)
+        obj = get_object_or_404(Medicamento, pk=pk)
+        form = MedicamentoForm(request.POST, instance=obj)
         if form.is_valid():
-            form.save() # ¡Actualiza en la BD!
+            form.save()
+            messages.success(request, "Medicamento actualizado.")
             return redirect('gestion_medica:ruta_lista_medicamentos')
         return render(request, "gestion_medica/pages/crear_medicamento.html", {'form': form})
 
-class MedicamentoDeleteView(View):
+
+class MedicamentoDeleteView(CatalogoMedicoBaseView):
     def post(self, request, pk):
-        medicamento = get_object_or_404(Medicamento, pk=pk)
-        medicamento.delete() # ¡Borra de la BD!
+        obj = get_object_or_404(Medicamento, pk=pk)
+        try:
+            obj.delete()
+            messages.success(request, "Medicamento eliminado del catálogo.")
+        except ProtectedError:
+            messages.error(request, "No se puede eliminar: Hay pacientes usando este medicamento.")
         return redirect('gestion_medica:ruta_lista_medicamentos')
 
-# --- ALERGIAS ---
-class AlergiaListView(View):
-    def get(self, request):
-        alergias = Alergia.objects.all().order_by('nombre')
-        return render(request, "gestion_medica/pages/lista_alergias.html", {'object_list': alergias})
 
-class AlergiaCrearView(View):
-    def get(self, request):
-        form = AlergiaForm()
-        return render(request, "gestion_medica/pages/crear_alergia.html", {'form': form})
 
+
+# --- ALERGIAS (CATÁLOGO) ---
+class AlergiaListView(CatalogoMedicoBaseView):
+    def get(self, request):
+        return render(request, "gestion_medica/pages/lista_alergias.html", {'object_list': Alergia.objects.all().order_by('nombre')})
+
+
+class AlergiaCrearView(CatalogoMedicoBaseView):
+    def get(self, request):
+        return render(request, "gestion_medica/pages/crear_alergia.html", {'form': AlergiaForm()})
+    
     def post(self, request):
         form = AlergiaForm(request.POST)
         if form.is_valid():
-            form.save()
+            obj = form.save()
+            messages.success(request, "Alergia creada.")
             return redirect('gestion_medica:ruta_lista_alergias')
         return render(request, "gestion_medica/pages/crear_alergia.html", {'form': form})
 
-class AlergiaUpdateView(View):
-    def get(self, request, pk):
-        alergia = get_object_or_404(Alergia, pk=pk)
-        form = AlergiaForm(instance=alergia)
-        return render(request, "gestion_medica/pages/crear_alergia.html", {'form': form})
 
+class AlergiaDeleteView(CatalogoMedicoBaseView):
     def post(self, request, pk):
-        alergia = get_object_or_404(Alergia, pk=pk)
-        form = AlergiaForm(request.POST, instance=alergia)
-        if form.is_valid():
-            form.save()
-            return redirect('gestion_medica:ruta_lista_alergias')
-        return render(request, "gestion_medica/pages/crear_alergia.html", {'form': form})
-
-class AlergiaDeleteView(View):
-    def post(self, request, pk):
-        alergia = get_object_or_404(Alergia, pk=pk)
-        alergia.delete()
+        obj = get_object_or_404(Alergia, pk=pk)
+        try:
+            obj.delete()
+            messages.success(request, "Alergia eliminada.")
+        except ProtectedError:
+            messages.error(request, "No se puede eliminar: Hay pacientes con esta alergia registrada.")
         return redirect('gestion_medica:ruta_lista_alergias')
 
-# --- CIRUGÍAS ---
-class CirugiaListView(View):
+
+
+
+# --- ENFERMEDADES (CATÁLOGO) ---
+class EnfermedadListView(CatalogoMedicoBaseView):
     def get(self, request):
-        cirugias = Cirugia.objects.all().order_by('nombre')
-        return render(request, "gestion_medica/pages/lista_cirugias.html", {'object_list': cirugias})
+        return render(request, "gestion_medica/pages/lista_enfermedades.html", {'object_list': Enfermedad.objects.all().order_by('nombre')})
 
-class CirugiaCrearView(View):
+
+class EnfermedadCrearView(CatalogoMedicoBaseView):
     def get(self, request):
-        form = CirugiaForm()
-        return render(request, "gestion_medica/pages/crear_cirugia.html", {'form': form})
-
-    def post(self, request):
-        form = CirugiaForm(request.POST)
-        if form.is_valid():
-            form.save()
-            return redirect('gestion_medica:ruta_lista_cirugias')
-        return render(request, "gestion_medica/pages/crear_cirugia.html", {'form': form})
-
-class CirugiaUpdateView(View):
-    def get(self, request, pk):
-        item = get_object_or_404(Cirugia, pk=pk)
-        form = CirugiaForm(instance=item)
-        return render(request, "gestion_medica/pages/crear_cirugia.html", {'form': form})
-
-    def post(self, request, pk):
-        item = get_object_or_404(Cirugia, pk=pk)
-        form = CirugiaForm(request.POST, instance=item)
-        if form.is_valid():
-            form.save()
-            return redirect('gestion_medica:ruta_lista_cirugias')
-        return render(request, "gestion_medica/pages/crear_cirugia.html", {'form': form})
-
-class CirugiaDeleteView(View):
-    def post(self, request, pk):
-        item = get_object_or_404(Cirugia, pk=pk)
-        item.delete()
-        return redirect('gestion_medica:ruta_lista_cirugias')
-
-# --- ENFERMEDADES ---
-class EnfermedadListView(View):
-    def get(self, request):
-        enfermedades = Enfermedad.objects.all().order_by('nombre')
-        return render(request, "gestion_medica/pages/lista_enfermedades.html", {'object_list': enfermedades})
-
-class EnfermedadCrearView(View):
-    def get(self, request):
-        form = EnfermedadForm()
-        return render(request, "gestion_medica/pages/crear_enfermedad.html", {'form': form})
+        return render(request, "gestion_medica/pages/crear_enfermedad.html", {'form': EnfermedadForm()})
+    
     def post(self, request):
         form = EnfermedadForm(request.POST)
         if form.is_valid():
             form.save()
-            return redirect('gestion_medica:ruta_lista_enfermedades')
-        return render(request, "gestion_medica/pages/crear_enfermedad.html", {'form': form})
-    
-class EnfermedadUpdateView(View):
-    def get(self, request, pk):
-        item = get_object_or_404(Enfermedad, pk=pk)
-        form = EnfermedadForm(instance=item)
-        return render(request, "gestion_medica/pages/crear_enfermedad.html", {'form': form})
-    def post(self, request, pk):
-        item = get_object_or_404(Enfermedad, pk=pk)
-        form = EnfermedadForm(request.POST, instance=item)
-        if form.is_valid():
-            form.save()
+            messages.success(request, "Enfermedad creada.")
             return redirect('gestion_medica:ruta_lista_enfermedades')
         return render(request, "gestion_medica/pages/crear_enfermedad.html", {'form': form})
 
-class EnfermedadDeleteView(View):
+
+class EnfermedadDeleteView(CatalogoMedicoBaseView):
     def post(self, request, pk):
-        item = get_object_or_404(Enfermedad, pk=pk)
-        item.delete()
+        obj = get_object_or_404(Enfermedad, pk=pk)
+        try:
+            obj.delete()
+            messages.success(request, "Enfermedad eliminada.")
+        except ProtectedError:
+            messages.error(request, "No se puede eliminar: Hay pacientes con esta enfermedad.")
         return redirect('gestion_medica:ruta_lista_enfermedades')
 
+
+
+
+# --- CIRUGÍAS (CATÁLOGO) ---
+class CirugiaListView(CatalogoMedicoBaseView):
+    def get(self, request):
+        return render(request, "gestion_medica/pages/lista_cirugias.html", {'object_list': Cirugia.objects.all().order_by('nombre')})
+
+
+class CirugiaCrearView(CatalogoMedicoBaseView):
+    def get(self, request):
+        return render(request, "gestion_medica/pages/crear_cirugia.html", {'form': CirugiaForm()})
+    
+    def post(self, request):
+        form = CirugiaForm(request.POST)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Cirugía creada.")
+            return redirect('gestion_medica:ruta_lista_cirugias')
+        return render(request, "gestion_medica/pages/crear_cirugia.html", {'form': form})
+
+
+class CirugiaDeleteView(CatalogoMedicoBaseView):
+    def post(self, request, pk):
+        obj = get_object_or_404(Cirugia, pk=pk)
+        try:
+            obj.delete()
+            messages.success(request, "Cirugía eliminada.")
+        except ProtectedError:
+            messages.error(request, "No se puede eliminar: Hay pacientes con registro de esta cirugía.")
+        return redirect('gestion_medica:ruta_lista_cirugias')

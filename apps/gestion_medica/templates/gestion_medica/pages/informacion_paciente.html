@@ -23,7 +23,7 @@
                 
                 <div class="avatar-container">
                     {% static 'imagenes/default_avatar.png' as default_img %}
-                    {% with foto=voluntario.imagen_thumb_small|default:voluntario.usuario.avatar %}
+                    {% with foto=voluntario.imagen_thumb_medium|default:voluntario.usuario.avatar_thumb_medium %}
                         {% if foto %}
                             <img src="{{ foto.url }}" alt="Avatar" class="profile-avatar" onerror="this.onerror=null; this.src='{{ default_img }}';">
                         {% else %}
