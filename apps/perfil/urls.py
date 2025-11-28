@@ -1,5 +1,5 @@
 from django.urls import path
-from .views import VerPerfilView, EditarPerfilView, CambiarContrasenaView
+from .views import VerPerfilView, EditarPerfilView, CambiarContrasenaView, DescargarMiHojaVidaView, DescargarMiFichaMedicaView
 
 app_name = 'perfil'
 
@@ -12,4 +12,7 @@ urlpatterns = [
     
     # URL para el formulario de cambio de contraseña
     path('cambiar-contrasena/', CambiarContrasenaView.as_view(), name='cambiar_contrasena'),
+
+    path('descargar/hoja-vida/', DescargarMiHojaVidaView.as_view(), name='descargar_hoja_vida'),
+    path('descargar/ficha-medica/', DescargarMiFichaMedicaView.as_view(), name='descargar_ficha_medica'),
 ]
