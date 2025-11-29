@@ -54,9 +54,13 @@ class EditarPerfilView(LoginRequiredMixin, View):
     def post(self, request, *args, **kwargs):
         form = self.form_class(request.POST, request.FILES, instance=request.user)
         if form.is_valid():
-            form.save()
-            messages.success(request, '¡Tu perfil ha sido actualizado!')
-            return redirect(self.success_url)
+            try:
+                form.save()
+                messages.success(request, '¡Tu perfil ha sido actualizado!')
+                return redirect(self.success_url)
+            except Exception as e:
+                messages.error(request, f"Error crítico al actualizar perfil: {str(e)}")
+
         messages.error(request, 'Error en el formulario.')
         return render(request, self.template_name, {'form': form})
 
@@ -66,9 +70,16 @@ class CambiarContrasenaView(PasswordChangeView):
     success_url = reverse_lazy('perfil:ver')
 
     def form_valid(self, form):
-        messages.success(self.request, '¡Contraseña cambiada correctamente!')
-        return super().form_valid(form)
-
+        try:
+            messages.success(self.request, '¡Contraseña cambiada correctamente!')
+            return super().form_valid(form)
+        except Exception as e:
+            messages.error(self.request, f"Error al cambiar la contraseña: {e}")
+            return self.form_invalid(form)
+    
+    def form_invalid(self, form):
+        messages.error(self.request, "No se pudo cambiar la contraseña. Verifica que la contraseña actual sea correcta y que las nuevas coincidan.")
+        return super().form_invalid(form)
 
 # =============================================================================
 # VISTAS DE DESCARGA (CON RUTAS CORREGIDAS A 'PAGES')
@@ -115,10 +126,15 @@ class DescargarMiHojaVidaView(LoginRequiredMixin, AuditoriaMixin, View):
                 )
 
                 return response
-            return HttpResponse("Error al generar PDF", status=500)
+            messages.error(request, "Error interno al generar el PDF. Contacte a soporte.")
+            return redirect('perfil:ver')
 
         except Voluntario.DoesNotExist:
-            messages.error(request, "No tienes perfil de voluntario.")
+            messages.error(request, "No tienes perfil de voluntario asociado.")
+            return redirect('perfil:ver')
+        
+        except Exception as e:
+            messages.error(request, f"Ocurrió un error inesperado: {str(e)}")
             return redirect('perfil:ver')
 
 
@@ -170,6 +186,9 @@ class VerMiFichaMedicaView(LoginRequiredMixin, AuditoriaMixin, View):
             })
 
         except FichaMedica.DoesNotExist:
-            # Manejo de error si el usuario no tiene ficha creada
             messages.error(request, "No se encontró una ficha médica asociada a tu cuenta.")
-            return redirect('perfil:ver') # O la ruta que prefieras
+            return redirect('perfil:ver')
+        
+        except Exception as e:
+            messages.error(request, f"Error al cargar la ficha médica: {str(e)}")
+            return redirect('perfil:ver')
