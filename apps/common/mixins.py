@@ -2,7 +2,7 @@ import os
 import uuid
 from PIL import Image
 from django.core.exceptions import PermissionDenied, ImproperlyConfigured
-from django.contrib.auth.mixins import AccessMixin, LoginRequiredMixin
+from django.contrib.auth.mixins import AccessMixin, LoginRequiredMixin, PermissionRequiredMixin
 from django.apps import apps
 from django.shortcuts import get_object_or_404, redirect
 from django.http import Http404
@@ -66,7 +66,7 @@ class EstacionActivaRequiredMixin(AccessMixin):
         
         if not self.estacion_activa_id:
             # Caso 1: No hay ID en la sesión.
-            return self.handle_no_permission()
+            return self.handle_no_station()
         
         try:
             # 2. Hay ID, intentamos obtener el objeto Estacion
@@ -80,16 +80,19 @@ class EstacionActivaRequiredMixin(AccessMixin):
             if 'active_estacion_id' in request.session:
                 del request.session['active_estacion_id']
             
-            return self.handle_no_permission()
+            return self.handle_no_station()
         
         # ¡Éxito! El usuario tiene un ID y es válido.
         # self.estacion_activa y self.estacion_activa_id están ahora
         # disponibles en la vista (en self.get, self.post, etc.)
+        print("El usuario tiene una estación activa")
         return super().dispatch(request, *args, **kwargs)
+    
 
-    def handle_no_permission(self):
+    def handle_no_station(self):
         """
-        Maneja la redirección si no se encuentra una estación activa.
+        Método PROPIO para errores de estación.
+        No choca con el PermissionRequiredMixin de Django.
         """
         messages.error(self.request, self.mensaje_sin_estacion)
         return redirect(self.redirect_url_sin_estacion)
@@ -130,8 +133,8 @@ class EstacionContextMixin(AccessMixin):
 
 class BaseEstacionMixin(
     LoginRequiredMixin, 
+    EstacionActivaRequiredMixin, 
     ModuleAccessMixin, 
-    EstacionActivaRequiredMixin
 ):
     """
     Este "super-mixin" agrupa las 3 validaciones más comunes
@@ -286,3 +289,22 @@ class AuditoriaMixin:
         else:
             # Fallback por si alguien usa el mixin fuera de una vista web
             print("Error: AuditoriaMixin usado sin self.request")
+
+
+
+
+class CustomPermissionRequiredMixin(PermissionRequiredMixin):
+    """
+    Extiende el mixin nativo para dar feedback visual en lugar de lanzar un 403 duro.
+    """
+    mensaje_sin_permiso = "No tienes permisos para realizar esta acción."
+    url_redireccion = 'portal:ruta_inicio'
+
+    def handle_no_permission(self):
+        # Si el usuario no está logueado, comportamiento normal (redirigir al login)
+        if not self.request.user.is_authenticated:
+            return super().handle_no_permission()
+
+        # Si está logueado pero sin permiso: Mensaje + Redirect
+        messages.error(self.request, self.mensaje_sin_permiso)
+        return redirect(self.url_redireccion)
