@@ -5,6 +5,8 @@ from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout, views as auth_views
 from django.urls import reverse, reverse_lazy
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
+from django.utils.decorators import method_decorator
+from django.views.decorators.cache import never_cache
 
 from .forms import FormularioLogin
 from apps.gestion_usuarios.models import Membresia
@@ -16,8 +18,11 @@ class LoginView(FormView):
     form_class = FormularioLogin
     success_url = reverse_lazy('portal:ruta_inicio')
 
+    @method_decorator(never_cache)
     def dispatch(self, request, *args, **kwargs):
-        # Redirección proactiva si ya está logueado
+        """
+        Evita caché en el login y redirige si ya está autenticado.
+        """
         if request.user.is_authenticated:
             return redirect(self.get_success_url())
         return super().dispatch(request, *args, **kwargs)
@@ -32,67 +37,98 @@ class LoginView(FormView):
         password = form.cleaned_data.get('password')
 
         try:
+            # 1. Autenticación pura de Django
             user = authenticate(self.request, rut=rut, password=password)
+            
             if user is None:
                 messages.warning(self.request, "Usuario y/o contraseña incorrectos")
                 return self.form_invalid(form)
 
-            # 1. Iniciar Sesión (Django Auth)
+            # 2. Iniciar Sesión (Crear cookie de sesión)
             login(self.request, user)
 
-            # 2. Lógica de Membresía y Sesión
+            # 3. Delegar lógica de negocio (Estaciones y Membresías)
             return self._procesar_ingreso_usuario(user)
         
         except Exception as e:
-            # Si falla la BD al buscar la membresía o al escribir la sesión
-            messages.error(self.request, f"Error del sistema al intentar ingresar: {str(e)}")
+            # Captura de errores generales para no romper la vista (Error 500)
+            print(f"Error crítico en Login: {e}") # Log para consola
+            messages.error(self.request, "Ocurrió un error inesperado al iniciar sesión. Intente nuevamente.")
             return self.form_invalid(form)
 
 
     def _procesar_ingreso_usuario(self, user):
         """
-        Maneja la lógica específica de tu negocio: Membresías y variables de sesión.
+        Determina a dónde va el usuario y configura su entorno.
         """
-        # Buscamos membresía activa
+        # Buscamos membresía activa.
+        # Nota: Usamos filter().first() en lugar de get() para evitar errores DoesNotExist
         membresia = Membresia.objects.filter(
             usuario=user, 
-            estado='ACTIVO' # Ojo: Asegúrate que tu modelo usa 'ACTIVO' o el valor correcto del choices
+            estado='ACTIVO' 
         ).select_related('estacion').first()
 
         if membresia:
-            # CASO A: Usuario con estación. Configuramos sesión completa.
-            self._configurar_sesion_estacion(membresia.estacion)
-            messages.success(self.request, f"Bienvenido, {user.first_name.title()}!")
-            return redirect('portal:ruta_inicio')
+            # CASO A: Usuario "Voluntario" con estación válida.
+            if membresia.estacion:
+                self._configurar_sesion_estacion(membresia.estacion)
+                messages.success(self.request, f"Bienvenido, {user.first_name.title()}!")
+                return redirect('portal:ruta_inicio')
+            else:
+                # Caso borde: Tiene membresía pero la estación es Null (Inconsistencia de datos)
+                messages.error(self.request, "Tu cuenta tiene un error de configuración (Sin Estación). Contacta soporte.")
+                return redirect('perfil:ver')
 
         elif user.is_superuser:
-            # CASO B: Superusuario sin membresía.
+            # CASO B: Superusuario.
             messages.info(self.request, "Bienvenido Administrador. Selecciona una estación.")
-            # Asumo que esta ruta existe o existirá
+            # Asegúrate que esta ruta exista en tus urls.py
             return redirect('acceso:ruta_seleccionar_estacion')
 
         else:
-            # CASO C: Usuario sin membresía (El cambio clave).
-            # NO cerramos sesión. Lo enviamos a su perfil para que pueda gestionar sus datos.
+            # CASO C: Usuario sin membresía activa.
             messages.warning(self.request, "Has ingresado sin una estación asignada. Solo puedes editar tu perfil.")
-            return redirect('perfil:ver') # Redirige al perfil en lugar de expulsarlo
+            return redirect('perfil:ver')
 
 
     def _configurar_sesion_estacion(self, estacion):
         """
-        Helper para inyectar variables en la sesión. Mantiene tu lógica original limpia.
+        Guarda los datos de la estación en la sesión de forma segura.
         """
-        self.request.session['active_estacion_id'] = estacion.id
-        self.request.session['active_estacion_nombre'] = estacion.nombre
-
-        # Lógica de Logo (Mejorada con getattr para evitar errores si faltan campos)
-        logo_url = None
-        if hasattr(estacion, 'logo_thumb_small') and estacion.logo_thumb_small:
-            logo_url = estacion.logo_thumb_small.url
-        elif estacion.logo:
-            logo_url = estacion.logo.url
+        try:
+            # 1. ID de Estación: Convertimos a STRING explícitamente.
+            # Esto previene errores si tu PK es un UUID o BigInt que JSON no serialice bien.
+            self.request.session['active_estacion_id'] = str(estacion.id)
             
-        self.request.session['active_estacion_logo'] = logo_url
+            # 2. Nombre de Estación
+            self.request.session['active_estacion_nombre'] = estacion.nombre
+
+            # 3. Logo (Gestión de errores si el archivo no existe físicamente)
+            logo_url = None
+            try:
+                if hasattr(estacion, 'logo_thumb_small') and estacion.logo_thumb_small:
+                    logo_url = estacion.logo_thumb_small.url
+                elif estacion.logo:
+                    logo_url = estacion.logo.url
+            except ValueError:
+                # Si la BD dice que hay imagen pero el archivo no está en disco
+                logo_url = None
+            
+            self.request.session['active_estacion_logo'] = logo_url
+
+            # 4. FORZAR GUARDADO DE SESIÓN
+            # Esto es vital. Le dice a Django que la sesión ha cambiado y DEBE escribirse en BD/Cookie.
+            self.request.session.modified = True
+            
+            # Opcional: Forzar escritura inmediata (si usas DatabaseSession)
+            if hasattr(self.request.session, 'save'):
+                self.request.session.save()
+
+        except Exception as e:
+            # Si falla el guardado en sesión, lo logueamos pero no detenemos el login
+            print(f"Error al guardar datos en sesión: {e}")
+            # No lanzamos error al usuario, pero la sesión quedará 'coja' (sin ID)
+            # Esto causaría el error original, pero al menos sabremos por qué gracias al print.
 
 
 

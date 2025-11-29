@@ -2,7 +2,6 @@ from django.shortcuts import render, get_object_or_404, redirect
 from django.views import View
 from django.db.models import Prefetch, Count, Q
 from django.contrib import messages
-from django.contrib.auth.mixins import PermissionRequiredMixin
 import csv
 import json
 import io
@@ -18,7 +17,7 @@ from .models import (
     HistorialReconocimiento, HistorialSancion
 )
 from apps.gestion_usuarios.models import Membresia
-from apps.common.mixins import BaseEstacionMixin, AuditoriaMixin
+from apps.common.mixins import BaseEstacionMixin, AuditoriaMixin, CustomPermissionRequiredMixin
 from apps.gestion_usuarios.models import Membresia
 
 # Importamos TODOS los formularios
@@ -73,11 +72,11 @@ class VoluntariosInicioView(BaseEstacionMixin, View):
 
 
 
-class VoluntariosListaView(BaseEstacionMixin, PermissionRequiredMixin, View):
+class VoluntariosListaView(BaseEstacionMixin, CustomPermissionRequiredMixin, View):
     """
     Listado de voluntarios de la estación activa.
     """
-    permission_required = 'gestion_voluntarios.accion_gestion_voluntarios_ver_voluntarios'
+    permission_required = 'gestion_usuarios.accion_gestion_voluntarios_ver_voluntarios'
 
     def get(self, request):
         # 1. Filtros de URL
@@ -130,11 +129,11 @@ class VoluntariosListaView(BaseEstacionMixin, PermissionRequiredMixin, View):
 
 
 
-class VoluntariosVerView(BaseEstacionMixin, PermissionRequiredMixin, View):
+class VoluntariosVerView(BaseEstacionMixin, CustomPermissionRequiredMixin, View):
     """
     Ficha detallada del voluntario (Hoja de Vida).
     """
-    permission_required = 'gestion_voluntarios.accion_gestion_voluntarios_ver_voluntarios'
+    permission_required = 'gestion_usuarios.accion_gestion_voluntarios_ver_voluntarios'
 
     def get(self, request, id):
         # Prefetches complejos para armar la hoja de vida completa
@@ -186,8 +185,8 @@ class VoluntariosVerView(BaseEstacionMixin, PermissionRequiredMixin, View):
 # =============================================================================
 #  ACCIONES DE BITÁCORA (AGREGAR EVENTOS)
 # =============================================================================
-class VoluntarioAgregarCargoView(BaseEstacionMixin, AuditoriaMixin, PermissionRequiredMixin, View):
-    permission_required = 'gestion_voluntarios.accion_gestion_voluntarios_gestionar_voluntarios'
+class VoluntarioAgregarCargoView(BaseEstacionMixin, AuditoriaMixin, CustomPermissionRequiredMixin, View):
+    permission_required = 'gestion_usuarios.accion_gestion_voluntarios_gestionar_voluntarios'
 
     def post(self, request, id):
         # Validamos pertenencia a la estación
@@ -264,8 +263,8 @@ class VoluntarioAgregarCargoView(BaseEstacionMixin, AuditoriaMixin, PermissionRe
 
 
 
-class VoluntarioAgregarReconocimientoView(BaseEstacionMixin, AuditoriaMixin, PermissionRequiredMixin, View):
-    permission_required = 'gestion_voluntarios.accion_gestion_voluntarios_gestionar_voluntarios'
+class VoluntarioAgregarReconocimientoView(BaseEstacionMixin, AuditoriaMixin, CustomPermissionRequiredMixin, View):
+    permission_required = 'gestion_usuarios.accion_gestion_voluntarios_gestionar_voluntarios'
 
     def post(self, request, id):
         voluntario = get_object_or_404(Voluntario, usuario__id=id, usuario__membresias__estacion=self.estacion_activa)
@@ -304,8 +303,8 @@ class VoluntarioAgregarReconocimientoView(BaseEstacionMixin, AuditoriaMixin, Per
 
 
 
-class VoluntarioAgregarSancionView(BaseEstacionMixin, AuditoriaMixin, PermissionRequiredMixin, View):
-    permission_required = 'gestion_voluntarios.accion_gestion_voluntarios_gestionar_voluntarios'
+class VoluntarioAgregarSancionView(BaseEstacionMixin, AuditoriaMixin, CustomPermissionRequiredMixin, View):
+    permission_required = 'gestion_usuarios.accion_gestion_voluntarios_gestionar_voluntarios'
 
     def post(self, request, id):
         voluntario = get_object_or_404(Voluntario, usuario__id=id, usuario__membresias__estacion=self.estacion_activa)
@@ -342,12 +341,12 @@ class VoluntarioAgregarSancionView(BaseEstacionMixin, AuditoriaMixin, Permission
 
 
 
-class VoluntariosModificarView(BaseEstacionMixin, AuditoriaMixin, PermissionRequiredMixin, View):
+class VoluntariosModificarView(BaseEstacionMixin, AuditoriaMixin, CustomPermissionRequiredMixin, View):
     """
     Edita los datos básicos (perennes) del voluntario y su usuario.
     No edita historial.
     """
-    permission_required = 'gestion_voluntarios.accion_gestion_voluntarios_gestionar_voluntarios'
+    permission_required = 'gestion_usuarios.accion_gestion_voluntarios_gestionar_voluntarios'
 
     def get_voluntario(self, id):
         return get_object_or_404(
@@ -403,8 +402,8 @@ class VoluntariosModificarView(BaseEstacionMixin, AuditoriaMixin, PermissionRequ
 # =============================================================================
 #  GESTIÓN DE NORMALIZACIÓN (CARGOS Y PROFESIONES)
 # =============================================================================
-class CargosListaView(BaseEstacionMixin, PermissionRequiredMixin, View):
-    permission_required = 'gestion_voluntarios.accion_gestion_voluntarios_gestionar_datos_normalizacion'
+class CargosListaView(BaseEstacionMixin, CustomPermissionRequiredMixin, View):
+    permission_required = 'gestion_usuarios.accion_gestion_voluntarios_gestionar_datos_normalizacion'
 
     def get(self, request):
         q_profesion = request.GET.get('q_profesion', '')
@@ -432,8 +431,8 @@ class CargosListaView(BaseEstacionMixin, PermissionRequiredMixin, View):
 
 
 # CRUD simple para Profesiones y Cargos
-class ProfesionesCrearView(BaseEstacionMixin, PermissionRequiredMixin, View):
-    permission_required = 'gestion_voluntarios.accion_gestion_voluntarios_gestionar_datos_normalizacion'
+class ProfesionesCrearView(BaseEstacionMixin, CustomPermissionRequiredMixin, View):
+    permission_required = 'gestion_usuarios.accion_gestion_voluntarios_gestionar_datos_normalizacion'
 
     def get(self, request):
         return render(request, "gestion_voluntarios/pages/crear_profesion.html", {'form': ProfesionForm()})
@@ -454,8 +453,8 @@ class ProfesionesCrearView(BaseEstacionMixin, PermissionRequiredMixin, View):
 
 
 
-class ProfesionesModificarView(BaseEstacionMixin, PermissionRequiredMixin, View):
-    permission_required = 'gestion_voluntarios.accion_gestion_voluntarios_gestionar_datos_normalizacion'
+class ProfesionesModificarView(BaseEstacionMixin, CustomPermissionRequiredMixin, View):
+    permission_required = 'gestion_usuarios.accion_gestion_voluntarios_gestionar_datos_normalizacion'
 
     def get(self, request, id):
         prof = get_object_or_404(Profesion, id=id)
@@ -478,8 +477,8 @@ class ProfesionesModificarView(BaseEstacionMixin, PermissionRequiredMixin, View)
 
 
 
-class CargosCrearView(BaseEstacionMixin, PermissionRequiredMixin, View):
-    permission_required = 'gestion_voluntarios.accion_gestion_voluntarios_gestionar_datos_normalizacion'
+class CargosCrearView(BaseEstacionMixin, CustomPermissionRequiredMixin, View):
+    permission_required = 'gestion_usuarios.accion_gestion_voluntarios_gestionar_datos_normalizacion'
 
     def get(self, request):
         return render(request, "gestion_voluntarios/pages/crear_cargo.html", {'form': CargoForm()})
@@ -499,8 +498,8 @@ class CargosCrearView(BaseEstacionMixin, PermissionRequiredMixin, View):
 
 
 
-class CargosModificarView(BaseEstacionMixin, PermissionRequiredMixin, View):
-    permission_required = 'gestion_voluntarios.accion_gestion_voluntarios_gestionar_datos_normalizacion'
+class CargosModificarView(BaseEstacionMixin, CustomPermissionRequiredMixin, View):
+    permission_required = 'gestion_usuarios.accion_gestion_voluntarios_gestionar_datos_normalizacion'
 
     def get(self, request, id):
         cargo = get_object_or_404(Cargo, id=id)
@@ -526,11 +525,11 @@ class CargosModificarView(BaseEstacionMixin, PermissionRequiredMixin, View):
 # =============================================================================
 #  REPORTES Y EXPORTACIONES
 # =============================================================================
-class HojaVidaView(BaseEstacionMixin, PermissionRequiredMixin, View):
+class HojaVidaView(BaseEstacionMixin, CustomPermissionRequiredMixin, View):
     """
     Genera PDF de hoja de vida. Validamos acceso y auditoría de visualización.
     """
-    permission_required = 'gestion_voluntarios.accion_gestion_voluntarios_generar_hoja_vida'
+    permission_required = 'gestion_usuarios.accion_gestion_voluntarios_generar_hoja_vida'
 
     def get(self, request, id):
         # Reutilizamos la lógica de seguridad de VerVoluntario
@@ -573,11 +572,11 @@ class HojaVidaView(BaseEstacionMixin, PermissionRequiredMixin, View):
 
 
 
-class ExportarListadoView(BaseEstacionMixin, PermissionRequiredMixin, View):
+class ExportarListadoView(BaseEstacionMixin, CustomPermissionRequiredMixin, View):
     """
     Maneja CSV, Excel, PDF y JSON en una sola vista centralizada.
     """
-    permission_required = 'gestion_voluntarios.accion_gestion_voluntarios_generar_reportes'
+    permission_required = 'gestion_usuarios.accion_gestion_voluntarios_generar_reportes'
 
     def _get_queryset(self, request):
         estacion = self.estacion_activa

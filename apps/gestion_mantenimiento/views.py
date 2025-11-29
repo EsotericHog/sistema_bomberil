@@ -2,15 +2,14 @@ import json
 from django.views import View
 from django.views.generic import ListView, CreateView, DetailView, UpdateView, DeleteView, TemplateView
 from django.db.models import Q, Count, ProtectedError
-from django.shortcuts import render, redirect, get_object_or_404
+from django.shortcuts import redirect
 from django.urls import reverse_lazy, reverse
 from django.contrib import messages
-from django.contrib.auth.mixins import PermissionRequiredMixin
 from django.utils import timezone
 
 from .models import PlanMantenimiento, PlanActivoConfig, OrdenMantenimiento
 from .forms import PlanMantenimientoForm, OrdenCorrectivaForm
-from apps.common.mixins import BaseEstacionMixin, ObjectInStationRequiredMixin, AuditoriaMixin
+from apps.common.mixins import BaseEstacionMixin, ObjectInStationRequiredMixin, AuditoriaMixin, CustomPermissionRequiredMixin
 from apps.gestion_inventario.models import Activo
 
 
@@ -74,14 +73,14 @@ class MantenimientoInicioView(BaseEstacionMixin, TemplateView):
 
 # === GESTIÓN DE PLANES ===
 
-class PlanMantenimientoListView(BaseEstacionMixin, PermissionRequiredMixin, ListView):
+class PlanMantenimientoListView(BaseEstacionMixin, CustomPermissionRequiredMixin, ListView):
     """
     Vista para listar los planes de mantenimiento.
     Incluye búsqueda, paginación y filtrado estricto por Estación Activa.
     """
     model = PlanMantenimiento
     template_name = 'gestion_mantenimiento/pages/lista_planes.html'
-    permission_required = 'gestion_mantenimiento.accion_gestion_mantenimiento_ver_ordenes'
+    permission_required = 'gestion_usuarios.accion_gestion_mantenimiento_ver_ordenes'
     context_object_name = 'planes'
     paginate_by = 10  # Elementos por página
 
@@ -117,7 +116,7 @@ class PlanMantenimientoListView(BaseEstacionMixin, PermissionRequiredMixin, List
 
 
 
-class PlanMantenimientoCrearView(BaseEstacionMixin, PermissionRequiredMixin, AuditoriaMixin, CreateView):
+class PlanMantenimientoCrearView(BaseEstacionMixin, CustomPermissionRequiredMixin, AuditoriaMixin, CreateView):
     """
     Vista para crear un nuevo plan de mantenimiento.
     Asigna automáticamente la estación activa al plan.
@@ -125,7 +124,7 @@ class PlanMantenimientoCrearView(BaseEstacionMixin, PermissionRequiredMixin, Aud
     model = PlanMantenimiento
     form_class = PlanMantenimientoForm
     template_name = 'gestion_mantenimiento/pages/crear_plan.html'
-    permission_required = 'gestion_mantenimiento.accion_gestion_mantenimiento_gestionar_planes'
+    permission_required = 'gestion_usuarios.accion_gestion_mantenimiento_gestionar_planes'
     success_url = reverse_lazy('gestion_mantenimiento:ruta_lista_planes')
 
 
@@ -168,14 +167,14 @@ class PlanMantenimientoCrearView(BaseEstacionMixin, PermissionRequiredMixin, Aud
 
 
 
-class PlanMantenimientoGestionarView(BaseEstacionMixin, PermissionRequiredMixin, ObjectInStationRequiredMixin, DetailView):
+class PlanMantenimientoGestionarView(BaseEstacionMixin, CustomPermissionRequiredMixin, ObjectInStationRequiredMixin, DetailView):
     """
     Vista principal para gestionar los activos de un plan específico.
     Muestra la lista actual y provee la interfaz para añadir/quitar.
     """
     model = PlanMantenimiento
     template_name = 'gestion_mantenimiento/pages/gestionar_plan.html'
-    permission_required = 'gestion_mantenimiento.accion_gestion_mantenimiento_gestionar_planes'
+    permission_required = 'gestion_usuarios.accion_gestion_mantenimiento_gestionar_planes'
     context_object_name = 'plan'
     station_lookup = 'estacion' # Para ObjectInStationRequiredMixin
 
@@ -194,7 +193,7 @@ class PlanMantenimientoGestionarView(BaseEstacionMixin, PermissionRequiredMixin,
 
 
 
-class PlanMantenimientoEditarView(BaseEstacionMixin, PermissionRequiredMixin, ObjectInStationRequiredMixin, AuditoriaMixin, UpdateView):
+class PlanMantenimientoEditarView(BaseEstacionMixin, CustomPermissionRequiredMixin, ObjectInStationRequiredMixin, AuditoriaMixin, UpdateView):
     """
     Vista para editar un plan existente.
     Protegida por ObjectInStationRequiredMixin para asegurar propiedad.
@@ -202,7 +201,7 @@ class PlanMantenimientoEditarView(BaseEstacionMixin, PermissionRequiredMixin, Ob
     model = PlanMantenimiento
     form_class = PlanMantenimientoForm
     template_name = 'gestion_mantenimiento/pages/editar_plan.html'
-    permission_required = 'gestion_mantenimiento.accion_gestion_mantenimiento_gestionar_planes'
+    permission_required = 'gestion_usuarios.accion_gestion_mantenimiento_gestionar_planes'
     success_url = reverse_lazy('gestion_mantenimiento:ruta_lista_planes')
     station_lookup = 'estacion' # Define el campo para verificar la propiedad
 
@@ -242,14 +241,14 @@ class PlanMantenimientoEditarView(BaseEstacionMixin, PermissionRequiredMixin, Ob
 
 
 
-class PlanMantenimientoEliminarView(BaseEstacionMixin, PermissionRequiredMixin, ObjectInStationRequiredMixin, AuditoriaMixin, DeleteView):
+class PlanMantenimientoEliminarView(BaseEstacionMixin, CustomPermissionRequiredMixin, ObjectInStationRequiredMixin, AuditoriaMixin, DeleteView):
     """
     Vista para eliminar un plan de mantenimiento.
     Protegida para asegurar que solo se borren planes de la propia estación.
     """
     model = PlanMantenimiento
     template_name = 'gestion_mantenimiento/pages/eliminar_plan.html'
-    permission_required = 'gestion_mantenimiento.accion_gestion_mantenimiento_gestionar_planes'
+    permission_required = 'gestion_usuarios.accion_gestion_mantenimiento_gestionar_planes'
     success_url = reverse_lazy('gestion_mantenimiento:ruta_lista_planes')
     station_lookup = 'estacion'
 
@@ -298,14 +297,14 @@ class PlanMantenimientoEliminarView(BaseEstacionMixin, PermissionRequiredMixin, 
 
 
 # === GESTIÓN DE ÓRDENES DE TRABAJO ===
-class OrdenMantenimientoListView(BaseEstacionMixin, PermissionRequiredMixin, ListView):
+class OrdenMantenimientoListView(BaseEstacionMixin, CustomPermissionRequiredMixin, ListView):
     """
     Bandeja de Entrada de Órdenes de Trabajo.
     Muestra las órdenes filtradas por estado y estación.
     """
     model = OrdenMantenimiento
     template_name = 'gestion_mantenimiento/pages/lista_ordenes.html'
-    permission_required = 'gestion_mantenimiento.accion_gestion_mantenimiento_ver_ordenes'
+    permission_required = 'gestion_usuarios.accion_gestion_mantenimiento_ver_ordenes'
     context_object_name = 'ordenes'
     paginate_by = 15
 
@@ -361,14 +360,14 @@ class OrdenMantenimientoListView(BaseEstacionMixin, PermissionRequiredMixin, Lis
 
 
 
-class OrdenCorrectivaCreateView(BaseEstacionMixin, PermissionRequiredMixin, AuditoriaMixin, CreateView):
+class OrdenCorrectivaCreateView(BaseEstacionMixin, CustomPermissionRequiredMixin, AuditoriaMixin, CreateView):
     """
     Vista para crear una Orden de Mantenimiento Correctiva (sin plan).
     """
     model = OrdenMantenimiento
     form_class = OrdenCorrectivaForm
     template_name = 'gestion_mantenimiento/pages/crear_orden_correctiva.html'
-    permission_required = 'gestion_mantenimiento.accion_gestion_mantenimiento_gestionar_ordenes'
+    permission_required = 'gestion_usuarios.accion_gestion_mantenimiento_gestionar_ordenes'
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -407,14 +406,14 @@ class OrdenCorrectivaCreateView(BaseEstacionMixin, PermissionRequiredMixin, Audi
 
 
 
-class OrdenMantenimientoDetalleView(BaseEstacionMixin, PermissionRequiredMixin, ObjectInStationRequiredMixin, DetailView):
+class OrdenMantenimientoDetalleView(BaseEstacionMixin, CustomPermissionRequiredMixin, ObjectInStationRequiredMixin, DetailView):
     """
     Panel de control para ejecutar una orden de trabajo específica.
     Muestra los activos involucrados y permite registrar tareas.
     """
     model = OrdenMantenimiento
     template_name = 'gestion_mantenimiento/pages/gestionar_orden.html'
-    permission_required = 'gestion_mantenimiento.accion_gestion_mantenimiento_gestionar_ordenes'
+    permission_required = 'gestion_usuarios.accion_gestion_mantenimiento_gestionar_ordenes'
     context_object_name = 'orden'
     station_lookup = 'estacion'
 

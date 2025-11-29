@@ -1,13 +1,12 @@
 import uuid
 from django.utils import timezone
 from django.shortcuts import redirect, get_object_or_404
-from django.http import JsonResponse
 from django.db import IntegrityError, transaction
 from django.db.models import Count, F, Sum, Q
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
-from rest_framework.permissions import IsAuthenticated, AllowAny
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.parsers import MultiPartParser, FormParser
 from PIL import Image
 
@@ -16,7 +15,7 @@ from apps.gestion_mantenimiento.models import PlanMantenimiento, PlanActivoConfi
 from apps.gestion_mantenimiento.services import auditar_modificacion_incremental
 from apps.common.utils import procesar_imagen_en_memoria, generar_thumbnail_en_memoria
 from apps.common.mixins import AuditoriaMixin
-from apps.gestion_inventario.models import Comuna, Activo, LoteInsumo, ProductoGlobal, Estacion, Producto, Estado
+from apps.gestion_inventario.models import Comuna, Activo, LoteInsumo, ProductoGlobal, Producto, Estado
 from apps.gestion_inventario.utils import generar_sku_sugerido
 from .serializers import ComunaSerializer, ProductoLocalInputSerializer
 from .permissions import (

@@ -4,7 +4,6 @@ from io import BytesIO
 from django.shortcuts import render, redirect, get_object_or_404
 from django.views import View
 from django.contrib import messages
-from django.contrib.auth.mixins import PermissionRequiredMixin
 from django.urls import reverse  
 from django.db import IntegrityError
 from django.db.models import Count, ProtectedError
@@ -22,7 +21,7 @@ from .forms import (
     FichaMedicaCirugiaForm, AlergiaForm, EnfermedadForm, CirugiaForm
 )  
 from .utils import BLOOD_COMPATIBILITY
-from apps.common.mixins import BaseEstacionMixin, AuditoriaMixin
+from apps.common.mixins import BaseEstacionMixin, AuditoriaMixin, CustomPermissionRequiredMixin
 from apps.gestion_usuarios.models import Membresia
 from apps.gestion_voluntarios.models import Voluntario
 
@@ -76,11 +75,11 @@ class MedicoInicioView(BaseEstacionMixin, View):
 
 
 
-class MedicoListaView(BaseEstacionMixin, PermissionRequiredMixin, View):
+class MedicoListaView(BaseEstacionMixin, CustomPermissionRequiredMixin, View):
     """
     Listado de personal con ficha médica disponible.
     """
-    permission_required = 'gestion_medica.accion_gestion_medica_ver_fichas_medicas'
+    permission_required = 'gestion_usuarios.accion_gestion_medica_ver_fichas_medicas'
 
     def get(self, request):
         # 1. Filtramos usuarios activos de la estación
@@ -98,11 +97,11 @@ class MedicoListaView(BaseEstacionMixin, PermissionRequiredMixin, View):
 
 
 
-class MedicoInfoView(BaseEstacionMixin, PermissionRequiredMixin, AuditoriaMixin, View):
+class MedicoInfoView(BaseEstacionMixin, CustomPermissionRequiredMixin, AuditoriaMixin, View):
     """
     Ficha clínica detallada (Solo Lectura).
     """
-    permission_required = 'gestion_medica.accion_gestion_medica_ver_fichas_medicas'
+    permission_required = 'gestion_usuarios.accion_gestion_medica_ver_fichas_medicas'
 
     def get(self, request, pk):
         # 1. Recuperación segura (pertenece a la estación)
@@ -151,11 +150,11 @@ class MedicoInfoView(BaseEstacionMixin, PermissionRequiredMixin, AuditoriaMixin,
 
 
 
-class MedicoModificarView(BaseEstacionMixin, AuditoriaMixin, PermissionRequiredMixin, View):
+class MedicoModificarView(BaseEstacionMixin, AuditoriaMixin, CustomPermissionRequiredMixin, View):
     """
     Edición de datos fisiológicos básicos (Peso, Altura, Grupo, etc.)
     """
-    permission_required = 'gestion_medica.accion_gestion_medica_gestionar_fichas_medicas'
+    permission_required = 'gestion_usuarios.accion_gestion_medica_gestionar_fichas_medicas'
 
     def get_ficha(self, pk):
         return get_object_or_404(
@@ -199,8 +198,8 @@ class MedicoModificarView(BaseEstacionMixin, AuditoriaMixin, PermissionRequiredM
 # ==============================================================================
 # 2. REPORTES E IMPRESIÓN
 # ==============================================================================
-class MedicoImprimirView(BaseEstacionMixin, PermissionRequiredMixin, AuditoriaMixin, View):
-    permission_required = 'gestion_medica.accion_gestion_medica_generar_reportes'
+class MedicoImprimirView(BaseEstacionMixin, CustomPermissionRequiredMixin, AuditoriaMixin, View):
+    permission_required = 'gestion_usuarios.accion_gestion_medica_generar_reportes'
 
     def get(self, request, pk):
         ficha = get_object_or_404(
@@ -245,8 +244,8 @@ class MedicoImprimirView(BaseEstacionMixin, PermissionRequiredMixin, AuditoriaMi
 
 
 
-class MedicoImprimirQRView(BaseEstacionMixin, PermissionRequiredMixin, View):
-    permission_required = 'gestion_medica.accion_gestion_medica_generar_reportes'
+class MedicoImprimirQRView(BaseEstacionMixin, CustomPermissionRequiredMixin, View):
+    permission_required = 'gestion_usuarios.accion_gestion_medica_generar_reportes'
 
     def get(self, request, pk):
         ficha = get_object_or_404(FichaMedica, pk=pk, voluntario__usuario__membresias__estacion=self.estacion_activa)
@@ -272,11 +271,11 @@ class MedicoImprimirQRView(BaseEstacionMixin, PermissionRequiredMixin, View):
 
 
 
-class MedicoCompatibilidadView(BaseEstacionMixin, PermissionRequiredMixin, View):
+class MedicoCompatibilidadView(BaseEstacionMixin, CustomPermissionRequiredMixin, View):
     """
     Matriz de compatibilidad sanguínea local.
     """
-    permission_required = 'gestion_medica.accion_gestion_medica_ver_fichas_medicas'
+    permission_required = 'gestion_usuarios.accion_gestion_medica_ver_fichas_medicas'
 
     def get(self, request):
         estacion = self.estacion_activa
@@ -343,9 +342,9 @@ class MedicoCompatibilidadView(BaseEstacionMixin, PermissionRequiredMixin, View)
 # ==============================================================================
 
 # --- HELPERS PARA MIXINS Y REPETICIÓN ---
-class SubElementoMedicoBaseView(BaseEstacionMixin, AuditoriaMixin, PermissionRequiredMixin, View):
+class SubElementoMedicoBaseView(BaseEstacionMixin, AuditoriaMixin, CustomPermissionRequiredMixin, View):
     """Clase base para Contactos, Alergias, Enfermedades, etc."""
-    permission_required = 'gestion_medica.accion_gestion_medica_gestionar_fichas_medicas'
+    permission_required = 'gestion_usuarios.accion_gestion_medica_gestionar_fichas_medicas'
 
     def get_ficha(self, pk):
         return get_object_or_404(
@@ -723,9 +722,9 @@ class EliminarCirugiaPacienteView(SubElementoMedicoBaseView):
 # ==============================================================================
 # 4. GESTIÓN DE CATÁLOGOS GLOBALES (NORMALIZACIÓN)
 # ==============================================================================
-class CatalogoMedicoBaseView(BaseEstacionMixin, AuditoriaMixin, PermissionRequiredMixin, View):
+class CatalogoMedicoBaseView(BaseEstacionMixin, AuditoriaMixin, CustomPermissionRequiredMixin, View):
     """Base para CRUDs de catálogos globales (Medicamentos, Enfermedades, etc.)"""
-    permission_required = 'gestion_medica.accion_gestion_medica_gestionar_datos_normalizacion'
+    permission_required = 'gestion_usuarios.accion_gestion_medica_gestionar_datos_normalizacion'
 
     def get_context_data(self, **kwargs):
         # Hook para personalizar contexto en hijos si fuera necesario

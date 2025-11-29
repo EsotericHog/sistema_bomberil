@@ -18,7 +18,7 @@ from django.urls import reverse, reverse_lazy
 from django.contrib import messages
 from django.shortcuts import get_object_or_404
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
-from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
+from django.contrib.auth.mixins import LoginRequiredMixin
 from django.db.models.functions import Coalesce
 from dateutil.relativedelta import relativedelta
 from django.db.models.functions import Coalesce, Abs
@@ -29,7 +29,7 @@ from core.settings import (
     INVENTARIO_UBICACION_VEHICULO_NOMBRE as VEHICULO_NOMBRE, 
 )
 
-from apps.common.mixins import ModuleAccessMixin, BaseEstacionMixin, AuditoriaMixin
+from apps.common.mixins import ModuleAccessMixin, BaseEstacionMixin, AuditoriaMixin, CustomPermissionRequiredMixin
 from .mixins import UbicacionMixin, InventoryStateValidatorMixin, StationInventoryObjectMixin
 
 from .models import (
@@ -180,7 +180,7 @@ class InventarioInicioView(BaseEstacionMixin, TemplateView):
 
 
 
-class AreaListaView(BaseEstacionMixin, PermissionRequiredMixin, View):
+class AreaListaView(BaseEstacionMixin, CustomPermissionRequiredMixin, View):
     """
     Vista para listar las Áreas (Ubicaciones) de la estación activa,
     excluyendo vehículos y mostrando conteos optimizados.
@@ -225,7 +225,7 @@ class AreaListaView(BaseEstacionMixin, PermissionRequiredMixin, View):
 
 
 
-class AreaCrearView(BaseEstacionMixin, PermissionRequiredMixin, AuditoriaMixin, View):
+class AreaCrearView(BaseEstacionMixin, CustomPermissionRequiredMixin, AuditoriaMixin, View):
     """
     Vista para crear ubicaciones de tipo "ÁREA"
     """
@@ -308,7 +308,7 @@ class AreaCrearView(BaseEstacionMixin, PermissionRequiredMixin, AuditoriaMixin, 
 
 
 
-class UbicacionDetalleView(BaseEstacionMixin, PermissionRequiredMixin, UbicacionMixin, View):
+class UbicacionDetalleView(BaseEstacionMixin, CustomPermissionRequiredMixin, UbicacionMixin, View):
     """
     Vista para gestionar un área/ubicación: muestra detalles, 
     resúmenes de stock, lista de compartimentos con sus totales,
@@ -379,7 +379,7 @@ class UbicacionDetalleView(BaseEstacionMixin, PermissionRequiredMixin, Ubicacion
 
 
 
-class UbicacionDeleteView(BaseEstacionMixin, PermissionRequiredMixin, UbicacionMixin, AuditoriaMixin, View):
+class UbicacionDeleteView(BaseEstacionMixin, CustomPermissionRequiredMixin, UbicacionMixin, AuditoriaMixin, View):
     """
     Vista para confirmar y ejecutar la eliminación de una Ubicación (Área o Vehículo).
     Maneja ProtectedError si la ubicación aún tiene compartimentos.
@@ -458,7 +458,7 @@ class UbicacionDeleteView(BaseEstacionMixin, PermissionRequiredMixin, UbicacionM
 
 
 
-class AreaEditarView(BaseEstacionMixin, PermissionRequiredMixin, UbicacionMixin, AuditoriaMixin, View):
+class AreaEditarView(BaseEstacionMixin, CustomPermissionRequiredMixin, UbicacionMixin, AuditoriaMixin, View):
     """
     Editar datos de una ubicación/almacén.
     """
@@ -541,7 +541,7 @@ class AreaEditarView(BaseEstacionMixin, PermissionRequiredMixin, UbicacionMixin,
 
 
 
-class VehiculoListaView(BaseEstacionMixin, PermissionRequiredMixin, View):
+class VehiculoListaView(BaseEstacionMixin, CustomPermissionRequiredMixin, View):
     """
     Vista para listar los Vehículos (Ubicaciones de tipo 'VEHÍCULO')
     de la estación activa, mostrando conteos optimizados.
@@ -593,7 +593,7 @@ class VehiculoListaView(BaseEstacionMixin, PermissionRequiredMixin, View):
 
 
 
-class VehiculoCrearView(BaseEstacionMixin, PermissionRequiredMixin, AuditoriaMixin, View):
+class VehiculoCrearView(BaseEstacionMixin, CustomPermissionRequiredMixin, AuditoriaMixin, View):
     """
     Vista para crear un nuevo Vehículo.
     Maneja la creación simultánea en los modelos Ubicacion y Vehiculo.
@@ -690,7 +690,7 @@ class VehiculoCrearView(BaseEstacionMixin, PermissionRequiredMixin, AuditoriaMix
 
 
 
-class VehiculoEditarView(BaseEstacionMixin, PermissionRequiredMixin, UbicacionMixin, AuditoriaMixin, View):
+class VehiculoEditarView(BaseEstacionMixin, CustomPermissionRequiredMixin, UbicacionMixin, AuditoriaMixin, View):
     """
     Vista para editar los detalles de un Vehículo.
     Maneja dos formularios:
@@ -813,7 +813,7 @@ class VehiculoEditarView(BaseEstacionMixin, PermissionRequiredMixin, UbicacionMi
 
 
 
-class CompartimentoListaView(BaseEstacionMixin, PermissionRequiredMixin, View):
+class CompartimentoListaView(BaseEstacionMixin, CustomPermissionRequiredMixin, View):
     """
     Lista potente de compartimentos con filtros, búsqueda, paginación 
     y conteo rápido de existencias.
@@ -888,7 +888,7 @@ class CompartimentoListaView(BaseEstacionMixin, PermissionRequiredMixin, View):
 
 
 
-class CompartimentoCrearView(BaseEstacionMixin, PermissionRequiredMixin, AuditoriaMixin, CreateView):
+class CompartimentoCrearView(BaseEstacionMixin, CustomPermissionRequiredMixin, AuditoriaMixin, CreateView):
     """
     Vista para crear un compartimento.
     Utiliza CreateView y @cached_property para una gestión 
@@ -965,7 +965,7 @@ class CompartimentoCrearView(BaseEstacionMixin, PermissionRequiredMixin, Auditor
 
 
 
-class CompartimentoDetalleView(BaseEstacionMixin, PermissionRequiredMixin, DetailView):
+class CompartimentoDetalleView(BaseEstacionMixin, CustomPermissionRequiredMixin, DetailView):
     """
     Vista de detalle para un compartimento.
     Implementa DetailView, separando la lógica de consulta (queryset)
@@ -1032,7 +1032,7 @@ class CompartimentoDetalleView(BaseEstacionMixin, PermissionRequiredMixin, Detai
 
 
 
-class CompartimentoEditView(BaseEstacionMixin, PermissionRequiredMixin, AuditoriaMixin, UpdateView):
+class CompartimentoEditView(BaseEstacionMixin, CustomPermissionRequiredMixin, AuditoriaMixin, UpdateView):
     """
     Vista para editar un compartimento.
     Utiliza UpdateView para eliminar boilerplate, delegando 
@@ -1098,7 +1098,7 @@ class CompartimentoEditView(BaseEstacionMixin, PermissionRequiredMixin, Auditori
 
 
 
-class CompartimentoDeleteView(BaseEstacionMixin, PermissionRequiredMixin, AuditoriaMixin, DeleteView):
+class CompartimentoDeleteView(BaseEstacionMixin, CustomPermissionRequiredMixin, AuditoriaMixin, DeleteView):
     """
     Vista para eliminar un compartimento.
     Utiliza DeleteView genérica, encapsulando la lógica de negocio
@@ -1167,7 +1167,7 @@ class CompartimentoDeleteView(BaseEstacionMixin, PermissionRequiredMixin, Audito
 
 
 
-class CatalogoGlobalListView(BaseEstacionMixin, PermissionRequiredMixin, ListView):
+class CatalogoGlobalListView(BaseEstacionMixin, CustomPermissionRequiredMixin, ListView):
     """
     Muestra el Catálogo Maestro Global de Productos con filtros avanzados
     de búsqueda, marca, categoría y asignación.
@@ -1258,7 +1258,7 @@ class CatalogoGlobalListView(BaseEstacionMixin, PermissionRequiredMixin, ListVie
 
 
 
-class ProductoGlobalCrearView(BaseEstacionMixin, PermissionRequiredMixin, AuditoriaMixin, CreateView):
+class ProductoGlobalCrearView(BaseEstacionMixin, CustomPermissionRequiredMixin, AuditoriaMixin, CreateView):
     """
     Vista para crear un Producto Global.
     Utiliza CreateView y extrae la lógica de negocio compleja 
@@ -1364,7 +1364,7 @@ class ProductoGlobalCrearView(BaseEstacionMixin, PermissionRequiredMixin, Audito
 
 
 
-class ProductoLocalListView(BaseEstacionMixin, PermissionRequiredMixin, ListView):
+class ProductoLocalListView(BaseEstacionMixin, CustomPermissionRequiredMixin, ListView):
     """
     Vista del Catálogo Local de Productos.
     Implementa ListView genérica, centralizando la lógica de filtrado
@@ -1474,7 +1474,7 @@ class ProductoLocalListView(BaseEstacionMixin, PermissionRequiredMixin, ListView
 
 
 
-class ProductoLocalEditView(BaseEstacionMixin, PermissionRequiredMixin, AuditoriaMixin, UpdateView):
+class ProductoLocalEditView(BaseEstacionMixin, CustomPermissionRequiredMixin, AuditoriaMixin, UpdateView):
     """
     Vista para editar un producto del catálogo local.
     Utiliza UpdateView y encapsula la lógica compleja de 
@@ -1577,7 +1577,7 @@ class ProductoLocalEditView(BaseEstacionMixin, PermissionRequiredMixin, Auditori
 
 
 
-class ProductoLocalDetalleView(BaseEstacionMixin, PermissionRequiredMixin, DetailView):
+class ProductoLocalDetalleView(BaseEstacionMixin, CustomPermissionRequiredMixin, DetailView):
     """
     Muestra los detalles de un Producto (Local y Global) y 
     lista todo el stock existente (Activos o Lotes) de ese 
@@ -1707,7 +1707,7 @@ class ProductoLocalDetalleView(BaseEstacionMixin, PermissionRequiredMixin, Detai
 
 
 
-class ProveedorListView(BaseEstacionMixin, PermissionRequiredMixin, ListView):
+class ProveedorListView(BaseEstacionMixin, CustomPermissionRequiredMixin, ListView):
     """
     Vista para listar Proveedores.
     Implementa ListView genérica, preservando la optimización de 
@@ -1816,7 +1816,7 @@ class ProveedorListView(BaseEstacionMixin, PermissionRequiredMixin, ListView):
 
 
 
-class ProveedorCrearView(BaseEstacionMixin, PermissionRequiredMixin, AuditoriaMixin, View):
+class ProveedorCrearView(BaseEstacionMixin, CustomPermissionRequiredMixin, AuditoriaMixin, View):
     """
     Vista para crear un Proveedor y su Contacto Principal simultáneamente.
     Manejo de múltiples formularios con transacción atómica
@@ -1906,7 +1906,7 @@ class ProveedorCrearView(BaseEstacionMixin, PermissionRequiredMixin, AuditoriaMi
 
 
 
-class ProveedorDetalleView(BaseEstacionMixin, PermissionRequiredMixin, DetailView):
+class ProveedorDetalleView(BaseEstacionMixin, CustomPermissionRequiredMixin, DetailView):
     """
     Vista de detalle de Proveedor.
     mplementa DetailView, optimizando la carga de relaciones (Globales y Locales)
@@ -1971,7 +1971,7 @@ class ProveedorDetalleView(BaseEstacionMixin, PermissionRequiredMixin, DetailVie
 
 
 
-class ContactoPersonalizadoCrearView(BaseEstacionMixin, PermissionRequiredMixin, AuditoriaMixin, CreateView):
+class ContactoPersonalizadoCrearView(BaseEstacionMixin, CustomPermissionRequiredMixin, AuditoriaMixin, CreateView):
     """
     Vista para crear un Contacto Personalizado.
     Utiliza CreateView con chequeo de pre-condiciones en dispatch,
@@ -2066,7 +2066,7 @@ class ContactoPersonalizadoCrearView(BaseEstacionMixin, PermissionRequiredMixin,
 
 
 
-class ContactoPersonalizadoEditarView(BaseEstacionMixin, PermissionRequiredMixin, AuditoriaMixin, UpdateView):
+class ContactoPersonalizadoEditarView(BaseEstacionMixin, CustomPermissionRequiredMixin, AuditoriaMixin, UpdateView):
     """
     Permite a una estación activa editar SU PROPIO ContactoProveedor
     específico (su 'ContactoPersonalizado').
@@ -2140,7 +2140,7 @@ class ContactoPersonalizadoEditarView(BaseEstacionMixin, PermissionRequiredMixin
 
 
 
-class StockActualListView(BaseEstacionMixin, PermissionRequiredMixin, TemplateView):
+class StockActualListView(BaseEstacionMixin, CustomPermissionRequiredMixin, TemplateView):
     """
     Vista unificada del stock actual (Activos + Lotes).
     Utiliza TemplateView como orquestador, delegando la complejidad
@@ -2317,7 +2317,7 @@ class StockActualListView(BaseEstacionMixin, PermissionRequiredMixin, TemplateVi
 
 
 
-class RecepcionStockView(BaseEstacionMixin, PermissionRequiredMixin, AuditoriaMixin, View):
+class RecepcionStockView(BaseEstacionMixin, CustomPermissionRequiredMixin, AuditoriaMixin, View):
     """
     Vista transaccional compleja para recepción de stock.
     Descompone la lógica monolítica en métodos de servicio privados,
@@ -2532,7 +2532,7 @@ class RecepcionStockView(BaseEstacionMixin, PermissionRequiredMixin, AuditoriaMi
 
 
 
-class AgregarStockACompartimentoView(BaseEstacionMixin, PermissionRequiredMixin, AuditoriaMixin, View):
+class AgregarStockACompartimentoView(BaseEstacionMixin, CustomPermissionRequiredMixin, AuditoriaMixin, View):
     """
     Vista para ingreso rápido de stock en compartimento.
     Gestiona transacciones atómicas, cumple reglas de negocio
@@ -2705,7 +2705,7 @@ def get_or_create_anulado_compartment(estacion: Estacion) -> Compartimento:
 
 
 
-class AnularExistenciaView(BaseEstacionMixin, PermissionRequiredMixin, StationInventoryObjectMixin, InventoryStateValidatorMixin, AuditoriaMixin, View):
+class AnularExistenciaView(BaseEstacionMixin, CustomPermissionRequiredMixin, StationInventoryObjectMixin, InventoryStateValidatorMixin, AuditoriaMixin, View):
     """
     Vista para anular existencia.
     Usa StationInventoryObjectMixin para cargar el ítem y
@@ -2797,7 +2797,7 @@ class AnularExistenciaView(BaseEstacionMixin, PermissionRequiredMixin, StationIn
 
 
 
-class AjustarStockLoteView(BaseEstacionMixin, PermissionRequiredMixin, InventoryStateValidatorMixin, SingleObjectMixin, AuditoriaMixin, FormView):
+class AjustarStockLoteView(BaseEstacionMixin, CustomPermissionRequiredMixin, InventoryStateValidatorMixin, SingleObjectMixin, AuditoriaMixin, FormView):
     """
     Vista para ajuste manual de stock de lotes (inventario cíclico).
     Combina FormView (para el formulario de ajuste) con 
@@ -2930,7 +2930,7 @@ class AjustarStockLoteView(BaseEstacionMixin, PermissionRequiredMixin, Inventory
 
 
 
-class BajaExistenciaView(BaseEstacionMixin, PermissionRequiredMixin, StationInventoryObjectMixin, InventoryStateValidatorMixin, AuditoriaMixin, FormView):
+class BajaExistenciaView(BaseEstacionMixin, CustomPermissionRequiredMixin, StationInventoryObjectMixin, InventoryStateValidatorMixin, AuditoriaMixin, FormView):
     """
     Vista para Dar de Baja una existencia.
     Utiliza StationInventoryObjectMixin para la carga segura del ítem,
@@ -3052,7 +3052,7 @@ def get_or_create_extraviado_compartment(estacion: Estacion) -> Compartimento:
 
 
 
-class ExtraviadoExistenciaView(BaseEstacionMixin, PermissionRequiredMixin, StationInventoryObjectMixin, InventoryStateValidatorMixin, AuditoriaMixin, FormView):
+class ExtraviadoExistenciaView(BaseEstacionMixin, CustomPermissionRequiredMixin, StationInventoryObjectMixin, InventoryStateValidatorMixin, AuditoriaMixin, FormView):
     """
     Vista para reportar una existencia como extraviada.
     Utiliza composición de mixins para manejo seguro de items,
@@ -3149,7 +3149,7 @@ class ExtraviadoExistenciaView(BaseEstacionMixin, PermissionRequiredMixin, Stati
 
 
 
-class ConsumirStockLoteView(BaseEstacionMixin, PermissionRequiredMixin, InventoryStateValidatorMixin, SingleObjectMixin, AuditoriaMixin, FormView):
+class ConsumirStockLoteView(BaseEstacionMixin, CustomPermissionRequiredMixin, InventoryStateValidatorMixin, SingleObjectMixin, AuditoriaMixin, FormView):
     """
     Vista para registrar consumo de stock (Salida por uso interno).
     Utiliza FormView, valida reglas de negocio (estados permitidos)
@@ -3262,7 +3262,7 @@ class ConsumirStockLoteView(BaseEstacionMixin, PermissionRequiredMixin, Inventor
 
 
 
-class TransferenciaExistenciaView(BaseEstacionMixin, PermissionRequiredMixin, StationInventoryObjectMixin, InventoryStateValidatorMixin, AuditoriaMixin, FormView):
+class TransferenciaExistenciaView(BaseEstacionMixin, CustomPermissionRequiredMixin, StationInventoryObjectMixin, InventoryStateValidatorMixin, AuditoriaMixin, FormView):
     """
     Vista para transferir existencias.
     Utiliza composición de Mixins para delegar la recuperación del ítem,
@@ -3389,7 +3389,7 @@ class TransferenciaExistenciaView(BaseEstacionMixin, PermissionRequiredMixin, St
 
 
 
-class CrearPrestamoView(BaseEstacionMixin, PermissionRequiredMixin, AuditoriaMixin, View):
+class CrearPrestamoView(BaseEstacionMixin, CustomPermissionRequiredMixin, AuditoriaMixin, View):
     """
     Vista para crear un Préstamo (Cabecera y Detalles).
     Manejo híbrido de Formulario + JSON, con lógica transaccional
@@ -3573,7 +3573,7 @@ class CrearPrestamoView(BaseEstacionMixin, PermissionRequiredMixin, AuditoriaMix
 
 
 
-class BuscarItemPrestamoJson(LoginRequiredMixin, ModuleAccessMixin, PermissionRequiredMixin, View):
+class BuscarItemPrestamoJson(LoginRequiredMixin, ModuleAccessMixin, CustomPermissionRequiredMixin, View):
     """
     API endpoint (solo GET) para buscar un ítem por su código
     y verificar si está disponible para préstamo.
@@ -3632,7 +3632,7 @@ class BuscarItemPrestamoJson(LoginRequiredMixin, ModuleAccessMixin, PermissionRe
 
 
 
-class HistorialPrestamosView(BaseEstacionMixin, PermissionRequiredMixin, ListView):
+class HistorialPrestamosView(BaseEstacionMixin, CustomPermissionRequiredMixin, ListView):
     """
     Vista para listar el historial de préstamos.
     Utiliza ListView genérica y BaseEstacionMixin para obtener 
@@ -3690,7 +3690,7 @@ class HistorialPrestamosView(BaseEstacionMixin, PermissionRequiredMixin, ListVie
 
 
 
-class GestionarDevolucionView(BaseEstacionMixin, PermissionRequiredMixin, AuditoriaMixin, View):
+class GestionarDevolucionView(BaseEstacionMixin, CustomPermissionRequiredMixin, AuditoriaMixin, View):
     """
     Vista para gestionar devoluciones de préstamos.
     Descompone la lógica de devolución masiva en servicios
@@ -3857,7 +3857,7 @@ class GestionarDevolucionView(BaseEstacionMixin, PermissionRequiredMixin, Audito
 
 
 
-class DestinatarioListView(BaseEstacionMixin, PermissionRequiredMixin, ListView):
+class DestinatarioListView(BaseEstacionMixin, CustomPermissionRequiredMixin, ListView):
     """
     Vista para listar Destinatarios.
     Nivel Senior: Utiliza ListView genérica para manejar paginación estándar y
@@ -3911,7 +3911,7 @@ class DestinatarioListView(BaseEstacionMixin, PermissionRequiredMixin, ListView)
 
 
 
-class DestinatarioCreateView(BaseEstacionMixin, PermissionRequiredMixin, AuditoriaMixin, CreateView):
+class DestinatarioCreateView(BaseEstacionMixin, CustomPermissionRequiredMixin, AuditoriaMixin, CreateView):
     """
     Vista para crear un nuevo destinatario.
     Implementa CreateView genérica, inyección automática de dependencias
@@ -3976,7 +3976,7 @@ class DestinatarioCreateView(BaseEstacionMixin, PermissionRequiredMixin, Auditor
 
 
 
-class DestinatarioEditView(BaseEstacionMixin, PermissionRequiredMixin, AuditoriaMixin, UpdateView):
+class DestinatarioEditView(BaseEstacionMixin, CustomPermissionRequiredMixin, AuditoriaMixin, UpdateView):
     """
     Vista para editar un destinatario existente.
     Utiliza UpdateView para simplificar el ciclo de vida (GET/POST),
@@ -4047,7 +4047,7 @@ class DestinatarioEditView(BaseEstacionMixin, PermissionRequiredMixin, Auditoria
 
 
 
-class MovimientoInventarioListView(BaseEstacionMixin, PermissionRequiredMixin, ListView):
+class MovimientoInventarioListView(BaseEstacionMixin, CustomPermissionRequiredMixin, ListView):
     """
     Vista de Historial de Movimientos.
     Implementa ListView genérica con filtrado dinámico avanzado,
@@ -4120,7 +4120,7 @@ class MovimientoInventarioListView(BaseEstacionMixin, PermissionRequiredMixin, L
 
 
 
-class GenerarQRView(BaseEstacionMixin, PermissionRequiredMixin, View):
+class GenerarQRView(BaseEstacionMixin, CustomPermissionRequiredMixin, View):
     """
     Genera un código QR dinámico en formato PNG.
     Nivel Senior: Implementa FileResponse para manejo eficiente de binarios
@@ -4170,7 +4170,7 @@ class GenerarQRView(BaseEstacionMixin, PermissionRequiredMixin, View):
 
 
 
-class ImprimirEtiquetasView(BaseEstacionMixin, PermissionRequiredMixin, TemplateView):
+class ImprimirEtiquetasView(BaseEstacionMixin, CustomPermissionRequiredMixin, TemplateView):
     """
     Vista para imprimir etiquetas QR.
     Implementa TemplateView, maneja correctamente UUIDs en la URL

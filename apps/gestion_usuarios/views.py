@@ -6,7 +6,7 @@ from django.views.generic import ListView
 from django.contrib import messages
 from django.contrib.auth import login
 from django.contrib.auth.models import Permission
-from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin, UserPassesTestMixin
+from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.contrib.auth.forms import PasswordResetForm
 from django.db import IntegrityError, transaction
 from django.db.models import Q, Count, ProtectedError
@@ -24,7 +24,7 @@ from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from .models import Usuario, Membresia, Rol, RegistroActividad
 from .forms import FormularioCrearUsuario, FormularioEditarUsuario, FormularioRol
 from .mixins import MembresiaGestionableMixin
-from apps.common.mixins import BaseEstacionMixin, AuditoriaMixin
+from apps.common.mixins import BaseEstacionMixin, AuditoriaMixin, CustomPermissionRequiredMixin
 from .utils import generar_contraseña_segura
 
 
@@ -141,7 +141,7 @@ class UsuarioInicioView(BaseEstacionMixin, View):
 
 
 
-class UsuarioListaView(BaseEstacionMixin, PermissionRequiredMixin, View):
+class UsuarioListaView(BaseEstacionMixin, CustomPermissionRequiredMixin, View):
     '''Vista para listar usuarios con membresías vigentes en la estación. Se excluyen membresías con el estado "FINALIZADO".'''
 
     template_name = "gestion_usuarios/pages/lista_usuarios.html"
@@ -235,7 +235,7 @@ class UsuarioListaView(BaseEstacionMixin, PermissionRequiredMixin, View):
 
 
 
-class UsuarioObtenerView(BaseEstacionMixin, PermissionRequiredMixin, MembresiaGestionableMixin, View):
+class UsuarioObtenerView(BaseEstacionMixin, CustomPermissionRequiredMixin, MembresiaGestionableMixin, View):
     """
     Vista para obtener el detalle de la última membresía 
     (activa/inactiva) de un usuario en la estación actual.
@@ -288,7 +288,7 @@ class UsuarioObtenerView(BaseEstacionMixin, PermissionRequiredMixin, MembresiaGe
 
 
 
-class UsuarioAgregarView(BaseEstacionMixin, PermissionRequiredMixin, AuditoriaMixin, View):
+class UsuarioAgregarView(BaseEstacionMixin, CustomPermissionRequiredMixin, AuditoriaMixin, View):
     """
     Vista para agregar un usuario existente (sin membresía activa)
     a la estación actual.
@@ -362,7 +362,7 @@ class UsuarioAgregarView(BaseEstacionMixin, PermissionRequiredMixin, AuditoriaMi
 
 
 
-class UsuarioCrearView(BaseEstacionMixin, PermissionRequiredMixin, AuditoriaMixin, View):
+class UsuarioCrearView(BaseEstacionMixin, CustomPermissionRequiredMixin, AuditoriaMixin, View):
     """
     Vista para crear un nuevo Usuario y su Membresía inicial.
     Refactorizada con el patrón de helpers de CBV.
@@ -463,7 +463,7 @@ class UsuarioCrearView(BaseEstacionMixin, PermissionRequiredMixin, AuditoriaMixi
 
 
 
-class UsuarioEditarView(BaseEstacionMixin, PermissionRequiredMixin, MembresiaGestionableMixin, AuditoriaMixin, View):
+class UsuarioEditarView(BaseEstacionMixin, CustomPermissionRequiredMixin, MembresiaGestionableMixin, AuditoriaMixin, View):
     """
     Vista para editar la información personal de un Usuario.
     
@@ -585,7 +585,7 @@ class UsuarioEditarView(BaseEstacionMixin, PermissionRequiredMixin, MembresiaGes
 
 
 
-class UsuarioDesactivarView(BaseEstacionMixin, PermissionRequiredMixin, AuditoriaMixin, View):
+class UsuarioDesactivarView(BaseEstacionMixin, CustomPermissionRequiredMixin, AuditoriaMixin, View):
     """
     Vista (solo POST) para desactivar la membresía de un usuario
     (cambia su estado a 'INACTIVO').
@@ -657,7 +657,7 @@ class UsuarioDesactivarView(BaseEstacionMixin, PermissionRequiredMixin, Auditori
 
 
 
-class UsuarioActivarView(BaseEstacionMixin, PermissionRequiredMixin, AuditoriaMixin, View):
+class UsuarioActivarView(BaseEstacionMixin, CustomPermissionRequiredMixin, AuditoriaMixin, View):
     """
     Vista (solo POST) para activar la membresía de un usuario
     (cambia su estado a 'ACTIVO').
@@ -729,7 +729,7 @@ class UsuarioActivarView(BaseEstacionMixin, PermissionRequiredMixin, AuditoriaMi
 
 
 
-class RolListaView(BaseEstacionMixin, PermissionRequiredMixin, View):
+class RolListaView(BaseEstacionMixin, CustomPermissionRequiredMixin, View):
     """
     Muestra una lista de roles (globales y de la estación)
     con filtros de búsqueda y tipo.
@@ -797,7 +797,7 @@ class RolListaView(BaseEstacionMixin, PermissionRequiredMixin, View):
 
 
 
-class RolObtenerView(BaseEstacionMixin, PermissionRequiredMixin, View):
+class RolObtenerView(BaseEstacionMixin, CustomPermissionRequiredMixin, View):
     """
     Vista para obtener el detalle de un rol.
     
@@ -931,7 +931,7 @@ class RolObtenerView(BaseEstacionMixin, PermissionRequiredMixin, View):
 
 
 
-class RolEditarView(BaseEstacionMixin, PermissionRequiredMixin, AuditoriaMixin, View):
+class RolEditarView(BaseEstacionMixin, CustomPermissionRequiredMixin, AuditoriaMixin, View):
     """
     Vista para editar roles (nombre y descripción).
     
@@ -1037,7 +1037,7 @@ class RolEditarView(BaseEstacionMixin, PermissionRequiredMixin, AuditoriaMixin, 
 
 
 
-class RolCrearView(BaseEstacionMixin, PermissionRequiredMixin, AuditoriaMixin, View):
+class RolCrearView(BaseEstacionMixin, CustomPermissionRequiredMixin, AuditoriaMixin, View):
     """
     Vista para crear roles personalizados.
     Los roles se asocian automáticamente a la estación activa del usuario.
@@ -1117,7 +1117,7 @@ class RolCrearView(BaseEstacionMixin, PermissionRequiredMixin, AuditoriaMixin, V
 
 
 
-class RolAsignarPermisosView(BaseEstacionMixin, PermissionRequiredMixin, AuditoriaMixin, View):
+class RolAsignarPermisosView(BaseEstacionMixin, CustomPermissionRequiredMixin, AuditoriaMixin, View):
     """
     Vista para asignar permisos a un rol.
     Muestra una lista de TODOS los permisos del sistema agrupados por módulo.
@@ -1246,7 +1246,7 @@ class RolAsignarPermisosView(BaseEstacionMixin, PermissionRequiredMixin, Auditor
 
 
 
-class RolEliminarView(BaseEstacionMixin, PermissionRequiredMixin, AuditoriaMixin, View):
+class RolEliminarView(BaseEstacionMixin, CustomPermissionRequiredMixin, AuditoriaMixin, View):
     """
     Vista para eliminar un rol personalizado.
     
@@ -1313,7 +1313,7 @@ class RolEliminarView(BaseEstacionMixin, PermissionRequiredMixin, AuditoriaMixin
 
 
 
-class UsuarioAsignarRolesView(BaseEstacionMixin, PermissionRequiredMixin, MembresiaGestionableMixin, AuditoriaMixin, View):
+class UsuarioAsignarRolesView(BaseEstacionMixin, CustomPermissionRequiredMixin, MembresiaGestionableMixin, AuditoriaMixin, View):
     """
     Vista para gestionar los ROLES de un usuario dentro de la estación activa.
     
@@ -1445,7 +1445,7 @@ class UsuarioAsignarRolesView(BaseEstacionMixin, PermissionRequiredMixin, Membre
 
 
 
-class UsuarioRestablecerContrasena(BaseEstacionMixin, PermissionRequiredMixin, MembresiaGestionableMixin, AuditoriaMixin, View):
+class UsuarioRestablecerContrasena(BaseEstacionMixin, CustomPermissionRequiredMixin, MembresiaGestionableMixin, AuditoriaMixin, View):
     """
     Vista para que un administrador inicie el proceso de restablecimiento
     de contraseña para otro usuario de su estación.
@@ -1521,7 +1521,7 @@ class UsuarioRestablecerContrasena(BaseEstacionMixin, PermissionRequiredMixin, M
 
 
 
-class UsuarioVerPermisos(BaseEstacionMixin, PermissionRequiredMixin, MembresiaGestionableMixin, View):
+class UsuarioVerPermisos(BaseEstacionMixin, CustomPermissionRequiredMixin, MembresiaGestionableMixin, View):
     """
     Muestra una lista consolidada de solo lectura de todos los permisos 
     que un usuario posee en la estación activa (suma de sus roles).
@@ -1600,7 +1600,7 @@ class UsuarioVerPermisos(BaseEstacionMixin, PermissionRequiredMixin, MembresiaGe
 
 
 
-class UsuarioFinalizarMembresiaView(BaseEstacionMixin, PermissionRequiredMixin, MembresiaGestionableMixin, AuditoriaMixin, View):
+class UsuarioFinalizarMembresiaView(BaseEstacionMixin, CustomPermissionRequiredMixin, MembresiaGestionableMixin, AuditoriaMixin, View):
     """
     Muestra una página de confirmación y gestiona la finalización
     de la membresía de un usuario en la estación activa.
@@ -1674,7 +1674,7 @@ class UsuarioFinalizarMembresiaView(BaseEstacionMixin, PermissionRequiredMixin, 
 
 
 
-class HistorialMembresiasView(BaseEstacionMixin, PermissionRequiredMixin, ListView):
+class HistorialMembresiasView(BaseEstacionMixin, CustomPermissionRequiredMixin, ListView):
     """
     Muestra un historial paginado de todas las membresías FINALIZADAS
     de la estación activa.
@@ -1752,7 +1752,7 @@ class HistorialMembresiasView(BaseEstacionMixin, PermissionRequiredMixin, ListVi
 
 
 
-class RegistroActividadView(BaseEstacionMixin, PermissionRequiredMixin, View):
+class RegistroActividadView(BaseEstacionMixin, CustomPermissionRequiredMixin, View):
     """
     Muestra el "Feed de Actividad" (legible por humanos)
     para la estación activa del usuario.
@@ -1845,7 +1845,7 @@ class RegistroActividadView(BaseEstacionMixin, PermissionRequiredMixin, View):
 
 
 
-class UsuarioForzarCierreSesionView(BaseEstacionMixin, PermissionRequiredMixin, MembresiaGestionableMixin, AuditoriaMixin, View):
+class UsuarioForzarCierreSesionView(BaseEstacionMixin, CustomPermissionRequiredMixin, MembresiaGestionableMixin, AuditoriaMixin, View):
     """
     Elimina todas las sesiones activas de un usuario específico
     usando 'django-user-sessions' para un rendimiento óptimo (O(1)).

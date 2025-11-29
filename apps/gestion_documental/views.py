@@ -1,12 +1,11 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.views import View
 from django.contrib import messages
-from django.contrib.auth.mixins import PermissionRequiredMixin
 from django.db.models import Count, Q
 from django.core.paginator import Paginator
 
 # --- Imports del Proyecto ---
-from apps.common.mixins import BaseEstacionMixin, AuditoriaMixin
+from apps.common.mixins import BaseEstacionMixin, AuditoriaMixin, CustomPermissionRequiredMixin
 
 from .models import DocumentoHistorico, TipoDocumento
 from .forms import DocumentoHistoricoForm
@@ -44,11 +43,11 @@ class DocumentoInicioView(BaseEstacionMixin, View):
 
 
 
-class ListaDocumentoView(BaseEstacionMixin, PermissionRequiredMixin, View):
+class ListaDocumentoView(BaseEstacionMixin, CustomPermissionRequiredMixin, View):
     """
     Listado principal de documentos con filtros.
     """
-    permission_required = 'gestion_documental.accion_gestion_documental_ver_documentos'
+    permission_required = 'gestion_usuarios.accion_gestion_documental_ver_documentos'
 
     def get(self, request):
         try:
@@ -101,11 +100,11 @@ class ListaDocumentoView(BaseEstacionMixin, PermissionRequiredMixin, View):
 
 
 
-class SubirDocumentoView(BaseEstacionMixin, AuditoriaMixin, PermissionRequiredMixin, View):
+class SubirDocumentoView(BaseEstacionMixin, AuditoriaMixin, CustomPermissionRequiredMixin, View):
     """
     Formulario para cargar nuevos documentos históricos (PDF, Imágenes).
     """
-    permission_required = 'gestion_documental.accion_gestion_documental_gestionar_documentos'
+    permission_required = 'gestion_usuarios.accion_gestion_documental_gestionar_documentos'
 
     def get(self, request):
         form = DocumentoHistoricoForm()
@@ -147,11 +146,11 @@ class SubirDocumentoView(BaseEstacionMixin, AuditoriaMixin, PermissionRequiredMi
 
 
 
-class EliminarDocumentoView(BaseEstacionMixin, AuditoriaMixin, PermissionRequiredMixin, View):
+class EliminarDocumentoView(BaseEstacionMixin, AuditoriaMixin, CustomPermissionRequiredMixin, View):
     """
     Permite eliminar un documento (Solo si se tiene el permiso de gestionar).
     """
-    permission_required = 'gestion_documental.accion_gestion_documental_gestionar_documentos'
+    permission_required = 'gestion_usuarios.accion_gestion_documental_gestionar_documentos'
 
     def get(self, request, pk):
         documento = get_object_or_404(DocumentoHistorico, pk=pk, estacion=self.estacion_activa)
