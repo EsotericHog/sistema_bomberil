@@ -124,6 +124,11 @@ class BuscarUsuarioAPIView(APIView):
                 'status': 'NO_EXISTE',
                 'mensaje': 'Usuario no encontrado. Puede crearlo y asignarlo a la compañía.'
             })
+        except Exception as e:
+            return Response(
+                {'error': f'Error interno al buscar usuario: {str(e)}'},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
 
 
 
@@ -188,13 +193,20 @@ class ComunasPorRegionAPIView(APIView):
     permission_classes = [IsAuthenticated]
     
     def get(self, request, region_id, *args, **kwargs):
-        # Filtra las comunas que pertenecen a la region_id especificada en la URL
-        comunas = Comuna.objects.filter(region_id=region_id).order_by('nombre')
+        try:
+            # Filtra las comunas que pertenecen a la region_id especificada en la URL
+            comunas = Comuna.objects.filter(region_id=region_id).order_by('nombre')
         
-        # Si no se encuentran comunas, devuelve una lista vacía (lo cual es correcto)
-        serializer = ComunaSerializer(comunas, many=True)
+            # Si no se encuentran comunas, devuelve una lista vacía (lo cual es correcto)
+            serializer = ComunaSerializer(comunas, many=True)
         
-        return Response(serializer.data, status=status.HTTP_200_OK)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        
+        except Exception as e:
+            return Response(
+                {'error': f'Error al cargar comunas: {str(e)}'}, 
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
 
 
 
@@ -208,56 +220,63 @@ class InventarioGraficoExistenciasCategoriaAPIView(APIView):
     permission_classes = [IsAuthenticated, IsEstacionActiva]
     
     def get(self, request, format=None):
-        # 1. Obtener Estación Activa de la sesión
-        estacion = request.estacion_activa
+        try:
+            # 1. Obtener Estación Activa de la sesión
+            estacion = request.estacion_activa
 
-        # 2. Agrupar Activos por Categoría
-        # Ruta: Activo -> Producto -> ProductoGlobal -> Categoria -> nombre
-        activos_por_categoria = (
-            Activo.objects
-            .filter(estacion=estacion)
-            .values(nombre_categoria=F('producto__producto_global__categoria__nombre'))
-            .annotate(total=Count('id'))
-        )
+            # 2. Agrupar Activos por Categoría
+            # Ruta: Activo -> Producto -> ProductoGlobal -> Categoria -> nombre
+            activos_por_categoria = (
+                Activo.objects
+                .filter(estacion=estacion)
+                .values(nombre_categoria=F('producto__producto_global__categoria__nombre'))
+                .annotate(total=Count('id'))
+            )
 
-        # 3. Agrupar Lotes por Categoría
-        # Ruta: LoteInsumo -> Producto -> ProductoGlobal -> Categoria -> nombre
-        # NOTA: Para lotes, ¿queremos contar lotes O sumar cantidades?
-        # Generalmente para inventario masivo se suman cantidades.
-        # Si prefieres sumar cantidades, usa Sum('cantidad') en lugar de Count('id').
-        # Por ahora usaremos Count('id') para ser consistentes con Activos (1 activo = 1 unidad).
-        lotes_por_categoria = (
-            LoteInsumo.objects
-            .filter(compartimento__ubicacion__estacion=estacion)
-            .values(nombre_categoria=F('producto__producto_global__categoria__nombre'))
-            .annotate(total=Sum('cantidad')) # Sumamos la cantidad real de insumos
-        )
+            # 3. Agrupar Lotes por Categoría
+            # Ruta: LoteInsumo -> Producto -> ProductoGlobal -> Categoria -> nombre
+            # NOTA: Para lotes, ¿queremos contar lotes O sumar cantidades?
+            # Generalmente para inventario masivo se suman cantidades.
+            # Si prefieres sumar cantidades, usa Sum('cantidad') en lugar de Count('id').
+            # Por ahora usaremos Count('id') para ser consistentes con Activos (1 activo = 1 unidad).
+            lotes_por_categoria = (
+                LoteInsumo.objects
+                .filter(compartimento__ubicacion__estacion=estacion)
+                .values(nombre_categoria=F('producto__producto_global__categoria__nombre'))
+                .annotate(total=Sum('cantidad')) # Sumamos la cantidad real de insumos
+            )
 
-        # 4. Combinar resultados en un diccionario para sumarlos
-        conteo_final = {}
+            # 4. Combinar resultados en un diccionario para sumarlos
+            conteo_final = {}
 
-        # Procesar Activos
-        for item in activos_por_categoria:
-            cat = item['nombre_categoria']
-            total = item['total']
-            conteo_final[cat] = conteo_final.get(cat, 0) + total
+            # Procesar Activos
+            for item in activos_por_categoria:
+                cat = item['nombre_categoria']
+                total = item['total']
+                conteo_final[cat] = conteo_final.get(cat, 0) + total
 
-        # Procesar Lotes (sumándolos a lo que ya exista)
-        for item in lotes_por_categoria:
-            cat = item['nombre_categoria']
-            total = item['total'] or 0 # Asegurar que no sea None si Sum devuelve null
-            conteo_final[cat] = conteo_final.get(cat, 0) + total
+            # Procesar Lotes (sumándolos a lo que ya exista)
+            for item in lotes_por_categoria:
+                cat = item['nombre_categoria']
+                total = item['total'] or 0 # Asegurar que no sea None si Sum devuelve null
+                conteo_final[cat] = conteo_final.get(cat, 0) + total
 
-        # 5. Formatear para Chart.js (labels y data separados)
-        labels = list(conteo_final.keys())
-        values = list(conteo_final.values())
+            # 5. Formatear para Chart.js (labels y data separados)
+            labels = list(conteo_final.keys())
+            values = list(conteo_final.values())
 
-        data = {
-            "labels": labels,
-            "values": values
-        }
+            data = {
+                "labels": labels,
+                "values": values
+            }
 
-        return Response(data)
+            return Response(data)
+        
+        except Exception as e:
+            return Response(
+                {'error': f'Error generando gráfico: {str(e)}'}, 
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
 
 
 
@@ -270,36 +289,43 @@ class InventarioGraficoEstadosAPIView(APIView):
     permission_classes = [IsAuthenticated, IsEstacionActiva]
 
     def get(self, request, format=None):
-        estacion = request.estacion_activa
+        try:
+            estacion = request.estacion_activa
 
-        # Agrupamos por Tipo de Estado
-        # Ruta: Activo -> Estado -> TipoEstado -> nombre
-        activos_por_estado = (
-            Activo.objects.filter(estacion=estacion)
-            .values(nombre_estado=F('estado__tipo_estado__nombre'))
-            .annotate(total=Count('id'))
-        )
+            # Agrupamos por Tipo de Estado
+            # Ruta: Activo -> Estado -> TipoEstado -> nombre
+            activos_por_estado = (
+                Activo.objects.filter(estacion=estacion)
+                .values(nombre_estado=F('estado__tipo_estado__nombre'))
+                .annotate(total=Count('id'))
+            )
 
-        # Ruta: LoteInsumo -> Estado -> TipoEstado -> nombre
-        lotes_por_estado = (
-            LoteInsumo.objects.filter(compartimento__ubicacion__estacion=estacion)
-            .values(nombre_estado=F('estado__tipo_estado__nombre'))
-            .annotate(total=Sum('cantidad'))
-        )
+            # Ruta: LoteInsumo -> Estado -> TipoEstado -> nombre
+            lotes_por_estado = (
+                LoteInsumo.objects.filter(compartimento__ubicacion__estacion=estacion)
+                .values(nombre_estado=F('estado__tipo_estado__nombre'))
+                .annotate(total=Sum('cantidad'))
+            )
 
-        conteo_final = {}
-        for item in activos_por_estado:
-             cat = item['nombre_estado'] or "Sin Estado" # Manejo de posibles nulos
-             conteo_final[cat] = conteo_final.get(cat, 0) + item['total']
+            conteo_final = {}
+            for item in activos_por_estado:
+                 cat = item['nombre_estado'] or "Sin Estado" # Manejo de posibles nulos
+                 conteo_final[cat] = conteo_final.get(cat, 0) + item['total']
 
-        for item in lotes_por_estado:
-             cat = item['nombre_estado'] or "Sin Estado"
-             conteo_final[cat] = conteo_final.get(cat, 0) + (item['total'] or 0)
+            for item in lotes_por_estado:
+                 cat = item['nombre_estado'] or "Sin Estado"
+                 conteo_final[cat] = conteo_final.get(cat, 0) + (item['total'] or 0)
 
-        return Response({
-            "labels": list(conteo_final.keys()),
-            "values": list(conteo_final.values())
-        })
+            return Response({
+                "labels": list(conteo_final.keys()),
+                "values": list(conteo_final.values())
+            })
+        
+        except Exception as e:
+            return Response(
+                {'error': f'Error generando gráfico: {str(e)}'}, 
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
 
 
 
@@ -471,36 +497,40 @@ class MantenimientoAnadirActivoEnPlanAPIView(APIView):
     permission_classes = [IsAuthenticated, IsEstacionActiva, CanGestionarPlanes]
 
     def post(self, request, plan_pk):
-        estacion = request.estacion_activa
-        plan = get_object_or_404(PlanMantenimiento, pk=plan_pk, estacion=estacion)
-        activo_id = request.data.get('activo_id')
+        try:
+            estacion = request.estacion_activa
+            plan = get_object_or_404(PlanMantenimiento, pk=plan_pk, estacion=estacion)
+            activo_id = request.data.get('activo_id')
 
-        if not activo_id:
-            return Response({'error': 'Falta activo_id'}, status=status.HTTP_400_BAD_REQUEST)
+            if not activo_id:
+                return Response({'error': 'Falta activo_id'}, status=status.HTTP_400_BAD_REQUEST)
 
-        activo = get_object_or_404(Activo, pk=activo_id, estacion=estacion)
+            activo = get_object_or_404(Activo, pk=activo_id, estacion=estacion)
 
-        # Lógica de Negocio
-        config, created = PlanActivoConfig.objects.get_or_create(
-            plan=plan,
-            activo=activo,
-            defaults={
-                'horas_uso_en_ultima_mantencion': activo.horas_uso_totales 
-            }
-        )
+            # Lógica de Negocio
+            config, created = PlanActivoConfig.objects.get_or_create(
+                plan=plan,
+                activo=activo,
+                defaults={
+                    'horas_uso_en_ultima_mantencion': activo.horas_uso_totales 
+                }
+            )
 
-        if not created:
-            return Response({'message': 'El activo ya está en el plan'}, status=status.HTTP_400_BAD_REQUEST)
+            if not created:
+                return Response({'message': 'El activo ya está en el plan'}, status=status.HTTP_400_BAD_REQUEST)
 
-        # --- AUDITORÍA INCREMENTAL ---
-        # No inundamos el log. Agrupamos.
-        auditar_modificacion_incremental(
-            request=request,
-            plan=plan,
-            accion_detalle=f"Agregó activo: {activo.codigo_activo}"
-        )
+            # --- AUDITORÍA INCREMENTAL ---
+            # No inundamos el log. Agrupamos.
+            auditar_modificacion_incremental(
+                request=request,
+                plan=plan,
+                accion_detalle=f"Agregó activo: {activo.codigo_activo}"
+            )
 
-        return Response({'status': 'ok', 'message': f"Activo {activo.codigo_activo} añadido."}, status=status.HTTP_201_CREATED)
+            return Response({'status': 'ok', 'message': f"Activo {activo.codigo_activo} añadido."}, status=status.HTTP_201_CREATED)
+        
+        except Exception as e:
+            return Response({'error': f'Error al añadir activo: {str(e)}'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 
@@ -512,24 +542,28 @@ class MantenimientoQuitarActivoDePlanAPIView(APIView):
     permission_classes = [IsAuthenticated, IsEstacionActiva, CanGestionarPlanes]
 
     def delete(self, request, pk):
-        estacion = request.estacion_activa
-        
-        # Buscamos la configuración asegurando estación
-        config = get_object_or_404(PlanActivoConfig, pk=pk, plan__estacion=estacion)
-        
-        plan = config.plan
-        activo_codigo = config.activo.codigo_activo
-        
-        config.delete()
+        try:
+            estacion = request.estacion_activa
 
-        # --- AUDITORÍA INCREMENTAL ---
-        auditar_modificacion_incremental(
-            request=request,
-            plan=plan,
-            accion_detalle=f"Retiró activo: {activo_codigo}"
-        )
+            # Buscamos la configuración asegurando estación
+            config = get_object_or_404(PlanActivoConfig, pk=pk, plan__estacion=estacion)
 
-        return Response({'status': 'ok', 'message': f"Activo {activo_codigo} removido."}, status=status.HTTP_200_OK)
+            plan = config.plan
+            activo_codigo = config.activo.codigo_activo
+
+            config.delete()
+
+            # --- AUDITORÍA INCREMENTAL ---
+            auditar_modificacion_incremental(
+                request=request,
+                plan=plan,
+                accion_detalle=f"Retiró activo: {activo_codigo}"
+            )
+
+            return Response({'status': 'ok', 'message': f"Activo {activo_codigo} removido."}, status=status.HTTP_200_OK)
+        
+        except Exception as e:
+            return Response({'error': f'Error al quitar activo: {str(e)}'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 
@@ -542,30 +576,34 @@ class MantenimientoTogglePlanActivoAPIView(AuditoriaMixin, APIView):
     permission_classes = [IsAuthenticated, IsEstacionActiva, CanGestionarPlanes]
 
     def post(self, request, pk):
-        estacion = request.estacion_activa
-        # Buscamos el plan
-        plan = get_object_or_404(PlanMantenimiento, pk=pk, estacion=estacion)
+        try:
+            estacion = request.estacion_activa
+            # Buscamos el plan
+            plan = get_object_or_404(PlanMantenimiento, pk=pk, estacion=estacion)
+
+            # Toggle
+            plan.activo_en_sistema = not plan.activo_en_sistema
+            plan.save(update_fields=['activo_en_sistema'])
+
+            estado_texto = "activó" if plan.activo_en_sistema else "desactivó"
+
+            # --- AUDITORÍA ---
+            # 2. Usamos el método del Mixin para consistencia
+            self.auditar(
+                verbo=f"{estado_texto} la ejecución automática del plan",
+                objetivo=plan,
+                objetivo_repr=plan.nombre,
+                detalles={'nuevo_estado': plan.activo_en_sistema}
+            )
+
+            return Response({
+                'status': 'ok',
+                'nuevo_estado': plan.activo_en_sistema,
+                'mensaje': f'Plan {estado_texto.lower()} correctamente.'
+            })
         
-        # Toggle
-        plan.activo_en_sistema = not plan.activo_en_sistema
-        plan.save(update_fields=['activo_en_sistema'])
-        
-        estado_texto = "activó" if plan.activo_en_sistema else "desactivó"
-        
-        # --- AUDITORÍA ---
-        # 2. Usamos el método del Mixin para consistencia
-        self.auditar(
-            verbo=f"{estado_texto} la ejecución automática del plan",
-            objetivo=plan,
-            objetivo_repr=plan.nombre,
-            detalles={'nuevo_estado': plan.activo_en_sistema}
-        )
-        
-        return Response({
-            'status': 'ok',
-            'nuevo_estado': plan.activo_en_sistema,
-            'mensaje': f'Plan {estado_texto.lower()} correctamente.'
-        })
+        except Exception as e:
+            return Response({'error': f'Error al cambiar estado: {str(e)}'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 
@@ -578,61 +616,65 @@ class MantenimientoCambiarEstadoOrdenAPIView(AuditoriaMixin, APIView):
     permission_classes = [IsAuthenticated, IsEstacionActiva, CanGestionarOrdenes]
 
     def post(self, request, pk):
-        estacion = request.estacion_activa
-        orden = get_object_or_404(OrdenMantenimiento, pk=pk, estacion=estacion)
-        accion = request.data.get('accion')
-        verbo_auditoria = ""
+        try:
+            estacion = request.estacion_activa
+            orden = get_object_or_404(OrdenMantenimiento, pk=pk, estacion=estacion)
+            accion = request.data.get('accion')
+            verbo_auditoria = ""
+
+            if accion == 'iniciar':
+                if orden.estado != OrdenMantenimiento.EstadoOrden.PENDIENTE:
+                    return Response({'message': 'La orden no está pendiente.'}, status=status.HTTP_400_BAD_REQUEST)
+
+                # Validación de orden vacía
+                if orden.activos_afectados.count() == 0:
+                    return Response({'status': 'error', 'message': 'No se puede iniciar una orden sin activos.'}, status=status.HTTP_400_BAD_REQUEST)
+
+                orden.estado = OrdenMantenimiento.EstadoOrden.EN_CURSO
+                orden.save()
+                verbo_auditoria = "Inició la ejecución de la Orden de Mantenimiento"
+
+                # Poner activos en "EN REPARACIÓN"
+                try:
+                    estado_reparacion = Estado.objects.get(nombre__iexact="EN REPARACIÓN")
+                    orden.activos_afectados.update(estado=estado_reparacion)
+                except Estado.DoesNotExist:
+                    pass
+
+            elif accion == 'finalizar':
+                orden.estado = OrdenMantenimiento.EstadoOrden.REALIZADA
+                orden.fecha_cierre = timezone.now()
+                orden.save()
+                verbo_auditoria = "Finalizó exitosamente la Orden de Mantenimiento"
+
+            elif accion == 'cancelar':
+                orden.estado = OrdenMantenimiento.EstadoOrden.CANCELADA
+                orden.fecha_cierre = timezone.now()
+                orden.save()
+                verbo_auditoria = "Canceló la Orden de Mantenimiento"
+
+                # Devolver activos a "DISPONIBLE"
+                try:
+                    estado_disponible = Estado.objects.get(nombre__iexact="DISPONIBLE")
+                    orden.activos_afectados.update(estado=estado_disponible)
+                except Estado.DoesNotExist:
+                    pass
+
+            else:
+                return Response({'message': 'Acción no válida.'}, status=status.HTTP_400_BAD_REQUEST)
+
+            # --- AUDITORÍA (Cambio de Estado - Registro Único) ---
+            self.auditar(
+                verbo=verbo_auditoria,
+                objetivo=orden,
+                objetivo_repr=f"Orden #{orden.id} ({orden.tipo_orden})",
+                detalles={'nuevo_estado': orden.estado}
+            )
+
+            return Response({'status': 'ok', 'message': 'Estado actualizado.'})
         
-        if accion == 'iniciar':
-            if orden.estado != OrdenMantenimiento.EstadoOrden.PENDIENTE:
-                return Response({'message': 'La orden no está pendiente.'}, status=status.HTTP_400_BAD_REQUEST)
-            
-            # Validación de orden vacía
-            if orden.activos_afectados.count() == 0:
-                return Response({'status': 'error', 'message': 'No se puede iniciar una orden sin activos.'}, status=status.HTTP_400_BAD_REQUEST)
-            
-            orden.estado = OrdenMantenimiento.EstadoOrden.EN_CURSO
-            orden.save()
-            verbo_auditoria = "Inició la ejecución de la Orden de Mantenimiento"
-
-            # Poner activos en "EN REPARACIÓN"
-            try:
-                estado_reparacion = Estado.objects.get(nombre__iexact="EN REPARACIÓN")
-                orden.activos_afectados.update(estado=estado_reparacion)
-            except Estado.DoesNotExist:
-                pass
-
-        elif accion == 'finalizar':
-            orden.estado = OrdenMantenimiento.EstadoOrden.REALIZADA
-            orden.fecha_cierre = timezone.now()
-            orden.save()
-            verbo_auditoria = "Finalizó exitosamente la Orden de Mantenimiento"
-
-        elif accion == 'cancelar':
-            orden.estado = OrdenMantenimiento.EstadoOrden.CANCELADA
-            orden.fecha_cierre = timezone.now()
-            orden.save()
-            verbo_auditoria = "Canceló la Orden de Mantenimiento"
-            
-            # Devolver activos a "DISPONIBLE"
-            try:
-                estado_disponible = Estado.objects.get(nombre__iexact="DISPONIBLE")
-                orden.activos_afectados.update(estado=estado_disponible)
-            except Estado.DoesNotExist:
-                pass
-
-        else:
-            return Response({'message': 'Acción no válida.'}, status=status.HTTP_400_BAD_REQUEST)
-
-        # --- AUDITORÍA (Cambio de Estado - Registro Único) ---
-        self.auditar(
-            verbo=verbo_auditoria,
-            objetivo=orden,
-            objetivo_repr=f"Orden #{orden.id} ({orden.tipo_orden})",
-            detalles={'nuevo_estado': orden.estado}
-        )
-
-        return Response({'status': 'ok', 'message': 'Estado actualizado.'})
+        except Exception as e:
+            return Response({'error': f'Error procesando la orden: {str(e)}'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 class MantenimientoRegistrarTareaAPIView(APIView):
@@ -642,64 +684,68 @@ class MantenimientoRegistrarTareaAPIView(APIView):
     permission_classes = [IsAuthenticated, IsEstacionActiva, CanGestionarOrdenes]
 
     def post(self, request, pk):
-        estacion = request.estacion_activa
-        orden = get_object_or_404(OrdenMantenimiento, pk=pk, estacion=estacion)
+        try:
+            estacion = request.estacion_activa
+            orden = get_object_or_404(OrdenMantenimiento, pk=pk, estacion=estacion)
+
+            if orden.estado != OrdenMantenimiento.EstadoOrden.EN_CURSO:
+                return Response({'message': 'Debe INICIAR la orden antes de registrar tareas.'}, status=status.HTTP_400_BAD_REQUEST)
+
+            activo_id = request.data.get('activo_id')
+            notas = request.data.get('notas')
+            fue_exitoso = request.data.get('exitoso', True)
+
+            activo = get_object_or_404(Activo, pk=activo_id, estacion=estacion)
+
+            registro, created = RegistroMantenimiento.objects.update_or_create(
+                orden_mantenimiento=orden,
+                activo=activo,
+                defaults={
+                    'usuario_ejecutor': request.user,
+                    'fecha_ejecucion': timezone.now(),
+                    'notas': notas,
+                    'fue_exitoso': fue_exitoso
+                }
+            )
+
+            # Actualizar estado del activo
+            if fue_exitoso:
+                try:
+                    nuevo_estado = Estado.objects.get(nombre__iexact="DISPONIBLE")
+                    activo.estado = nuevo_estado
+                except Estado.DoesNotExist:
+                    pass
+            else:
+                try:
+                    nuevo_estado = Estado.objects.get(nombre__iexact="NO OPERATIVO")
+                    activo.estado = nuevo_estado
+                except Estado.DoesNotExist:
+                    pass
+                
+            activo.save()
+
+            # Actualizar Plan si aplica
+            if fue_exitoso and orden.plan_origen:
+                plan_config = PlanActivoConfig.objects.filter(plan=orden.plan_origen, activo=activo).first()
+                if plan_config:
+                    plan_config.fecha_ultima_mantencion = timezone.now()
+                    plan_config.horas_uso_en_ultima_mantencion = activo.horas_uso_totales
+                    plan_config.save()
+
+            # --- AUDITORÍA INCREMENTAL (Avance de Tareas) ---
+            # Agrupamos el progreso: "Registró tareas en la Orden X"
+            accion_txt = "Tarea exitosa" if fue_exitoso else "Falla reportada"
+
+            auditar_modificacion_incremental(
+                request=request,
+                plan=orden, # El objetivo es la Orden
+                accion_detalle=f"{accion_txt} en {activo.codigo_activo}"
+            )
+
+            return Response({'status': 'ok', 'message': 'Registro guardado.'})
         
-        if orden.estado != OrdenMantenimiento.EstadoOrden.EN_CURSO:
-            return Response({'message': 'Debe INICIAR la orden antes de registrar tareas.'}, status=status.HTTP_400_BAD_REQUEST)
-
-        activo_id = request.data.get('activo_id')
-        notas = request.data.get('notas')
-        fue_exitoso = request.data.get('exitoso', True)
-
-        activo = get_object_or_404(Activo, pk=activo_id, estacion=estacion)
-
-        registro, created = RegistroMantenimiento.objects.update_or_create(
-            orden_mantenimiento=orden,
-            activo=activo,
-            defaults={
-                'usuario_ejecutor': request.user,
-                'fecha_ejecucion': timezone.now(),
-                'notas': notas,
-                'fue_exitoso': fue_exitoso
-            }
-        )
-
-        # Actualizar estado del activo
-        if fue_exitoso:
-            try:
-                nuevo_estado = Estado.objects.get(nombre__iexact="DISPONIBLE")
-                activo.estado = nuevo_estado
-            except Estado.DoesNotExist:
-                pass
-        else:
-            try:
-                nuevo_estado = Estado.objects.get(nombre__iexact="NO OPERATIVO")
-                activo.estado = nuevo_estado
-            except Estado.DoesNotExist:
-                pass
-        
-        activo.save()
-        
-        # Actualizar Plan si aplica
-        if fue_exitoso and orden.plan_origen:
-            plan_config = PlanActivoConfig.objects.filter(plan=orden.plan_origen, activo=activo).first()
-            if plan_config:
-                plan_config.fecha_ultima_mantencion = timezone.now()
-                plan_config.horas_uso_en_ultima_mantencion = activo.horas_uso_totales
-                plan_config.save()
-
-        # --- AUDITORÍA INCREMENTAL (Avance de Tareas) ---
-        # Agrupamos el progreso: "Registró tareas en la Orden X"
-        accion_txt = "Tarea exitosa" if fue_exitoso else "Falla reportada"
-        
-        auditar_modificacion_incremental(
-            request=request,
-            plan=orden, # El objetivo es la Orden
-            accion_detalle=f"{accion_txt} en {activo.codigo_activo}"
-        )
-
-        return Response({'status': 'ok', 'message': 'Registro guardado.'})
+        except Exception as e:
+            return Response({'error': f'Error guardando tarea: {str(e)}'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 class MantenimientoBuscarActivoParaOrdenAPIView(APIView):
@@ -751,25 +797,28 @@ class MantenimientoAnadirActivoOrdenAPIView(APIView):
     permission_classes = [IsAuthenticated, IsEstacionActiva, CanGestionarOrdenes]
 
     def post(self, request, pk):
-        estacion = request.estacion_activa
-        orden = get_object_or_404(OrdenMantenimiento, pk=pk, estacion=estacion)
-        
-        if orden.estado != OrdenMantenimiento.EstadoOrden.PENDIENTE:
-            return Response({'message': 'Solo se pueden agregar activos a órdenes PENDIENTES.'}, status=status.HTTP_400_BAD_REQUEST)
+        try:
+            estacion = request.estacion_activa
+            orden = get_object_or_404(OrdenMantenimiento, pk=pk, estacion=estacion)
 
-        activo_id = request.data.get('activo_id')
-        activo = get_object_or_404(Activo, pk=activo_id, estacion=estacion)
+            if orden.estado != OrdenMantenimiento.EstadoOrden.PENDIENTE:
+                return Response({'message': 'Solo se pueden agregar activos a órdenes PENDIENTES.'}, status=status.HTTP_400_BAD_REQUEST)
 
-        orden.activos_afectados.add(activo)
+            activo_id = request.data.get('activo_id')
+            activo = get_object_or_404(Activo, pk=activo_id, estacion=estacion)
+
+            orden.activos_afectados.add(activo)
+
+            # --- AUDITORÍA INCREMENTAL ---
+            auditar_modificacion_incremental(
+                request=request,
+                plan=orden, # Reutilizamos la función pasando la orden como 'plan' (objeto genérico)
+                accion_detalle=f"Añadió a la orden: {activo.codigo_activo}"
+            )
+            return Response({'status': 'ok', 'message': f"Activo {activo.codigo_activo} añadido."})
         
-        # --- AUDITORÍA INCREMENTAL ---
-        auditar_modificacion_incremental(
-            request=request,
-            plan=orden, # Reutilizamos la función pasando la orden como 'plan' (objeto genérico)
-            accion_detalle=f"Añadió a la orden: {activo.codigo_activo}"
-        )
-        
-        return Response({'status': 'ok', 'message': f"Activo {activo.codigo_activo} añadido."})
+        except Exception as e:
+            return Response({'error': f'Error: {str(e)}'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 class MantenimientoQuitarActivoOrdenAPIView(APIView):
@@ -779,22 +828,25 @@ class MantenimientoQuitarActivoOrdenAPIView(APIView):
     permission_classes = [IsAuthenticated, IsEstacionActiva, CanGestionarOrdenes]
 
     def post(self, request, pk):
-        estacion = request.estacion_activa
-        orden = get_object_or_404(OrdenMantenimiento, pk=pk, estacion=estacion)
+        try:
+            estacion = request.estacion_activa
+            orden = get_object_or_404(OrdenMantenimiento, pk=pk, estacion=estacion)
+
+            if orden.estado != OrdenMantenimiento.EstadoOrden.PENDIENTE:
+                return Response({'message': 'Solo se pueden quitar activos de órdenes PENDIENTES.'}, status=status.HTTP_400_BAD_REQUEST)
+
+            activo_id = request.data.get('activo_id')
+            activo = get_object_or_404(Activo, pk=activo_id, estacion=estacion)
+
+            orden.activos_afectados.remove(activo)
+
+            # --- AUDITORÍA INCREMENTAL ---
+            auditar_modificacion_incremental(
+                request=request,
+                plan=orden, 
+                accion_detalle=f"Quitó de la orden: {activo.codigo_activo}"
+            )
+            return Response({'status': 'ok', 'message': f"Activo {activo.codigo_activo} quitado."})
         
-        if orden.estado != OrdenMantenimiento.EstadoOrden.PENDIENTE:
-            return Response({'message': 'Solo se pueden quitar activos de órdenes PENDIENTES.'}, status=status.HTTP_400_BAD_REQUEST)
-
-        activo_id = request.data.get('activo_id')
-        activo = get_object_or_404(Activo, pk=activo_id, estacion=estacion)
-
-        orden.activos_afectados.remove(activo)
-
-        # --- AUDITORÍA INCREMENTAL ---
-        auditar_modificacion_incremental(
-            request=request,
-            plan=orden, 
-            accion_detalle=f"Quitó de la orden: {activo.codigo_activo}"
-        )
-
-        return Response({'status': 'ok', 'message': f"Activo {activo.codigo_activo} quitado."})
+        except Exception as e:
+            return Response({'error': f'Error: {str(e)}'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
