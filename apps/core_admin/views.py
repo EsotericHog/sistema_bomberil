@@ -280,12 +280,16 @@ class EstacionSwitchView(SuperuserRequiredMixin, View):
         request.session['active_estacion_id'] = estacion.id
         request.session['active_estacion_nombre'] = estacion.nombre
 
-        # Obtener el logo de la estación
-        if estacion.logo_thumb_small:
-            request.session['active_estacion_logo'] = estacion.logo_thumb_small.url
-        elif estacion.logo:
-            request.session['active_estacion_logo'] = estacion.logo.url
-        else:
+        try:
+            # Obtener el logo de la estación
+            if estacion.logo_thumb_small:
+                request.session['active_estacion_logo'] = estacion.logo_thumb_small.url
+            elif estacion.logo:
+                request.session['active_estacion_logo'] = estacion.logo.url
+            else:
+                request.session['active_estacion_logo'] = None
+
+        except Exception:
             request.session['active_estacion_logo'] = None
         
         # 2. Feedback al usuario
@@ -596,7 +600,11 @@ class ApiRolesPorEstacionView(SuperuserRequiredMixin, View):
         
         # Si seleccionaron una estación, sumamos sus roles locales
         if estacion_id:
-            criterio = criterio | Q(estacion_id=estacion_id)
+            if str(estacion_id).isdigit():
+                criterio = criterio | Q(estacion_id=estacion_id)
+            else:
+                # Opcional: Loguear intento inválido
+                pass
             
         roles = Rol.objects.filter(criterio).values('id', 'nombre', 'estacion__nombre').order_by('estacion', 'nombre')
         
@@ -635,18 +643,24 @@ class MembresiaCreateView(SuperuserRequiredMixin, CreateView):
 
 
     def form_valid(self, form):
-        # 1. Guardamos la Membresía
-        self.object = form.save(commit=False)
-        self.object.estado = 'ACTIVO'
-        self.object.save()
-        
-        # 2. Guardamos los Roles
-        roles = form.cleaned_data['roles_seleccionados']
-        self.object.roles.set(roles)
-        
-        messages.success(self.request, f"Membresía creada exitosamente para {self.object.usuario} en {self.object.estacion}.")
-        return super().form_valid(form)
+        try:
+            with transaction.atomic():
+                # 1. Guardamos la Membresía
+                self.object = form.save(commit=False)
+                self.object.estado = 'ACTIVO'
+                self.object.save()
+
+                # 2. Guardamos los Roles
+                roles = form.cleaned_data['roles_seleccionados']
+                self.object.roles.set(roles)
+            messages.success(self.request, f"Membresía creada exitosamente para {self.object.usuario} en {self.object.estacion}.")
+            return super().form_valid(form)
+            
+        except Exception as e:
+            messages.error(self.request, f"Error crítico al crear la membresía: {e}")
+            return self.form_invalid(form)
     
+
     def form_invalid(self, form):
         messages.error(self.request, "Error en el formulario. Por favor revisa los campos marcados en rojo.")
         return super().form_invalid(form)
@@ -755,25 +769,31 @@ class RolGlobalCreateView(SuperuserRequiredMixin, PermisosMatrixMixin, CreateVie
         return context
 
     def form_valid(self, form):
-        # 1. Guardar el objeto Rol (sin M2M aún)
-        self.object = form.save(commit=False)
-        self.object.estacion = None # Forzar Global
-        self.object.save()
+        try:
+            with transaction.atomic():
+                # 1. Guardar el objeto Rol (sin M2M aún)
+                self.object = form.save(commit=False)
+                self.object.estacion = None # Forzar Global
+                self.object.save()
+
+                # 2. GUARDADO EXPLÍCITO
+                # Obtenemos los permisos limpios del formulario (ya filtrados por el queryset)
+                permisos_seleccionados = form.cleaned_data['permisos']
+
+                # Debug (Opcional: para ver en consola qué está llegando)
+                print(f"DEBUG: Guardando {permisos_seleccionados.count()} permisos para el rol {self.object.nombre}")
+
+                # .set() reemplaza TODO lo que había con la nueva lista.
+                # Esto elimina automáticamente cualquier permiso basura (sys_, add_, etc.)
+                self.object.permisos.set(permisos_seleccionados)
+            messages.success(self.request, f"Rol global '{self.object.nombre}' creado con {permisos_seleccionados.count()} permisos.")
+            return redirect(self.get_success_url())
         
-        # 2. GUARDADO EXPLÍCITO
-        # Obtenemos los permisos limpios del formulario (ya filtrados por el queryset)
-        permisos_seleccionados = form.cleaned_data['permisos']
-        
-        # Debug (Opcional: para ver en consola qué está llegando)
-        print(f"DEBUG: Guardando {permisos_seleccionados.count()} permisos para el rol {self.object.nombre}")
-        
-        # .set() reemplaza TODO lo que había con la nueva lista.
-        # Esto elimina automáticamente cualquier permiso basura (sys_, add_, etc.)
-        self.object.permisos.set(permisos_seleccionados)
-        
-        messages.success(self.request, f"Rol global '{self.object.nombre}' creado con {permisos_seleccionados.count()} permisos.")
-        return redirect(self.get_success_url())
+        except Exception as e:
+            messages.error(self.request, f"Error de integridad al guardar el Rol: {e}")
+            return self.form_invalid(form)
     
+
     def form_invalid(self, form):
         messages.error(self.request, "No se pudo guardar el Rol. Revisa que el nombre sea único y los datos correctos.")
         return super().form_invalid(form)
@@ -804,21 +824,27 @@ class RolGlobalUpdateView(SuperuserRequiredMixin, PermisosMatrixMixin, UpdateVie
         return context
 
     def form_valid(self, form):
-        # 1. Guardar cambios básicos (nombre, descripción)
-        self.object = form.save(commit=False)
-        self.object.save()
+        try:
+            with transaction.atomic():
+                # 1. Guardar cambios básicos (nombre, descripción)
+                self.object = form.save(commit=False)
+                self.object.save()
+
+                # 2. GUARDADO EXPLÍCITO (La Solución)
+                permisos_seleccionados = form.cleaned_data['permisos']
+
+                print(f"DEBUG: Actualizando a {permisos_seleccionados.count()} permisos para {self.object.nombre}")
+
+                # Limpieza total y reasignación
+                self.object.permisos.set(permisos_seleccionados)
+            messages.success(self.request, f"Rol actualizado. Permisos activos: {permisos_seleccionados.count()}.")
+            return redirect(self.get_success_url())
         
-        # 2. GUARDADO EXPLÍCITO (La Solución)
-        permisos_seleccionados = form.cleaned_data['permisos']
-        
-        print(f"DEBUG: Actualizando a {permisos_seleccionados.count()} permisos para {self.object.nombre}")
-        
-        # Limpieza total y reasignación
-        self.object.permisos.set(permisos_seleccionados)
-        
-        messages.success(self.request, f"Rol actualizado. Permisos activos: {permisos_seleccionados.count()}.")
-        return redirect(self.get_success_url())
+        except Exception as e:
+            messages.error(self.request, f"Error de integridad al guardar el Rol: {e}")
+            return self.form_invalid(form)
     
+
     def form_invalid(self, form):
         messages.error(self.request, "No se pudo guardar el Rol. Revisa que el nombre sea único y los datos correctos.")
         return super().form_invalid(form)
