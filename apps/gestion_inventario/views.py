@@ -12,13 +12,12 @@ from django.views.generic import TemplateView, DeleteView, UpdateView, ListView,
 from django.views.generic.detail import SingleObjectMixin
 from django.http import JsonResponse, HttpResponse, HttpResponseRedirect, Http404, HttpResponseBadRequest, FileResponse
 from django.db import models
-from django.db.models import Count, Sum, Q, Subquery, OuterRef, ProtectedError, Value, Case, When, CharField, F
+from django.db.models import Count, Sum, Q, Subquery, OuterRef, ProtectedError, Value, Case, When, CharField, F, Max
 from django.db.models.functions import Coalesce
 from django.urls import reverse, reverse_lazy
 from django.contrib import messages
 from django.shortcuts import get_object_or_404
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
-from django.contrib.auth.mixins import LoginRequiredMixin
 from django.db.models.functions import Coalesce
 from dateutil.relativedelta import relativedelta
 from django.db.models.functions import Coalesce, Abs
@@ -53,7 +52,8 @@ from .models import (
     PrestamoDetalle,
     Destinatario,
     MovimientoInventario,
-    TipoMovimiento
+    TipoMovimiento,
+    RegistroUsoActivo
     )
 
 from .forms import (
@@ -86,6 +86,8 @@ from .forms import (
     DestinatarioForm,
     EtiquetaFilterForm
     )
+
+from apps.gestion_mantenimiento.models import PlanActivoConfig, OrdenMantenimiento, RegistroMantenimiento
 
 
 class InventarioInicioView(BaseEstacionMixin, TemplateView):
@@ -2895,6 +2897,110 @@ def get_or_create_anulado_compartment(estacion: Estacion) -> Compartimento:
         }
     )
     return compartimento_anulado
+
+
+
+
+class DetalleExistenciaView(BaseEstacionMixin, CustomPermissionRequiredMixin, View):
+    """
+    Vista Maestra: Hoja de Vida de la Existencia.
+    Muestra trazabilidad total: Ubicación, Movimientos, Uso y Mantenimiento.
+    """
+    permission_required = "gestion_usuarios.accion_gestion_inventario_ver_stock"
+    template_name = 'gestion_inventario/pages/detalle_existencia.html'
+
+    def get(self, request, tipo_item, item_id):
+        context = {}
+        
+        # 1. Determinar y obtener el objeto (Polimorfismo)
+        if tipo_item == 'activo':
+            item = get_object_or_404(
+                Activo.objects.select_related(
+                    'producto__producto_global', 
+                    'compartimento__ubicacion', 
+                    'estado',
+                    'proveedor'
+                ),
+                id=item_id,
+                estacion=self.estacion_activa
+            )
+            # Cargar contexto profundo para Activos
+            context.update(self._get_contexto_activo(item))
+            context['es_activo'] = True
+
+        elif tipo_item == 'lote':
+            item = get_object_or_404(
+                LoteInsumo.objects.select_related(
+                    'producto__producto_global', 
+                    'compartimento__ubicacion', 
+                    'estado'
+                ),
+                id=item_id,
+                compartimento__ubicacion__estacion=self.estacion_activa
+            )
+            # Cargar contexto simple para Lotes
+            context['es_activo'] = False
+        
+        else:
+            raise Http404("Tipo de ítem no válido")
+
+        # 2. Contexto Común (Historial de Movimientos)
+        # Traemos los últimos 50 movimientos para la bitácora
+        movimientos = MovimientoInventario.objects.filter(
+            estacion=self.estacion_activa
+        ).filter(
+            Q(activo=item) if tipo_item == 'activo' else Q(lote_insumo=item)
+        ).select_related(
+            'usuario', 'compartimento_origen', 'compartimento_destino'
+        ).order_by('-fecha_hora')[:50]
+
+        context['item'] = item
+        context['tipo_item'] = tipo_item # 'activo' o 'lote' para URLs
+        context['historial_movimientos'] = movimientos
+        
+        return render(request, self.template_name, context)
+
+    def _get_contexto_activo(self, activo):
+        """
+        Recopila toda la data compleja exclusiva de Activos Serializados.
+        """
+        data = {}
+
+        # A. HISTORIAL DE USO (RegistroUsoActivo)
+        # Obtenemos estadísticas básicas
+        uso_stats = RegistroUsoActivo.objects.filter(activo=activo).aggregate(
+            total_horas=Sum('horas_registradas'),
+            ultimo_uso=Max('fecha_uso'),
+            total_registros=Count('id')
+        )
+        data['uso_stats'] = uso_stats
+        
+        # Últimos 5 registros de uso para el widget
+        data['ultimos_usos'] = RegistroUsoActivo.objects.filter(activo=activo)\
+            .select_related('usuario_registra').order_by('-fecha_uso')[:5]
+
+        # B. MANTENIMIENTO: HISTORIAL (Bitácora)
+        # Registros cerrados de mantenimiento
+        data['historial_mantencion'] = RegistroMantenimiento.objects.filter(activo=activo)\
+            .select_related('usuario_ejecutor', 'orden_mantenimiento')\
+            .order_by('-fecha_ejecucion')[:10]
+
+        # C. MANTENIMIENTO: ÓRDENES EN CURSO (Lo que está pasando ahora)
+        data['ordenes_activas'] = OrdenMantenimiento.objects.filter(
+            activos_afectados=activo,
+            estado__in=['PENDIENTE', 'EN_CURSO']
+        ).order_by('fecha_programada')
+
+        # D. PLANES DE MANTENIMIENTO (El Futuro)
+        # Qué planes aplican a este activo y cuándo tocan
+        planes_config = PlanActivoConfig.objects.filter(
+            activo=activo, 
+            plan__activo_en_sistema=True
+        ).select_related('plan')
+        
+        data['planes_asociados'] = planes_config
+
+        return data
 
 
 

@@ -27,6 +27,7 @@ from .views import (
     VehiculoListaView,
     RecepcionStockView,
     AgregarStockACompartimentoView,
+    DetalleExistenciaView,
     AnularExistenciaView,
     AjustarStockLoteView,
     MovimientoInventarioListView,
@@ -111,6 +112,8 @@ urlpatterns = [
     path('recepcion-stock/', RecepcionStockView.as_view(), name='ruta_recepcion_stock'),
     # Añadir Stock a Compartimento
     path('compartimentos/<uuid:compartimento_id>/anadir-stock/', AgregarStockACompartimentoView.as_view(), name='ruta_agregar_stock_compartimento'),
+    # Detalle 360° de la existencia (Trazabilidad completa)
+    path('existencia/<str:tipo_item>/<uuid:item_id>/detalle/', DetalleExistenciaView.as_view(), name='ruta_detalle_existencia'),
 
     # Anular existencia
     path('existencia/<str:tipo_item>/<uuid:item_id>/anular/', AnularExistenciaView.as_view(), name='ruta_anular_existencia'),

@@ -1,9 +1,19 @@
 <div class="menu-acciones-usuarios"> {# Reutilizamos la clase contenedora de estilos existente #}
 
     {# --- ACCIONES COMUNES (Ver) --- #}
-    <a class="menu-acciones-usuarios__accion color_negro" href="#">
-        <i class="fa-solid fa-eye"></i> Ver Detalles
-    </a>
+    {% if item.producto.es_serializado %}
+        {# Caso: Es un ACTIVO #}
+        <a class="menu-acciones-usuarios__accion color_negro" 
+           href="{% url 'gestion_inventario:ruta_detalle_existencia' tipo_item='activo' item_id=item.id %}">
+            <i class="fa-solid fa-eye"></i> Ver Detalles
+        </a>
+    {% else %}
+        {# Caso: Es un LOTE #}
+        <a class="menu-acciones-usuarios__accion color_negro" 
+           href="{% url 'gestion_inventario:ruta_detalle_existencia' tipo_item='lote' item_id=item.id %}">
+            <i class="fa-solid fa-eye"></i> Ver Detalles
+        </a>
+    {% endif %}
 
     {# --- ACCIONES PARA ACTIVOS SERIALIZADOS --- #}
     {% if item.producto.es_serializado %}
