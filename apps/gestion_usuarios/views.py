@@ -1544,53 +1544,57 @@ class UsuarioVerPermisos(BaseEstacionMixin, CustomPermissionRequiredMixin, Membr
         except Membresia.DoesNotExist:
             raise Http404("El usuario no pertenece a esta estación.")
 
+
     # --- 2. Lógica de Agrupación ---
     def _agrupar_permisos(self, queryset_permisos):
         """
         Agrupa los permisos por el nombre verbose de su aplicación.
         """
         agrupados = defaultdict(list)
+        all_apps = apps.get_app_configs()
         
         for perm in queryset_permisos:
-            try:
-                # Obtenemos la configuración de la app (ej: 'gestion_usuarios')
-                app_label = perm.content_type.app_label
-                app_config = apps.get_app_config(app_label)
-                module_name = app_config.verbose_name
-            except (LookupError, AttributeError):
-                # Si algo falla (permisos huérfanos o apps borradas)
-                module_name = "Permisos Generales"
+            nombre_modulo = "Permisos Generales"
 
-            agrupados[module_name].append(perm)
+            for app in all_apps:
+                # Convención: 'acceso_APPLABEL' o 'accion_APPLABEL_...'
+                prefix_acceso = f"acceso_{app.label}"
+                prefix_accion = f"accion_{app.label}_"
+                
+                if perm.codename == prefix_acceso or perm.codename.startswith(prefix_accion):
+                    nombre_modulo = app.verbose_name
+                    break
+            
+            agrupados[nombre_modulo].append(perm)
         
         # Ordenamos el diccionario por nombre de módulo
         return dict(sorted(agrupados.items()))
+
 
     # --- 3. Manejador GET ---
     def get(self, request, *args, **kwargs):
         # El mixin obtiene y valida la membresía en self.object
         membresia = self.object
+
+        # 1. Obtener todos los roles de la membresía
+        roles = membresia.roles.all()
         
-        # 1. Obtenemos los IDs de todos los permisos vinculados a los roles de esta membresía.
-        #    'roles' es la relación M2M en Membresia.
-        #    'permisos' es la relación M2M en Rol.
-        permission_ids = membresia.roles.values_list('permisos', flat=True)
+        # 2. Recopilar IDs de permisos únicos de todos los roles
+        permission_ids = set()
+        for rol in roles:
+            permission_ids.update(rol.permisos.values_list('id', flat=True))
         
-        # 2. Buscamos los objetos Permission usando esos IDs.
-        #    Esto es 100% seguro y eficiente.
+        # 3. Traer los objetos Permission (QuerySet)
         permisos_del_usuario = Permission.objects.filter(
             id__in=permission_ids
-        ).distinct().select_related('content_type').order_by('codename')
+        ).order_by('codename')
         
-        # Agrupamos usando el helper (asegúrate de tener el método _agrupar_permisos en tu clase)
+        # 4. Agruparlos correctamente
         permisos_agrupados = self._agrupar_permisos(permisos_del_usuario)
         
-        # Obtenemos los roles para el listado lateral
-        roles_asignados = membresia.roles.all()
-
         context = {
             'membresia': membresia,
-            'roles_asignados': roles_asignados, 
+            'roles_asignados': roles, 
             'permisos_agrupados': permisos_agrupados,
             'total_permisos': len(permisos_del_usuario)
         }
