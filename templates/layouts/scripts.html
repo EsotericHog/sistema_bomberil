@@ -70,7 +70,7 @@ src="https://cdn.datatables.net/2.3.2/js/dataTables.js">
 
             // 2. Ejecutar el Toast
             Toastify({
-                text: "{{ message }}",
+                text: "{{ message|escapejs }}",
                 duration: 6000,           // 4 segundos
                 close: true,              // Botón de cerrar (X) minimalista
                 gravity: "bottom",           // top o bottom
