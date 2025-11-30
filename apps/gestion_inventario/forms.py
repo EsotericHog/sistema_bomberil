@@ -270,7 +270,8 @@ class ProductoLocalEditForm(forms.ModelForm):
             'es_expirable', 
             'proveedor_preferido', 
             'costo_compra',
-            'vida_util_estacion_anos'
+            'vida_util_estacion_anos',
+            'stock_critico'
         ]
         widgets = {
             'sku': forms.TextInput(attrs={'class': 'form-control fs_normal fondo_secundario color_primario'}),
@@ -279,6 +280,7 @@ class ProductoLocalEditForm(forms.ModelForm):
             'proveedor_preferido': forms.Select(attrs={'class': 'form-select fs_normal fondo_secundario color_primario'}),
             'costo_compra': forms.NumberInput(attrs={'class': 'form-control fs_normal fondo_secundario color_primario'}),
             'vida_util_estacion_anos': forms.NumberInput(attrs={'class': 'form-control fs_normal fondo_secundario color_primario'}),
+            'stock_critico': forms.NumberInput(attrs={'class': 'form-control color_primario'})
         }
         help_texts = {
             'sku': 'Código único interno de tu estación para este producto.',

@@ -83,6 +83,18 @@
                      </select>
                 </div>
 
+                {# Checkbox Mostrar Anulados #}
+                <div class="col-md-6 col-lg-2">
+                    <div class="form-check mb-2">
+                        <input class="form-check-input" type="checkbox" 
+                               id="check_anulados" name="mostrar_anulados" 
+                               {% if current_mostrar_anulados %}checked{% endif %}>
+                        <label class="form-check-label fs_pequena fw-bold" for="check_anulados">
+                            Mostrar Anulados
+                        </label>
+                    </div>
+                </div>
+
             </div>
             <div class="row mt-3">
                 <div class="col-12 text-end">
@@ -126,7 +138,7 @@
                 </thead>
                 <tbody class="fs_normal">
                     {% for item in stock_items %}
-                    <tr class="{% if item.estado.nombre == 'ANULADO POR ERROR' %}text-muted opacity-75{% endif %}">
+                    <tr class="{% if item.alerta_stock_critico %}table-warning border-start border-4 border-warning{% endif %} {% if item.estado.nombre == 'ANULADO POR ERROR' %}text-muted opacity-75{% endif %}">
                         {# Imagen #}
                         <td class="text-center align-middle">
                             {% with img_activo=item.imagen_thumb_small img_global=item.producto.producto_global.imagen_thumb_small %}
@@ -143,7 +155,7 @@
                                     {# Prioridad 2: Foto de catálogo #}
                                     <img src="{{ img_global.url }}" 
                                          alt="Foto Catálogo" 
-                                         class="rounded border-0 opacity-75" 
+                                         class="rounded border-0" 
                                          style="width: 40px; height: 40px; object-fit: contain;">
 
                                 {% else %}
@@ -217,12 +229,17 @@
                                 {% endwith %}
                         </td>
                         
-                        {# Cantidad #}
+                        {# Cantidad (CON ALERTA VISUAL) #}
                         <td class="text-center">
                             {% if item.producto.es_serializado %}
-                            <strong>1</strong>
+                                <strong>1</strong>
                             {% else %}
-                            <strong>{{ item.cantidad }}</strong>
+                                <strong class="fs_mediana">{{ item.cantidad }}</strong>
+                            {% endif %}
+
+                            {# Icono de advertencia si es crítico #}
+                            {% if item.alerta_stock_critico %}
+                                <i class="fas fa-arrow-down text-danger ms-1" title="Bajo el mínimo ({{ item.producto.stock_critico }})"></i>
                             {% endif %}
                         </td>
                         

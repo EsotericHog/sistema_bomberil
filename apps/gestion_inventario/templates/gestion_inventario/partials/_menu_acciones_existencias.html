@@ -75,12 +75,6 @@
             <i class="fa-solid fa-thumbs-down"></i> Dar de Baja
         </a>
 
-        {# Reportar Extravío #}
-        <a class="menu-acciones-usuarios__accion color_rojo" 
-           href="{% url 'gestion_inventario:ruta_extraviado_existencia' tipo_item='lote' item_id=item.id %}">
-            <i class="fa-solid fa-search-minus"></i> Reportar Extravío
-        </a>
-
         {# Anular #}
         <a class="menu-acciones-usuarios__accion color_rojo" 
            href="{% url 'gestion_inventario:ruta_anular_existencia' tipo_item='lote' item_id=item.id %}">

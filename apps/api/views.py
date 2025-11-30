@@ -451,6 +451,13 @@ class InventarioBuscarExistenciasPrestablesAPI(APIView):
     def get(self, request, format=None):
         # 1. Validación de Parámetros
         query = request.query_params.get('q', '').strip()
+
+        # Capturar IDs a excluir
+        exclude_param = request.query_params.get('exclude', '')
+        excluded_ids = []
+        if exclude_param:
+            # Convertimos "uuid1,uuid2" en una lista ['uuid1', 'uuid2']
+            excluded_ids = [x.strip() for x in exclude_param.split(',') if x.strip()]
         
         if not query:
             return Response(
@@ -481,7 +488,14 @@ class InventarioBuscarExistenciasPrestablesAPI(APIView):
                 Q(codigo_activo__icontains=query) | 
                 Q(producto__producto_global__nombre_oficial__icontains=query) |
                 Q(numero_serie_fabricante__icontains=query)
-            ).select_related('producto__producto_global')[:10]
+            )
+
+            # Aplicar exclusión de activos ya seleccionados
+            if excluded_ids:
+                activos = activos.exclude(id__in=excluded_ids)
+
+            # Optimizamos y limitamos DESPUÉS de filtrar
+            activos = activos.select_related('producto__producto_global')[:10]
 
             for a in activos:
                 results.append({
@@ -503,7 +517,13 @@ class InventarioBuscarExistenciasPrestablesAPI(APIView):
             ).filter(
                 Q(codigo_lote__icontains=query) | 
                 Q(producto__producto_global__nombre_oficial__icontains=query)
-            ).select_related('producto__producto_global')[:10]
+            )
+
+            # Aplicar exclusión de lotes ya seleccionados
+            if excluded_ids:
+                lotes = lotes.exclude(id__in=excluded_ids)
+
+            lotes = lotes.select_related('producto__producto_global')[:10]
 
             for l in lotes:
                 results.append({

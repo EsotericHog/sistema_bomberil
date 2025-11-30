@@ -1,0 +1,38 @@
+/* Estilos para la tabla de escaneo */
+    #scan-input {
+        font-size: 1.25rem;
+        text-align: center;
+    }
+    .scan-feedback {
+        height: 20px;
+        font-size: var(--fs-normal);
+    }
+    #items-prestados-table .btn-quitar {
+        font-size: var(--fs-pequena);
+    }
+    #items-prestados-table .item-info {
+        font-size: var(--fs-normal);
+    }
+    #items-prestados-table .item-code {
+        font-size: var(--fs-pequena);
+        font-family: monospace;
+    }
+
+
+    /* Estilos personalizados para el toggle */
+    .btn-check:checked + .btn-light {
+        background-color: white;
+        color: var(--color-primario) !important;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.05) !important;
+        border: 1px solid #dee2e6 !important;
+    }
+    /* Estilo sutil para el fondo del modo nuevo */
+    .bg-blue-light {
+        background-color: #f8fbff;
+    }
+    /* Ajuste para que TomSelect se vea bien dentro del floating label o card */
+    .ts-control {
+        border: 1px solid #dee2e6;
+        border-radius: 0.375rem;
+        padding: 0.5rem 0.75rem;
+    }

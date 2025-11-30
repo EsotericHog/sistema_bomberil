@@ -11,4 +11,10 @@
 @import url("vehiculo_card.css");
 
 /* Hoja de impresión de etiquetas */
-@import url('imprimir_etiquetas.css')
+@import url('imprimir_etiquetas.css');
+
+/* Gestionar préstamos */
+@import url('gestion_prestamos.css');
+
+/* Crear préstamo */
+@import url('crear_prestamo.css');

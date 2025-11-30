@@ -125,10 +125,36 @@ class InventarioInicioView(BaseEstacionMixin, TemplateView):
         )
 
         # KPI: Stock Bajo
-        # **NOTA:** El modelo Producto no tiene un campo 'stock_minimo'.
-        # Si se añadiera, la consulta sería:
-        # context['kpi_stock_bajo'] = Producto.objects.filter(estacion_id=estacion_activa_id, stock_actual__lt=F('stock_minimo')).count()
-        # Por ahora, lo omitimos.
+        # Obtenemos TODOS los productos de la estación que tengan configuración de stock crítico (> 0)
+        # Y realizamos el cálculo en una sola consulta potente.
+        productos_en_alerta = Producto.objects.filter(
+            estacion_id=self.estacion_activa_id,
+            stock_critico__gt=0 # Solo los que tienen la regla activada
+        ).annotate(
+            # 1. Contar Activos Operativos (Serializados)
+            cant_activos=Count(
+                'activo', 
+                filter=Q(activo__estado__tipo_estado__nombre='OPERATIVO')
+            ),
+            
+            # 2. Sumar Lotes Operativos (Insumos) - Usamos Coalesce para evitar None
+            cant_lotes=Coalesce(
+                Sum('loteinsumo__cantidad', 
+                    filter=Q(loteinsumo__estado__tipo_estado__nombre='OPERATIVO')
+                ), 
+                0
+            )
+        ).annotate(
+            # 3. Sumar ambos mundos (Un producto es activo O lote, el otro será 0, la suma funciona)
+            stock_actual=F('cant_activos') + F('cant_lotes')
+        ).filter(
+            # 4. El Filtro Final: ¿Es el actual menor o igual al crítico?
+            stock_actual__lte=F('stock_critico')
+        ).select_related('producto_global')
+
+        # Inyectamos la lista y el conteo
+        context['alerta_stock_critico_lista'] = productos_en_alerta[:5] # Top 5 para el widget
+        context['kpi_stock_critico_count'] = productos_en_alerta.count() # Número total para el badge rojo
 
         # 3. Suma de Totales (Ahora sí sumará 4 + 40)
         context['kpi_total_operativas'] = kpis_activos['operativos'] + kpis_lotes['operativos']
@@ -2208,7 +2234,8 @@ class StockActualListView(BaseEstacionMixin, CustomPermissionRequiredMixin, Temp
         self.estado_id = params.get('estado', '')
         self.fecha_desde = params.get('fecha_desde', '')
         self.fecha_hasta = params.get('fecha_hasta', '')
-        self.sort_by = params.get('sort', 'vencimiento_asc')
+        self.mostrar_anulados = params.get('mostrar_anulados') == 'on'
+        self.sort_by = params.get('sort', 'fecha_desc')
 
         # 2. Configuración de fechas para annotations
         today = timezone.now().date()
@@ -2253,9 +2280,11 @@ class StockActualListView(BaseEstacionMixin, CustomPermissionRequiredMixin, Temp
             'current_estado': self.estado_id,
             'current_fecha_desde': self.fecha_desde,
             'current_fecha_hasta': self.fecha_hasta,
+            'current_mostrar_anulados': self.mostrar_anulados,
             'current_sort': self.sort_by,
         })
         return context
+
 
     def _get_activos_queryset(self):
         """Construye y filtra el queryset de Activos."""
@@ -2268,6 +2297,9 @@ class StockActualListView(BaseEstacionMixin, CustomPermissionRequiredMixin, Temp
             vencimiento_final=Coalesce('fecha_expiracion', 'fin_vida_util_calculada'),
             estado_vencimiento=self.vencimiento_annotation
         )
+
+        if not self.mostrar_anulados:
+            qs = qs.exclude(estado__nombre='ANULADO POR ERROR')
 
         # Filtro específico de Activos (búsqueda)
         if self.query:
@@ -2282,6 +2314,7 @@ class StockActualListView(BaseEstacionMixin, CustomPermissionRequiredMixin, Temp
             qs = qs.filter(estado__id=self.estado_id)
 
         return self._aplicar_filtros_comunes(qs)
+
 
     def _get_lotes_queryset(self):
         """Construye y filtra el queryset de Lotes."""
@@ -2311,6 +2344,9 @@ class StockActualListView(BaseEstacionMixin, CustomPermissionRequiredMixin, Temp
             )
         )
 
+        if not self.mostrar_anulados:
+            qs = qs.exclude(estado__nombre='ANULADO POR ERROR')
+
         if self.query:
             qs = qs.filter(
                 self._get_base_search_q() | 
@@ -2318,6 +2354,7 @@ class StockActualListView(BaseEstacionMixin, CustomPermissionRequiredMixin, Temp
             )
 
         return self._aplicar_filtros_comunes(qs)
+
 
     def _get_base_search_q(self):
         """Retorna el objeto Q base para búsqueda en ProductoGlobal (común)."""
@@ -2327,6 +2364,7 @@ class StockActualListView(BaseEstacionMixin, CustomPermissionRequiredMixin, Temp
             Q(producto__producto_global__marca__nombre__icontains=self.query) |
             Q(producto__producto_global__modelo__icontains=self.query)
         )
+
 
     def _aplicar_filtros_comunes(self, qs):
         """Aplica filtros compartidos (Ubicación, Fechas)."""
@@ -2341,25 +2379,94 @@ class StockActualListView(BaseEstacionMixin, CustomPermissionRequiredMixin, Temp
             
         return qs
 
+
     def _combinar_y_ordenar(self, activos, lotes):
-        """Combina querysets y aplica ordenamiento en memoria (Python)."""
-        full_list = list(chain(activos, lotes))
+        """
+        Combina querysets, INYECTA ALERTA DE STOCK CRÍTICO y ordena con desempate.
+        """
+        # 1. Convertir a listas para iterar
+        # (Esto dispara las queries de Activos y Lotes, trayendo los datos)
+        activos_list = list(activos)
+        lotes_list = list(lotes)
         
+        full_list = activos_list + lotes_list
+
+        # --- OPTIMIZACIÓN STOCK CRÍTICO ---
+        if full_list:
+            # 2. Obtenemos el SET de IDs de productos que están críticos
+            ids_criticos = self._get_productos_criticos_ids()
+            
+            # 3. Inyectamos la bandera en cada objeto en memoria
+            for item in full_list:
+                # CAMBIO 4: Lógica de Alerta "Inteligente"
+                # Solo marcamos alerta si es crítico Y NO está anulado
+                es_anulado = getattr(item.estado, 'nombre', '') == 'ANULADO POR ERROR'
+                
+                if not es_anulado and item.producto_id in ids_criticos:
+                    item.alerta_stock_critico = True
+                else:
+                    item.alerta_stock_critico = False
+        
+        # 4. Ordenamiento (Tu lógica original intacta)
         reverse = self.sort_by.endswith('_desc')
         key_name = self.sort_by.replace('_desc', '').replace('_asc', '')
 
-        # Funciones lambda para manejo seguro de None en ordenamiento
+        # Helpers para fechas seguras
+        min_date = datetime.date.min
+        max_date = datetime.date.max
+        min_dt = timezone.make_aware(datetime.datetime.min)
+
         sort_strategies = {
-            'vencimiento': lambda x: getattr(x, 'vencimiento_final', datetime.date.max) or datetime.date.max,
-            'fecha': lambda x: getattr(x, 'fecha_recepcion', datetime.date.min) or datetime.date.min,
-            'nombre': lambda x: getattr(x.producto.producto_global, 'nombre_oficial', ''),
+            'vencimiento': lambda x: (
+                getattr(x, 'vencimiento_final', max_date) or max_date, 
+                x.created_at or min_dt # Desempate por creación
+            ),
+            'fecha': lambda x: (
+                getattr(x, 'fecha_recepcion', min_date) or min_date, 
+                x.created_at or min_dt # Desempate por creación (Clave para tu requerimiento)
+            ),
+            'nombre': lambda x: (
+                getattr(x.producto.producto_global, 'nombre_oficial', ''), 
+                x.created_at or min_dt
+            ),
         }
 
         strategy = sort_strategies.get(key_name)
         if strategy:
             full_list.sort(key=strategy, reverse=reverse)
-            
+
         return full_list
+    
+
+    def _get_productos_criticos_ids(self):
+        """
+        Retorna un SET con los IDs de productos que están bajo stock crítico.
+        Realiza una única consulta agregada potente.
+        """
+        # Usamos la misma lógica potente que hicimos para el Dashboard
+        # pero solo devolvemos los IDs para ser eficientes.
+        
+        criticos_qs = Producto.objects.filter(
+            estacion=self.estacion_activa,
+            stock_critico__gt=0
+        ).annotate(
+            cant_activos=Count(
+                'activo', 
+                filter=Q(activo__estado__tipo_estado__nombre='OPERATIVO')
+            ),
+            cant_lotes=Coalesce(
+                Sum('loteinsumo__cantidad', 
+                    filter=Q(loteinsumo__estado__tipo_estado__nombre='OPERATIVO')
+                ), 
+                0
+            )
+        ).annotate(
+            stock_total=F('cant_activos') + F('cant_lotes')
+        ).filter(
+            stock_total__lte=F('stock_critico')
+        ).values_list('id', flat=True) # <--- Solo traemos los IDs
+
+        return set(criticos_qs) # Convertimos a set para búsqueda rápida
 
 
 
@@ -3144,6 +3251,7 @@ class ExtraviadoExistenciaView(BaseEstacionMixin, CustomPermissionRequiredMixin,
     Vista para reportar una existencia como extraviada.
     Utiliza composición de mixins para manejo seguro de items,
     reglas de negocio y formularios.
+    AHORA SÓLO FUNCIONA PARA EXISTENCIAS DE TIPO ACTIVO
     """
     template_name = 'gestion_inventario/pages/extraviado_existencia.html'
     form_class = ExtraviadoExistenciaForm
@@ -3151,12 +3259,16 @@ class ExtraviadoExistenciaView(BaseEstacionMixin, CustomPermissionRequiredMixin,
     success_url = reverse_lazy('gestion_inventario:ruta_stock_actual')
 
     def dispatch(self, request, *args, **kwargs):
-        # 1. Carga Explícita del Ítem (Mixin)
         self.item = self.get_inventory_item()
         
         if not self.item:
             # Si falla la carga (o no hay sesión), el mixin o la redirección manual actúan
             return super().dispatch(request, *args, **kwargs) # Dejar que el flujo siga (posiblemente a 404 o redirect)
+        
+        # 1. RESTRICCIÓN: Solo Activos pueden usar esta vista específica
+        if self.tipo_item == 'lote':
+            messages.warning(request, "Para reportar pérdidas en Lotes/Insumos, utilice la opción 'Ajustar Stock'.")
+            return redirect('gestion_inventario:ruta_stock_actual')
 
         # 2. Validar Estado (Regla de Negocio)
         estados_permitidos = ['DISPONIBLE', 'PENDIENTE REVISIÓN', 'EN REPARACIÓN', 'EN PRÉSTAMO EXTERNO']
@@ -3173,31 +3285,31 @@ class ExtraviadoExistenciaView(BaseEstacionMixin, CustomPermissionRequiredMixin,
         try:
             estado_extraviado = Estado.objects.get(nombre='EXTRAVIADO')
             compartimento_limbo = get_or_create_extraviado_compartment(self.estacion_activa)
-            compartimento_origen = self.item.compartimento
 
             # Preparar datos para el log
             nombre_item = self.item.producto.producto_global.nombre_oficial
-            codigo_item = self.item.codigo_activo if self.tipo_item == 'activo' else self.item.codigo_lote
+            codigo_item = self.item.codigo_activo
+
+            # Guardamos estado previo para lógica condicional
+            estaba_prestado = (self.item.estado.nombre == 'EN PRÉSTAMO EXTERNO')
 
             with transaction.atomic():
-                # 1. Actualizar Item
-                cantidad_movimiento = 0
-                if self.tipo_item == 'lote':
-                    cantidad_movimiento = self.item.cantidad * -1
-                    self.item.cantidad = 0
-                else:
-                    cantidad_movimiento = -1
+                # --- A. LÓGICA DE MOVIMIENTO DE STOCK ---
+                # Si estaba prestado, ya "salió" del almacén físico. No restamos de nuevo.
+                # Si estaba disponible, sí restamos.
+                cantidad_movimiento = 0 if estaba_prestado else -1
                 
+                # Actualizar Activo
                 self.item.estado = estado_extraviado
                 self.item.compartimento = compartimento_limbo
                 self.item.save()
 
-                # 2. Auditoría
+                # --- B. AUDITORÍA (MOVIMIENTO) ---
                 MovimientoInventario.objects.create(
                     tipo_movimiento=TipoMovimiento.SALIDA,
                     usuario=self.request.user,
                     estacion=self.estacion_activa,
-                    compartimento_origen=compartimento_origen,
+                    compartimento_origen=None if estaba_prestado else self.item.compartimento, # Si estaba prestado, no sale de un compartimento físico real
                     compartimento_destino=compartimento_limbo,
                     activo=self.item if self.tipo_item == 'activo' else None,
                     lote_insumo=self.item if self.tipo_item == 'lote' else None,
@@ -3205,20 +3317,23 @@ class ExtraviadoExistenciaView(BaseEstacionMixin, CustomPermissionRequiredMixin,
                     notas=f"Extravío reportado: {notas}"
                 )
 
+                # 3. GESTIÓN DE PRÉSTAMOS PENDIENTES
+                # Si el ítem estaba prestado, debemos 'saldar' la deuda en el préstamo
+                # para que no quede abierto eternamente.
+                if estaba_prestado:
+                    self._registrar_perdida_en_prestamo(self.item)
+
                 # --- REGISTRO DE ACTIVIDAD (Feed) ---
                 self.auditar(
-                    verbo="reportó como extraviado (pérdida de inventario) a",
+                    verbo="reportó como extraviado a",
                     objetivo=self.item,
                     objetivo_repr=f"{nombre_item} ({codigo_item})",
-                    detalles={
-                        'motivo_declarado': notas,
-                        'ubicacion_anterior': compartimento_origen.nombre
-                    }
+                    detalles={'motivo': notas, 'estaba_prestado': estaba_prestado}
                 )
 
             messages.success(
                 self.request, 
-                f"'{self.item.producto.producto_global.nombre_oficial}' reportado como extraviado."
+                f"'({codigo_item}) {nombre_item}' reportado como extraviado."
             )
             return super().form_valid(form)
 
@@ -3229,9 +3344,38 @@ class ExtraviadoExistenciaView(BaseEstacionMixin, CustomPermissionRequiredMixin,
             messages.error(self.request, f"Error inesperado: {e}")
             return self.form_invalid(form)
         
+
     def form_invalid(self, form):
         messages.error(self.request, "No se pudo procesar el reporte de extravío. Revisa los campos del formulario.")
         return super().form_invalid(form)
+    
+
+    def _registrar_perdida_en_prestamo(self, activo):
+        """
+        Busca el préstamo activo y marca la cantidad como EXTRAVIADA, no devuelta.
+        """
+        detalles = PrestamoDetalle.objects.filter(
+            activo=activo,
+            prestamo__estado__in=[Prestamo.EstadoPrestamo.PENDIENTE, Prestamo.EstadoPrestamo.DEVUELTO_PARCIAL]
+        )
+
+        for detalle in detalles:
+            # Marcamos como extraviado en lugar de devuelto
+            detalle.cantidad_extraviada = 1 
+            detalle.save()
+            
+            # Verificamos si esto cierra el préstamo
+            self._verificar_cierre_prestamo(detalle.prestamo)
+    
+
+    def _verificar_cierre_prestamo(self, prestamo):
+        """Lógica reutilizable para cerrar préstamos."""
+        # Un ítem está saldado si (devuelto + extraviado) >= prestado
+        todos_saldados = all(d.esta_saldado for d in prestamo.items_prestados.all())
+        
+        if todos_saldados:
+            prestamo.estado = Prestamo.EstadoPrestamo.COMPLETADO
+            prestamo.save(update_fields=['estado', 'updated_at'])
 
 
 
@@ -3697,65 +3841,6 @@ class CrearPrestamoView(BaseEstacionMixin, CustomPermissionRequiredMixin, Audito
 
 
 
-class BuscarItemPrestamoJson(LoginRequiredMixin, ModuleAccessMixin, CustomPermissionRequiredMixin, View):
-    """
-    API endpoint (solo GET) para buscar un ítem por su código
-    y verificar si está disponible para préstamo.
-    """
-    permission_required = "gestion_usuarios.accion_gestion_inventario_ver_prestamos"
-
-    def get(self, request, *args, **kwargs):
-        estacion_id = request.session.get('active_estacion_id')
-        codigo = kwargs.get('codigo')
-
-        if not estacion_id or not codigo:
-            return JsonResponse({"error": "Faltan datos (estación o código)."}, status=400)
-
-        # 1. Buscar en Activos
-        try:
-            # Buscamos por el código exacto (case-insensitive)
-            activo = Activo.objects.select_related('producto__producto_global', 'estado')\
-                .get(codigo_activo__iexact=codigo, estacion_id=estacion_id)
-            
-            # Verificamos que esté 'DISPONIBLE'
-            if activo.estado.nombre != 'DISPONIBLE':
-                return JsonResponse({"error": f"Activo no disponible (Estado: {activo.estado.nombre})."}, status=400)
-
-            return JsonResponse({
-                "tipo": "activo",
-                "id": activo.id,
-                "codigo": activo.codigo_activo,
-                "nombre": activo.producto.producto_global.nombre_oficial
-            })
-        except Activo.DoesNotExist:
-            pass # No era un activo, buscar en lotes
-
-        # 2. Buscar en Lotes
-        try:
-            lote = LoteInsumo.objects.select_related('producto__producto_global', 'estado')\
-                .get(codigo_lote__iexact=codigo, compartimento__ubicacion__estacion_id=estacion_id)
-
-            if lote.estado.nombre != 'DISPONIBLE':
-                 return JsonResponse({"error": f"Lote no disponible (Estado: {lote.estado.nombre})."}, status=400)
-            
-            if lote.cantidad <= 0:
-                return JsonResponse({"error": f"Lote {lote.codigo_lote} no tiene stock (Cantidad: 0)."}, status=400)
-
-            return JsonResponse({
-                "tipo": "lote",
-                "id": lote.id,
-                "codigo": lote.codigo_lote,
-                "nombre": lote.producto.producto_global.nombre_oficial,
-                "max_qty": lote.cantidad
-            })
-        except LoteInsumo.DoesNotExist:
-            pass # No se encontró
-
-        return JsonResponse({"error": f"Código '{codigo}' no encontrado o no disponible en esta estación."}, status=404)
-
-
-
-
 class HistorialPrestamosView(BaseEstacionMixin, CustomPermissionRequiredMixin, ListView):
     """
     Vista para listar el historial de préstamos.
@@ -3831,6 +3916,7 @@ class GestionarDevolucionView(BaseEstacionMixin, CustomPermissionRequiredMixin, 
             estacion_id=self.estacion_activa_id
         )
 
+
     def get(self, request, prestamo_id):
         prestamo = self.get_prestamo_seguro(prestamo_id)
         
@@ -3842,7 +3928,7 @@ class GestionarDevolucionView(BaseEstacionMixin, CustomPermissionRequiredMixin, 
 
         # Cálculo en memoria para la UI
         for item in items_prestados:
-            item.cantidad_pendiente = item.cantidad_prestada - item.cantidad_devuelta
+            item.pendiente_real = item.cantidad_prestada - item.cantidad_devuelta - item.cantidad_extraviada
 
         context = {
             'prestamo': prestamo,
@@ -3871,6 +3957,7 @@ class GestionarDevolucionView(BaseEstacionMixin, CustomPermissionRequiredMixin, 
 
         return redirect('gestion_inventario:ruta_gestionar_devolucion', prestamo_id=prestamo.id)
 
+
     def _procesar_devoluciones(self, request, prestamo):
         """Orquesta la lógica de devolución de ítems."""
         items_prestados = prestamo.items_prestados.select_related('activo', 'lote').all()
@@ -3883,39 +3970,64 @@ class GestionarDevolucionView(BaseEstacionMixin, CustomPermissionRequiredMixin, 
         total_items_completados = 0
         total_unidades_fisicas_devueltas = 0 # Contador para el log
 
+        items_perdidos_count = 0
+        ahora = timezone.now()
+
         for detalle in items_prestados:
-            pendiente = detalle.cantidad_prestada - detalle.cantidad_devuelta
+            pendiente = detalle.cantidad_prestada - detalle.cantidad_devuelta - detalle.cantidad_extraviada
             if pendiente <= 0:
                 total_items_completados += 1
                 continue
 
-            # Extraer cantidad del POST de forma segura
-            try:
-                cantidad_a_devolver = int(request.POST.get(f'cantidad-devolver-{detalle.id}', 0))
-            except ValueError:
-                continue # Ignorar valores basura
+            # 1. Capturar Inputs
+            cant_devolver = int(request.POST.get(f'cantidad-devolver-{detalle.id}', 0))
+            cant_perder = int(request.POST.get(f'cantidad-perder-{detalle.id}', 0)) # Nuevo input
 
-            if cantidad_a_devolver <= 0 or cantidad_a_devolver > pendiente:
-                continue # Ignorar cantidades inválidas
+            # Validaciones básicas
+            suma_accion = cant_devolver + cant_perder
+            if suma_accion <= 0:
+                continue 
+            
+            if suma_accion > pendiente:
+                # Error de validación: intentan devolver/perder más de lo que deben
+                messages.warning(request, f"Error en {detalle}: La suma de devolución y pérdida excede lo pendiente.")
+                continue
 
-            # 1. Actualizar Detalle
-            detalle.cantidad_devuelta += cantidad_a_devolver
+            hubo_cambios = False
+
+            # PROCESAR DEVOLUCIÓN (Tu lógica existente)
+            if cant_devolver > 0:
+                detalle.cantidad_devuelta += cant_devolver
+                movimiento = self._restaurar_stock(detalle, cant_devolver, estado_disponible, prestamo.id)
+                movimientos_bulk.append(movimiento)
+                total_unidades_fisicas_devueltas += cant_devolver
+                hubo_cambios = True
+
+            # PROCESAR PÉRDIDA (Nueva lógica integrada)
+            if cant_perder > 0:
+                detalle.cantidad_extraviada += cant_perder
+                self._procesar_perdida_desde_prestamo(detalle, cant_perder, request.user)
+                items_perdidos_count += cant_perder
+                hubo_cambios = True
+
+            # ACTUALIZACIÓN DE FECHA ULTIMOS CAMBIOS
+            if hubo_cambios:
+                detalle.fecha_ultima_devolucion = ahora
+
+            # Actualizar Detalle
             detalle.save()
             items_actualizados_count += 1
-            total_unidades_fisicas_devueltas += cantidad_a_devolver
 
-            if detalle.cantidad_devuelta == detalle.cantidad_prestada:
+            # Verificar si esta línea quedó saldada
+            if detalle.esta_saldado:
                 total_items_completados += 1
 
-            # 2. Actualizar Stock y Generar Movimiento
-            movimiento = self._restaurar_stock(detalle, cantidad_a_devolver, estado_disponible, prestamo.id)
-            movimientos_bulk.append(movimiento)
 
-        # 3. Guardar Movimientos en Lote (Eficiencia)
+        # Guardar Movimientos en Lote (Eficiencia)
         if movimientos_bulk:
             MovimientoInventario.objects.bulk_create(movimientos_bulk)
 
-        # 4. Actualizar Estado del Préstamo
+        # Actualizar Estado del Préstamo
         self._actualizar_estado_prestamo(prestamo, total_items_completados, total_items_prestamo)
 
          # --- AUDITORÍA ---
@@ -3932,7 +4044,11 @@ class GestionarDevolucionView(BaseEstacionMixin, CustomPermissionRequiredMixin, 
                 }
             )
 
-        return {'procesados': items_actualizados_count}
+        return {
+            'procesados': total_unidades_fisicas_devueltas, 
+            'perdidos': items_perdidos_count
+        }
+
 
     def _restaurar_stock(self, detalle, cantidad, estado_disp, prestamo_id):
         """Restaura el stock (Activo o Lote) y retorna el objeto Movimiento (sin guardar)."""
@@ -3964,6 +4080,7 @@ class GestionarDevolucionView(BaseEstacionMixin, CustomPermissionRequiredMixin, 
 
         return movimiento
 
+
     def _actualizar_estado_prestamo(self, prestamo, completados, total):
         """Calcula y guarda el nuevo estado del préstamo."""
         nuevo_estado = None
@@ -3977,6 +4094,46 @@ class GestionarDevolucionView(BaseEstacionMixin, CustomPermissionRequiredMixin, 
         if nuevo_estado:
             prestamo.estado = nuevo_estado
             prestamo.save(update_fields=['estado', 'updated_at'])
+
+    
+    def _procesar_perdida_desde_prestamo(self, detalle, cantidad, usuario):
+        """
+        Ejecuta la lógica de extravío (cambio de estado y movimiento) para un ítem prestado.
+        """
+        estado_extraviado = Estado.objects.get(nombre='EXTRAVIADO')
+        compartimento_limbo = get_or_create_extraviado_compartment(self.estacion_activa) # Tu función helper
+        
+        # A. Si es Activo Serializado
+        if detalle.activo:
+            activo = detalle.activo
+            activo.estado = estado_extraviado
+            activo.compartimento = compartimento_limbo
+            activo.save()
+            
+            # Movimiento de Ajuste (Cantidad 0 porque ya estaba fuera)
+            MovimientoInventario.objects.create(
+                tipo_movimiento=TipoMovimiento.AJUSTE,
+                usuario=usuario,
+                estacion=self.estacion_activa,
+                compartimento_destino=compartimento_limbo,
+                activo=activo,
+                cantidad_movida=0, 
+                notas=f"Reportado extraviado durante devolución de Préstamo #{detalle.prestamo.id}"
+            )
+
+        # B. Si es Lote (Insumo)
+        elif detalle.lote:
+            # Aquí NO cambiamos el estado del lote original (porque el lote original sigue en bodega)
+            # Simplemente registramos que esas unidades prestadas "murieron" afuera.
+            MovimientoInventario.objects.create(
+                tipo_movimiento=TipoMovimiento.AJUSTE,
+                usuario=usuario,
+                estacion=self.estacion_activa,
+                compartimento_destino=compartimento_limbo,
+                lote_insumo=detalle.lote,
+                cantidad_movida=0, # Igual es 0 porque salieron del stock prestado, no del físico
+                notas=f"Reportado extraviado ({cantidad} u.) durante devolución de Préstamo #{detalle.prestamo.id}"
+            )
 
 
 

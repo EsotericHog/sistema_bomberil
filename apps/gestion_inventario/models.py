@@ -543,6 +543,7 @@ class Producto(models.Model):
     costo_compra = models.DecimalField(max_digits=10, decimal_places=0, null=True, blank=True)
     estacion = models.ForeignKey(Estacion, on_delete=models.PROTECT, verbose_name="Estación Origen")
     vida_util_estacion_anos = models.PositiveIntegerField(verbose_name="Vida Útil (Años)", null=True, blank=True, help_text="Regla de la estación. Si se deja en blanco, se usará la recomendación global.")
+    stock_critico = models.PositiveIntegerField(verbose_name="Stock Crítico / Mínimo", default=0, help_text="Cantidad mínima deseada. Si el stock operativo baja de este número, se generará una alerta. Dejar en 0 para desactivar.")
     es_expirable = models.BooleanField(verbose_name="¿Es expirable?", default=0)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -923,6 +924,8 @@ class PrestamoDetalle(models.Model):
     
     cantidad_prestada = models.PositiveIntegerField(default=1)
     cantidad_devuelta = models.PositiveIntegerField(default=0)
+    cantidad_extraviada = models.PositiveIntegerField(default=0, verbose_name="Cant. Extraviada/Dañada")
+    fecha_ultima_devolucion = models.DateTimeField(null=True, blank=True, verbose_name="Última Actualización", help_text="Fecha de la última devolución o reporte de pérdida parcial.")
 
     class Meta:
         verbose_name = "Detalle de Préstamo"
@@ -935,6 +938,11 @@ class PrestamoDetalle(models.Model):
             ("sys_change_prestamodetalle", "System: Puede cambiar Detalles de Préstamos"),
             ("sys_delete_prestamodetalle", "System: Puede eliminar Detalles de Préstamos"),
         ]
+
+    @property
+    def esta_saldado(self):
+        """Verifica si la línea está cerrada (ya sea por devolución o pérdida)."""
+        return (self.cantidad_devuelta + self.cantidad_extraviada) >= self.cantidad_prestada
 
     def clean(self):
         if not self.activo and not self.lote:

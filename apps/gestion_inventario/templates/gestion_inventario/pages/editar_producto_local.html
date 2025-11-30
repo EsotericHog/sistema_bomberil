@@ -63,6 +63,17 @@
                         </div>
 
                         <div class="mb-3">
+                            <label for="{{ form.stock_critico.id_for_label }}" class="form-label fs_normal color_primario_variante text-danger fw-bold">
+                                <i class="fas fa-exclamation-triangle me-1"></i> {{ form.stock_critico.label }}
+                            </label>
+                            {{ form.stock_critico }}
+                            <small class="form-text color_primario_muteado fs_pequena">{{ form.stock_critico.help_text }}</small>
+                            {% if form.stock_critico.errors %}
+                                <div class="text-danger fs_pequena mt-1">{{ form.stock_critico.errors|striptags }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="mb-3">
                             <label for="{{ form.proveedor_preferido.id_for_label }}" class="form-label fs_normal color_primario_variante">{{ form.proveedor_preferido.label }}</label>
                             {{ form.proveedor_preferido }}
                             {% if form.proveedor_preferido.errors %}
