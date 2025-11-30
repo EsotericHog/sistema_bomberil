@@ -17,7 +17,7 @@
                         {# --- SECCIÓN DEL AVATAR --- #}
                         <div id="avatar-container-perfil" 
                         class="position-relative me-3" 
-                        data-api-url="#"> ```                            
+                        data-api-url="#">                         
                             <img class="js-avatar-image rounded-circle" 
                                  src="{% if usuario.avatar %}{{ usuario.avatar.url }}{% else %}{% static 'imagenes/default_avatar.png' %}{% endif %}" 
                                  alt="Avatar de {{ usuario.first_name }}" 
