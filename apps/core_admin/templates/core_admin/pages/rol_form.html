@@ -69,14 +69,14 @@
                             {% for perm in group.children %}
                             <div class="col-md-6 col-xl-4">
                                 <div class="form-check py-1">
-                                    <input class="form-check-input permiso-check" 
+                                    <input class="form-check-input permiso-check text-sm" 
                                            type="checkbox" 
                                            name="permisos" 
                                            value="{{ perm.id }}" 
                                            id="perm-{{ perm.id }}"
                                            data-module="{{ group.app_label }}"
                                            {% if perm.id in rol_permissions_ids %}checked{% endif %}>
-                                    <label class="form-check-label text-muted text-xs" for="perm-{{ perm.id }}" style="cursor: pointer;">
+                                    <label class="form-check-label text-muted text-sm" for="perm-{{ perm.id }}" style="cursor: pointer;">
                                         {{ perm.name }}
                                     </label>
                                 </div>

@@ -66,8 +66,8 @@ document.addEventListener('DOMContentLoaded', function () {
                         datasets: [{
                             data: data.values,
                             backgroundColor: [
-                                '#e74c3c', 
                                 '#2ecc71', 
+                                '#e74c3c', 
                                 '#f1c40f', 
                                 '#95a5a6', 
                                 '#3498db', 

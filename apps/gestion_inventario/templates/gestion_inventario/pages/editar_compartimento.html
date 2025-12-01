@@ -1,10 +1,11 @@
-{% extends 'gestion_inventario/layouts/base.html' %}
-{% load static %}
+{# Plantilla base #}{% extends 'gestion_inventario/layouts/base.html' %}
+{# Cargar assets #}{% load static %}
 
-{% block titulo_ventana %}Editar: {{ compartimento.nombre }}{% endblock %}
+{# Título de la ventana #} {% block titulo_ventana %}Editar: {{ compartimento.nombre }}{% endblock %}
 
+{# Título de la página #} 
 {% block titulo_pagina %}
-    <span class="fs_grande color_primario">
+    <span class="text-xl color_primario">
         <i class="fas fa-edit me-2"></i> Editar Compartimento
     </span>
 {% endblock %}
@@ -14,24 +15,29 @@
     <div class="row justify-content-center">
         <div class="col-12 col-lg-10 col-xl-8">
 
-            <div class="card shadow-sm mb-4 fondo_secundario">
+            <div class="card shadow-sm border-0">
                 <div class="card-body p-4 p-md-5">
 
                     <form method="POST" enctype="multipart/form-data" novalidate>
                         {% csrf_token %}
 
                         <div class="row g-4">
+                            {# --- COLUMNA IZQUIERDA: IMAGEN --- #}
                             <div class="col-12 col-md-5">
-                                <h5 class="color_primario fs_mediana fw-bold">Imagen Actual</h5>
-                                <img src="{% if compartimento.imagen_thumb_medium %}{{ compartimento.imagen_thumb_medium.url }}{% else %}{% static 'gestion_inventario/imagenes/default_compartimento.png' %}{% endif %}"
-                                     class="img-fluid rounded-3 shadow-sm mb-3" alt="Imagen {{ compartimento.nombre }}" 
-                                     style="height: 250px; width: 100%; object-fit: cover;">
+                                <h5 class="text-lg font-bold color_primario mb-3">Imagen Actual</h5>
+                                
+                                <div class="mb-3 text-center bg-light rounded-3 p-2 border">
+                                    <img src="{% if compartimento.imagen_thumb_medium %}{{ compartimento.imagen_thumb_medium.url }}{% else %}{% static 'gestion_inventario/imagenes/default_compartimento.png' %}{% endif %}"
+                                         class="img-fluid rounded shadow-sm" 
+                                         alt="Imagen {{ compartimento.nombre }}" 
+                                         style="max-height: 250px; width: 100%; object-fit: contain;">
+                                </div>
                                 
                                 <div class="mb-3">
-                                    <label for="{{ form.imagen.id_for_label }}" class="form-label fs_normal color_primario_variante fw-bold">Subir nueva imagen</label>
+                                    <label for="{{ form.imagen.id_for_label }}" class="form-label font-bold text-sm">Subir nueva imagen</label>
                                     {{ form.imagen }}
                                     {% if form.imagen.errors %}
-                                        <div class="invalid-feedback d-block">
+                                        <div class="invalid-feedback d-block text-xs mt-1">
                                             {% for error in form.imagen.errors %}
                                                 {{ error }}
                                             {% endfor %}
@@ -40,21 +46,28 @@
                                 </div>
                             </div>
 
+                            {# --- COLUMNA DERECHA: DETALLES --- #}
                             <div class="col-12 col-md-7">
-                                <h5 class="color_primario fs_mediana fw-bold">Detalles del Compartimento</h5>
-                                <p class="fs_normal color_primario_variante mb-3">
-                                    Modificando: <strong>{{ compartimento.nombre }}</strong><br>
-                                    Perteneciente a: 
-                                    <a href="{% url 'gestion_inventario:ruta_gestionar_ubicacion' compartimento.ubicacion.id %}">
-                                        {{ compartimento.ubicacion.nombre }}
-                                    </a>
-                                </p>
+                                <h5 class="text-lg font-bold color_primario mb-3">Detalles del Compartimento</h5>
+                                
+                                <div class="alert alert-light border d-flex align-items-center mb-4 p-3">
+                                    <i class="fas fa-info-circle text-primary fs-4 me-3"></i>
+                                    <div>
+                                        <div class="text-xs text-uppercase font-bold text-muted">Ubicación</div>
+                                        <a href="{% url 'gestion_inventario:ruta_gestionar_ubicacion' compartimento.ubicacion.id %}" class="text-base font-bold text-decoration-none">
+                                            {{ compartimento.ubicacion.nombre }}
+                                        </a>
+                                    </div>
+                                </div>
 
+                                {# Campo: Nombre #}
                                 <div class="mb-3">
-                                    <label for="{{ form.nombre.id_for_label }}" class="form-label fs_normal color_primario_variante fw-bold">Nombre del compartimento</label>
+                                    <label for="{{ form.nombre.id_for_label }}" class="form-label font-bold text-sm">
+                                        Nombre <span class="text-danger fw-bold" title="Campo Obligatorio">*</span>
+                                    </label>
                                     {{ form.nombre }}
                                     {% if form.nombre.errors %}
-                                        <div class="invalid-feedback d-block">
+                                        <div class="invalid-feedback d-block text-xs mt-1">
                                             {% for error in form.nombre.errors %}
                                                 {{ error }}
                                             {% endfor %}
@@ -62,11 +75,12 @@
                                     {% endif %}
                                 </div>
 
+                                {# Campo: Descripción #}
                                 <div class="mb-3">
-                                    <label for="{{ form.descripcion.id_for_label }}" class="form-label fs_normal color_primario_variante fw-bold">Descripción (opcional)</label>
+                                    <label for="{{ form.descripcion.id_for_label }}" class="form-label font-bold text-sm">Descripción</label>
                                     {{ form.descripcion }}
                                     {% if form.descripcion.errors %}
-                                        <div class="invalid-feedback d-block">
+                                        <div class="invalid-feedback d-block text-xs mt-1">
                                             {% for error in form.descripcion.errors %}
                                                 {{ error }}
                                             {% endfor %}
@@ -76,15 +90,19 @@
                             </div>
                         </div>
 
-                        <div class="row mt-4 pt-4 border-top">
-                            <div class="col-12 d-flex justify-content-end">
-                                <a href="{% url 'gestion_inventario:ruta_detalle_compartimento' compartimento.id %}" class="btn btn-secondary fs_normal me-2">
-                                    <i class="fas fa-times me-1"></i> Cancelar
-                                </a>
-                                <button type="submit" class="btn btn-primary fs_normal">
-                                    <i class="fas fa-save me-1"></i> Guardar Cambios
-                                </button>
-                            </div>
+                        <hr class="my-4">
+
+                        <div class="d-flex justify-content-end gap-2">
+                            <a href="{% url 'gestion_inventario:ruta_detalle_compartimento' compartimento.id %}" class="btn btn-outline-secondary text-base">
+                                Cancelar
+                            </a>
+                            
+                            {# PERMISO: Gestionar Ubicaciones (Editar) #}
+                            {% if perms.gestion_inventario.accion_gestion_inventario_gestionar_ubicaciones %}
+                            <button type="submit" class="btn btn-primary text-base px-4">
+                                <i class="fas fa-save me-1"></i> Guardar Cambios
+                            </button>
+                            {% endif %}
                         </div>
 
                     </form>

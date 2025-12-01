@@ -2,39 +2,45 @@
 {% load static %}
 {% block titulo_ventana %}Crear Proveedor{% endblock %}
 
+{% block titulo_pagina %}
+    <span class="text-xl color_primario">
+        <i class="fas fa-truck-moving me-2"></i> Crear Nuevo Proveedor
+    </span>
+{% endblock %}
+
 {% block contenido %}
 <div class="container mt-4">
     <div class="row justify-content-center">
         <div class="col-lg-8">
             <form method="POST">
                 {% csrf_token %}
-                <div class="card shadow-sm">
-                    <div class="card-header fondo_secundario_variante">
-                        <h4 class="mb-0 fs_grande color_primario">Crear Nuevo Proveedor</h4>
+                <div class="card shadow-sm border-0">
+                    <div class="card-header bg-white border-bottom py-3">
+                        <h5 class="mb-0 text-lg font-bold color_primario">Datos de la Entidad</h5>
                     </div>
-                    <div class="card-body fondo_secundario">
+                    <div class="card-body p-4">
                         
                         <!-- SECCIÓN DATOS DEL PROVEEDOR (EMPRESA) -->
                         <fieldset>
-                            <legend class="fs-5 color_primario_variante fs_pequena">Datos de la Entidad</legend>
+                            <legend class="text-base font-bold color_primario_variante mb-3">Información General</legend>
                             
                             {% if proveedor_form.non_field_errors %}
-                                <div class="alert alert-danger fs_pequena">{{ proveedor_form.non_field_errors }}</div>
+                                <div class="alert alert-danger text-sm">{{ proveedor_form.non_field_errors }}</div>
                             {% endif %}
                             
                             <div class="mb-3">
-                                <label for="{{ proveedor_form.nombre.id_for_label }}" class="form-label fs_normal color_primario_variante">{{ proveedor_form.nombre.label }}*</label>
+                                <label for="{{ proveedor_form.nombre.id_for_label }}" class="form-label font-bold text-sm color_primario_variante">{{ proveedor_form.nombre.label }} <span class="text-danger">*</span></label>
                                 {{ proveedor_form.nombre }}
                                 {% if proveedor_form.nombre.errors %}
-                                    <div class="text-danger fs_pequena mt-1">{{ proveedor_form.nombre.errors|striptags }}</div>
+                                    <div class="text-danger text-xs mt-1">{{ proveedor_form.nombre.errors|striptags }}</div>
                                 {% endif %}
                             </div>
 
                             <div class="mb-3">
-                                <label for="{{ proveedor_form.rut.id_for_label }}" class="form-label fs_normal color_primario_variante">{{ proveedor_form.rut.label }}*</label>
+                                <label for="{{ proveedor_form.rut.id_for_label }}" class="form-label font-bold text-sm color_primario_variante">{{ proveedor_form.rut.label }} <span class="text-danger">*</span></label>
                                 {{ proveedor_form.rut }}
                                 {% if proveedor_form.rut.errors %}
-                                    <div class="text-danger fs_pequena mt-1">{{ proveedor_form.rut.errors|striptags }}</div>
+                                    <div class="text-danger text-xs mt-1">{{ proveedor_form.rut.errors|striptags }}</div>
                                 {% endif %}
                             </div>
                         </fieldset>
@@ -43,64 +49,68 @@
 
                         <!-- SECCIÓN DATOS DEL CONTACTO PRINCIPAL -->
                         <fieldset>
-                            <legend class="fs-5 color_primario_variante">Datos del Contacto Principal</legend>
+                            <legend class="text-base font-bold color_primario_variante mb-3">Datos del Contacto Principal</legend>
 
                              {% if contacto_form.non_field_errors %}
-                                <div class="alert alert-danger">{{ contacto_form.non_field_errors }}</div>
+                                <div class="alert alert-danger text-sm">{{ contacto_form.non_field_errors }}</div>
                             {% endif %}
                             
                             <div class="mb-3">
-                                <label for="{{ contacto_form.nombre_contacto.id_for_label }}" class="form-label fs_normal color_primario_variante">{{ contacto_form.nombre_contacto.label }}*</label>
+                                <label for="{{ contacto_form.nombre_contacto.id_for_label }}" class="form-label font-bold text-sm color_primario_variante">{{ contacto_form.nombre_contacto.label }} <span class="text-danger">*</span></label>
                                 {{ contacto_form.nombre_contacto }}
                                 {% if contacto_form.nombre_contacto.errors %}
-                                    <div class="text-danger fs_pequena mt-1">{{ contacto_form.nombre_contacto.errors|striptags }}</div>
+                                    <div class="text-danger text-xs mt-1">{{ contacto_form.nombre_contacto.errors|striptags }}</div>
                                 {% endif %}
                             </div>
 
                             <div class="row">
                                 <div class="col-md-6 mb-3">
-                                    <label for="{{ contacto_form.telefono.id_for_label }}" class="form-label fs_normal color_primario_variante">{{ contacto_form.telefono.label }}</label>
+                                    <label for="{{ contacto_form.telefono.id_for_label }}" class="form-label font-bold text-sm color_primario_variante">{{ contacto_form.telefono.label }}</label>
                                     {{ contacto_form.telefono }}
-                                    {% if contacto_form.telefono.errors %}<div class="text-danger fs_pequena mt-1">{{ contacto_form.telefono.errors|striptags }}</div>{% endif %}
+                                    {% if contacto_form.telefono.errors %}<div class="text-danger text-xs mt-1">{{ contacto_form.telefono.errors|striptags }}</div>{% endif %}
                                 </div>
                                 <div class="col-md-6 mb-3">
-                                    <label for="{{ contacto_form.email.id_for_label }}" class="form-label fs_normal color_primario_variante">{{ contacto_form.email.label }}</label>
+                                    <label for="{{ contacto_form.email.id_for_label }}" class="form-label font-bold text-sm color_primario_variante">{{ contacto_form.email.label }}</label>
                                     {{ contacto_form.email }}
-                                    {% if contacto_form.email.errors %}<div class="text-danger fs_pequena mt-1">{{ contacto_form.email.errors|striptags }}</div>{% endif %}
+                                    {% if contacto_form.email.errors %}<div class="text-danger text-xs mt-1">{{ contacto_form.email.errors|striptags }}</div>{% endif %}
                                 </div>
                             </div>
 
                             <div class="mb-3">
-                                <label for="{{ contacto_form.direccion.id_for_label }}" class="form-label fs_normal color_primario_variante">{{ contacto_form.direccion.label }}</label>
+                                <label for="{{ contacto_form.direccion.id_for_label }}" class="form-label font-bold text-sm color_primario_variante">{{ contacto_form.direccion.label }}</label>
                                 {{ contacto_form.direccion }}
-                                {% if contacto_form.direccion.errors %}<div class="text-danger fs_pequena mt-1">{{ contacto_form.direccion.errors|striptags }}</div>{% endif %}
+                                {% if contacto_form.direccion.errors %}<div class="text-danger text-xs mt-1">{{ contacto_form.direccion.errors|striptags }}</div>{% endif %}
                             </div>
                             
                             <div class="row">
                                 <div class="col-md-6 mb-3">
-                                    <label for="{{ contacto_form.region.id_for_label }}" class="form-label fs_normal color_primario_variante">{{ contacto_form.region.label }}</label>
+                                    <label for="{{ contacto_form.region.id_for_label }}" class="form-label font-bold text-sm color_primario_variante">{{ contacto_form.region.label }}</label>
                                     {{ contacto_form.region }}
-                                    {% if contacto_form.region.errors %}<div class="text-danger fs_pequena mt-1">{{ contacto_form.region.errors|striptags }}</div>{% endif %}
+                                    {% if contacto_form.region.errors %}<div class="text-danger text-xs mt-1">{{ contacto_form.region.errors|striptags }}</div>{% endif %}
                                 </div>
                                 <div class="col-md-6 mb-3">
-                                    <label for="{{ contacto_form.comuna.id_for_label }}" class="form-label fs_normal color_primario_variante">{{ contacto_form.comuna.label }}</label>
+                                    <label for="{{ contacto_form.comuna.id_for_label }}" class="form-label font-bold text-sm color_primario_variante">{{ contacto_form.comuna.label }}</label>
                                     {{ contacto_form.comuna }}
-                                    {% if contacto_form.comuna.errors %}<div class="text-danger fs_pequena mt-1">{{ contacto_form.comuna.errors|striptags }}</div>{% endif %}
+                                    {% if contacto_form.comuna.errors %}<div class="text-danger text-xs mt-1">{{ contacto_form.comuna.errors|striptags }}</div>{% endif %}
                                 </div>
                             </div>
                             
                              <div class="mb-3">
-                                <label for="{{ contacto_form.notas.id_for_label }}" class="form-label fs_normal color_primario_variante">{{ contacto_form.notas.label }}</label>
+                                <label for="{{ contacto_form.notas.id_for_label }}" class="form-label font-bold text-sm color_primario_variante">{{ contacto_form.notas.label }}</label>
                                 {{ contacto_form.notas }}
-                                {% if contacto_form.notas.errors %}<div class="text-danger fs_pequena mt-1">{{ contacto_form.notas.errors|striptags }}</div>{% endif %}
+                                {% if contacto_form.notas.errors %}<div class="text-danger text-xs mt-1">{{ contacto_form.notas.errors|striptags }}</div>{% endif %}
                             </div>
 
                         </fieldset>
 
-                        <hr>
+                        <hr class="my-4">
                         <div class="d-flex justify-content-end gap-2">
-                            <a href="{% url 'gestion_inventario:ruta_lista_proveedores' %}" class="btn btn-secondary fs_normal">Cancelar</a>
-                            <button type="submit" class="btn btn-primary fs_normal">Guardar Proveedor</button>
+                            <a href="{% url 'gestion_inventario:ruta_lista_proveedores' %}" class="btn btn-outline-secondary text-base">Cancelar</a>
+                            
+                            {# PERMISO: Gestionar Proveedores (Crear) #}
+                            {% if perms.gestion_inventario.accion_gestion_inventario_gestionar_proveedores %}
+                            <button type="submit" class="btn btn-primary text-base px-4">Guardar Proveedor</button>
+                            {% endif %}
                         </div>
                     </div>
                 </div>
@@ -122,7 +132,7 @@
 
             regionSelect.addEventListener('change', async function() {
                 const regionId = this.value;
-                comunaSelect.innerHTML = '<option value="">---------</option>';
+                comunaSelect.innerHTML = '<option value="">Seleccione Comuna...</option>';
                 if (!regionId) { return; }
 
                 try {

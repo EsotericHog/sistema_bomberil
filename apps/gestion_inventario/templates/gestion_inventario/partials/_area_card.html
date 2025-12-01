@@ -3,25 +3,30 @@
 <div class="almacen-card slider-item">
     <img src="{% if ubicacion.imagen_thumb_medium %}{{ ubicacion.imagen_thumb_medium.url }}{% else %}{% static 'gestion_inventario/imagenes/default_almacen.png' %}{% endif %}" alt="Imagen del {{ ubicacion.nombre }}">
 
-    <div class="almacen-card-body fondo_secundario fs_normal">
+    <div class="almacen-card-body fondo_secundario text-base">
         
         <div class="almacen-card-info color_primario">
-            <h4 class="fs_normal">{{ubicacion.nombre}}</h4>
-            <p class="fs_pequena">{{ubicacion.descripcion|default:"Sin descripción"}}</p>
+            <h4 class="text-lg font-bold">{{ubicacion.nombre}}</h4>
+            <p class="text-xs">{{ubicacion.descripcion|default:"Sin descripción"}}</p>
         </div>
 
         <div class="almacen-card-stats">
             <div class="stat">
-                <span class="stat-number color_primario_variante fs_normal">{{ ubicacion.total_existencias }}</span>
-                <span class="stat-label color_primario_variante fs_pequena">Existencias</span>
+                <span class="stat-number color_primario_variante text-base font-bold">{{ ubicacion.total_existencias }}</span>
+                <span class="stat-label color_primario_variante text-xs">Existencias</span>
             </div>
             <div class="stat">
-                <span class="stat-number color_primario_variante fs_normal">{{ ubicacion.total_compartimentos }}</span>
-                <span class="stat-label color_primario_variante fs_pequena">Compartimentos</span>
+                <span class="stat-number color_primario_variante text-base font-bold">{{ ubicacion.total_compartimentos }}</span>
+                <span class="stat-label color_primario_variante text-xs">Compartimentos</span>
             </div>
         </div>
 
-    <a href="{% url 'gestion_inventario:ruta_gestionar_ubicacion' ubicacion.id %}" class="almacen-card-btn fs_normal color_blanco">Gestionar Área</a>
+    {# PERMISO: Ver Ubicaciones (Basta con lectura para entrar a gestionar/ver) #}
+    {% if perms.gestion_inventario.accion_gestion_inventario_ver_ubicaciones %}
+    <a href="{% url 'gestion_inventario:ruta_gestionar_ubicacion' ubicacion.id %}" class="almacen-card-btn text-base color_blanco">
+        Gestionar Área
+    </a>
+    {% endif %}
 
     </div>
 </div>

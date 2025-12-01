@@ -4,7 +4,7 @@
 {% block titulo_ventana %}Transferir Existencia{% endblock %}
 
 {% block titulo_pagina %}
-    <span class="fs_grande color_primario">
+    <span class="text-xl color_primario">
         <i class="fas fa-truck-moving me-2"></i> Transferir Existencia
     </span>
 {% endblock %}
@@ -14,77 +14,89 @@
     <div class="row justify-content-center">
         <div class="col-12 col-lg-8 col-xl-6">
 
-            <div class="card shadow-sm mb-4">
+            <div class="card shadow-sm mb-4 border-0">
                 <div class="card-body p-4 p-md-5">
 
                     <form method="POST" novalidate>
                         {% csrf_token %}
                         
-                        <div class="text-center">
-                            <h2 class="fs_mediana fw-bold color_primario">
+                        {# --- Encabezado del Ítem --- #}
+                        <div class="text-center mb-4">
+                            <h2 class="text-lg font-bold color_primario mb-3">
                                 Moviendo la Existencia:
                             </h2>
                             
-                            <div class="my-3 p-3 fondo_secundario_variante rounded-2">
-                                <h3 class="fs_mediana color_primario_variante fw-light mb-1">
+                            <div class="my-3 p-3 bg-light rounded border">
+                                <h3 class="text-md font-bold color_primario_variante mb-1">
                                     {{ item.producto.producto_global.nombre_oficial }}
                                 </h3>
                                 
                                 {% if tipo_item == 'activo' %}
-                                    <p class="fs_normal text-muted mb-0">ID: {{ item.codigo_activo }}</p>
+                                    <p class="text-base text-muted mb-0">ID: <span class="text-data-code">{{ item.codigo_activo }}</span></p>
                                 {% else %}
-                                    <p class="fs_normal text-muted mb-0">Lote: {{ item.codigo_lote }} (Cant: {{ item.cantidad }})</p>
+                                    <p class="text-base text-muted mb-0">Lote: <span class="text-data-code">{{ item.codigo_lote }}</span> (Cant: {{ item.cantidad }})</p>
                                 {% endif %}
                             </div>
-                            <p class="fs_normal color_primario_variante">
-                                Desde: <strong>{{ item.compartimento.ubicacion.nombre }} / {{ item.compartimento.nombre }}</strong>
-                            </p>
+                            
+                            <div class="d-inline-flex align-items-center text-sm text-muted">
+                                <i class="fas fa-map-marker-alt me-2"></i>
+                                Origen: <strong>{{ item.compartimento.ubicacion.nombre }} <i class="fas fa-chevron-right mx-1 text-xs"></i> {{ item.compartimento.nombre }}</strong>
+                            </div>
                         </div>
 
                         <hr>
 
-                        <div class="row justify-content-center my-4">
+                        {# --- Formulario de Destino --- #}
+                        <div class="row justify-content-center my-4 g-3">
                             
-                            <div class="col-md-5 mb-3 mb-md-0">
-                                <label class="form-label fs_normal color_primario_variante fw-bold">Ubicación Destino</label>
-                                <select id="select-ubicacion-filter" class="form-select fs_normal fondo_secundario_variante color_primario">
+                            <div class="col-md-5">
+                                <label for="select-ubicacion-filter" class="form-label text-sm font-bold color_primario_variante">Filtrar Ubicación Destino</label>
+                                {# Select manual para filtro #}
+                                <select id="select-ubicacion-filter" class="form-select form-select-sm text-base">
                                     <option value="">Filtrar Ubicación...</option>
-                                    </select>
+                                </select>
                             </div>
 
                             <div class="col-md-5">
-                                <label for="{{ form.compartimento_destino.id_for_label }}" class="form-label fs_normal color_primario_variante fw-bold">{{ form.compartimento_destino.label }} (*)</label>
-                                {{ form.compartimento_destino }}
-                                {% if form.compartimento_destino.errors %}<div class="invalid-feedback d-block">{{ form.compartimento_destino.errors.0 }}</div>{% endif %}
+                                <label for="{{ form.compartimento_destino.id_for_label }}" class="form-label text-sm font-bold color_primario_variante">{{ form.compartimento_destino.label }} <span class="text-danger">*</span></label>
+                                {# Wrapper para Tom Select #}
+                                <div class="tom-select-wrapper">
+                                    {{ form.compartimento_destino }}
+                                </div>
+                                {% if form.compartimento_destino.errors %}<div class="invalid-feedback d-block text-xs">{{ form.compartimento_destino.errors.0 }}</div>{% endif %}
                             </div>
 
                         </div>
 
                         {% if es_lote %}
-                        <div class="row justify-content-center my-4">
+                        <div class="row justify-content-center mb-4">
                             <div class="col-md-6">
-                                <label for="{{ form.cantidad.id_for_label }}" class="form-label fs_normal color_primario_variante fw-bold">{{ form.cantidad.label }} (*)</label>
+                                <label for="{{ form.cantidad.id_for_label }}" class="form-label text-sm font-bold color_primario_variante">{{ form.cantidad.label }} <span class="text-danger">*</span></label>
                                 {{ form.cantidad }}
-                                {% if form.cantidad.errors %}<div class="invalid-feedback d-block">{{ form.cantidad.errors.0 }}</div>{% endif %}
+                                {% if form.cantidad.errors %}<div class="invalid-feedback d-block text-xs">{{ form.cantidad.errors.0 }}</div>{% endif %}
                             </div>
                         </div>
                         {% endif %}
 
-                        <div class="row justify-content-center my-4">
+                        <div class="row justify-content-center mb-4">
                             <div class="col-md-10">
-                                <label for="{{ form.notas.id_for_label }}" class="form-label fs_normal color_primario_variante fw-bold">{{ form.notas.label }}</label>
+                                <label for="{{ form.notas.id_for_label }}" class="form-label text-sm font-bold color_primario_variante">{{ form.notas.label }}</label>
                                 {{ form.notas }}
-                                {% if form.notas.errors %}<div class="invalid-feedback d-block">{{ form.notas.errors.0 }}</div>{% endif %}
+                                {% if form.notas.errors %}<div class="invalid-feedback d-block text-xs">{{ form.notas.errors.0 }}</div>{% endif %}
                             </div>
                         </div>
 
-                        <div class="d-flex justify-content-end mt-4 pt-4 border-top">
-                            <a href="{% url 'gestion_inventario:ruta_stock_actual' %}" class="btn btn-secondary fs_normal me-3">
+                        <div class="d-flex justify-content-end mt-4 pt-4 border-top gap-2">
+                            <a href="{% url 'gestion_inventario:ruta_stock_actual' %}" class="btn btn-outline-secondary text-base">
                                 <i class="fas fa-times me-1"></i> Cancelar
                             </a>
-                            <button type="submit" class="btn btn-primary fs_normal">
+                            
+                            {# PERMISO: Gestionar Stock Interno (Transferir) #}
+                            {% if perms.gestion_inventario.accion_gestion_inventario_gestionar_stock_interno %}
+                            <button type="submit" class="btn btn-primary text-base px-4">
                                 <i class="fas fa-check me-1"></i> Confirmar Transferencia
                             </button>
+                            {% endif %}
                         </div>
 
                     </form>
@@ -95,6 +107,22 @@
         </div>
     </div>
 </div>
+
+<style>
+    /* FIX para Tom Select */
+    .ts-wrapper .ts-control {
+        font-size: var(--font-base) !important;
+        line-height: 1.5 !important;
+        border-radius: 0.25rem;
+        padding: 0.375rem 0.75rem;
+    }
+    .ts-dropdown .option {
+        font-size: var(--font-base) !important;
+    }
+    .ts-control input {
+        font-size: inherit !important;
+    }
+</style>
 {% endblock %}
 
 {% block scripts %}
@@ -112,20 +140,24 @@ document.addEventListener('DOMContentLoaded', function() {
     const ubicacionSelect = document.getElementById('select-ubicacion-filter');
     const compartimentoSelect = document.getElementById('id_compartimento_destino'); // ID estándar de Django
 
-    // 3. Inicializar TomSelect para Ubicación
-    const tsUbicacion = new TomSelect(ubicacionSelect, {
+    // Configuración común
+    const tomSelectConfig = {
         create: false,
-        sortField: { field: "text", direction: "asc" },
+        sortField: { field: "text", direction: "asc" }
+    };
+
+    // 3. Inicializar TomSelect para Ubicación (Filtro)
+    const tsUbicacion = new TomSelect(ubicacionSelect, {
+        ...tomSelectConfig,
         placeholder: "Seleccione Ubicación...",
         onChange: function(value) {
             updateCompartimentos(value);
         }
     });
 
-    // 4. Inicializar TomSelect para Compartimento (Vacío inicialmente)
+    // 4. Inicializar TomSelect para Compartimento (Destino)
     const tsCompartimento = new TomSelect(compartimentoSelect, {
-        create: false,
-        sortField: { field: "text", direction: "asc" },
+        ...tomSelectConfig,
         placeholder: "Seleccione ubicación primero...",
         valueField: 'id',
         labelField: 'nombre',

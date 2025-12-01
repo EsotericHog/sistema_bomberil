@@ -2,27 +2,40 @@
 {% load static %}
 {% block titulo_ventana %}Catálogo Global{% endblock %}
 
+{% block titulo_pagina %}
+    <span class="text-xl color_primario">
+        <i class="fas fa-globe me-2"></i> Catálogo Global
+    </span>
+{% endblock %}
+
 {% block contenido %}
 
 <div class="container-fluid mt-4">
     
     <div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-3">
-        <h2 class="color_primario fs_grande"><i class="fas fa-globe me-2"></i> Catálogo Global</h2>
+        {# Título ya manejado en el bloque superior, aquí solo controles extra si fuera necesario #}
+        <div></div> 
 
-        <a href="{% url 'gestion_inventario:ruta_crear_producto_global' %}" class="btn btn-success fs_normal">
-            <i class="fas fa-plus-circle me-1"></i> Crear Nuevo Producto Global
-        </a>
-        
-        <div class="btn-group" role="group">
-            <a href="?{{ query_params }}&view=gallery" class="fs_normal btn {% if view_mode == 'gallery' %}btn-primary{% else %}btn-outline-secondary{% endif %}">
-                <i class="fas fa-th-large me-1"></i> Galería
+        <div class="d-flex gap-2">
+            {# PERMISO: Crear Producto Global #}
+            {% if perms.gestion_inventario.accion_gestion_inventario_crear_producto_global %}
+            <a href="{% url 'gestion_inventario:ruta_crear_producto_global' %}" class="btn btn-success text-base">
+                <i class="fas fa-plus-circle me-1"></i> Crear Nuevo Producto Global
             </a>
-            <a href="?{{ query_params }}&view=table" class="fs_normal btn {% if view_mode == 'gallery' %}btn-outline-secondary{% else %}btn-primary{% endif %}">
-                <i class="fas fa-list me-1"></i> Tabla
-            </a>
+            {% endif %}
+            
+            <div class="btn-group shadow-sm" role="group">
+                <a href="?{{ query_params }}&view=gallery" class="btn text-base {% if view_mode == 'gallery' %}btn-primary{% else %}btn-outline-secondary{% endif %}">
+                    <i class="fas fa-th-large me-1"></i> Galería
+                </a>
+                <a href="?{{ query_params }}&view=table" class="btn text-base {% if view_mode == 'gallery' %}btn-outline-secondary{% else %}btn-primary{% endif %}">
+                    <i class="fas fa-list me-1"></i> Tabla
+                </a>
+            </div>
         </div>
     </div>
 
+    {# Panel de Filtros #}
     <div class="card shadow-sm mb-3">
         <div class="card-body">
             <form method="GET" action="{% url 'gestion_inventario:ruta_catalogo_global' %}">
@@ -30,14 +43,14 @@
                 
                 <div class="row g-2 align-items-end">
                     <div class="col-md-3">
-                        <label for="q" class="form-label fw-bold fs_pequena">Buscar</label>
-                        <input type="text" name="q" id="q" class="form-control form-control-sm fs_normal color_primario" 
+                        <label for="q" class="form-label font-bold text-sm">Buscar</label>
+                        <input type="text" name="q" id="q" class="form-control form-control-sm text-base color_primario" 
                                value="{{ current_search|default:'' }}" placeholder="Ej: Casco, G1, MSA...">
                     </div>
                     
                     <div class="col-md-2">
-                        <label for="categoria" class="form-label fw-bold fs_pequena">Categoría</label>
-                        <select name="categoria" id="categoria" class="form-select form-select-sm fs_normal">
+                        <label for="categoria" class="form-label font-bold text-sm">Categoría</label>
+                        <select name="categoria" id="categoria" class="form-select form-select-sm text-base">
                             <option value="">Todas</option>
                             {% for cat in all_categorias %}
                                 <option value="{{ cat.id }}" 
@@ -49,8 +62,8 @@
                     </div>
 
                     <div class="col-md-2">
-                        <label for="marca" class="form-label fw-bold fs_pequena">Marca</label>
-                        <select name="marca" id="marca" class="form-select form-select-sm fs_normal">
+                        <label for="marca" class="form-label font-bold text-sm">Marca</label>
+                        <select name="marca" id="marca" class="form-select form-select-sm text-base">
                             <option value="">Todas</option>
                             {% for marca in all_marcas %}
                                 <option value="{{ marca.id }}" 
@@ -62,8 +75,8 @@
                     </div>
 
                     <div class="col-md-2">
-                        <label for="filtro" class="form-label fw-bold fs_pequena">Estado</label>
-                        <select name="filtro" id="filtro" class="form-select form-select-sm fs_normal">
+                        <label for="filtro" class="form-label font-bold text-sm">Estado</label>
+                        <select name="filtro" id="filtro" class="form-select form-select-sm text-base">
                             <option value="todos" {% if current_filtro == 'todos' %}selected{% endif %}>
                                 Todos los Productos
                             </option>
@@ -77,11 +90,11 @@
                     </div>
 
                     <div class="col-md-3 d-flex gap-2">
-                        <button type="submit" class="btn btn-primary btn-sm w-100 fs_normal">
+                        <button type="submit" class="btn btn-primary btn-sm w-100 text-base">
                             <i class="fas fa-filter me-1"></i> Filtrar
                         </button>
                         <a href="{% url 'gestion_inventario:ruta_catalogo_global' %}?view={{ view_mode }}" 
-                           class="btn btn-outline-secondary btn-sm w-100 fs_normal">
+                           class="btn btn-outline-secondary btn-sm w-100 text-base">
                             Limpiar
                         </a>
                     </div>
@@ -93,6 +106,7 @@
     {% if productos %}
 
         {% if view_mode == 'gallery' %}
+            {# VISTA GALERÍA #}
             <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 row-cols-xl-4 g-4">
                 {% for producto in productos %}
                 <div class="col">
@@ -107,11 +121,11 @@
                         {% endif %}
 
                         <div class="card-body d-flex flex-column">
-                            <h5 class="card-title fs_normal">{{ producto.nombre_oficial }}</h5>
+                            <h5 class="card-title text-md font-bold text-dark">{{ producto.nombre_oficial }}</h5>
                             
-                            <ul class="list-unstyled text-muted fs_pequena mb-3">
+                            <ul class="list-unstyled text-muted text-sm mb-3">
                                 <li>
-                                    <strong>Marca:</strong> 
+                                    <strong class="text-dark">Marca:</strong> 
                                     {% if producto.marca %}
                                         {{ producto.marca.nombre }}
                                     {% else %}
@@ -119,7 +133,7 @@
                                     {% endif %}
                                 </li>
                                 <li>
-                                    <strong>Modelo:</strong> 
+                                    <strong class="text-dark">Modelo:</strong> 
                                     {% if producto.modelo %}
                                         {{ producto.modelo }}
                                     {% else %}
@@ -127,24 +141,27 @@
                                     {% endif %}
                                 </li>
                                 <li>
-                                    <strong>Categoría:</strong> 
+                                    <strong class="text-dark">Categoría:</strong> 
                                     {{ producto.categoria.nombre }}
                                 </li>
                             </ul>
 
                             <div class="mt-auto">
                                 {% if producto.id in productos_locales_set %}
-                                    <button class="btn btn-sm btn-success w-100 fs_normal" disabled>
+                                    <button class="btn btn-sm btn-success w-100 text-base" disabled>
                                         <i class="fas fa-check me-1"></i> Añadido a mi Estación
                                     </button>
                                 {% else %}
-                                    <button class="btn btn-sm btn-outline-primary w-100 btn-anadir-local fs_normal" 
+                                    {# PERMISO: Gestionar Catálogo Local #}
+                                    {% if perms.gestion_inventario.accion_gestion_inventario_gestionar_catalogo_local %}
+                                    <button class="btn btn-sm btn-outline-primary w-100 btn-anadir-local text-base" 
                                     data-productoglobal-id="{{ producto.id }}"
                                     data-url="{% url 'api:api_get_producto_global_sku' producto.id %}"
                                     data-bs-toggle="modal" 
                                     data-bs-target="#modalAnadirProducto">
                                         <i class="fas fa-plus me-1"></i> Añadir a mi Estación
                                     </button>
+                                    {% endif %}
                                 {% endif %}
                             </div>
                         </div>
@@ -154,61 +171,65 @@
             </div>
 
         {% else %}
+            {# VISTA TABLA #}
             <div class="card shadow-sm">
-                <div class="card-body">
+                <div class="card-body p-0">
                     <div class="table-responsive">
-                        <table class="table table-hover align-middle {% if request.session.dark_mode %}table-dark{% endif %}">
-                            <thead class="table-light fs_pequena">
+                        <table class="table table-hover align-middle mb-0 {% if request.session.dark_mode %}table-dark{% endif %}">
+                            <thead class="bg-light text-sm text-uppercase">
                                 <tr>
-                                    <th style="width: 10%;">Imagen</th>
+                                    <th style="width: 10%;" class="ps-4">Imagen</th>
                                     <th>Nombre Oficial</th>
                                     <th>Marca</th>
                                     <th>Modelo</th>
                                     <th>Categoría</th>
-                                    <th style="width: 15%;">Acciones</th>
+                                    <th style="width: 15%;" class="text-end pe-4">Acciones</th>
                                 </tr>
                             </thead>
-                            <tbody class="fs_normal">
+                            <tbody class="text-base">
                                 {% for producto in productos %}
                                 <tr>
-                                    <td>
+                                    <td class="ps-4">
                                         {% if producto.imagen_thumb_small %}
-                                            <img src="{{ producto.imagen_thumb_small.url }}" alt="{{ producto.nombre_oficial }}" class="img-thumbnail" style="width: 60px; height: 60px; object-fit: cover;">
+                                            <img src="{{ producto.imagen_thumb_small.url }}" alt="{{ producto.nombre_oficial }}" class="rounded border" style="width: 50px; height: 50px; object-fit: cover;">
                                         {% else %}
-                                            <div class="img-thumbnail-placeholder d-flex align-items-center justify-content-center bg-light text-muted" style="width: 60px; height: 60px;">
+                                            <div class="d-flex align-items-center justify-content-center bg-light text-muted rounded border" style="width: 50px; height: 50px;">
                                                 <i class="fas fa-image"></i>
                                             </div>
                                         {% endif %}
                                     </td>
-                                    <td>{{ producto.nombre_oficial }}</td>
-                                    <td class="text-muted">
+                                    <td class="font-bold text-dark">{{ producto.nombre_oficial }}</td>
+                                    <td class="text-muted text-sm">
                                         {% if producto.marca %}
                                             {{ producto.marca.nombre }}
                                         {% else %}
                                             <span class="text-muted fst-italic">Genérico</span>
                                         {% endif %}
                                     </td>
-                                    <td class="text-muted">
+                                    <td class="text-muted text-sm">
                                         {% if producto.modelo %}
                                             {{ producto.modelo }}
                                         {% else %}
                                             <span class="text-muted fst-italic">N/A</span>
                                         {% endif %}
                                     </td>
-                                    <td class="text-muted">{{ producto.categoria.nombre }}</td>
-                                    <td>
+                                    <td class="text-muted text-sm">{{ producto.categoria.nombre }}</td>
+                                    <td class="text-end pe-4">
                                         {% if producto.id in productos_locales_set %}
-                                            <button class="btn btn-sm btn-success fs_normal" disabled>
+                                            <button class="btn btn-sm btn-success text-base" disabled>
                                                 <i class="fas fa-check me-1"></i> Añadido
                                             </button>
                                         {% else %}
-                                            <button class="btn btn-sm btn-primary btn-anadir-local fs_normal"
+                                            {# PERMISO: Gestionar Catálogo Local #}
+                                            {% if perms.gestion_inventario.accion_gestion_inventario_gestionar_catalogo_local %}
+                                            <button class="btn btn-sm btn-primary btn-anadir-local text-base"
                                             data-productoglobal-id="{{ producto.id }}"
                                             data-url="{% url 'api:api_get_producto_global_sku' producto.id %}"
                                             data-bs-toggle="modal"
                                             data-bs-target="#modalAnadirProducto">
                                                 <i class="fas fa-plus me-1"></i> Añadir
                                             </button>
+                                            {% endif %}
                                         {% endif %}
                                     </td>
                                 </tr>
@@ -220,8 +241,10 @@
             </div>
         {% endif %}
 
+        {# PAGINACIÓN #}
+        {% if is_paginated %}
         <nav aria-label="Paginación del catálogo" class="mt-4">
-            <ul class="pagination justify-content-center">
+            <ul class="pagination justify-content-center text-base">
                 
                 {% if page_obj.has_previous %}
                     <li class="page-item">
@@ -231,7 +254,7 @@
                     <li class="page-item disabled"><span class="page-link">Anterior</span></li>
                 {% endif %}
 
-                <li classD"page-item active" aria-current="page">
+                <li class="page-item active" aria-current="page">
                     <span class="page-link">Página {{ page_obj.number }} de {{ page_obj.paginator.num_pages }}</span>
                 </li>
 
@@ -244,9 +267,10 @@
                 {% endif %}
             </ul>
         </nav>
+        {% endif %}
 
     {% else %}
-        <div class="alert alert-warning text-center" role="alert">
+        <div class="alert alert-warning text-center text-base py-4" role="alert">
             <i class="fas fa-exclamation-triangle me-2"></i>
             No se encontraron productos que coincidan con tus filtros.
             <a href="{% url 'gestion_inventario:ruta_catalogo_global' %}?view={{ view_mode }}" class="alert-link ms-2">Limpiar filtros</a>
@@ -255,58 +279,59 @@
 
 </div>
 
+{# --- MODAL AÑADIR PRODUCTO --- #}
 <div class="modal fade" id="modalAnadirProducto" tabindex="-1" aria-labelledby="modalAnadirProductoLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="modalAnadirProductoLabel">Añadir Producto a mi Estación</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title text-md font-bold" id="modalAnadirProductoLabel">Añadir Producto a mi Estación</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             
             <form id="formAnadirProducto">
                 {% csrf_token %}
                 <input type="hidden" id="modal_productoglobal_id" name="productoglobal_id">
                 
-                <div class="modal-body">
+                <div class="modal-body p-4">
                     <div id="modalSpinner" class="text-center my-5">
                         <div class="spinner-border text-primary" role="status">
                             <span class="visually-hidden">Cargando...</span>
                         </div>
-                        <p class="mt-2">Cargando detalles...</p>
+                        <p class="mt-2 text-sm text-muted">Cargando detalles...</p>
                     </div>
 
                     <div id="modalFormContent" class="d-none">
-                        <p>Vas a añadir el siguiente producto a tu catálogo local:</p>
-                        <h6 class="text-center p-3 rounded" id="modalNombreProducto"></h6>
+                        <p class="text-base mb-2">Vas a añadir el siguiente producto a tu catálogo local:</p>
+                        <h6 class="text-center p-3 rounded bg-light border text-lg font-bold color_primario mb-4" id="modalNombreProducto"></h6>
                         
                         <div class="mb-3">
-                            <label for="modal_sku" class="form-label">SKU Sugerido (Puedes editarlo)</label>
-                            <input type="text" class="form-control" id="modal_sku" name="sku" required>
+                            <label for="modal_sku" class="form-label font-bold text-sm">SKU Sugerido (Puedes editarlo)</label>
+                            <input type="text" class="form-control text-base font-monospace text-data-code" id="modal_sku" name="sku" required>
                         </div>
                         
                         <div class="form-check form-switch mb-2">
                             <input class="form-check-input" type="checkbox" id="modal_es_serializado" name="es_serializado" value="true">
-                            <label class="form-check-label" for="modal_es_serializado">
+                            <label class="form-check-label text-base" for="modal_es_serializado">
                                 ¿Es un Activo Serializado?
-                                <small class="d-block text-muted">(Ej: Casco, Manguera, ERA). Si no, se tratará como insumo (Ej: Guantes, Vendas).</small>
+                                <small class="d-block text-muted text-xs">(Ej: Casco, Manguera, ERA). Si no, se tratará como insumo (Ej: Guantes, Vendas).</small>
                             </label>
                         </div>
 
                         <div class="form-check form-switch mb-3">
                             <input class="form-check-input" type="checkbox" id="modal_es_expirable" name="es_expirable" value="true">
-                            <label class="form-check-label" for="modal_es_expirable">
+                            <label class="form-check-label text-base" for="modal_es_expirable">
                                 ¿Requiere seguimiento de expiración?
-                                <small class="d-block text-muted">(Ej: Medicamentos, Vendas, Espuma).</small>
+                                <small class="d-block text-muted text-xs">(Ej: Medicamentos, Vendas, Espuma).</small>
                             </label>
                         </div>
                         
-                        <div id="modalErrorAlert" class="alert alert-danger d-none" role="alert"></div>
+                        <div id="modalErrorAlert" class="alert alert-danger d-none text-sm" role="alert"></div>
                     </div>
                 </div>
                 
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="submit" class="btn btn-primary" id="modalSubmitButton">
+                <div class="modal-footer bg-light">
+                    <button type="button" class="btn btn-secondary text-base" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary text-base" id="modalSubmitButton">
                         <span id="modalSubmitButtonText">Guardar en mi Estación</span>
                         <span id="modalSubmitSpinner" class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true"></span>
                     </button>
@@ -318,16 +343,16 @@
 
 <style>
     .product-card .card-img-top {
-        height: 200px;           /* Mantiene la altura fija para uniformidad */
-        width: 100%;             /* Asegura que use el ancho disponible */
-        object-fit: contain;     /* <--- EL CAMBIO CLAVE: Muestra la imagen entera */
-        padding: 10px;           /* Añade "aire" para que el producto no toque los bordes */
-        background-color: #fff;  /* Fondo blanco por si la imagen es PNG transparente */
+        height: 200px;
+        width: 100%;
+        object-fit: contain;
+        padding: 10px;
+        background-color: #fff;
     }
     
     .product-card .card-img-top-placeholder {
         height: 200px;
-        background-color: #f8f9fa; /* Un gris muy suave para cuando no hay imagen */
+        background-color: #f8f9fa;
     }
 </style>
 {% endblock %}

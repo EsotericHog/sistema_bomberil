@@ -4,7 +4,7 @@
 {% block titulo_ventana %}Dar de Baja Existencia{% endblock %}
 
 {% block titulo_pagina %}
-    <span class="fs_grande color_primario">
+    <span class="text-xl color_primario">
         <i class="fas fa-thumbs-down me-2 text-danger"></i> Dar de Baja Existencia
     </span>
 {% endblock %}
@@ -15,32 +15,32 @@
         <div class="col-12 col-lg-8 col-xl-6">
 
             <div class="card shadow-sm mb-4">
-                <div class="card-body p-4 p-md-5">
+                <div class="card-body p-4 p-md-5 text-center">
 
                     <form method="POST" novalidate>
                         {% csrf_token %}
                         
                         <div class="text-center">
-                            <h2 class="fs_mediana fw-bold color_primario">
+                            <h2 class="text-lg font-bold color_primario">
                                 ¿Estás seguro de que deseas dar de baja esta existencia?
                             </h2>
                             
                             <div class="my-3 p-3 fondo_secundario_variante rounded-2">
-                                <h3 class="fs_mediana color_primario_variante fw-light mb-1">
+                                <h3 class="text-md font-bold color_primario_variante fw-light mb-1">
                                     {{ item.producto.producto_global.nombre_oficial }}
                                 </h3>
                                 
                                 {% if tipo_item == 'activo' %}
-                                    <p class="fs_normal text-muted mb-0">ID: {{ item.codigo_activo }}</p>
+                                    <p class="text-base text-muted mb-0 text-data-code">ID: {{ item.codigo_activo }}</p>
                                 {% else %}
-                                    <p class="fs_normal text-muted mb-0">Lote: {{ item.codigo_lote }} (Cant: {{ item.cantidad }})</p>
+                                    <p class="text-base text-muted mb-0 text-data-code">Lote: {{ item.codigo_lote }} (Cant: {{ item.cantidad }})</p>
                                 {% endif %}
                             </div>
                         </div>
 
-                        <div class="alert alert-danger mt-4" role="alert">
-                            <h5 class="alert-heading fw-bold"><i class="fas fa-exclamation-triangle me-1"></i> ¡Acción Permanente!</h5>
-                            <p class="fs_normal mb-0">
+                        <div class="alert alert-danger mt-4 text-start" role="alert">
+                            <h5 class="alert-heading font-bold text-base"><i class="fas fa-exclamation-triangle me-1"></i> ¡Acción Permanente!</h5>
+                            <p class="text-sm mb-0">
                                 Esta acción marcará el ítem como <strong>"DE BAJA"</strong> y lo retirará permanentemente del stock operativo.
                                 {% if tipo_item == 'lote' and item.cantidad > 0 %}
                                     La cantidad restante ({{ item.cantidad }}) se registrará como una salida.
@@ -49,20 +49,24 @@
                         </div>
 
                         <div class="row justify-content-center my-4">
-                            <div class="col-md-12">
-                                <label for="{{ form.notas.id_for_label }}" class="form-label fs_normal color_primario_variante fw-bold">{{ form.notas.label }}</label>
+                            <div class="col-md-12 text-start">
+                                <label for="{{ form.notas.id_for_label }}" class="form-label text-base color_primario_variante font-bold">{{ form.notas.label }}</label>
                                 {{ form.notas }}
-                                {% if form.notas.errors %}<div class="invalid-feedback d-block">{{ form.notas.errors.0 }}</div>{% endif %}
+                                {% if form.notas.errors %}<div class="invalid-feedback d-block text-xs">{{ form.notas.errors.0 }}</div>{% endif %}
                             </div>
                         </div>
 
                         <div class="d-flex justify-content-end mt-4 pt-4 border-top">
-                            <a href="{% url 'gestion_inventario:ruta_stock_actual' %}" class="btn btn-secondary fs_normal me-3">
+                            <a href="{% url 'gestion_inventario:ruta_stock_actual' %}" class="btn btn-secondary text-base me-3">
                                 <i class="fas fa-times me-1"></i> Cancelar
                             </a>
-                            <button type="submit" class="btn btn-danger fs_normal">
+                            
+                            {# PERMISO: Gestionar Bajas #}
+                            {% if perms.gestion_inventario.accion_gestion_inventario_gestionar_bajas_stock %}
+                            <button type="submit" class="btn btn-danger text-base">
                                 <i class="fas fa-check me-1"></i> Sí, dar de baja
                             </button>
+                            {% endif %}
                         </div>
 
                     </form>

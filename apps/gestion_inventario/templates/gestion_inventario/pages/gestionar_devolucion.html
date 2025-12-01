@@ -9,8 +9,8 @@
             <i class="fas fa-arrow-left text-muted"></i>
         </a>
         <div>
-            <h4 class="mb-0 fw-bold color_primario">Gestionar Devolución</h4>
-            <small class="text-muted">Folio de Préstamo #{{ prestamo.id }}</small>
+            <h4 class="mb-0 font-bold color_primario text-xl">Gestionar Devolución</h4>
+            <small class="text-muted text-sm">Folio de Préstamo <span class="text-data-code">#{{ prestamo.id }}</span></small>
         </div>
     </div>
 {% endblock %}
@@ -19,47 +19,48 @@
 <div class="container-fluid mt-4">
     <div class="row g-4">
 
+        {# --- COLUMNA IZQUIERDA: RESUMEN --- #}
         <div class="col-lg-3">
             <div class="card border-0 shadow-sm mb-3">
                 <div class="card-body text-center p-4">
-                    <div class="mb-2 text-muted fw-bold small text-uppercase">Estado Actual</div>
+                    <div class="mb-2 text-muted font-bold text-xs text-uppercase">Estado Actual</div>
                     {% if prestamo.estado == 'PEN' %}
-                        <span class="badge bg-warning-subtle text-warning-emphasis fs-5 px-4 py-2 rounded-pill">Pendiente</span>
+                        <span class="badge bg-warning-subtle text-warning-emphasis text-base px-4 py-2 rounded-pill">Pendiente</span>
                     {% elif prestamo.estado == 'PAR' %}
-                        <span class="badge bg-info-subtle text-info-emphasis fs-5 px-4 py-2 rounded-pill">Parcial</span>
+                        <span class="badge bg-info-subtle text-info-emphasis text-base px-4 py-2 rounded-pill">Parcial</span>
                     {% elif prestamo.estado == 'COM' %}
-                        <span class="badge bg-success-subtle text-success-emphasis fs-5 px-4 py-2 rounded-pill">Completado</span>
+                        <span class="badge bg-success-subtle text-success-emphasis text-base px-4 py-2 rounded-pill">Completado</span>
                     {% endif %}
                 </div>
             </div>
 
             <div class="card border-0 shadow-sm">
                 <div class="card-body">
-                    <h6 class="fw-bold text-muted mb-3 pb-2 border-bottom">Información General</h6>
+                    <h6 class="font-bold text-muted mb-3 pb-2 border-bottom text-sm text-uppercase">Información General</h6>
                     
                     <div class="mb-3">
-                        <label class="small text-muted fw-bold d-block">Destinatario</label>
-                        <span class="fs-normal text-dark">{{ prestamo.destinatario.nombre_entidad }}</span>
+                        <label class="text-xs text-muted font-bold d-block text-uppercase">Destinatario</label>
+                        <span class="text-base text-dark fw-bold">{{ prestamo.destinatario.nombre_entidad }}</span>
                     </div>
                     
                     <div class="mb-3">
-                        <label class="small text-muted fw-bold d-block">Responsable Interno</label>
+                        <label class="text-xs text-muted font-bold d-block text-uppercase">Responsable Interno</label>
                         <div class="d-flex align-items-center mt-1">
-                            <div class="bg-light rounded-circle d-flex align-items-center justify-content-center me-2" style="width: 32px; height: 32px;">
-                                <i class="fas fa-user text-secondary"></i>
+                            <div class="bg-light rounded-circle d-flex align-items-center justify-content-center me-2" style="width: 24px; height: 24px;">
+                                <i class="fas fa-user text-secondary text-xs"></i>
                             </div>
-                            <span>{{ prestamo.usuario_responsable.get_full_name|default:"Sistema" }}</span>
+                            <span class="text-sm">{{ prestamo.usuario_responsable.get_full_name|default:"Sistema" }}</span>
                         </div>
                     </div>
 
                     <div class="row">
                         <div class="col-6 mb-3">
-                            <label class="small text-muted fw-bold d-block">Prestado el</label>
-                            <span>{{ prestamo.fecha_prestamo|date:"d/m/y" }}</span>
+                            <label class="text-xs text-muted font-bold d-block text-uppercase">Prestado el</label>
+                            <span class="text-data-code text-sm">{{ prestamo.fecha_prestamo|date:"d/m/y" }}</span>
                         </div>
                         <div class="col-6 mb-3">
-                            <label class="small text-muted fw-bold d-block">Vence el</label>
-                            <span class="{% if prestamo.fecha_devolucion_esperada < today %}text-danger fw-bold{% endif %}">
+                            <label class="text-xs text-muted font-bold d-block text-uppercase">Vence el</label>
+                            <span class="text-data-code text-sm {% if prestamo.fecha_devolucion_esperada < today %}text-danger fw-bold{% endif %}">
                                 {{ prestamo.fecha_devolucion_esperada|date:"d/m/y"|default:"-" }}
                             </span>
                         </div>
@@ -67,13 +68,14 @@
 
                     {% if prestamo.notas_prestamo %}
                     <div class="mt-2 p-2 bg-light rounded border-start border-4 border-primary">
-                        <small class="text-muted fst-italic">"{{ prestamo.notas_prestamo }}"</small>
+                        <small class="text-muted fst-italic text-xs">"{{ prestamo.notas_prestamo }}"</small>
                     </div>
                     {% endif %}
                 </div>
             </div>
         </div>
 
+        {# --- COLUMNA DERECHA: FORMULARIO DE DEVOLUCIÓN --- #}
         <div class="col-lg-9">
             <form method="post" action="{% url 'gestion_inventario:ruta_gestionar_devolucion' prestamo.id %}" id="form-devolucion">
                 {% csrf_token %}
@@ -81,20 +83,26 @@
                 <div class="card border-0 shadow-sm">
                     <div class="card-header bg-white py-3 border-bottom">
                         <div class="d-flex justify-content-between align-items-center">
-                            <h5 class="mb-0 fw-bold color_primario">
+                            <h5 class="mb-0 font-bold color_primario text-lg">
                                 <i class="fas fa-boxes me-2 text-primary"></i>Ítems Prestados
                             </h5>
+                            
                             {% if prestamo.estado != 'COM' %}
-                            <button type="submit" class="btn btn-primary btn-lg px-4 shadow-sm fs_normal">
-                                <i class="fas fa-save me-2"></i> Procesar Cambios
-                            </button>
+                                {# PERMISO: Gestionar Préstamos (Devolver) #}
+                                {% if perms.gestion_inventario.accion_gestion_inventario_gestionar_prestamos %}
+                                <button type="submit" class="btn btn-primary px-4 shadow-sm text-base font-bold">
+                                    <i class="fas fa-save me-2"></i> Procesar Cambios
+                                </button>
+                                {% else %}
+                                <span class="badge bg-light text-muted border text-xs">Solo Lectura</span>
+                                {% endif %}
                             {% endif %}
                         </div>
                     </div>
 
                     <div class="table-responsive">
                         <table class="table align-middle mb-0 table-hover">
-                            <thead class="bg-light fs_pequena text-uppercase text-muted">
+                            <thead class="bg-light text-xs font-bold text-uppercase text-muted">
                                 <tr>
                                     <th class="ps-4 py-3" style="width: 35%;">Ítem / Código</th>
                                     <th class="text-center">Resumen</th>
@@ -106,6 +114,7 @@
                                 {% for detalle in items_prestados %}
                                 <tr class="{% if detalle.pendiente_real == 0 %}bg-light opacity-75{% endif %}">
                                     
+                                    {# Columna Producto #}
                                     <td class="ps-4">
                                         <div class="d-flex align-items-center">
                                             <div class="rounded p-2 me-3 {% if detalle.activo %}bg-primary-subtle text-primary{% else %}bg-warning-subtle text-warning-emphasis{% endif %}">
@@ -116,38 +125,40 @@
                                                 {% endif %}
                                             </div>
                                             <div>
-                                                <div class="fw-bold text-dark mb-1">{{ detalle.descripcion_item }}</div>
-                                                <div class="badge bg-light text-dark border font-monospace">
+                                                <div class="font-bold text-dark mb-1 text-base">{{ detalle.descripcion_item }}</div>
+                                                <div class="badge bg-light text-dark border font-monospace text-xs text-data-code">
                                                     {{ detalle.codigo_item }}
                                                 </div>
                                             </div>
                                         </div>
                                     </td>
 
+                                    {# Columna Resumen #}
                                     <td class="text-center">
                                         <div class="d-flex justify-content-center gap-2">
                                             <div class="text-center px-2">
-                                                <small class="text-muted d-block" style="font-size: 0.7rem;">PRESTADO</small>
-                                                <span class="fw-bold">{{ detalle.cantidad_prestada }}</span>
+                                                <small class="text-muted d-block text-xs font-bold">PRESTADO</small>
+                                                <span class="font-bold text-base">{{ detalle.cantidad_prestada }}</span>
                                             </div>
                                             <div class="vr opacity-25"></div>
                                             <div class="text-center px-2">
-                                                <small class="text-muted d-block" style="font-size: 0.7rem;">DEVUELTO</small>
-                                                <span class="text-success fw-bold">{{ detalle.cantidad_devuelta }}</span>
+                                                <small class="text-muted d-block text-xs font-bold">DEVUELTO</small>
+                                                <span class="text-success font-bold text-base">{{ detalle.cantidad_devuelta }}</span>
                                             </div>
                                             {% if detalle.cantidad_extraviada > 0 %}
                                             <div class="vr opacity-25"></div>
                                             <div class="text-center px-2">
-                                                <small class="text-muted d-block" style="font-size: 0.7rem;">PERDIDO</small>
-                                                <span class="text-danger fw-bold">{{ detalle.cantidad_extraviada }}</span>
+                                                <small class="text-muted d-block text-xs font-bold">PERDIDO</small>
+                                                <span class="text-danger font-bold text-base">{{ detalle.cantidad_extraviada }}</span>
                                             </div>
                                             {% endif %}
                                         </div>
                                     </td>
 
+                                    {# Columna Pendiente #}
                                     <td class="text-center">
                                         {% if detalle.pendiente_real > 0 %}
-                                            <span class="badge bg-primary fs-6 rounded-pill px-3 shadow-sm">
+                                            <span class="badge bg-primary text-base rounded-pill px-3 shadow-sm">
                                                 {{ detalle.pendiente_real }}
                                             </span>
                                         {% else %}
@@ -155,68 +166,79 @@
                                         {% endif %}
                                     </td>
 
+                                    {# Columna Acciones #}
                                     <td class="pe-4 py-3">
                                     {% if detalle.pendiente_real > 0 %}
-
-                                        {% if detalle.activo %}
-                                            <div class="action-selector">
-                                                <div class="action-option">
-                                                    <input type="checkbox" name="cantidad-devolver-{{ detalle.id }}" id="dev-{{ detalle.id }}" value="1" 
-                                                           class="btn-check-custom" onchange="toggleState(this, 'perd-{{ detalle.id }}')">
-                                                    <label class="action-label lbl-devolver" for="dev-{{ detalle.id }}">
-                                                        <i class="fas fa-undo me-1"></i> Devolver
-                                                    </label>
-                                                </div>
-                                            
-                                                <div class="action-option">
-                                                    <input type="checkbox" name="cantidad-perder-{{ detalle.id }}" id="perd-{{ detalle.id }}" value="1"
-                                                           class="btn-check-custom" onchange="toggleState(this, 'dev-{{ detalle.id }}')">
-                                                    <label class="action-label lbl-perdido" for="perd-{{ detalle.id }}">
-                                                        <i class="fas fa-times me-1"></i> Perdido
-                                                    </label>
-                                                </div>
-                                            </div>
                                         
-                                        {% else %}
-                                            <div class="d-flex flex-column gap-2">
-                                                <div class="input-group input-group-sm">
-                                                    <span class="input-group-text bg-white text-success border-success">
-                                                        <i class="fas fa-undo"></i>
-                                                    </span>
-                                                    <input type="number" name="cantidad-devolver-{{ detalle.id }}" 
-                                                           class="form-control border-success text-center fw-bold" 
-                                                           placeholder="0" min="0" max="{{ detalle.pendiente_real }}">
-                                                    <span class="input-group-text bg-success text-white border-success">Devolver</span>
-                                                </div>
+                                        {# Solo mostramos controles si tiene permiso #}
+                                        {% if perms.gestion_inventario.accion_gestion_inventario_gestionar_prestamos %}
                                             
-                                                <div class="collapse" id="lote-lost-{{ detalle.id }}">
-                                                    <div class="input-group input-group-sm">
-                                                        <span class="input-group-text bg-white text-danger border-danger">
-                                                            <i class="fas fa-exclamation-triangle"></i>
-                                                        </span>
-                                                        <input type="number" name="cantidad-perder-{{ detalle.id }}" 
-                                                               class="form-control border-danger text-center fw-bold text-danger" 
-                                                               placeholder="0" min="0" max="{{ detalle.pendiente_real }}">
-                                                        <span class="input-group-text bg-danger text-white border-danger">Perdido</span>
+                                            {% if detalle.activo %}
+                                                {# Lógica Activo: Checkbox Devolver o Perdido #}
+                                                <div class="action-selector d-flex gap-2">
+                                                    <div class="action-option flex-grow-1">
+                                                        <input type="checkbox" name="cantidad-devolver-{{ detalle.id }}" id="dev-{{ detalle.id }}" value="1" 
+                                                               class="btn-check" autocomplete="off" onchange="toggleState(this, 'perd-{{ detalle.id }}')">
+                                                        <label class="btn btn-outline-success w-100 btn-sm text-sm" for="dev-{{ detalle.id }}">
+                                                            <i class="fas fa-undo me-1"></i> Devolver
+                                                        </label>
+                                                    </div>
+                                                
+                                                    <div class="action-option flex-grow-1">
+                                                        <input type="checkbox" name="cantidad-perder-{{ detalle.id }}" id="perd-{{ detalle.id }}" value="1"
+                                                               class="btn-check" autocomplete="off" onchange="toggleState(this, 'dev-{{ detalle.id }}')">
+                                                        <label class="btn btn-outline-danger w-100 btn-sm text-sm" for="perd-{{ detalle.id }}">
+                                                            <i class="fas fa-times me-1"></i> Perdido
+                                                        </label>
                                                     </div>
                                                 </div>
+                                            
+                                            {% else %}
+                                                {# Lógica Lote: Input Numérico #}
+                                                <div class="d-flex flex-column gap-2">
+                                                    <div class="input-group input-group-sm">
+                                                        <span class="input-group-text bg-white text-success border-success">
+                                                            <i class="fas fa-undo"></i>
+                                                        </span>
+                                                        <input type="number" name="cantidad-devolver-{{ detalle.id }}" 
+                                                               class="form-control border-success text-center fw-bold text-base" 
+                                                               placeholder="0" min="0" max="{{ detalle.pendiente_real }}">
+                                                        <span class="input-group-text bg-success text-white border-success text-xs font-bold">Devolver</span>
+                                                    </div>
+                                                
+                                                    <div class="collapse" id="lote-lost-{{ detalle.id }}">
+                                                        <div class="input-group input-group-sm">
+                                                            <span class="input-group-text bg-white text-danger border-danger">
+                                                                <i class="fas fa-exclamation-triangle"></i>
+                                                            </span>
+                                                            <input type="number" name="cantidad-perder-{{ detalle.id }}" 
+                                                                   class="form-control border-danger text-center fw-bold text-danger text-base" 
+                                                                   placeholder="0" min="0" max="{{ detalle.pendiente_real }}">
+                                                            <span class="input-group-text bg-danger text-white border-danger text-xs font-bold">Perdido</span>
+                                                        </div>
+                                                    </div>
 
-                                                <a href="#lote-lost-{{ detalle.id }}" data-bs-toggle="collapse" 
-                                                   class="text-decoration-none text-muted fs_pequena text-end" 
-                                                   onclick="this.style.display='none'">
-                                                   ¿Reportar faltante?
-                                                </a>
-                                            </div>
+                                                    <a href="#lote-lost-{{ detalle.id }}" data-bs-toggle="collapse" 
+                                                       class="text-decoration-none text-muted text-xs text-end" 
+                                                       onclick="this.style.display='none'">
+                                                       ¿Reportar faltante?
+                                                    </a>
+                                                </div>
+                                            {% endif %}
+
+                                        {% else %}
+                                            <span class="text-muted text-xs fst-italic">Sin permisos de edición</span>
                                         {% endif %}
                                         
                                     {% else %}
+                                        {# Ítem Cerrado #}
                                         <div class="text-end">
-                                            <span class="badge bg-secondary mb-1">
+                                            <span class="badge bg-secondary mb-1 text-xs">
                                                 <i class="fas fa-check-double me-1"></i> Cerrado
                                             </span>
 
                                             {% if detalle.fecha_ultima_devolucion %}
-                                                <small class="d-block text-muted" style="font-size: 0.7em;">
+                                                <small class="d-block text-muted text-xs text-data-code">
                                                     Actualizado: {{ detalle.fecha_ultima_devolucion|date:"d/m/y H:i" }}
                                                 </small>
                                             {% endif %}
@@ -228,7 +250,7 @@
                                 <tr>
                                     <td colspan="4" class="text-center py-5 text-muted">
                                         <i class="fas fa-ghost fs-1 mb-3"></i>
-                                        <p>No se encontraron ítems en este préstamo.</p>
+                                        <p class="text-base">No se encontraron ítems en este préstamo.</p>
                                     </td>
                                 </tr>
                                 {% endfor %}

@@ -4,7 +4,7 @@
 {% block titulo_ventana %}Recepción de Stock{% endblock %}
 
 {% block titulo_pagina %}
-    <span class="fs_grande color_primario">
+    <span class="text-xl color_primario">
         <i class="fas fa-dolly-flatbed me-2"></i> Registrar Recepción de Stock
     </span>
 {% endblock %}
@@ -16,185 +16,221 @@
     {% csrf_token %}
     {{ detalle_formset.management_form }}
 
-    <div class="card shadow-sm mb-4">
-        <div class="card-header fw-bold fs_mediana">
-            <i class="fas fa-info-circle me-1"></i> Datos Generales de la Recepción
+    {# TARJETA 1: CABECERA #}
+    <div class="card shadow-sm mb-4 border-0">
+        <div class="card-header bg-white border-bottom py-3">
+            <h5 class="mb-0 text-lg font-bold color_primario">
+                <i class="fas fa-info-circle me-1"></i> Datos Generales
+            </h5>
         </div>
-        <div class="card-body">
+        <div class="card-body p-4">
             <div class="row g-3">
                 <div class="col-md-4">
-                    <label for="{{ cabecera_form.proveedor.id_for_label }}" class="form-label fw-bold fs_pequena">{{ cabecera_form.proveedor.label }}</label>
-                    {# Aplicamos la clase 'tom-select-basic' para que JS lo inicialice #}
-                    <select name="{{ cabecera_form.proveedor.name }}" 
-                            id="id_proveedor_select" 
-                            class="tom-select-basic fondo_secundario_variante color_primario" 
-                            required>
-                        <option class="fs_normal fondo_secundario_variante" value="">Seleccione un proveedor...</option>
-                        {% for proveedor in cabecera_form.proveedor.field.queryset %}
-                        <option class="fs_normal fondo_secundario_variante" value="{{ proveedor.pk }}" {% if cabecera_form.proveedor.value == proveedor.pk %}selected{% endif %}>
-                            {{ proveedor.nombre }}
-                        </option>
-                        {% endfor %}
-                    </select>
+                    <label for="id_proveedor_select" class="form-label font-bold text-sm">{{ cabecera_form.proveedor.label }} <span class="text-danger">*</span></label>
+                    {# Renderizado manual para control total de Tom Select #}
+                    <div class="tom-select-wrapper">
+                        {# CORRECCIÓN: Agregadas clases 'form-select form-select-sm text-base' #}
+                        <select name="{{ cabecera_form.proveedor.name }}" 
+                                id="id_proveedor_select" 
+                                class="tom-select-basic form-select form-select-sm text-base" 
+                                required>
+                            <option value="">Seleccione un proveedor...</option>
+                            {% for proveedor in cabecera_form.proveedor.field.queryset %}
+                            <option value="{{ proveedor.pk }}" {% if cabecera_form.proveedor.value|stringformat:"s" == proveedor.pk|stringformat:"s" %}selected{% endif %}>
+                                {{ proveedor.nombre }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    {% if cabecera_form.proveedor.errors %}
+                        <div class="text-danger text-xs mt-1">{{ cabecera_form.proveedor.errors.0 }}</div>
+                    {% endif %}
                 </div>
                 <div class="col-md-4">
-                    <label for="{{ cabecera_form.fecha_recepcion.id_for_label }}" class="form-label fw-bold fs_pequena">{{ cabecera_form.fecha_recepcion.label }}</label>
+                    <label for="{{ cabecera_form.fecha_recepcion.id_for_label }}" class="form-label font-bold text-sm">{{ cabecera_form.fecha_recepcion.label }}</label>
                     {{ cabecera_form.fecha_recepcion }}
+                    {% if cabecera_form.fecha_recepcion.errors %}
+                        <div class="text-danger text-xs mt-1">{{ cabecera_form.fecha_recepcion.errors.0 }}</div>
+                    {% endif %}
                 </div>
                 <div class="col-md-4">
-                    <label for="{{ cabecera_form.notas.id_for_label }}" class="form-label fw-bold fs_pequena">{{ cabecera_form.notas.label }}</label>
+                    <label for="{{ cabecera_form.notas.id_for_label }}" class="form-label font-bold text-sm">{{ cabecera_form.notas.label }}</label>
                     {{ cabecera_form.notas }}
                 </div>
             </div>
         </div>
     </div>
 
-    <div class="card shadow-sm mb-4">
-        <div class="card-header fw-bold fs_mediana d-flex justify-content-between align-items-center">
-            <span>
+    {# TARJETA 2: DETALLES (Sin cambios, pero incluido para contexto completo) #}
+    <div class="card shadow-sm mb-4 border-0">
+        <div class="card-header bg-white border-bottom py-3 d-flex justify-content-between align-items-center">
+            <h5 class="mb-0 text-lg font-bold color_primario">
                 <i class="fas fa-boxes me-1"></i> Detalles de los Productos
-            </span>
-            <button type="button" class="btn btn-sm btn-outline-primary fs_pequena" id="add-detalle-form">
+            </h5>
+            <button type="button" class="btn btn-sm btn-outline-primary text-sm" id="add-detalle-form">
                 <i class="fas fa-plus me-1"></i> Agregar Producto
             </button>
         </div>
-        <div class="card-body">
+        <div class="card-body p-4">
             
             <div id="detalle-formset-container">
                 {% for form in detalle_formset %}
-                <div class="detalle-form mb-3 p-3 border rounded-2 fondo_secundario_variante" id="form-{{ forloop.counter0 }}">
-                    <div class="row g-2 align-items-center">
-                        <div class="col-lg-2">
-                            <label for="{{ form.producto.id_for_label }}" class="form-label fw-bold fs_pequena">Producto</label>
-                            {{ form.producto }}
-                            {% if form.producto.errors %}<div class="invalid-feedback d-block">{{ form.producto.errors.0 }}</div>{% endif %}
+                <div class="detalle-form mb-3 p-3 border rounded-2 bg-light position-relative" id="form-{{ forloop.counter0 }}">
+                    
+                    {% if form.can_delete %}
+                        <div class="d-none">{{ form.DELETE }}</div> 
+                        <button type="button" 
+                                class="btn btn-sm btn-link text-danger btn-eliminar-fila position-absolute top-0 end-0 m-2" 
+                                title="Eliminar fila">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    {% endif %}
+
+                    <div class="row g-2 align-items-end">
+                        <div class="col-lg-3">
+                            <label class="form-label font-bold text-xs text-uppercase text-muted">Producto</label>
+                            <div class="tom-select-wrapper">
+                                {{ form.producto }}
+                            </div>
+                            {% if form.producto.errors %}<div class="invalid-feedback d-block text-xs">{{ form.producto.errors.0 }}</div>{% endif %}
                         </div>
 
                         <div class="col-lg-2">
-                            <label class="form-label fw-bold fs_pequena">Ubicación</label>
-                            <select class="form-select fs_normal select-ubicacion-filter">
-                                <option value="">Filtrar Ubicación...</option>
-                                </select>
+                            <label class="form-label font-bold text-xs text-uppercase text-muted">Filtrar Ubicación</label>
+                            <select class="form-select form-select-sm text-base select-ubicacion-filter">
+                                <option value="">Todas...</option>
+                            </select>
                         </div>
 
                         <div class="col-lg-2">
-                            <label for="{{ form.compartimento_destino.id_for_label }}" class="form-label fw-bold fs_pequena">Destino</label>
+                            <label class="form-label font-bold text-xs text-uppercase text-muted">Destino Final</label>
                             {{ form.compartimento_destino }}
-                            {% if form.compartimento_destino.errors %}<div class="invalid-feedback d-block">{{ form.compartimento_destino.errors.0 }}</div>{% endif %}
+                            {% if form.compartimento_destino.errors %}<div class="invalid-feedback d-block text-xs">{{ form.compartimento_destino.errors.0 }}</div>{% endif %}
                         </div>
 
                         <div class="col-6 col-lg-1">
-                            <label for="{{ form.costo_unitario.id_for_label }}" class="form-label fw-bold fs_pequena">Costo U.</label>
-                            {{ form.costo_unitario }}
-                            {% if form.costo_unitario.errors %}<div class="invalid-feedback d-block">{{ form.costo_unitario.errors.0 }}</div>{% endif %}
+                            <label class="form-label font-bold text-xs text-uppercase text-muted">Costo U.</label>
+                            <div class="input-group input-group-sm">
+                                <span class="input-group-text">$</span>
+                                {{ form.costo_unitario }}
+                            </div>
                         </div>
                         
-                        {# --- MEJORA 1: Divs separados para "N° Serie" y "N° Lote" --- #}
                         <div class="col-6 col-lg-2 div-numero-serie">
-                            <label for="{{ form.numero_serie.id_for_label }}" class="form-label fw-bold fs_pequena">N° Serie Fabricante</label>
+                            <label class="form-label font-bold text-xs text-uppercase text-muted">N° Serie Fab.</label>
                             {{ form.numero_serie }}
-                            {% if form.numero_serie.errors %}<div class="invalid-feedback d-block">{{ form.numero_serie.errors.0 }}</div>{% endif %}
                         </div>
                         <div class="col-6 col-lg-2 div-numero-lote">
-                            <label for="{{ form.numero_lote.id_for_label }}" class="form-label fw-bold fs_pequena">N° Lote Fabricante</label>
+                            <label class="form-label font-bold text-xs text-uppercase text-muted">N° Lote</label>
                             {{ form.numero_lote }}
-                            {% if form.numero_lote.errors %}<div class="invalid-feedback d-block">{{ form.numero_lote.errors.0 }}</div>{% endif %}
                         </div>
 
                         <div class="col-6 col-lg-1">
-                            <label for="{{ form.cantidad.id_for_label }}" class="form-label fw-bold fs_pequena">Cantidad</label>
+                            <label class="form-label font-bold text-xs text-uppercase text-muted">Cantidad</label>
                             {{ form.cantidad }}
-                            {% if form.cantidad.errors %}<div class="invalid-feedback d-block">{{ form.cantidad.errors.0 }}</div>{% endif %}
                         </div>
                         
-                        {# --- MEJORA 1 y 2: Divs separados para "Fecha Fabricación" y "Fecha Vencimiento" --- #}
                         <div class="col-6 col-lg-2 div-fecha-fabricacion">
-                            <label for="{{ form.fecha_fabricacion.id_for_label }}" class="form-label fw-bold fs_pequena">Fecha Fabricación</label>
+                            <label class="form-label font-bold text-xs text-uppercase text-muted">F. Fabricación</label>
                             {{ form.fecha_fabricacion }}
-                            {% if form.fecha_fabricacion.errors %}<div class="invalid-feedback d-block">{{ form.fecha_fabricacion.errors.0 }}</div>{% endif %}
                         </div>
                          <div class="col-6 col-lg-2 div-fecha-vencimiento">
-                            <label for="{{ form.fecha_vencimiento.id_for_label }}" class="form-label fw-bold fs_pequena">Fecha Vencimiento</label>
+                            <label class="form-label font-bold text-xs text-uppercase text-muted">F. Vencimiento</label>
                             {{ form.fecha_vencimiento }}
-                            {% if form.fecha_vencimiento.errors %}<div class="invalid-feedback d-block">{{ form.fecha_vencimiento.errors.0 }}</div>{% endif %}
-                        </div>
-
-                        <div class="col-lg-1 d-flex align-items-end justify-content-center">
-                            {% if form.can_delete %}
-                                <div class="d-none">{{ form.DELETE }}</div> 
-                                
-                                <button type="button" 
-                                        class="btn btn-sm btn-outline-danger btn-eliminar-fila fs_normal {% if form.prefix == 'detalles-0' %}d-none{% endif %}" 
-                                        title="Eliminar esta fila">
-                                    <i class="fas fa-trash"></i>
-                                </button>
-                            {% endif %}
                         </div>
                     </div>
                 </div>
                 {% endfor %}
             </div>
 
-            <div class="d-flex justify-content-end mt-4 pt-4 border-top">
-                <a href="{% url 'gestion_inventario:ruta_inicio' %}" class="btn btn-secondary fs_normal me-2">Cancelar</a>
-                <button type="submit" class="btn btn-primary fs_normal">
+            <div class="d-flex justify-content-end mt-4 pt-4 border-top gap-2">
+                <a href="{% url 'gestion_inventario:ruta_stock_actual' %}" class="btn btn-outline-secondary text-base">Cancelar</a>
+                
+                {% if perms.gestion_inventario.accion_gestion_inventario_recepcionar_stock %}
+                <button type="submit" class="btn btn-primary text-base px-4">
                     <i class="fas fa-save me-1"></i> Guardar Recepción
                 </button>
+                {% endif %}
             </div>
             
         </div>
     </div>
 </form>
 
-</div> <div id="detalle-form-template" class="detalle-form mb-3 p-3 border rounded-2 fondo_secundario_variante d-none">
-    <div class="row g-2 align-items-center">
+</div> 
+
+{# TEMPLATE OCULTO PARA JS #}
+<div id="detalle-form-template" class="detalle-form mb-3 p-3 border rounded-2 bg-light position-relative d-none">
+    <div class="d-none">{{ detalle_formset.empty_form.DELETE }}</div>
+    <button type="button" class="btn btn-sm btn-link text-danger btn-eliminar-fila position-absolute top-0 end-0 m-2">
+        <i class="fas fa-times"></i>
+    </button>
+
+    <div class="row g-2 align-items-end">
         <div class="col-lg-3">
-            <label for="{{ detalle_formset.empty_form.producto.id_for_label }}" class="form-label fw-bold fs_pequena">Producto</label>
-            {{ detalle_formset.empty_form.producto }}
+            <label class="form-label font-bold text-xs text-uppercase text-muted">Producto</label>
+            <div class="tom-select-wrapper">
+                {{ detalle_formset.empty_form.producto }}
+            </div>
         </div>
         <div class="col-lg-2">
-            <label for="{{ detalle_formset.empty_form.compartimento_destino.id_for_label }}" class="form-label fw-bold fs_pequena">Destino</label>
+            <label class="form-label font-bold text-xs text-uppercase text-muted">Filtrar Ubicación</label>
+            <select class="form-select form-select-sm text-base select-ubicacion-filter">
+                <option value="">Todas...</option>
+            </select>
+        </div>
+        <div class="col-lg-2">
+            <label class="form-label font-bold text-xs text-uppercase text-muted">Destino Final</label>
             {{ detalle_formset.empty_form.compartimento_destino }}
         </div>
         <div class="col-6 col-lg-1">
-            <label for="{{ detalle_formset.empty_form.costo_unitario.id_for_label }}" class="form-label fw-bold fs_pequena">Costo U.</label>
-            {{ detalle_formset.empty_form.costo_unitario }}
+            <label class="form-label font-bold text-xs text-uppercase text-muted">Costo U.</label>
+            <div class="input-group input-group-sm">
+                <span class="input-group-text">$</span>
+                {{ detalle_formset.empty_form.costo_unitario }}
+            </div>
         </div>
 
-        {# --- MEJORA 1: Divs separados para "N° Serie" y "N° Lote" --- #}
         <div class="col-6 col-lg-2 div-numero-serie">
-            <label for="{{ detalle_formset.empty_form.numero_serie.id_for_label }}" class="form-label fw-bold fs_pequena">N° Serie Fab.</label>
+            <label class="form-label font-bold text-xs text-uppercase text-muted">N° Serie Fab.</label>
             {{ detalle_formset.empty_form.numero_serie }}
         </div>
         <div class="col-6 col-lg-2 div-numero-lote">
-            <label for="{{ detalle_formset.empty_form.numero_lote.id_for_label }}" class="form-label fw-bold fs_pequena">N° Lote</label>
+            <label class="form-label font-bold text-xs text-uppercase text-muted">N° Lote</label>
             {{ detalle_formset.empty_form.numero_lote }}
         </div>
 
         <div class="col-6 col-lg-1">
-            <label for="{{ detalle_formset.empty_form.cantidad.id_for_label }}" class="form-label fw-bold fs_pequena">Cantidad</label>
+            <label class="form-label font-bold text-xs text-uppercase text-muted">Cant.</label>
             {{ detalle_formset.empty_form.cantidad }}
         </div>
 
-        {# --- MEJORA 1 y 2: Divs separados para "Fecha Fabricación" y "Fecha Vencimiento" --- #}
         <div class="col-6 col-lg-2 div-fecha-fabricacion">
-            <label for="{{ detalle_formset.empty_form.fecha_fabricacion.id_for_label }}" class="form-label fw-bold fs_pequena">Fecha Fabricación</label>
+            <label class="form-label font-bold text-xs text-uppercase text-muted">F. Fabricación</label>
             {{ detalle_formset.empty_form.fecha_fabricacion }}
         </div>
         <div class="col-6 col-lg-2 div-fecha-vencimiento">
-            <label for="{{ detalle_formset.empty_form.fecha_vencimiento.id_for_label }}" class="form-label fw-bold fs_pequena">Fecha Vencimiento</label>
+            <label class="form-label font-bold text-xs text-uppercase text-muted">F. Vencimiento</label>
             {{ detalle_formset.empty_form.fecha_vencimiento }}
-        </div>
-
-        <div class="col-lg-1 d-flex align-items-end justify-content-center">
-            <div class="d-none">{{ detalle_formset.empty_form.DELETE }}</div>
-            
-            <button type="button" class="btn btn-sm btn-outline-danger btn-eliminar-fila fs_normal" title="Eliminar esta fila">
-                <i class="fas fa-trash"></i>
-            </button>
         </div>
     </div>
 </div>
+
+<style>
+    /* FIX para Tom Select */
+    .ts-wrapper .ts-control {
+        font-size: var(--font-base) !important;
+        line-height: 1.5 !important;
+        border-radius: 0.25rem;
+        padding: 0.375rem 0.75rem;
+    }
+    .ts-dropdown .option {
+        font-size: var(--font-base) !important;
+    }
+    .ts-control input {
+        font-size: inherit !important;
+    }
+</style>
 
 {% endblock %}
 
@@ -215,7 +251,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const productData = JSON.parse(document.getElementById('product-data').textContent);
     const formsetContainer = document.getElementById('detalle-formset-container');
     const addButton = document.getElementById('add-detalle-form');
-    const totalFormsInput = document.getElementById('id_detalles-TOTAL_FORMS'); // Prefix 'detalles'
+    const totalFormsInput = document.getElementById('id_detalles-TOTAL_FORMS'); 
     const ubicacionesData = JSON.parse(document.getElementById('ubicaciones-data').textContent);
     
     const template = document.getElementById('detalle-form-template');
@@ -230,12 +266,7 @@ document.addEventListener('DOMContentLoaded', function() {
         placeholder: "Buscar..."
     };
 
-    /**
-     * MEJORA 3: Función de ayuda para deshabilitar todos los campos de una fila,
-     * excepto el selector de producto y el de compartimento.
-     */
     function toggleAllFields(formRow, disabled) {
-        
         const fields = formRow.querySelectorAll(
             'input[name]:not([name$="-producto"]):not([type="checkbox"]), ' +
             'select[name]:not([name$="-producto"]):not([name$="-compartimento_destino"]), ' +
@@ -247,35 +278,24 @@ document.addEventListener('DOMContentLoaded', function() {
             field.classList.toggle('bg-light', disabled); 
         });
 
-        // Ocultar todos los contenedores dinámicos
         if (disabled) {
             formRow.querySelectorAll('.div-numero-serie, .div-numero-lote, .div-fecha-fabricacion, .div-fecha-vencimiento')
                    .forEach(div => div.classList.add('d-none'));
         }
     }
 
-
-    /**
-     * MEJORA 1, 2 y 3: Lógica centralizada para mostrar/ocultar campos
-     * según el producto seleccionado.
-     */
     function updateFormRowUI(formRow) {
         const productoSelect = formRow.querySelector('select[name$="-producto"]');
-        const compartimentoSelect = formRow.querySelector('select[name$="-compartimento_destino"]');
         const selectedProductId = productoSelect.value;
         const producto = productData[selectedProductId];
         
-        // --- MEJORA 3: Si no hay producto, deshabilitar todo y salir ---
         if (!producto) {
             toggleAllFields(formRow, true);
             return;
         }
 
-        // Si hay producto, habilitar todos los campos comunes
         toggleAllFields(formRow, false);
         
-        // (El resto de esta función es idéntica y ya estaba correcta)
-
         const esSerializado = producto.es_serializado;
         const esExpirable = producto.es_expirable; 
 
@@ -290,7 +310,6 @@ document.addEventListener('DOMContentLoaded', function() {
         const divFechaVenc = formRow.querySelector('.div-fecha-vencimiento');
         const inputFechaVenc = formRow.querySelector('input[name$="-fecha_vencimiento"]');
 
-        
         if (esSerializado) {
             inputCantidad.value = 1;
             inputCantidad.disabled = true;
@@ -334,14 +353,10 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-
-    /**
-     * Inicializa los listeners y TomSelect para una fila de formulario (existente o nueva)
-     */
     function initializeFormRow(formRow) {
-        // 1. Configurar el Selector de UBICACIÓN (El Filtro)
+        // 1. Selector de UBICACIÓN
         const ubicacionSelect = formRow.querySelector('.select-ubicacion-filter');
-        if (ubicacionSelect && ubicacionSelect.options.length <= 1) { // Evitar repoblar si ya tiene datos
+        if (ubicacionSelect && ubicacionSelect.options.length <= 1) { 
             for (const [id, data] of Object.entries(ubicacionesData)) {
                 const option = document.createElement('option');
                 option.value = id;
@@ -350,78 +365,65 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }
 
-        // 2. Configurar el Selector de COMPARTIMENTO (Destino Real)
-        const compartimentoSelect = formRow.querySelector('select[name$=\"-compartimento_destino\"]');
+        // 2. Selector de COMPARTIMENTO
+        const compartimentoSelect = formRow.querySelector('select[name$="-compartimento_destino"]');
         let tsCompartimento;
 
         if (compartimentoSelect) {
-            // Si ya existe una instancia (ej: al clonar), la destruimos para reconfigurarla limpia
             if (compartimentoSelect.tomselect) {
-                // Guardamos el valor seleccionado actual si estamos editando (post fail)
                 var initialValue = compartimentoSelect.tomselect.getValue();
                 compartimentoSelect.tomselect.destroy();
             }
 
-            // Inicializamos TomSelect vacío o con opciones filtradas
             tsCompartimento = new TomSelect(compartimentoSelect, { 
                 ...tomSelectConfig, 
                 placeholder: "Seleccione ubicación primero...",
                 valueField: 'id',
                 labelField: 'nombre',
                 searchField: 'nombre',
-                options: [], // Iniciamos VACÍO para obligar a usar el filtro
+                options: [], 
                 create: false
             });
             
-            // Si Django devolvió el form con error y ya había un valor seleccionado:
-            // Debemos intentar restaurar la ubicación y el compartimento visualmente.
             const valorActual = compartimentoSelect.getAttribute('value') || initialValue;
             
             if (valorActual) {
-                // Buscamos a qué ubicación pertenece este compartimento
                 for (const [ubiId, ubiData] of Object.entries(ubicacionesData)) {
                     const compEncontrado = ubiData.compartimentos.find(c => c.id == valorActual);
                     if (compEncontrado) {
-                        ubicacionSelect.value = ubiId; // Seleccionamos la ubicación
-                        // Cargamos las opciones de esa ubicación en TomSelect
+                        ubicacionSelect.value = ubiId; 
                         tsCompartimento.addOption(ubiData.compartimentos);
-                        tsCompartimento.setValue(valorActual); // Seleccionamos el compartimento
+                        tsCompartimento.setValue(valorActual); 
                         tsCompartimento.settings.placeholder = "Seleccione compartimento...";
-                        tsCompartimento.inputState(); // Refrescar UI
+                        tsCompartimento.inputState(); 
                         break;
                     }
                 }
             } else {
-                 tsCompartimento.disable(); // Deshabilitado hasta elegir ubicación
+                 tsCompartimento.disable();
             }
         }
 
-        // 3. Lógica de "Cascada" (Dependencia)
         if (ubicacionSelect && tsCompartimento) {
             ubicacionSelect.addEventListener('change', function() {
                 const ubicacionId = this.value;
-                
-                // Limpiamos el compartimento actual
                 tsCompartimento.clear();
                 tsCompartimento.clearOptions();
 
                 if (ubicacionId && ubicacionesData[ubicacionId]) {
-                    // Habilitamos y cargamos las opciones correspondientes
                     tsCompartimento.enable();
                     tsCompartimento.addOption(ubicacionesData[ubicacionId].compartimentos);
                     tsCompartimento.settings.placeholder = "Seleccione compartimento...";
                 } else {
-                    // Si seleccionan "Filtrar...", bloqueamos
                     tsCompartimento.disable();
                     tsCompartimento.settings.placeholder = "Seleccione ubicación primero...";
                 }
-                tsCompartimento.sync(); // Forzar actualización visual
+                tsCompartimento.sync(); 
             });
         }
         
-        
-        // Inicializar TomSelect para el producto
-        const productoSelectTS = formRow.querySelector('select[name$=\"-producto\"]');
+        // 3. TomSelect para PRODUCTO
+        const productoSelectTS = formRow.querySelector('select[name$="-producto"]');
         if (productoSelectTS && !productoSelectTS.tomselect) {
             new TomSelect(productoSelectTS, { 
                 ...tomSelectConfig,
@@ -432,65 +434,42 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         }
 
-        // Ejecutar la lógica de UI al inicializar la fila
         updateFormRowUI(formRow);
     }
     
-    /**
-     * Clona el template, actualiza los prefijos y lo añade al DOM
-     */
     function addForm() {
         const formIndex = parseInt(totalFormsInput.value);
-        
         const newFormRow = template.cloneNode(true);
         newFormRow.classList.remove('d-none');
         newFormRow.id = `form-${formIndex}`;
-        
         newFormRow.innerHTML = newFormRow.innerHTML.replace(/__prefix__/g, formIndex);
-        
         formsetContainer.appendChild(newFormRow);
-        
         totalFormsInput.value = formIndex + 1;
-        
         initializeFormRow(newFormRow);
     }
     
     // --- INICIALIZACIÓN ---
     
-    // 1. Inicializar TomSelect Básico para el proveedor (fuera del formset)
+    // 1. TomSelect Proveedor (Cabecera)
     document.querySelectorAll('.tom-select-basic').forEach(el => {
         if (!el.tomselect) new TomSelect(el, {...tomSelectConfig, placeholder: "Buscar proveedor..."});
     });
 
-    // 2. Inicializar todas las filas existentes en el formset
+    // 2. Filas iniciales
     formsetContainer.querySelectorAll('.detalle-form').forEach(formRow => {
         initializeFormRow(formRow);
     });
 
-    // 3. Configurar el botón de "Agregar Producto"
     addButton.addEventListener('click', addForm);
 
-    // --- 4. NUEVO: Configurar listeners para los botones de eliminar ---
-    // (Usamos delegación de eventos para que funcione en filas nuevas)
     formsetContainer.addEventListener('click', function(e) {
-        
-        // Buscamos si el clic (o su padre) es un '.btn-eliminar-fila'
         const deleteButton = e.target.closest('.btn-eliminar-fila');
-        
         if (deleteButton) {
             e.preventDefault();
-            
             const formRow = deleteButton.closest('.detalle-form');
             if (!formRow) return;
-
-            // 1. Encontrar el checkbox DELETE oculto dentro de esta fila
             const deleteCheckbox = formRow.querySelector('input[type="checkbox"][name$="-DELETE"]');
-            if (deleteCheckbox) {
-                // Marcamos el checkbox para que Django lo procese
-                deleteCheckbox.checked = true;
-            }
-
-            // 2. Ocultamos la fila de la vista para el usuario
+            if (deleteCheckbox) deleteCheckbox.checked = true;
             formRow.classList.add('d-none');
         }
     });

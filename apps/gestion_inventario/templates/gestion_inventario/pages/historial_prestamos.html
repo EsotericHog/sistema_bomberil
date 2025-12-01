@@ -6,29 +6,35 @@
 {% block titulo_pagina %}
     <div class="d-flex w-100 justify-content-between align-items-center flex-wrap gap-3">
         <div class="text-start">
-            <h4 class="mb-0 fw-bold color_primario">
+            <h4 class="mb-0 font-bold color_primario text-xl">
                 <i class="fas fa-history me-2"></i> Historial de Préstamos
             </h4>
-            <small class="text-muted">Registro y seguimiento de salidas externas</small>
+            <small class="text-muted text-sm">Registro y seguimiento de salidas externas</small>
         </div>
         
-        <a href="{% url 'gestion_inventario:ruta_crear_prestamo' %}" class="btn btn-primary shadow-sm fs_normal px-4 text-nowrap">
+        {# PERMISO: Gestionar Préstamos (Crear) #}
+        {% if perms.gestion_inventario.accion_gestion_inventario_gestionar_prestamos %}
+        <a href="{% url 'gestion_inventario:ruta_crear_prestamo' %}" class="btn btn-primary shadow-sm text-base px-4 text-nowrap">
             <i class="fas fa-plus me-2"></i> Nuevo Préstamo
         </a>
+        {% endif %}
     </div>
 {% endblock %}
 
 {% block contenido %}
 <div class="container-fluid mt-4">
 
+    {# PERMISO: Ver Préstamos (Vista General) #}
+    {% if perms.gestion_inventario.accion_gestion_inventario_ver_prestamos %}
+
     <div class="card border-0 shadow-sm mb-4">
         <div class="card-header bg-white py-2 border-bottom-0">
-            <button class="btn btn-link text-decoration-none text-dark fw-bold fs_normal p-0 d-flex align-items-center" type="button" data-bs-toggle="collapse" data-bs-target="#collapseFiltros" aria-expanded="true">
+            <button class="btn btn-link text-decoration-none text-dark font-bold text-base p-0 d-flex align-items-center" type="button" data-bs-toggle="collapse" data-bs-target="#collapseFiltros" aria-expanded="true">
                 <div class="bg-light rounded-circle p-2 me-2 d-flex align-items-center justify-content-center" style="width: 35px; height: 35px;">
                     <i class="fas fa-search text-primary"></i>
                 </div>
                 Filtros de Búsqueda
-                <i class="fas fa-chevron-down ms-2 fs_pequena text-muted"></i>
+                <i class="fas fa-chevron-down ms-2 text-xs text-muted"></i>
             </button>
         </div>
         <div class="collapse show" id="collapseFiltros">
@@ -36,26 +42,26 @@
                 <form method="get" action="{% url 'gestion_inventario:ruta_historial_prestamos' %}">
                     <div class="row g-3 align-items-end">
                         <div class="col-md-3">
-                            <label class="form-label fw-bold fs_pequena text-muted text-uppercase mb-1">Destinatario</label>
+                            <label class="form-label font-bold text-xs text-muted text-uppercase mb-1">Destinatario</label>
                             {{ filter_form.destinatario }}
                         </div>
                         <div class="col-md-2">
-                            <label class="form-label fw-bold fs_pequena text-muted text-uppercase mb-1">Estado</label>
+                            <label class="form-label font-bold text-xs text-muted text-uppercase mb-1">Estado</label>
                             {{ filter_form.estado }}
                         </div>
                         <div class="col-md-2">
-                            <label class="form-label fw-bold fs_pequena text-muted text-uppercase mb-1">Desde</label>
+                            <label class="form-label font-bold text-xs text-muted text-uppercase mb-1">Desde</label>
                             {{ filter_form.start_date }}
                         </div>
                         <div class="col-md-2">
-                            <label class="form-label fw-bold fs_pequena text-muted text-uppercase mb-1">Hasta</label>
+                            <label class="form-label font-bold text-xs text-muted text-uppercase mb-1">Hasta</label>
                             {{ filter_form.end_date }}
                         </div>
                         <div class="col-md-3 d-flex gap-2">
-                            <button type="submit" class="btn btn-outline-primary fs_normal w-100">
+                            <button type="submit" class="btn btn-outline-primary text-base w-100">
                                 <i class="fas fa-filter me-1"></i> Filtrar
                             </button>
-                            <a href="{% url 'gestion_inventario:ruta_historial_prestamos' %}" class="btn btn-light fs_normal text-muted" title="Limpiar">
+                            <a href="{% url 'gestion_inventario:ruta_historial_prestamos' %}" class="btn btn-light text-base text-muted" title="Limpiar">
                                 <i class="fas fa-times"></i>
                             </a>
                         </div>
@@ -70,7 +76,7 @@
             <div class="table-responsive">
                 <table class="table table-hover align-middle mb-0">
                     <thead class="bg-light border-bottom">
-                        <tr class="fs_pequena text-uppercase text-muted">
+                        <tr class="text-xs font-bold text-uppercase text-muted">
                             <th class="ps-4 py-3" style="width: 100px;">Folio</th>
                             <th style="width: 30%;">Destinatario / Responsable</th>
                             <th>Fechas Clave</th>
@@ -78,22 +84,22 @@
                             <th class="text-end pe-4">Acciones</th>
                         </tr>
                     </thead>
-                    <tbody class="fs_normal">
+                    <tbody class="text-sm">
                         {% for prestamo in page_obj %}
                         <tr class="{% if prestamo.estado == 'COM' %}opacity-75 bg-light-subtle{% endif %}">
                             
                             <td class="ps-4">
-                                <span class="badge bg-light text-dark border border-secondary-subtle font-monospace fs_normal">
+                                <span class="badge bg-light text-dark border border-secondary-subtle font-monospace text-sm text-data-code">
                                     #{{ prestamo.id|stringformat:"03d" }}
                                 </span>
                             </td>
 
                             <td>
                                 <div class="d-flex flex-column">
-                                    <span class="fw-bold text-dark mb-1 fs_mediana">
+                                    <span class="font-bold text-dark mb-1 text-base">
                                         {{ prestamo.destinatario.nombre_entidad }}
                                     </span>
-                                    <div class="d-flex align-items-center text-muted fs_pequena">
+                                    <div class="d-flex align-items-center text-muted text-xs">
                                         <i class="fas fa-user-circle me-1"></i>
                                         <span>Resp: {{ prestamo.usuario_responsable.get_full_name|default:"Sistema" }}</span>
                                     </div>
@@ -101,30 +107,30 @@
                             </td>
 
                             <td>
-                                <div class="d-flex flex-column gap-1 fs_pequena">
+                                <div class="d-flex flex-column gap-1 text-xs">
                                     <div class="text-muted">
                                         <i class="fas fa-calendar-alt me-2 text-secondary" style="width: 15px;"></i>
-                                        Prestado: <strong>{{ prestamo.fecha_prestamo|date:"d/m/Y" }}</strong>
+                                        Prestado: <strong class="text-data-code">{{ prestamo.fecha_prestamo|date:"d/m/Y" }}</strong>
                                     </div>
                                     
                                     {# Lógica visual para fechas de vencimiento #}
                                     {% if prestamo.estado != 'COM' %}
                                         {% now "Y-m-d" as today_str %}
                                         {% if prestamo.fecha_devolucion_esperada|date:"Y-m-d" < today_str %}
-                                            <div class="text-danger fw-bold">
+                                            <div class="text-danger font-bold">
                                                 <i class="fas fa-exclamation-circle me-2" style="width: 15px;"></i>
-                                                Vence: {{ prestamo.fecha_devolucion_esperada|date:"d/m/Y"|default:"Sin fecha" }} (Atrasado)
+                                                Vence: <span class="text-data-code">{{ prestamo.fecha_devolucion_esperada|date:"d/m/Y"|default:"Sin fecha" }}</span> (Atrasado)
                                             </div>
                                         {% else %}
                                             <div class="text-primary">
                                                 <i class="fas fa-clock me-2" style="width: 15px;"></i>
-                                                Vence: {{ prestamo.fecha_devolucion_esperada|date:"d/m/Y"|default:"Indefinido" }}
+                                                Vence: <span class="text-data-code">{{ prestamo.fecha_devolucion_esperada|date:"d/m/Y"|default:"Indefinido" }}</span>
                                             </div>
                                         {% endif %}
                                     {% else %}
                                         <div class="text-success">
                                             <i class="fas fa-check-circle me-2" style="width: 15px;"></i>
-                                            Finalizado el {{ prestamo.updated_at|date:"d/m/Y" }}
+                                            Finalizado el <span class="text-data-code">{{ prestamo.updated_at|date:"d/m/Y" }}</span>
                                         </div>
                                     {% endif %}
                                 </div>
@@ -132,19 +138,19 @@
 
                             <td class="text-center">
                                 {% if prestamo.estado == 'PEN' %}
-                                    <span class="badge bg-warning-subtle text-warning-emphasis rounded-pill px-3 py-2 border border-warning-subtle">
+                                    <span class="badge bg-warning-subtle text-warning-emphasis rounded-pill px-3 py-2 border border-warning-subtle text-xs">
                                         <i class="fas fa-hourglass-half me-1"></i> Pendiente
                                     </span>
                                 {% elif prestamo.estado == 'PAR' %}
-                                    <span class="badge bg-info-subtle text-info-emphasis rounded-pill px-3 py-2 border border-info-subtle">
+                                    <span class="badge bg-info-subtle text-info-emphasis rounded-pill px-3 py-2 border border-info-subtle text-xs">
                                         <i class="fas fa-adjust me-1"></i> Parcial
                                     </span>
                                 {% elif prestamo.estado == 'COM' %}
-                                    <span class="badge bg-success-subtle text-success-emphasis rounded-pill px-3 py-2 border border-success-subtle">
+                                    <span class="badge bg-success-subtle text-success-emphasis rounded-pill px-3 py-2 border border-success-subtle text-xs">
                                         <i class="fas fa-check me-1"></i> Completado
                                     </span>
                                 {% else %}
-                                    <span class="badge bg-secondary rounded-pill px-3 py-2">
+                                    <span class="badge bg-secondary rounded-pill px-3 py-2 text-xs">
                                         {{ prestamo.get_estado_display }}
                                     </span>
                                 {% endif %}
@@ -152,12 +158,17 @@
 
                             <td class="text-end pe-4">
                                 <a href="{% url 'gestion_inventario:ruta_gestionar_devolucion' prestamo.id %}" 
-                                   class="btn btn-sm {% if prestamo.estado == 'COM' %}btn-outline-secondary{% else %}btn-outline-primary{% endif %} fs_normal px-3"
+                                   class="btn btn-sm {% if prestamo.estado == 'COM' %}btn-outline-secondary{% else %}btn-outline-primary{% endif %} text-base px-3"
                                    title="Gestionar este préstamo">
                                     {% if prestamo.estado == 'COM' %}
                                         <i class="fas fa-eye me-1"></i> Ver Detalles
                                     {% else %}
-                                        <i class="fas fa-edit me-1"></i> Gestionar
+                                        {# Si puede gestionar, icono de editar. Si no, icono de ver #}
+                                        {% if perms.gestion_inventario.accion_gestion_inventario_gestionar_prestamos %}
+                                            <i class="fas fa-edit me-1"></i> Gestionar
+                                        {% else %}
+                                            <i class="fas fa-eye me-1"></i> Ver
+                                        {% endif %}
                                     {% endif %}
                                 </a>
                             </td>
@@ -168,7 +179,7 @@
                                 <div class="text-muted opacity-50 mb-2">
                                     <i class="fas fa-folder-open display-4"></i>
                                 </div>
-                                <p class="mb-0 fs_normal text-muted">No se encontraron préstamos con los filtros actuales.</p>
+                                <p class="mb-0 text-base text-muted">No se encontraron préstamos con los filtros actuales.</p>
                             </td>
                         </tr>
                         {% endfor %}
@@ -183,25 +194,25 @@
                         {% with params=request.GET.urlencode %}
                             {% if page_obj.has_previous %}
                                 <li class="page-item">
-                                    <a class="page-link border-0 text-muted" href="?{{ params }}&page=1"><i class="fas fa-angle-double-left"></i></a>
+                                    <a class="page-link border-0 text-muted text-sm" href="?{{ params }}&page=1"><i class="fas fa-angle-double-left"></i></a>
                                 </li>
                                 <li class="page-item">
-                                    <a class="page-link border-0 text-muted" href="?{{ params }}&page={{ page_obj.previous_page_number }}"><i class="fas fa-angle-left"></i></a>
+                                    <a class="page-link border-0 text-muted text-sm" href="?{{ params }}&page={{ page_obj.previous_page_number }}"><i class="fas fa-angle-left"></i></a>
                                 </li>
                             {% endif %}
                             
                             <li class="page-item disabled">
-                                <span class="page-link border-0 fw-bold text-dark">
+                                <span class="page-link border-0 font-bold text-dark text-sm">
                                     Página {{ page_obj.number }} de {{ page_obj.paginator.num_pages }}
                                 </span>
                             </li>
                             
                             {% if page_obj.has_next %}
                                 <li class="page-item">
-                                    <a class="page-link border-0 text-muted" href="?{{ params }}&page={{ page_obj.next_page_number }}"><i class="fas fa-angle-right"></i></a>
+                                    <a class="page-link border-0 text-muted text-sm" href="?{{ params }}&page={{ page_obj.next_page_number }}"><i class="fas fa-angle-right"></i></a>
                                 </li>
                                 <li class="page-item">
-                                    <a class="page-link border-0 text-muted" href="?{{ params }}&page={{ page_obj.paginator.num_pages }}"><i class="fas fa-angle-double-right"></i></a>
+                                    <a class="page-link border-0 text-muted text-sm" href="?{{ params }}&page={{ page_obj.paginator.num_pages }}"><i class="fas fa-angle-double-right"></i></a>
                                 </li>
                             {% endif %}
                         {% endwith %}
@@ -212,5 +223,17 @@
 
         </div>
     </div>
+    
+    {% else %}
+        {# Mensaje Sin Permiso #}
+        <div class="alert alert-danger border-0 shadow-sm d-flex align-items-center" role="alert">
+            <i class="fas fa-lock fs-4 me-3"></i>
+            <div>
+                <h5 class="alert-heading font-bold text-base">Acceso Restringido</h5>
+                <p class="text-sm mb-0">No tienes permisos para ver el historial de préstamos.</p>
+            </div>
+        </div>
+    {% endif %}
+
 </div>
 {% endblock %}

@@ -4,7 +4,7 @@
 {% block titulo_ventana %}Lista de Vehículos{% endblock %}
 
 {% block titulo_pagina %}
-    <span class="fs_grande color_primario">
+    <span class="text-xl color_primario">
         <i class="fas fa-truck me-2"></i> Vehículos de la Estación
     </span>
 {% endblock %}
@@ -21,7 +21,7 @@
                     {% include 'gestion_inventario/partials/_vehiculo_card.html' with ubicacion=vehiculo %}
                 {% endfor %}
             {% else %}
-                <p class="text-center text-muted fst-italic p-3">No hay vehículos registrados para esta estación.</p>
+                <p class="text-center text-muted fst-italic p-3 text-base">No hay vehículos registrados para esta estación.</p>
             {% endif %}
         </div>
     </div>
@@ -43,70 +43,98 @@
 
 <div class="container-fluid mt-4">
 
-<div class="card shadow-sm mb-4">
-    <div class="card-header d-flex justify-content-between align-items-center">
-        <span class="fw-bold fs_normal">
-            <i class="fas fa-table me-1"></i>
-            Lista de Vehículos
-        </span>
-        <a href="{% url 'gestion_inventario:ruta_crear_vehiculo' %}" class="btn btn-success btn-sm fs_normal"> <i class="fas fa-plus me-1"></i> Añadir Vehículo
-        </a>
-    </div>
-    <div class="card-body">
-        <div class="table-responsive">
-            <table class="table table-striped table-hover table-sm align-middle fs_normal">
-                <thead class="fs_pequena">
-                    <tr>
-                        <th>Nombre / Unidad</th>
-                        <th>Tipo de Vehículo</th>
-                        <th>Patente</th>
-                        <th class="text-center">Compartimentos</th>
-                        <th class="text-center">Existencias</th>
-                        <th class="text-center">Acciones</th>
-                    </tr>
-                </thead>
-                <tbody class="fs_normal">
-                    {% for vehiculo in vehiculos %}
-                    <tr>
-                        <td>
-                            <strong>{{ vehiculo.nombre|title }}</strong>
-                        </td>
-                        <td>
-                           {% if vehiculo.detalles_vehiculo and vehiculo.detalles_vehiculo.tipo_vehiculo %}
-                                {{ vehiculo.detalles_vehiculo.tipo_vehiculo.nombre }}
-                           {% else %}
-                                <span class="text-muted fst-italic">No especificado</span>
-                           {% endif %}
-                        </td>
-                        <td>
-                            {% if vehiculo.detalles_vehiculo and vehiculo.detalles_vehiculo.patente %}
-                                <code>{{ vehiculo.detalles_vehiculo.patente }}</code>
-                            {% else %}
-                                <span class="text-muted fst-italic">N/A</span>
-                            {% endif %}
-                        </td>
-                        <td class="text-center">{{ vehiculo.total_compartimentos }}</td>
-                        <td class="text-center">{{ vehiculo.total_existencias }}</td>
-                        <td class="text-center">
-                            <a class="btn btn-sm btn-outline-primary fs_normal" 
-                               href="{% url 'gestion_inventario:ruta_gestionar_ubicacion' vehiculo.id %}">Gestionar</a> <a class="btn btn-sm btn-outline-secondary fs_normal" 
-                               href="{% url 'gestion_inventario:ruta_editar_vehiculo' vehiculo.id %}">Editar</a> </td>
-                    </tr>
-                    {% empty %}
-                    <tr>
-                        <td colspan="6" class="text-center fst-italic py-4">
-                            No hay vehículos registrados para esta estación.
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+    <div class="card shadow-sm mb-4 border-0">
+        <div class="card-header bg-white border-bottom py-3 d-flex justify-content-between align-items-center">
+            <span class="font-bold text-lg color_primario">
+                <i class="fas fa-table me-1"></i>
+                Lista de Vehículos
+            </span>
+            
+            {# PERMISO: Crear Vehículo (Gestionar Ubicaciones) #}
+            {% if perms.gestion_inventario.accion_gestion_inventario_gestionar_ubicaciones %}
+            <a href="{% url 'gestion_inventario:ruta_crear_vehiculo' %}" class="btn btn-success btn-sm text-base"> 
+                <i class="fas fa-plus me-1"></i> Añadir Vehículo
+            </a>
+            {% endif %}
         </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="bg-light text-secondary text-uppercase text-sm font-bold">
+                        <tr>
+                            <th class="ps-4">Nombre / Unidad</th>
+                            <th>Tipo de Vehículo</th>
+                            <th>Patente</th>
+                            <th class="text-center">Compartimentos</th>
+                            <th class="text-center">Existencias</th>
+                            <th class="text-center pe-4">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody class="text-base">
+                        {% for vehiculo in vehiculos %}
+                        <tr>
+                            <td class="ps-4">
+                                <strong class="text-dark">{{ vehiculo.nombre|title }}</strong>
+                            </td>
+                            <td class="text-sm">
+                               {% if vehiculo.detalles_vehiculo and vehiculo.detalles_vehiculo.tipo_vehiculo %}
+                                    {{ vehiculo.detalles_vehiculo.tipo_vehiculo.nombre }}
+                               {% else %}
+                                    <span class="text-muted fst-italic">No especificado</span>
+                               {% endif %}
+                            </td>
+                            <td class="text-sm">
+                                {% if vehiculo.detalles_vehiculo and vehiculo.detalles_vehiculo.patente %}
+                                    <code class="text-data-code text-dark">{{ vehiculo.detalles_vehiculo.patente }}</code>
+                                {% else %}
+                                    <span class="text-muted fst-italic">N/A</span>
+                                {% endif %}
+                            </td>
+                            <td class="text-center">
+                                <span class="badge bg-light text-dark border text-xs">{{ vehiculo.total_compartimentos }}</span>
+                            </td>
+                            <td class="text-center">
+                                <span class="badge bg-light text-dark border text-xs">{{ vehiculo.total_existencias }}</span>
+                            </td>
+                            <td class="text-center pe-4">
+                                <div class="btn-group">
+                                    {# Botón Gestionar: Visible para ver detalles #}
+                                    <a class="btn btn-sm btn-outline-primary text-sm" 
+                                       href="{% url 'gestion_inventario:ruta_gestionar_ubicacion' vehiculo.id %}"
+                                       title="Ver detalles y compartimentos">
+                                        Gestionar
+                                    </a>
+                                    
+                                    {# PERMISO: Editar Vehículo (Gestionar Ubicaciones) #}
+                                    {% if perms.gestion_inventario.accion_gestion_inventario_gestionar_ubicaciones %}
+                                    <a class="btn btn-sm btn-outline-secondary text-sm" 
+                                       href="{% url 'gestion_inventario:ruta_editar_vehiculo' vehiculo.id %}"
+                                       title="Editar detalles técnicos">
+                                        Editar
+                                    </a>
+                                    {% endif %}
+                                </div>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="6" class="text-center py-5">
+                                <div class="text-muted opacity-50">
+                                    <i class="fas fa-truck fa-3x mb-3"></i>
+                                    <h5 class="text-lg">No hay vehículos registrados</h5>
+                                    <p class="text-sm">Añade unidades móviles para comenzar.</p>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
 
-        {# Aquí puedes añadir la paginación si decides paginar la vista #}
+            {# Aquí puedes añadir la paginación si decides paginar la vista #}
 
+        </div>
     </div>
-</div>
 
 </div>
 

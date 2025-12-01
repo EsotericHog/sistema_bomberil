@@ -321,8 +321,3 @@ ESTILOS DE MODO OSCURO
 .dark-mode .border {
     border-color: #2d3238 !important;
 }
-
-/* TOM SELECT TEMPORAL: PROBABLEMENTE TENGA QUE QUITAR ESTO */
-.ts-dropdown, .ts-dropdown.form-control {
-    z-index: 9999 !important; /* Por encima de todo */
-}

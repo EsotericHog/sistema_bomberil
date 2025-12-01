@@ -5,14 +5,14 @@
 
 {% block titulo_pagina %}
     <div class="d-flex align-items-center">
-        <a href="{% url 'gestion_inventario:ruta_historial_prestamos' %}" class="btn btn-light rounded-circle me-3 shadow-sm" title="Volver al Historial">
-            <i class="fas fa-arrow-left text-muted"></i>
+        <a href="{% url 'gestion_inventario:ruta_historial_prestamos' %}" class="btn btn-outline-light text-dark border-0 me-3" title="Volver al Historial">
+            <i class="fas fa-arrow-left fa-lg"></i>
         </a>
         <div>
-            <h4 class="mb-0 fw-bold color_primario">
+            <span class="text-xl font-bold color_primario">
                 <i class="fas fa-hand-holding-medical me-2"></i> Registrar Préstamo
-            </h4>
-            <small class="text-muted">Salida de equipos hacia entidades externas</small>
+            </span>
+            <small class="text-xs text-muted d-block">Salida de equipos hacia entidades externas</small>
         </div>
     </div>
 {% endblock %}
@@ -26,54 +26,57 @@
 
     <div class="row g-4">
         
+        {# --- COLUMNA IZQUIERDA: DATOS DEL DESTINATARIO --- #}
         <div class="col-lg-5">
             <div class="card border-0 shadow-sm h-100">
                 <div class="card-header bg-white py-3 border-bottom-0">
-                    <h5 class="fw-bold color_primario fs_mediana mb-0">
+                    <h5 class="font-bold color_primario text-lg mb-0">
                         <i class="fas fa-file-signature me-2"></i> Datos del Préstamo
                     </h5>
                 </div>
                 <div class="card-body pt-0">
                     
-                    <label class="form-label fw-bold fs_pequena text-uppercase text-muted mb-2">¿A quién se le presta?</label>
+                    <label class="form-label font-bold text-xs text-uppercase text-muted mb-2">¿A quién se le presta?</label>
                     <div class="bg-light p-1 rounded-3 d-flex mb-4 border">
                         <input type="radio" class="btn-check" name="mode_destinatario" id="mode_existente" value="existente" checked onchange="toggleDestinatarioMode()">
-                        <label class="btn btn-sm btn-light border-0 flex-fill rounded-3 fw-bold text-muted shadow-none" for="mode_existente" id="lbl_existente">
+                        <label class="btn btn-sm btn-light border-0 flex-fill rounded-3 font-bold text-muted shadow-none text-sm" for="mode_existente" id="lbl_existente">
                             <i class="fas fa-search me-1"></i> Entidad Registrada
                         </label>
 
                         <input type="radio" class="btn-check" name="mode_destinatario" id="mode_nuevo" value="nuevo" onchange="toggleDestinatarioMode()">
-                        <label class="btn btn-sm btn-light border-0 flex-fill rounded-3 fw-bold text-muted shadow-none" for="mode_nuevo" id="lbl_nuevo">
+                        <label class="btn btn-sm btn-light border-0 flex-fill rounded-3 font-bold text-muted shadow-none text-sm" for="mode_nuevo" id="lbl_nuevo">
                             <i class="fas fa-plus-circle me-1"></i> Nueva Entidad
                         </label>
                     </div>
 
+                    {# Modo: Existente #}
                     <div id="bloque-existente" class="mb-4">
-                        <div class="form-floating">
+                        <label class="form-label font-bold text-sm text-primary">Seleccionar Destinatario</label>
+                        <div class="tom-select-wrapper">
                             {{ cabecera_form.destinatario }}
-                            <label for="{{ cabecera_form.destinatario.id_for_label }}" class="opacity-75"></label>
                         </div>
                         {% if cabecera_form.destinatario.errors %}
-                            <div class="text-danger fs_pequena mt-1 ms-1">{{ cabecera_form.destinatario.errors.0 }}</div>
+                            <div class="text-danger text-xs mt-1 ms-1">{{ cabecera_form.destinatario.errors.0 }}</div>
                         {% endif %}
                     </div>
 
+                    {# Modo: Nuevo #}
                     <div id="bloque-nuevo" class="d-none mb-4 p-3 bg-blue-light border border-primary border-opacity-10 rounded-3">
                         <div class="mb-3">
-                            <label class="form-label fw-bold fs_pequena text-primary">Nombre de la Entidad (*)</label>
+                            <label class="form-label font-bold text-sm text-primary">Nombre de la Entidad (*)</label>
                             {{ cabecera_form.nuevo_destinatario_nombre }}
                             {% if cabecera_form.nuevo_destinatario_nombre.errors %}
-                                <div class="text-danger fs_pequena mt-1">{{ cabecera_form.nuevo_destinatario_nombre.errors.0 }}</div>
+                                <div class="text-danger text-xs mt-1">{{ cabecera_form.nuevo_destinatario_nombre.errors.0 }}</div>
                             {% endif %}
                         </div>
                         <div class="mb-0">
-                            <label class="form-label fw-bold fs_pequena text-primary">Contacto / Teléfono (Opcional)</label>
+                            <label class="form-label font-bold text-sm text-primary">Contacto / Teléfono (Opcional)</label>
                             {{ cabecera_form.nuevo_destinatario_contacto }}
                         </div>
                     </div>
 
                     <div class="mb-3">
-                        <label class="form-label fw-bold fs_pequena text-uppercase text-muted">Devolución Estimada</label>
+                        <label class="form-label font-bold text-xs text-uppercase text-muted">Devolución Estimada</label>
                         <div class="input-group">
                             <span class="input-group-text bg-white border-end-0 text-muted"><i class="fas fa-calendar-alt"></i></span>
                             {{ cabecera_form.fecha_devolucion_esperada }}
@@ -81,12 +84,12 @@
                     </div>
 
                     <div class="mb-0">
-                        <label class="form-label fw-bold fs_pequena text-uppercase text-muted">Motivo / Observaciones</label>
+                        <label class="form-label font-bold text-xs text-uppercase text-muted">Motivo / Observaciones</label>
                         {{ cabecera_form.notas_prestamo }}
                     </div>
 
                     {% if cabecera_form.non_field_errors %}
-                        <div class="alert alert-danger mt-3 fs_pequena">
+                        <div class="alert alert-danger mt-3 text-sm">
                             {% for error in cabecera_form.non_field_errors %}{{ error }}<br>{% endfor %}
                         </div>
                     {% endif %}
@@ -94,30 +97,34 @@
             </div>
         </div>
 
+        {# --- COLUMNA DERECHA: SELECCIÓN DE ÍTEMS --- #}
         <div class="col-lg-7">
             <div class="card border-0 shadow-sm h-100">
                 <div class="card-header bg-white py-3 border-bottom-0 d-flex justify-content-between align-items-center">
-                    <h5 class="fw-bold color_primario fs_mediana mb-0">
+                    <h5 class="font-bold color_primario text-lg mb-0">
                         <i class="fas fa-box-open me-2"></i> Ítems a Prestar
                     </h5>
-                    <span class="badge bg-light text-primary border fs_normal" id="badge-count">0 ítems</span>
+                    <span class="badge bg-light text-primary border text-sm" id="badge-count">0 ítems</span>
                 </div>
                 
                 <div class="card-body pt-0 d-flex flex-column">
                     
+                    {# Buscador de Ítems #}
                     <div class="bg-light p-3 rounded-3 mb-3 border">
-                        <label class="form-label fw-bold fs_pequena text-muted mb-1">AGREGAR ÍTEMS</label>
-                        <select id="scan-select" class="form-control" placeholder="Escriba código o nombre..."></select>
+                        <label class="form-label font-bold text-xs text-muted mb-1 text-uppercase">AGREGAR EQUIPOS O INSUMOS</label>
+                        {# Select vacío que Tom Select convertirá en buscador AJAX #}
+                        <select id="scan-select" class="form-control text-base" placeholder="Escriba código o nombre..."></select>
                         
                         <div class="d-flex justify-content-between mt-2">
-                            <span id="scan-feedback-text" class="fs_pequena fw-bold"></span>
-                            <small class="text-muted fst-italic"><i class="fas fa-barcode me-1"></i> Compatible con lector QR</small>
+                            <span id="scan-feedback-text" class="text-xs font-bold"></span>
+                            <small class="text-muted fst-italic text-xs"><i class="fas fa-barcode me-1"></i> Buscador inteligente</small>
                         </div>
                     </div>
 
+                    {# Tabla de Ítems Seleccionados #}
                     <div class="table-responsive flex-grow-1 border rounded-3 mb-3" style="min-height: 200px;">
                         <table class="table align-middle table-hover mb-0" id="items-prestados-table">
-                            <thead class="bg-light fs_pequena text-uppercase text-muted sticky-top">
+                            <thead class="bg-light text-xs text-uppercase text-muted sticky-top">
                                 <tr>
                                     <th class="ps-3">Producto</th>
                                     <th>Código</th>
@@ -125,12 +132,12 @@
                                     <th class="text-end pe-3"></th>
                                 </tr>
                             </thead>
-                            <tbody>
+                            <tbody class="text-base">
                                 <tr id="no-items-row">
                                     <td colspan="4" class="text-center py-5 text-muted">
                                         <i class="fas fa-inbox display-4 opacity-25 mb-2"></i>
-                                        <p class="mb-0 fs_normal">La lista está vacía.</p>
-                                        <small>Use el buscador para agregar equipos o insumos.</small>
+                                        <p class="mb-0 text-base">La lista está vacía.</p>
+                                        <small class="text-sm">Use el buscador para agregar equipos o insumos.</small>
                                     </td>
                                 </tr>
                             </tbody>
@@ -138,10 +145,14 @@
                     </div>
 
                     <div class="d-flex justify-content-end gap-2 pt-2 border-top">
-                        <a href="{% url 'gestion_inventario:ruta_stock_actual' %}" class="btn btn-light text-muted fs_normal px-4">Cancelar</a>
-                        <button type="submit" class="btn btn-primary fs_normal px-4 shadow-sm">
+                        <a href="{% url 'gestion_inventario:ruta_stock_actual' %}" class="btn btn-light text-muted text-base px-4">Cancelar</a>
+                        
+                        {# PERMISO: Gestionar Préstamos (Crear) #}
+                        {% if perms.gestion_inventario.accion_gestion_inventario_gestionar_prestamos %}
+                        <button type="submit" class="btn btn-primary text-base px-4 shadow-sm">
                             <i class="fas fa-save me-2"></i> Confirmar Préstamo
                         </button>
+                        {% endif %}
                     </div>
                 </div>
             </div>
@@ -151,6 +162,21 @@
 </form>
 
 </div>
+
+<style>
+    /* Estilos para Tom Select dentro del buscador de ítems */
+    .ts-wrapper .ts-control {
+        font-size: var(--font-base) !important;
+        border: 1px solid #ced4da; /* Borde estándar para el buscador */
+        padding: 8px 12px;
+    }
+    .ts-dropdown .option {
+        font-size: var(--font-base) !important;
+        padding: 8px 12px;
+    }
+    /* Estilo para los badges en la tabla */
+    .font-monospace { font-family: var(--font-data) !important; }
+</style>
 {% endblock %}
 
 {% block scripts %}
@@ -184,11 +210,11 @@
         }
     }
 
-    // --- LÓGICA DE NEGOCIO (COPIA MEJORADA DE TU SCRIPT ANTERIOR) ---
+    // --- LÓGICA DE NEGOCIO ---
     document.addEventListener('DOMContentLoaded', function() {
         
         // 1. Inicializar Estado UI
-        toggleDestinatarioMode(); // Asegurar estado inicial correcto
+        toggleDestinatarioMode(); 
 
         // 2. Variables y Selectores
         const feedbackText = document.getElementById('scan-feedback-text');
@@ -203,7 +229,11 @@
         // 3. TomSelect Destinatario (Solo si existe en el DOM)
         const destSelect = document.getElementById('id_destinatario');
         if (destSelect && !destSelect.tomselect) {
-            new TomSelect(destSelect, { create: false, placeholder: "Buscar entidad..." });
+            new TomSelect(destSelect, { 
+                create: false, 
+                placeholder: "Buscar entidad...",
+                maxOptions: 50
+            });
         }
 
         // 4. TomSelect Buscador de Ítems (Lógica Remota)
@@ -216,17 +246,14 @@
             load: function(query, callback) {
                 if (!query.length) return callback();
                 // --- Recolectar IDs para excluir ---
-                // itemsPrestados es tu array global donde guardas lo que vas agregando
                 const excludedIds = itemsPrestados.map(item => item.id).join(',');
             
-                // Agregamos &exclude=... a la URL
                 const urlWithParams = `${apiUrl}?q=${encodeURIComponent(query)}&exclude=${encodeURIComponent(excludedIds)}`;
 
                 fetch(urlWithParams)
                     .then(response => response.json())
                     .then(json => {
                         if (json.error) {
-                            // Opcional: manejar error silencioso o mostrar feedback
                             callback(); 
                         } else {
                             callback(json.items);
@@ -253,12 +280,12 @@
             },
             render: {
                 option: function(item, escape) {
-                    const icon = item.tipo === 'activo' ? 'fa-barcode text-primary' : 'fa-cubes text-warning';
+                    const icon = item.tipo === 'activo' ? 'bi bi-upc-scan text-primary' : 'bi bi-boxes text-warning';
                     return `<div class="py-2 d-flex align-items-center">
-                                <i class="fas ${icon} me-3 fs-5"></i>
+                                <i class="${icon} me-3 fs-5"></i>
                                 <div>
-                                    <div class="fw-bold text-dark">${escape(item.nombre)}</div>
-                                    <div class="small text-muted font-monospace">${escape(item.codigo)}</div>
+                                    <div class="font-bold text-dark text-sm">${escape(item.nombre)}</div>
+                                    <div class="text-muted font-monospace text-xs">${escape(item.codigo)}</div>
                                 </div>
                             </div>`;
                 }
@@ -273,7 +300,7 @@
 
         function showFeedback(msg, isError=false) {
             feedbackText.textContent = msg;
-            feedbackText.className = isError ? 'text-danger fs_pequena fw-bold' : 'text-success fs_pequena fw-bold';
+            feedbackText.className = isError ? 'text-danger text-xs font-bold' : 'text-success text-xs font-bold';
             setTimeout(() => feedbackText.textContent = '', 3000);
         }
 
@@ -287,18 +314,19 @@
                 itemsPrestados.forEach((item, index) => {
                     const tr = document.createElement('tr');
                     const qty = item.tipo === 'activo' ? 1 : item.cantidad_prestada;
-                    const iconClass = item.tipo === 'activo' ? 'bi bi-upc-scan text-primary' : 'bi bi-boxes text-warning'; // Usando Bootstrap icons si FontAwesome falla, o ajustar
+                    // Usamos iconos de Bootstrap Icons para consistencia
+                    const typeBadgeClass = item.tipo === 'activo' ? 'bg-info text-dark' : 'bg-warning text-dark';
                     
                     tr.innerHTML = `
                         <td class="ps-3">
-                            <div class="fw-bold text-dark mb-0 lh-1">${item.nombre}</div>
-                            <small class="text-muted font-monospace" style="font-size: 0.75rem;">${item.codigo}</small>
+                            <div class="font-bold text-dark mb-0 lh-1 text-base">${item.nombre}</div>
+                            <small class="text-muted font-monospace text-xs text-data-code">${item.codigo}</small>
                         </td>
                         <td>
-                            <span class="badge bg-light text-dark border font-monospace">${item.tipo.toUpperCase()}</span>
+                            <span class="badge ${typeBadgeClass} border text-xs">${item.tipo.toUpperCase()}</span>
                         </td>
                         <td class="text-center">
-                            <span class="fw-bold fs_normal">${qty}</span>
+                            <span class="font-bold text-base">${qty}</span>
                         </td>
                         <td class="text-end pe-3">
                             <button type="button" class="btn btn-link text-danger p-0 btn-quitar" data-index="${index}" title="Quitar">
@@ -326,7 +354,6 @@
 
             // Lógica de Lotes
             if (item.tipo === 'lote') {
-                // Usamos un prompt simple, se podría mejorar con un modal de Bootstrap
                 const input = prompt(`Stock disponible: ${item.max_qty}\nIngrese cantidad a prestar:`, 1);
                 const qty = parseInt(input);
                 
@@ -357,7 +384,6 @@
             if (itemsPrestados.length === 0) {
                 e.preventDefault();
                 showFeedback("⚠️ Debe agregar al menos un ítem.", true);
-                // Pequeña animación de sacudida o foco
                 scanSelectEl.focus(); 
             }
         });

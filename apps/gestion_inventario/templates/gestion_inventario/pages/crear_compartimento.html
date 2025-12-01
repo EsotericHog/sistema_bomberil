@@ -1,37 +1,92 @@
 {# Plantilla base #}{% extends 'gestion_inventario/layouts/base.html' %}
 {# Cargar assets #}{% load static %}
-{# Título de la ventana #} {% block titulo_ventana %}Crear compartimento{% endblock %}
-{# Título de la página #} {% block titulo_pagina %}Crear compartimento{% endblock %}
 
+{# Título de la ventana #} {% block titulo_ventana %}Crear Compartimento{% endblock %}
+
+{# Título de la página #} 
+{% block titulo_pagina %}
+    <span class="text-xl color_primario">
+        <i class="fas fa-box-open me-2"></i> Crear Compartimento
+    </span>
+{% endblock %}
 
 {% block contenido %}
-<div class="container py-4">
+<div class="container-fluid mt-4">
     <div class="row justify-content-center">
         <div class="col-12 col-md-8 col-lg-6">
-            <div class="card shadow-sm panel_base fondo_secundario">
-                <div class="card-body fondo_secundario">
-                    <h3 class="card-title h5 mb-3 fs_mediana color_primario">Crear compartimento en {{ ubicacion.nombre|title }}</h3>
+            
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-white border-bottom py-3">
+                    <h5 class="card-title mb-0 text-primary font-bold text-lg">
+                        <i class="fas fa-plus me-2"></i>Nuevo Compartimento
+                    </h5>
+                </div>
 
-                    <form method="post">
+                <div class="card-body p-4">
+                    
+                    {# Alerta de Contexto #}
+                    <div class="alert alert-primary bg-primary bg-opacity-10 border-0 d-flex align-items-center mb-4">
+                        <i class="fas fa-map-marker-alt fs-4 me-3 text-primary"></i>
+                        <div>
+                            <span class="text-xs text-uppercase font-bold text-primary">Ubicación Padre</span>
+                            <div class="text-base font-bold text-dark">{{ ubicacion.nombre|title }}</div>
+                        </div>
+                    </div>
+
+                    <form method="post" novalidate>
                         {% csrf_token %}
 
-                        {# Renderizar cada campo para aplicar clases Bootstrap #}
-                        {% for field in formulario %}
-                            <div class="mb-3">
-                                <label for="{{ field.id_for_label }}" class="form-label fs_normal color_primario_variante">{{ field.label }}{% if field.field.required %} <span class="text-danger">*</span>{% endif %}</label>
-                                {{ field }}
-                                {% if field.help_text %}
-                                    <div class="form-text fs_pequena color_primario_variante">{{ field.help_text }}</div>
-                                {% endif %}
-                                {% for error in field.errors %}
-                                    <div class="invalid-feedback d-block">{{ error }}</div>
+                        {# Errores Generales #}
+                        {% if formulario.non_field_errors %}
+                            <div class="alert alert-danger text-sm mb-4" role="alert">
+                                {% for error in formulario.non_field_errors %}
+                                    {{ error }}
                                 {% endfor %}
                             </div>
-                        {% endfor %}
+                        {% endif %}
 
-                        <div class="d-flex justify-content-between">
-                            <a href="{% url 'gestion_inventario:ruta_gestionar_ubicacion' ubicacion.id %}" class="btn btn-secondary fs_normal">Cancelar</a>
-                            <button type="submit" class="btn btn-primary fs_normal">Crear compartimento</button>
+                        {# Renderizado Manual de Campos para control total de estilos #}
+                        
+                        {# Campo: Nombre #}
+                        <div class="mb-3">
+                            <label for="{{ formulario.nombre.id_for_label }}" class="form-label font-bold text-sm">
+                                Nombre <span class="text-danger fw-bold" title="Campo Obligatorio">*</span>
+                            </label>
+                            {{ formulario.nombre }}
+                            {% if formulario.nombre.errors %}
+                                <div class="invalid-feedback d-block text-xs mt-1">
+                                    {{ formulario.nombre.errors.0 }}
+                                </div>
+                            {% endif %}
+                            <div class="form-text text-xs text-muted">Ej: "Cajonera 1", "Repisa Superior", "Maleta Trauma".</div>
+                        </div>
+
+                        {# Campo: Descripción #}
+                        <div class="mb-4">
+                            <label for="{{ formulario.descripcion.id_for_label }}" class="form-label font-bold text-sm">
+                                Descripción
+                            </label>
+                            {{ formulario.descripcion }}
+                            {% if formulario.descripcion.errors %}
+                                <div class="invalid-feedback d-block text-xs mt-1">
+                                    {{ formulario.descripcion.errors.0 }}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <hr class="my-4">
+
+                        <div class="d-flex justify-content-end gap-2">
+                            <a href="{% url 'gestion_inventario:ruta_gestionar_ubicacion' ubicacion.id %}" class="btn btn-outline-secondary text-base">
+                                Cancelar
+                            </a>
+                            
+                            {# PERMISO: Crear Ubicaciones (Compartimentos) #}
+                            {% if perms.gestion_inventario.accion_gestion_inventario_gestionar_ubicaciones %}
+                            <button type="submit" class="btn btn-success text-base px-4">
+                                <i class="fas fa-save me-1"></i> Crear Compartimento
+                            </button>
+                            {% endif %}
                         </div>
                     </form>
 

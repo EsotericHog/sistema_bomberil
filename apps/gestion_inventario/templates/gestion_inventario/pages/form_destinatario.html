@@ -4,7 +4,7 @@
 {% block titulo_ventana %}{{ titulo }}{% endblock %}
 
 {% block titulo_pagina %}
-    <span class="fs_grande color_primario">
+    <span class="text-xl color_primario">
         <i class="fas fa-address-book me-2"></i> {{ titulo }}
     </span>
 {% endblock %}
@@ -15,14 +15,14 @@
         <div class="col-lg-8">
             <form method="post" novalidate>
                 {% csrf_token %}
-                <div class="card shadow-sm">
-                    <div class="card-header fs_mediana">
-                        Datos del Destinatario
+                <div class="card shadow-sm border-0">
+                    <div class="card-header bg-white border-bottom py-3">
+                        <h5 class="mb-0 text-lg font-bold color_primario">Datos del Destinatario</h5>
                     </div>
-                    <div class="card-body fs_normal">
+                    <div class="card-body p-4">
                         
                         {% if form.non_field_errors %}
-                            <div class="alert alert-danger fs_normal" role="alert">
+                            <div class="alert alert-danger text-sm" role="alert">
                                 {% for error in form.non_field_errors %}
                                     {{ error }}
                                 {% endfor %}
@@ -31,54 +31,60 @@
 
                         <div class="row">
                             <div class="col-md-12 mb-3">
-                                <label for="{{ form.nombre_entidad.id_for_label }}" class="form-label fw-bold fs_pequena">Nombre de la Entidad</label>
+                                <label for="{{ form.nombre_entidad.id_for_label }}" class="form-label font-bold text-sm color_primario_variante">
+                                    Nombre de la Entidad <span class="text-danger">*</span>
+                                </label>
                                 {{ form.nombre_entidad }}
                                 {% if form.nombre_entidad.errors %}
-                                    <div class="invalid-feedback d-block fs_pequena">
+                                    <div class="invalid-feedback d-block text-xs mt-1">
                                         {{ form.nombre_entidad.errors.as_text }}
                                     </div>
                                 {% endif %}
                             </div>
 
                             <div class="col-md-12 mb-3">
-                                <label for="{{ form.rut_entidad.id_for_label }}" class="form-label fw-bold fs_pequena">RUT (Opcional)</label>
+                                <label for="{{ form.rut_entidad.id_for_label }}" class="form-label font-bold text-sm color_primario_variante">RUT (Opcional)</label>
                                 {{ form.rut_entidad }}
                                 {% if form.rut_entidad.errors %}
-                                    <div class="invalid-feedback d-block fs_pequena">
+                                    <div class="invalid-feedback d-block text-xs mt-1">
                                         {{ form.rut_entidad.errors.as_text }}
                                     </div>
                                 {% endif %}
                             </div>
 
-                            <div class="col-md-12 mb-3">
-                                <label for="{{ form.nombre_contacto.id_for_label }}" class="form-label fw-bold fs_pequena">Nombre Contacto (Opcional)</Vlabel>
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.nombre_contacto.id_for_label }}" class="form-label font-bold text-sm color_primario_variante">Nombre Contacto (Opcional)</label>
                                 {{ form.nombre_contacto }}
                                 {% if form.nombre_contacto.errors %}
-                                    <div class="invalid-feedback d-block fs_pequena">
+                                    <div class="invalid-feedback d-block text-xs mt-1">
                                         {{ form.nombre_contacto.errors.as_text }}
                                     </div>
                                 {% endif %}
                             </div>
 
-                            <div class="col-md-12 mb-3">
-                                <label for="{{ form.telefono_contacto.id_for_label }}" class="form-label fw-bold fs_pequena">Teléfono Contacto (Opcional)</label>
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.telefono_contacto.id_for_label }}" class="form-label font-bold text-sm color_primario_variante">Teléfono Contacto (Opcional)</label>
                                 {{ form.telefono_contacto }}
                                 {% if form.telefono_contacto.errors %}
-                                    <div class="invalid-feedback d-block fs_pequena">
+                                    <div class="invalid-feedback d-block text-xs mt-1">
                                         {{ form.telefono_contacto.errors.as_text }}
                                     </div>
                                 {% endif %}
                             </div>
 
-                            </div>
+                        </div>
                     </div>
-                    <div class="card-footer text-end">
-                        <a href="{% url 'gestion_inventario:ruta_lista_destinatarios' %}" class="btn btn-secondary btn-sm fs_normal">
+                    <div class="card-footer bg-white border-top py-3 text-end">
+                        <a href="{% url 'gestion_inventario:ruta_lista_destinatarios' %}" class="btn btn-outline-secondary text-base me-2">
                             Cancelar
                         </a>
-                        <button type="submit" class="btn btn-success btn-sm fs_normal">
+                        
+                        {# PERMISO: Gestionar Préstamos (Administrar Destinatarios) #}
+                        {% if perms.gestion_inventario.accion_gestion_inventario_gestionar_prestamos %}
+                        <button type="submit" class="btn btn-success text-base px-4">
                             Guardar Destinatario
                         </button>
+                        {% endif %}
                     </div>
                 </div>
             </form>

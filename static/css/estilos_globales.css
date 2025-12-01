@@ -75,4 +75,5 @@
 @import url("utilidades.css");
 
 /* Bootstrap personalizado */
-@import url('custom_bootstrap.css')
+@import url('custom_bootstrap.css');
+@import url('custom_tom_select.css')

@@ -4,8 +4,8 @@
 {% block titulo_ventana %}Lista de Áreas{% endblock %}
 
 {% block titulo_pagina %}
-    <span class="fs_grande color_primario">
-        <i class="fa-solid fa-warehouse"></i> Áreas
+    <span class="text-xl color_primario">
+        <i class="fa-solid fa-warehouse me-2"></i> Áreas
     </span>
 {% endblock %}
 
@@ -38,62 +38,84 @@
 
 
 <div class="container-fluid mt-4">
-<div class="card shadow-sm mb-4">
-    <div class="card-header d-flex justify-content-between align-items-center">
-        <span class="fw-bold fs_normal">
-            <i class="fas fa-table me-1"></i>
-            Lista de Áreas
-        </span>
-        <a href="{% url 'gestion_inventario:ruta_crear_area' %}" class="btn btn-success btn-sm fs_normal">
-            <i class="fas fa-plus me-1"></i> Añadir Área
-        </a>
-    </div>
-    <div class="card-body">
-        <div class="table-responsive">
-            <table class="table table-striped table-hover table-sm align-middle fs_normal">
-                <thead class="fs_pequena">
-                    <tr>
-                        <th>Código</th>
-                        <th>Nombre</th>
-                        <th class="text-center">Compartimentos</th>
-                        <th class="text-center">Existencias</th>
-                        <th class="text-center">Acciones</th>
-                    </tr>
-                </thead>
-                <tbody class="fs_normal">
-                    {% for ubicacion in ubicaciones %}
-                    <tr>
-                        <td>{{ ubicacion.codigo }}</td>
-                        <td>
-                            <strong>{{ ubicacion.nombre|title }}</strong>
-                        </td>
-                        
-                        <td class="text-center">{{ ubicacion.total_compartimentos }}</td>
-                        
-                        <td class="text-center">{{ ubicacion.total_existencias }}</td>
-
-                        <td class="text-center">
-                            <a class="btn btn-sm btn-outline-primary fs_normal" 
-                               href="{% url 'gestion_inventario:ruta_gestionar_ubicacion' ubicacion.id %}">Gestionar</a>
-                            <a class="btn btn-sm btn-outline-secondary fs_normal" 
-                               href="{% url 'gestion_inventario:ruta_editar_area' ubicacion.id %}">Editar</a>
-                        </td>
-                    </tr>
-                    {% empty %}
-                    <tr>
-                        <td colspan="6" class="text-center fst-italic py-4">
-                            No hay áreas (ubicaciones) registradas para esta estación.
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+    <div class="card shadow-sm mb-4 border-0">
+        <div class="card-header bg-white border-bottom py-3 d-flex justify-content-between align-items-center">
+            <span class="font-bold text-lg color_primario">
+                <i class="fas fa-table me-1"></i>
+                Lista de Áreas
+            </span>
+            
+            {# PERMISO: Crear Área (Gestionar Ubicaciones) #}
+            {% if perms.gestion_inventario.accion_gestion_inventario_gestionar_ubicaciones %}
+            <a href="{% url 'gestion_inventario:ruta_crear_area' %}" class="btn btn-success btn-sm text-base">
+                <i class="fas fa-plus me-1"></i> Añadir Área
+            </a>
+            {% endif %}
         </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="bg-light text-secondary text-uppercase text-sm font-bold">
+                        <tr>
+                            <th class="ps-4">Código</th>
+                            <th>Nombre</th>
+                            <th class="text-center">Compartimentos</th>
+                            <th class="text-center">Existencias</th>
+                            <th class="text-center pe-4">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody class="text-base">
+                        {% for ubicacion in ubicaciones %}
+                        <tr>
+                            <td class="ps-4 text-data-code text-sm">{{ ubicacion.codigo }}</td>
+                            <td>
+                                <strong class="text-dark">{{ ubicacion.nombre|title }}</strong>
+                            </td>
+                            
+                            <td class="text-center">
+                                <span class="badge bg-light text-dark border text-xs">{{ ubicacion.total_compartimentos }}</span>
+                            </td>
+                            
+                            <td class="text-center">
+                                <span class="badge bg-light text-dark border text-xs">{{ ubicacion.total_existencias }}</span>
+                            </td>
 
-        {# Aquí puedes añadir la paginación de Bootstrap si decides paginar la vista #}
-
+                            <td class="text-center pe-4">
+                                <div class="btn-group">
+                                    {# Botón Gestionar: Visible para ver detalles #}
+                                    <a class="btn btn-sm btn-outline-primary text-sm" 
+                                       href="{% url 'gestion_inventario:ruta_gestionar_ubicacion' ubicacion.id %}"
+                                       title="Ver detalles y compartimentos">
+                                        Gestionar
+                                    </a>
+                                    
+                                    {# PERMISO: Editar Área (Gestionar Ubicaciones) #}
+                                    {% if perms.gestion_inventario.accion_gestion_inventario_gestionar_ubicaciones %}
+                                    <a class="btn btn-sm btn-outline-secondary text-sm" 
+                                       href="{% url 'gestion_inventario:ruta_editar_area' ubicacion.id %}"
+                                       title="Editar nombre o imagen">
+                                        Editar
+                                    </a>
+                                    {% endif %}
+                                </div>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="5" class="text-center py-5">
+                                <div class="text-muted opacity-50">
+                                    <i class="fas fa-warehouse fa-3x mb-3"></i>
+                                    <h5 class="text-lg">No hay áreas registradas</h5>
+                                    <p class="text-sm">Añade bodegas, pañoles o salas para comenzar.</p>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
     </div>
-</div>
 </div>
 
 {# Script del Slider #}
