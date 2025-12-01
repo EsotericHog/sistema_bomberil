@@ -259,7 +259,7 @@ class ImageProcessingFormMixin:
             if hasattr(instance, field_small_name):
                 thumb_small = generar_thumbnail_en_memoria(
                     image_obj=img_obj,
-                    dimensions=(50, 50),
+                    dimensions=(60, 60),
                     new_filename=small_name
                 )
                 setattr(instance, field_small_name, thumb_small)

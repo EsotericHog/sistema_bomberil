@@ -161,18 +161,22 @@ class ActualizarAvatarUsuarioAPIView(APIView):
             
             # Procesar principal (Cuadrada 1024x1024)
             processed_avatar = procesar_imagen_en_memoria(nuevo_avatar_file, (1024, 1024), main_name, crop_to_square=True)
+
+            # Nos aseguramos de leer el archivo procesado desde el inicio
+            if hasattr(processed_avatar, 'seek'):
+                processed_avatar.seek(0)
             
-            # Rebobinar para generar thumbs
-            nuevo_avatar_file.seek(0)
-            with Image.open(nuevo_avatar_file) as img:
-                thumb_100 = generar_thumbnail_en_memoria(img.copy(), (600, 600), f"{base_name}_medium.jpg")
-                thumb_40 = generar_thumbnail_en_memoria(img.copy(), (50, 50), f"{base_name}_small.jpg")
+            with Image.open(processed_avatar) as img_procesada:
+                # Generamos los thumbnails basados en la versión cuadrada perfecta
+                # Nota: No necesitamos .copy() si generar_thumbnail lo maneja, pero es buena práctica
+                thumb_medium = generar_thumbnail_en_memoria(img_procesada, (600, 600), f"{base_name}_medium.jpg")
+                thumb_small = generar_thumbnail_en_memoria(img_procesada, (60, 60), f"{base_name}_small.jpg")
 
             # Asignación y Guardado
             # django-cleanup se encargará de borrar los anteriores al guardar los nuevos
             usuario.avatar = processed_avatar
-            usuario.avatar_thumb_small = thumb_40
-            usuario.avatar_thumb_medium = thumb_100
+            usuario.avatar_thumb_small = thumb_small
+            usuario.avatar_thumb_medium = thumb_medium
             
             usuario.save()
             usuario.refresh_from_db()
