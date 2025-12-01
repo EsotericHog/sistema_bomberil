@@ -31,3 +31,106 @@
     display: flex;
 
 }
+
+
+
+/* Contenedor principal del menú */
+.modern-context-menu {
+    position: fixed; /* Vital para el posicionamiento JS */
+    z-index: var(--contextual-menu-z-index);
+    min-width: 220px;
+    background-color: #ffffff;
+    border-radius: 12px; /* Bordes más redondeados y modernos */
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 
+                0 8px 10px -6px rgba(0, 0, 0, 0.1); /* Sombra suave "Apple style" */
+    border: 1px solid rgba(0,0,0,0.05);
+    padding: 6px;
+    
+    /* Estados de animación iniciales */
+    opacity: 0;
+    visibility: hidden;
+    transform: scale(0.95);
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Clase para mostrar el menú (activada por JS) */
+.modern-context-menu.visible {
+    opacity: 1;
+    visibility: visible;
+    transform: scale(1);
+}
+
+/* Reset de lista */
+.modern-menu-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+/* Cabecera pequeña (ID del item) */
+.menu-header {
+    padding: 8px 12px;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    color: #9ca3af;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    border-bottom: 1px solid #f3f4f6;
+    margin-bottom: 4px;
+}
+
+/* Items del menú */
+.menu-item {
+    display: flex;
+    align-items: center;
+    padding: 10px 12px;
+    color: #374151; /* Gris oscuro elegante */
+    text-decoration: none;
+    font-size: 0.9rem;
+    font-weight: 500;
+    border-radius: 8px; /* Redondeado interno */
+    transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.menu-item:hover {
+    background-color: #f3f4f6; /* Gris muy suave al hover */
+    color: #111827; /* Negro casi puro */
+}
+
+/* Iconos */
+.menu-icon {
+    width: 24px;
+    text-align: center;
+    margin-right: 10px;
+    color: #6b7280; /* Iconos en gris medio */
+    transition: color 0.15s;
+}
+
+.menu-item:hover .menu-icon {
+    color: #4b5563;
+}
+
+/* Separadores */
+.menu-divider {
+    height: 1px;
+    background-color: #e5e7eb;
+    margin: 6px 0;
+}
+
+/* Acciones Peligrosas */
+.item-danger {
+    color: #ef4444 !important; /* Rojo moderno */
+}
+
+.item-danger .menu-icon {
+    color: #fca5a5; /* Rojo claro */
+}
+
+.item-danger:hover {
+    background-color: #fef2f2 !important; /* Fondo rojo muy pálido */
+    color: #dc2626 !important;
+}
+
+.item-danger:hover .menu-icon {
+    color: #dc2626;
+}

@@ -1,82 +1,124 @@
-<div class="menu-acciones-usuarios">
+<div class="modern-context-menu" role="menu">
+    <ul class="modern-menu-list">
+        
+        {# --- CABECERA: NOMBRE DE USUARIO --- #}
+        <li class="menu-header text-xs font-bold text-data-code text-truncate" style="max-width: 200px;">
+            {{ membresia.usuario.get_full_name|default:membresia.usuario.email|upper }}
+        </li>
 
-    {# Ver usuario #}
-    {% if perms.gestion_usuarios.accion_gestion_usuarios_ver_compania %}
-    <a class="menu-acciones-usuarios__accion acciones-usuarios-ver color_negro" 
-       href="{% url 'gestion_usuarios:ruta_ver_usuario' id=membresia.usuario.id %}">
-        <i class="fa-solid fa-eye"></i> Ver
-    </a>
-    {% endif %}
+        {# --- ACCIONES GENERALES --- #}
+        
+        {# Ver usuario #}
+        {% if perms.gestion_usuarios.accion_gestion_usuarios_ver_compania %}
+        <li>
+            <a class="menu-item text-sm font-medium" 
+               href="{% url 'gestion_usuarios:ruta_ver_usuario' id=membresia.usuario.id %}">
+                <i class="fa-solid fa-eye menu-icon"></i>
+                <span>Ver Perfil</span>
+            </a>
+        </li>
+        {% endif %}
 
-    {# Modificar información personal de usuario #}
-    {% if perms.gestion_usuarios.accion_gestion_usuarios_modificar_info %}
-    <a class="menu-acciones-usuarios__accion acciones-usuarios-editar color_negro"
-       href="{% url 'gestion_usuarios:ruta_editar_usuario' id=membresia.usuario.id %}">
-        <i class="fa-solid fa-pen-to-square"></i> Modificar información
-    </a>
-    {% endif %}
+        {# Modificar información #}
+        {% if perms.gestion_usuarios.accion_gestion_usuarios_modificar_info %}
+        <li>
+            <a class="menu-item text-sm font-medium"
+               href="{% url 'gestion_usuarios:ruta_editar_usuario' id=membresia.usuario.id %}">
+                <i class="fa-solid fa-pen-to-square menu-icon"></i>
+                <span>Modificar Info</span>
+            </a>
+        </li>
+        {% endif %}
 
-    {# Asignar roles al usuario #}
-    {% if perms.gestion_usuarios.accion_gestion_usuarios_asignar_roles %}
-    <a class="menu-acciones-usuarios__accion acciones-usuarios-editar color_negro"
-       href="{% url 'gestion_usuarios:ruta_asignar_roles_usuario' id=membresia.usuario.id %}">
-        <i class="fa-solid fa-group-arrows-rotate"></i> Asignar roles
-    </a>
-    {% endif %}
+        {# Asignar roles #}
+        {% if perms.gestion_usuarios.accion_gestion_usuarios_asignar_roles %}
+        <li>
+            <a class="menu-item text-sm font-medium"
+               href="{% url 'gestion_usuarios:ruta_asignar_roles_usuario' id=membresia.usuario.id %}">
+                <i class="fa-solid fa-group-arrows-rotate menu-icon"></i>
+                <span>Asignar Roles</span>
+            </a>
+        </li>
+        {% endif %}
 
-    {# Ver permisos del usuario #}
-    {% if perms.gestion_usuarios.accion_gestion_usuarios_ver_permisos %}
-    <a class="menu-acciones-usuarios__accion color_negro" 
-       href="{% url 'gestion_usuarios:ruta_ver_permisos_usuario' id=membresia.usuario.id %}">
-        <i class="fa-solid fa-shield-halved"></i> Ver Permisos
-    </a>
-    {% endif %}
-    
-    {# Restablecer Contraseña #}
-    {% if perms.gestion_usuarios.accion_gestion_usuarios_restablecer_pass and membresia.estado != 'FINALIZADO' %}
-    <button type="button" 
-            class="menu-acciones-usuarios__accion js-reset-password-btn fondo_transparente"
-            data-bs-toggle="modal" 
-            data-bs-target="#confirmResetModal"
-            data-user-name="{{ membresia.usuario.get_full_name|title|escapejs }}"
-            data-form-action="{% url 'gestion_usuarios:ruta_restablecer_contrasena' id=membresia.usuario.id %}">
-        <i class="fa-solid fa-key"></i> Restablecer Contraseña
-    </button>
-    {% endif %}
+        {# Ver permisos #}
+        {% if perms.gestion_usuarios.accion_gestion_usuarios_ver_permisos %}
+        <li>
+            <a class="menu-item text-sm font-medium" 
+               href="{% url 'gestion_usuarios:ruta_ver_permisos_usuario' id=membresia.usuario.id %}">
+                <i class="fa-solid fa-shield-halved menu-icon"></i>
+                <span>Ver Permisos</span>
+            </a>
+        </li>
+        {% endif %}
 
-    {# Forzar cierre de sesiones del usuario #}
-    {% if perms.gestion_usuarios.accion_gestion_usuarios_forzar_logout %} {# Usamos el mismo permiso que definimos en la vista #}
-        <button type="button"  
-           class="menu-acciones-usuarios__accion fs_normal boton-forzar-logout fondo_transparente"
-           data-bs-toggle="modal" 
-           data-bs-target="#ModalForzarLogout"
-           data-form-action="{% url 'gestion_usuarios:ruta_forzar_logout' id=membresia.usuario.id %}">
-            <i class="fas fa-power-off me-2 text-warning"></i> Forzar Cierre de Sesión
-        </button>
-    {% endif %}
+        {# --- ZONA DE SEGURIDAD / PELIGRO --- #}
+        {% if perms.gestion_usuarios.accion_gestion_usuarios_restablecer_pass or perms.gestion_usuarios.accion_gestion_usuarios_forzar_logout or perms.gestion_usuarios.accion_gestion_usuarios_desactivar_cuenta or perms.gestion_usuarios.accion_gestion_usuarios_finalizar_membresia %}
+            <li class="menu-divider"></li>
+        {% endif %}
 
-    {# Desactivar usuario #}
-    {% if perms.gestion_usuarios.accion_gestion_usuarios_desactivar_cuenta and membresia.estado == 'ACTIVO' %}
-    <button type="button" 
-            class="menu-acciones-usuarios__accion boton-desactivar-usuario fondo_transparente color_rojo"
-            data-form-action="{% url 'gestion_usuarios:ruta_desactivar_usuario' id=membresia.usuario.id %}">
-        <i class="fa-solid fa-ban"></i> Desactivar
-    </button>
-    {% endif %}
-    
-    {# Activar usuario #}
-    {% if perms.gestion_usuarios.accion_gestion_usuarios_desactivar_cuenta and membresia.estado == 'INACTIVO' %}
-    <button type="button" 
-            class="menu-acciones-usuarios__accion boton-activar-usuario fondo_transparente color_negro"
-            data-form-action="{% url 'gestion_usuarios:ruta_activar_usuario' id=membresia.usuario.id %}">
-        <i class="fa-solid fa-circle-up"></i> Activar
-    </button>
-    {% endif %}
+        {# Restablecer Contraseña #}
+        {% if perms.gestion_usuarios.accion_gestion_usuarios_restablecer_pass and membresia.estado != 'FINALIZADO' %}
+        <li>
+            <button type="button" 
+                    class="menu-item w-100 text-start border-0 bg-transparent text-sm font-medium js-reset-password-btn"
+                    data-bs-toggle="modal" 
+                    data-bs-target="#confirmResetModal"
+                    data-user-name="{{ membresia.usuario.get_full_name|title|escapejs }}"
+                    data-form-action="{% url 'gestion_usuarios:ruta_restablecer_contrasena' id=membresia.usuario.id %}">
+                <i class="fa-solid fa-key menu-icon"></i>
+                <span>Restablecer Pass</span>
+            </button>
+        </li>
+        {% endif %}
 
-    {# Finalizar membresía #}
-    {% if perms.gestion_usuarios.accion_gestion_usuarios_finalizar_membresia %}
-    <a class="menu-acciones-usuarios__accion acciones-usuarios-finalizar color_rojo" href="{% url 'gestion_usuarios:ruta_finalizar_membresia' id=membresia.usuario.id %}">
-        <i class="fa-solid fa-flag-checkered"></i> Finalizar Membresía
-    </a>
-    {% endif %}
+        {# Forzar cierre de sesión #}
+        {% if perms.gestion_usuarios.accion_gestion_usuarios_forzar_logout %}
+        <li>
+            <button type="button"  
+               class="menu-item w-100 text-start border-0 bg-transparent text-sm font-medium boton-forzar-logout text-warning-hover"
+               data-bs-toggle="modal" 
+               data-bs-target="#ModalForzarLogout"
+               data-form-action="{% url 'gestion_usuarios:ruta_forzar_logout' id=membresia.usuario.id %}">
+                <i class="fas fa-power-off menu-icon text-warning"></i> 
+                <span>Forzar Logout</span>
+            </button>
+        </li>
+        {% endif %}
+
+        {# Desactivar (Peligro) #}
+        {% if perms.gestion_usuarios.accion_gestion_usuarios_desactivar_cuenta and membresia.estado == 'ACTIVO' %}
+        <li>
+            <button type="button" 
+                    class="menu-item item-danger w-100 text-start border-0 bg-transparent text-sm font-medium boton-desactivar-usuario"
+                    data-form-action="{% url 'gestion_usuarios:ruta_desactivar_usuario' id=membresia.usuario.id %}">
+                <i class="fa-solid fa-ban menu-icon"></i>
+                <span>Desactivar</span>
+            </button>
+        </li>
+        {% endif %}
+        
+        {# Activar (Positivo) #}
+        {% if perms.gestion_usuarios.accion_gestion_usuarios_desactivar_cuenta and membresia.estado == 'INACTIVO' %}
+        <li>
+            <button type="button" 
+                    class="menu-item w-100 text-start border-0 bg-transparent text-sm font-medium text-success boton-activar-usuario"
+                    data-form-action="{% url 'gestion_usuarios:ruta_activar_usuario' id=membresia.usuario.id %}">
+                <i class="fa-solid fa-circle-up menu-icon text-success"></i>
+                <span>Activar</span>
+            </button>
+        </li>
+        {% endif %}
+
+        {# Finalizar membresía (Peligro Extremo) #}
+        {% if perms.gestion_usuarios.accion_gestion_usuarios_finalizar_membresia %}
+        <li>
+            <a class="menu-item item-danger text-sm font-medium acciones-usuarios-finalizar" 
+               href="{% url 'gestion_usuarios:ruta_finalizar_membresia' id=membresia.usuario.id %}">
+                <i class="fa-solid fa-flag-checkered menu-icon"></i>
+                <span>Finalizar Membresía</span>
+            </a>
+        </li>
+        {% endif %}
+    </ul>
 </div>

@@ -1,95 +1,122 @@
-<div class="menu-acciones-usuarios"> {# Reutilizamos la clase contenedora de estilos existente #}
+<div class="modern-context-menu" role="menu">
+    <ul class="modern-menu-list">
 
-    {# --- ACCIONES COMUNES (Ver) --- #}
-    {% if item.producto.es_serializado %}
-        {# Caso: Es un ACTIVO #}
-        <a class="menu-acciones-usuarios__accion color_negro" 
-           href="{% url 'gestion_inventario:ruta_detalle_existencia' tipo_item='activo' item_id=item.id %}">
-            <i class="fa-solid fa-eye"></i> Ver Detalles
-        </a>
-    {% else %}
-        {# Caso: Es un LOTE #}
-        <a class="menu-acciones-usuarios__accion color_negro" 
-           href="{% url 'gestion_inventario:ruta_detalle_existencia' tipo_item='lote' item_id=item.id %}">
-            <i class="fa-solid fa-eye"></i> Ver Detalles
-        </a>
-    {% endif %}
+        {# --- CABECERA (Tipo de Item e Identificador) --- #}
+        {# Usamos text-xs para que sea sutil, font-bold para jerarquía y text-data-code para el ID #}
+        <li class="menu-header text-xs font-bold text-data-code">
+            {% if item.producto.es_serializado %} 
+                ACTIVO #{{ item.id }} 
+            {% else %} 
+                LOTE #{{ item.id }} 
+            {% endif %}
+        </li>
 
-    {# --- ACCIONES PARA ACTIVOS SERIALIZADOS --- #}
-    {% if item.producto.es_serializado %}
-        
-        {# Imprimir QR #}
-        <a class="menu-acciones-usuarios__accion color_negro" 
-           href="{% url 'gestion_inventario:ruta_imprimir_etiquetas' %}?activos={{ item.id }}" target="_blank">
-            <i class="fa-solid fa-qrcode"></i> Imprimir Etiqueta
-        </a>
+        {# --- ACCIONES COMUNES (Ver) --- #}
+        <li>
+            {# Enlaces: Usamos text-sm para tamaño estándar de UI y font-medium para buen peso de lectura #}
+            <a class="menu-item text-sm font-medium" 
+               href="{% url 'gestion_inventario:ruta_detalle_existencia' tipo_item=item.producto.es_serializado|yesno:'activo,lote' item_id=item.id %}">
+                <i class="fa-solid fa-eye menu-icon"></i>
+                <span>Ver Detalles</span>
+            </a>
+        </li>
 
-        {# Mover #}
-        <a class="menu-acciones-usuarios__accion color_negro" 
-           href="{% url 'gestion_inventario:ruta_mover_existencia' tipo_item='activo' item_id=item.id %}">
-            <i class="fa-solid fa-truck-moving"></i> Mover
-        </a>
+        {# --- ACCIONES ESPECÍFICAS --- #}
+        {% if item.producto.es_serializado %}
+            {# === CASO: ES UN ACTIVO === #}
 
-        <div class="dropdown-divider"></div>
+            {# PERMISO: Imprimir Etiquetas #}
+            {% if perms.gestion_inventario.accion_gestion_inventario_imprimir_etiquetas_qr %}
+            <li>
+                <a class="menu-item text-sm font-medium" 
+                   href="{% url 'gestion_inventario:ruta_imprimir_etiquetas' %}?activos={{ item.id }}" target="_blank">
+                    <i class="fa-solid fa-qrcode menu-icon"></i>
+                    <span>Imprimir Etiqueta</span>
+                </a>
+            </li>
+            {% endif %}
 
-        {# Dar de Baja #}
-        <a class="menu-acciones-usuarios__accion color_rojo" 
-           href="{% url 'gestion_inventario:ruta_dar_de_baja_existencia' tipo_item='activo' item_id=item.id %}">
-            <i class="fa-solid fa-thumbs-down"></i> Dar de Baja
-        </a>
+            {# PERMISO: Gestionar Stock Interno (Mover) #}
+            {% if perms.gestion_inventario.accion_gestion_inventario_gestionar_stock_interno %}
+            <li>
+                <a class="menu-item text-sm font-medium" 
+                   href="{% url 'gestion_inventario:ruta_mover_existencia' tipo_item='activo' item_id=item.id %}">
+                    <i class="fa-solid fa-truck-moving menu-icon"></i>
+                    <span>Mover</span>
+                </a>
+            </li>
+            {% endif %}
 
-        {# Reportar Extravío #}
-        <a class="menu-acciones-usuarios__accion color_rojo" 
-           href="{% url 'gestion_inventario:ruta_extraviado_existencia' tipo_item='activo' item_id=item.id %}">
-            <i class="fa-solid fa-search-minus"></i> Reportar Extravío
-        </a>
+        {% else %}
+            {# === CASO: ES UN LOTE === #}
 
-        {# Anular #}
-        <a class="menu-acciones-usuarios__accion color_rojo" 
-           href="{% url 'gestion_inventario:ruta_anular_existencia' tipo_item='activo' item_id=item.id %}">
-            <i class="fa-solid fa-times-circle"></i> Anular Registro
-        </a>
+            {# PERMISO: Imprimir Etiquetas #}
+            {% if perms.gestion_inventario.accion_gestion_inventario_imprimir_etiquetas_qr %}
+            <li>
+                <a class="menu-item text-sm font-medium" 
+                   href="{% url 'gestion_inventario:ruta_imprimir_etiquetas' %}?lotes={{ item.id }}" target="_blank">
+                    <i class="fa-solid fa-qrcode menu-icon"></i>
+                    <span>Imprimir Etiqueta</span>
+                </a>
+            </li>
+            {% endif %}
 
-    {# --- ACCIONES PARA LOTES DE INSUMOS --- #}
-    {% else %}
+            {# PERMISO: Gestionar Stock Interno (Consumir, Mover, Ajustar) #}
+            {% if perms.gestion_inventario.accion_gestion_inventario_gestionar_stock_interno %}
+            <li>
+                <a class="menu-item text-sm font-medium" 
+                   href="{% url 'gestion_inventario:ruta_consumir_stock_lote' item.id %}">
+                    <i class="fa-solid fa-minus-circle menu-icon"></i>
+                    <span>Consumir Stock</span>
+                </a>
+            </li>
+            <li>
+                <a class="menu-item text-sm font-medium" 
+                   href="{% url 'gestion_inventario:ruta_mover_existencia' tipo_item='lote' item_id=item.id %}">
+                    <i class="fa-solid fa-truck-moving menu-icon"></i>
+                    <span>Mover</span>
+                </a>
+            </li>
+            <li>
+                <a class="menu-item text-sm font-medium" 
+                   href="{% url 'gestion_inventario:ruta_ajustar_stock_lote' item.id %}">
+                    <i class="fa-solid fa-balance-scale menu-icon"></i>
+                    <span>Ajustar Cantidad</span>
+                </a>
+            </li>
+            {% endif %}
+        {% endif %}
 
-        {# Imprimir QR #}
-        <a class="menu-acciones-usuarios__accion color_negro" 
-           href="{% url 'gestion_inventario:ruta_imprimir_etiquetas' %}?lotes={{ item.id }}" target="_blank">
-            <i class="fa-solid fa-qrcode"></i> Imprimir Etiqueta
-        </a>
+        {# --- ZONA DE PELIGRO (BAJAS Y ANULACIONES) --- #}
+        {% if perms.gestion_inventario.accion_gestion_inventario_gestionar_bajas_stock %}
+            <li class="menu-divider"></li>
+            
+            <li>
+                <a class="menu-item item-danger text-sm font-medium" 
+                   href="{% url 'gestion_inventario:ruta_dar_de_baja_existencia' tipo_item=item.producto.es_serializado|yesno:'activo,lote' item_id=item.id %}">
+                    <i class="fa-solid fa-thumbs-down menu-icon"></i>
+                    <span>Dar de Baja</span>
+                </a>
+            </li>
+            
+            {% if item.producto.es_serializado %}
+            <li>
+                <a class="menu-item item-danger text-sm font-medium" 
+                   href="{% url 'gestion_inventario:ruta_extraviado_existencia' tipo_item='activo' item_id=item.id %}">
+                    <i class="fa-solid fa-search-minus menu-icon"></i>
+                    <span>Reportar Extravío</span>
+                </a>
+            </li>
+            {% endif %}
 
-        {# Consumir #}
-        <a class="menu-acciones-usuarios__accion color_verde" 
-           href="{% url 'gestion_inventario:ruta_consumir_stock_lote' item.id %}">
-            <i class="fa-solid fa-minus-circle"></i> Consumir Stock
-        </a>
+            <li>
+                <a class="menu-item item-danger text-sm font-medium" 
+                   href="{% url 'gestion_inventario:ruta_anular_existencia' tipo_item=item.producto.es_serializado|yesno:'activo,lote' item_id=item.id %}">
+                    <i class="fa-solid fa-times-circle menu-icon"></i>
+                    <span>Anular Registro</span>
+                </a>
+            </li>
+        {% endif %}
 
-        {# Mover #}
-        <a class="menu-acciones-usuarios__accion color_negro" 
-           href="{% url 'gestion_inventario:ruta_mover_existencia' tipo_item='lote' item_id=item.id %}">
-            <i class="fa-solid fa-truck-moving"></i> Mover
-        </a>
-
-        {# Ajustar #}
-        <a class="menu-acciones-usuarios__accion color_negro" 
-           href="{% url 'gestion_inventario:ruta_ajustar_stock_lote' item.id %}">
-            <i class="fa-solid fa-balance-scale"></i> Ajustar Cantidad
-        </a>
-
-        <div class="dropdown-divider"></div>
-
-        {# Dar de Baja #}
-        <a class="menu-acciones-usuarios__accion color_rojo" 
-           href="{% url 'gestion_inventario:ruta_dar_de_baja_existencia' tipo_item='lote' item_id=item.id %}">
-            <i class="fa-solid fa-thumbs-down"></i> Dar de Baja
-        </a>
-
-        {# Anular #}
-        <a class="menu-acciones-usuarios__accion color_rojo" 
-           href="{% url 'gestion_inventario:ruta_anular_existencia' tipo_item='lote' item_id=item.id %}">
-            <i class="fa-solid fa-times-circle"></i> Anular Registro
-        </a>
-
-    {% endif %}
+    </ul>
 </div>
