@@ -173,8 +173,30 @@
 
 <script>
     document.addEventListener('DOMContentLoaded', function() {
+        // 1. Limpieza visual de inputs
         const inputs = document.querySelectorAll('input, select');
-        inputs.forEach(input => input.classList.add('form-control-clean'));
+        inputs.forEach(input => {
+            if (!input.classList.contains('select-busqueda')) {
+                input.classList.add('form-control-clean');
+            }
+        });
+
+        // 2. INICIALIZAR TOM SELECT (Buscador)
+        const selectBuscable = document.querySelector('.select-busqueda');
+        
+        if (selectBuscable) {
+            new TomSelect(selectBuscable, {
+                create: false,
+                sortField: {
+                    field: "text",
+                    direction: "asc"
+                },
+                placeholder: 'Escriba para buscar...',
+                allowEmptyOption: true,
+                maxOptions: 50,
+                dropdownParent: 'body' // <--- CLAVE: Para que no se corte
+            });
+        }
     });
 </script>
 {% endblock %}

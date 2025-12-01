@@ -101,7 +101,7 @@ class FichaMedicaAlergiaForm(forms.ModelForm):
         model = FichaMedicaAlergia
         fields = ['alergia', 'observaciones']
         widgets = {
-            'alergia': forms.Select(attrs={'class': 'form-select'}),
+            'alergia': forms.Select(attrs={'class': 'form-select select-busqueda', 'placeholder': 'Buscar alergia...'}),
             'observaciones': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Ej: Reacción grave'}),
         }
 
@@ -111,7 +111,8 @@ class FichaMedicaMedicamentoForm(forms.ModelForm):
         model = FichaMedicaMedicamento
         fields = ['medicamento', 'dosis_frecuencia']
         widgets = {
-            'medicamento': forms.Select(attrs={'class': 'form-select'}),
+            'medicamento': forms.Select(attrs={'class': 'form-select select-busqueda', 
+                'placeholder': 'Seleccione un medicamento...'}),
             'dosis_frecuencia': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Ej: 500mg cada 8hrs'}),
         }
     
@@ -128,7 +129,7 @@ class FichaMedicaEnfermedadForm(forms.ModelForm):
         model = FichaMedicaEnfermedad
         fields = ['enfermedad', 'observaciones']
         widgets = {
-            'enfermedad': forms.Select(attrs={'class': 'form-select select2-simple'}),
+            'enfermedad': forms.Select(attrs={'class': 'form-select select-busqueda', 'placeholder': 'Buscar enfermedad...'}),
             'observaciones': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Ej: En tratamiento...'}),
         }
     
@@ -147,7 +148,7 @@ class FichaMedicaCirugiaForm(forms.ModelForm):
         model = FichaMedicaCirugia
         fields = ['cirugia', 'fecha_cirugia', 'observaciones']
         widgets = {
-            'cirugia': forms.Select(attrs={'class': 'form-select'}),
+            'cirugia': forms.Select(attrs={'class': 'form-select select-busqueda', 'placeholder': 'Buscar cirugía...'}),
             'fecha_cirugia': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
             'observaciones': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Detalles...'}),
         }
