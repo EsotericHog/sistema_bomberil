@@ -5,7 +5,7 @@
 {% block titulo_ventana %}Modificar Rol: {{ rol.nombre|title }}{% endblock %}
 
 {% block titulo_pagina %}
-    <span class="fs_grande color_primario">
+    <span class="text-xl color_primario">
         <i class="fas fa-edit me-2"></i> Modificar Rol
     </span>
 {% endblock %}
@@ -17,7 +17,7 @@
         <div class="col-lg-7 col-md-9">
             
             <div class="card shadow-sm {% if request.session.dark_mode %}dark-mode{% endif %}">
-                <div class="card-header fs_normal">
+                <div class="card-header text-lg font-bold">
                     <i class="fas fa-edit me-1"></i>
                     Editando Rol: <strong>{{ rol.nombre|title }}</strong>
                 </div>
@@ -28,7 +28,7 @@
                     <div class="card-body">
                         {# Mostramos errores generales del formulario si existen #}
                         {% if formulario.non_field_errors %}
-                            <div class="alert alert-danger fs_pequena" role="alert">
+                            <div class="alert alert-danger text-sm" role="alert">
                                 {% for error in formulario.non_field_errors %}
                                     {{ error }}
                                 {% endfor %}
@@ -37,10 +37,10 @@
 
                         {# Nombre #}
                         <div class="mb-3">
-                            <label for="{{ formulario.nombre.id_for_label }}" class="form-label fw-bold fs_pequena">Nombre del Rol <span class="text-danger">*</span></label>
+                            <label for="{{ formulario.nombre.id_for_label }}" class="form-label font-bold text-sm">Nombre del Rol <span class="text-danger">*</span></label>
                             {{ formulario.nombre }}
                             {% if formulario.nombre.errors %}
-                                <div class="invalid-feedback d-block fs_pequena">
+                                <div class="invalid-feedback d-block text-sm">
                                     {% for error in formulario.nombre.errors %}{{ error }}{% endfor %}
                                 </div>
                             {% endif %}
@@ -48,27 +48,31 @@
                         
                         {# Descripción #}
                         <div class="mb-3">
-                            <label for="{{ formulario.descripcion.id_for_label }}" class="form-label fw-bold fs_pequena">Descripción</label>
+                            <label for="{{ formulario.descripcion.id_for_label }}" class="form-label font-bold text-sm">Descripción</label>
                             {{ formulario.descripcion }} {# Asumo que es un textarea #}
                             {% if formulario.descripcion.errors %}
-                                <div class="invalid-feedback d-block fs_pequena">
+                                <div class="invalid-feedback d-block text-sm">
                                     {% for error in formulario.descripcion.errors %}{{ error }}{% endfor %}
                                 </div>
                             {% endif %}
-                            <div class="form-text fs_pequena">
+                            <div class="form-text text-sm">
                                 Opcional. Describe brevemente el propósito de este rol.
                             </div>
                         </div>
                     </div>
                     
                     <div class="card-footer text-end">
-                        <a href="{% url 'gestion_usuarios:ruta_lista_roles' %}" class="btn btn-outline-secondary btn-sm fs_normal me-2">
+                        <a href="{% url 'gestion_usuarios:ruta_lista_roles' %}" class="btn btn-outline-secondary btn-sm text-base me-2">
                             Cancelar
                         </a>
-                        <button type="submit" class="btn btn-success btn-sm fs_normal">
+                        
+                        {# PERMISO: Gestionar Roles (Editar) #}
+                        {% if perms.gestion_usuarios.accion_gestion_usuarios_gestionar_roles %}
+                        <button type="submit" class="btn btn-success btn-sm text-base">
                             <i class="fas fa-save me-1"></i>
                             Guardar Cambios
                         </button>
+                        {% endif %}
                     </div>
                 </form>
             </div>

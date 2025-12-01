@@ -12,7 +12,7 @@ class FormularioCrearUsuario(forms.Form):
         widget=forms.TextInput(
             attrs={
                 # Reemplazamos las clases por las de Bootstrap + tu clase de fuente
-                'class': 'form-control form-control-sm fs_normal',
+                'class': 'form-control form-control-sm text-base', # fs_normal -> text-base
                 'autocomplete': 'off',
                 'placeholder': 'ejemplo@correo.com' # (Recomendado)
             }
@@ -22,7 +22,7 @@ class FormularioCrearUsuario(forms.Form):
         required=True, 
         widget=forms.TextInput(
             attrs={
-                'class': 'form-control form-control-sm fs_normal',
+                'class': 'form-control form-control-sm text-base',
                 'autocomplete': 'off',
             }
         )
@@ -31,7 +31,7 @@ class FormularioCrearUsuario(forms.Form):
         required=True, 
         widget=forms.TextInput(
             attrs={
-                'class': 'form-control form-control-sm fs_normal',
+                'class': 'form-control form-control-sm text-base',
                 'autocomplete': 'off',
             }
         )
@@ -40,7 +40,7 @@ class FormularioCrearUsuario(forms.Form):
         required=True, 
         widget=forms.TextInput(
             attrs={
-                'class': 'form-control form-control-sm fs_normal',
+                'class': 'form-control form-control-sm text-base',
                 'autocomplete': 'off',
                 'placeholder': '12.345.678-9' # (Recomendado)
             }
@@ -51,7 +51,7 @@ class FormularioCrearUsuario(forms.Form):
         widget=forms.DateInput(
             attrs={
                 'type': 'date', # Mantenemos esto
-                'class': 'form-control form-control-sm fs_normal',
+                'class': 'form-control form-control-sm text-base',
                 'autocomplete': 'off',
             }
         )
@@ -60,7 +60,7 @@ class FormularioCrearUsuario(forms.Form):
         required=False, 
         widget=forms.TextInput(
             attrs={
-                'class': 'form-control form-control-sm fs_normal',
+                'class': 'form-control form-control-sm text-base',
                 'autocomplete': 'off',
             }
         )
@@ -70,7 +70,7 @@ class FormularioCrearUsuario(forms.Form):
         widget=forms.ClearableFileInput(
             attrs={
                 # Bootstrap estiliza los inputs de archivo con 'form-control'
-                'class': 'form-control form-control-sm fs_normal',
+                'class': 'form-control form-control-sm text-base',
                 'autocomplete': 'off',
             }
         )
@@ -86,7 +86,7 @@ class FormularioEditarUsuario(ImageProcessingFormMixin, forms.ModelForm):
         required=False, # No es 'required' porque no se está enviando, solo mostrando
         widget=forms.TextInput(attrs={
             # Usamos las clases de Bootstrap, pero mantenemos 'readonly'
-            'class': 'form-control form-control-sm fs_normal text-muted',
+            'class': 'form-control form-control-sm text-base text-muted', # fs_normal -> text-base
             'autocomplete': 'off',
             'readonly': 'readonly',
             'tabindex': '-1'
@@ -101,23 +101,23 @@ class FormularioEditarUsuario(ImageProcessingFormMixin, forms.ModelForm):
         # Definimos los widgets para los campos del ModelForm
         widgets = {
             'email': forms.EmailInput(attrs={
-                'class': 'form-control form-control-sm fs_normal'
+                'class': 'form-control form-control-sm text-base'
             }),
             'first_name': forms.TextInput(attrs={
-                'class': 'form-control form-control-sm fs_normal'
+                'class': 'form-control form-control-sm text-base'
             }),
             'last_name': forms.TextInput(attrs={
-                'class': 'form-control form-control-sm fs_normal'
+                'class': 'form-control form-control-sm text-base'
             }),
             'phone': forms.TextInput(attrs={
-                'class': 'form-control form-control-sm fs_normal'
+                'class': 'form-control form-control-sm text-base'
             }),
             'birthdate': forms.DateInput(attrs={
-                'class': 'form-control form-control-sm fs_normal',
+                'class': 'form-control form-control-sm text-base',
                 'type': 'date' # Aseguramos que sea un input de fecha
             }),
             'avatar': forms.ClearableFileInput(attrs={
-                'class': 'form-control form-control-sm fs_normal'
+                'class': 'form-control form-control-sm text-base'
             }),
         }
 
@@ -223,8 +223,8 @@ class FormularioRol(forms.ModelForm):
         super().__init__(*args, **kwargs)
 
         # Personaliza otros campos si es necesario
-        self.fields['nombre'].widget.attrs.update({'class': 'form-control form-control-sm fs_normal', 'autocomplete': 'off'})
-        self.fields['descripcion'].widget.attrs.update({'class': 'form-control form-control-sm fs_normal', 'autocomplete': 'off', 'rows': 3})
+        self.fields['nombre'].widget.attrs.update({'class': 'form-control form-control-sm text-base', 'autocomplete': 'off'})
+        self.fields['descripcion'].widget.attrs.update({'class': 'form-control form-control-sm text-base', 'autocomplete': 'off', 'rows': 3})
 
 
     def save(self, commit=True):
@@ -239,6 +239,3 @@ class FormularioRol(forms.ModelForm):
             instance.save()
             # self.save_m2m() # Necesario si el form manejara campos ManyToMany
         return instance
-
-
-
