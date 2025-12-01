@@ -1,33 +1,185 @@
 {# Plantilla base #}{% extends 'portal/layouts/base.html' %}
 {# Cargar assets #}{% load static %}
-{# Título de la ventana #} {% block titulo_ventana %}Iniciar sesión{% endblock %}
-{# Módulo #} {% block modulo %}Bomberil{% endblock  %}
+{# Título de la ventana #} {% block titulo_ventana %}Iniciar Sesión{% endblock %}
+{# Módulo #} {% block modulo %}Acceso{% endblock  %}
 
 {% block contenido %}
-<div class="portal_login__container fondo_secundario">
-    <h1 class="main__titulo_pagina fs_grande color_primario">
-        Iniciar sesión
-    </h1>
-
-    <form class="portal_login__formulario" name="LoginForm" method="post" action="{% url 'acceso:ruta_login' %}">
-        {% csrf_token %}
-
-        <div class="input_box">
-            <label class="fs_normal color_primario" for="LoginInputCorreo">Rut</label>
-            {{form.rut}}
+{# Contenedor principal con fondo blanco explícito (bg-white) para tapar el fondo del base.html #}
+<div class="d-flex min-vh-100 bg-white w-100 position-absolute top-0 start-0" style="z-index: 10;">
+    
+    {# --- COLUMNA IZQUIERDA: IMAGEN HERO (Visible en escritorio) --- #}
+    <div class="d-none d-lg-flex col-lg-7 col-xl-8 position-relative align-items-center justify-content-center overflow-hidden p-0">
+        
+        {# Capa de la imagen (Tu nueva imagen V2) #}
+        <div class="position-absolute top-0 start-0 w-100 h-100 animate-zoom-slow" 
+             style="background-image: url('{% static 'portal/imagenes/bomberil_portal_background_v2.jpg' %}'); 
+                    background-size: cover; 
+                    background-position: center;">
         </div>
-        <div class="input_box">
-            <label class="fs_normal color_primario" for="LoginInputPassword">Contraseña</label>
-            {{form.password}}
+        
+        {# Overlay degradado oscuro para legibilidad #}
+        <div class="position-absolute top-0 start-0 w-100 h-100 bg-dark opacity-75" 
+             style="background: linear-gradient(to right, rgba(0,0,0,0.7), rgba(0,0,0,0.4));">
         </div>
-        <div class="input_box">
-            <button class="fs_normal boton_flex fondo_azul color_blanco hover_color" type="submit">Entrar</button>
-        </div>
-    </form>
 
-    <div class="portal_login__enlaces">
-        <a class="fs_normal color_primario hover_color" href="{% url 'acceso:password_reset' %}">¿Olvidaste tu contraseña?</a>
+        {# Contenido de Marca #}
+        <div class="position-relative z-1 text-white px-5 ms-5 text-start">
+            <div class="mb-4 animate-up">
+                <div class="d-inline-flex align-items-center mb-3">
+                    <i class="fas fa-shield-alt fa-3x me-3 text-warning"></i>
+                    <span class="text-uppercase letter-spacing-2 font-bold text-sm border-start border-warning ps-3 border-3">Sistema de Gestión</span>
+                </div>
+                <h1 class="text-5xl font-black mb-3 display-4 fw-bold">Bomberil System</h1>
+                <p class="text-xl font-regular opacity-75" style="max-width: 500px;">
+                    Plataforma centralizada para operaciones, inventario y gestión de personal voluntario.
+                </p>
+            </div>
+        </div>
+        
+        {# Footer decorativo #}
+        <div class="position-absolute bottom-0 start-0 p-5 text-white opacity-50 text-xs font-monospace">
+            v2.0 &bull; Bomberos de Chile
+        </div>
     </div>
 
+    {# --- COLUMNA DERECHA: FORMULARIO --- #}
+    {# Fondo blanco (bg-white) para asegurar que no se transparente nada #}
+    <div class="col-12 col-lg-5 col-xl-4 d-flex align-items-center justify-content-center p-4 p-md-5 bg-white position-relative">
+        
+        <div class="w-100 animate-fade-in" style="max-width: 400px;">
+            
+            {# Encabezado Móvil #}
+            <div class="d-lg-none text-center mb-5">
+                <div class="text-primary mb-3">
+                    <i class="fas fa-fire-extinguisher fa-3x"></i>
+                </div>
+                <h3 class="text-2xl font-bold color_primario">Portal Bomberil</h3>
+            </div>
+
+            <div class="mb-5">
+                <h2 class="text-3xl font-black color_primario mb-2">Bienvenido</h2>
+                <p class="text-base text-muted font-regular">Inicia sesión para acceder a tu panel.</p>
+            </div>
+
+            <form name="LoginForm" method="post" action="{% url 'acceso:ruta_login' %}" class="needs-validation" novalidate>
+                {% csrf_token %}
+
+                {% if form.non_field_errors %}
+                    <div class="alert alert-danger border-0 shadow-sm d-flex align-items-center mb-4 p-3 rounded-3 bg-danger bg-opacity-10" role="alert">
+                        <i class="fas fa-exclamation-circle fs-4 me-3 text-danger"></i>
+                        <div class="text-sm text-danger">
+                            {% for error in form.non_field_errors %}{{ error }}{% endfor %}
+                        </div>
+                    </div>
+                {% endif %}
+
+                {# RUT #}
+                <div class="mb-4 form-group-modern">
+                    <label class="form-label text-xs font-bold text-uppercase text-muted letter-spacing-1">RUT del Usuario</label>
+                    <div class="input-group">
+                        <span class="input-group-text bg-white border-end-0 ps-3 text-muted">
+                            <i class="far fa-user"></i>
+                        </span>
+                        {{ form.rut }}
+                    </div>
+                    {% if form.rut.errors %}
+                        <div class="text-danger text-xs mt-1 ps-1">{{ form.rut.errors.0 }}</div>
+                    {% endif %}
+                </div>
+
+                {# Contraseña #}
+                <div class="mb-2 form-group-modern">
+                    <label class="form-label text-xs font-bold text-uppercase text-muted letter-spacing-1">Contraseña</label>
+                    <div class="input-group">
+                        <span class="input-group-text bg-white border-end-0 ps-3 text-muted">
+                            <i class="fas fa-lock"></i>
+                        </span>
+                        {{ form.password }}
+                    </div>
+                    {% if form.password.errors %}
+                        <div class="text-danger text-xs mt-1 ps-1">{{ form.password.errors.0 }}</div>
+                    {% endif %}
+                </div>
+
+                <div class="d-flex justify-content-end mb-5">
+                    <a href="{% url 'acceso:password_reset' %}" class="text-xs font-medium text-primary text-decoration-none hover-underline">
+                        ¿Olvidaste tu contraseña?
+                    </a>
+                </div>
+
+                <div class="d-grid">
+                    <button class="btn btn-primary btn-lg py-3 text-base font-bold shadow-lg hover-lift transition-all" type="submit">
+                        Ingresar
+                        <i class="fas fa-arrow-right ms-2 opacity-50"></i>
+                    </button>
+                </div>
+            </form>
+
+            <div class="mt-5 pt-4 border-top text-center">
+                <p class="text-xs text-muted mb-0">
+                    &copy; {% now "Y" %} <span class="fw-bold">Bomberil System</span>
+                </p>
+            </div>
+        </div>
+    </div>
 </div>
-{% endblock  %}
+
+<style>
+    /* Estilos del Login Moderno */
+    .letter-spacing-1 { letter-spacing: 1px; }
+    .letter-spacing-2 { letter-spacing: 2px; }
+
+    /* Inputs Limpios */
+    .form-group-modern .input-group {
+        border: 1px solid #e2e8f0;
+        border-radius: 8px;
+        transition: all 0.2s ease;
+        background-color: white; /* Asegurar fondo blanco en input */
+    }
+    
+    .form-group-modern .input-group:focus-within {
+        border-color: var(--color-primario);
+        box-shadow: 0 0 0 4px rgba(var(--bs-primary-rgb), 0.1);
+    }
+
+    .form-group-modern .form-control {
+        border: none;
+        padding: 0.8rem 0.8rem 0.8rem 0;
+        font-size: var(--font-base);
+        font-weight: 500;
+        color: #2d3748;
+    }
+    .form-group-modern .form-control:focus { box-shadow: none; }
+    .form-group-modern .input-group-text { border: none; }
+
+    /* Efecto Zoom Lento en Imagen */
+    @keyframes zoomSlow {
+        0% { transform: scale(1); }
+        100% { transform: scale(1.05); }
+    }
+    .animate-zoom-slow {
+        animation: zoomSlow 20s linear infinite alternate;
+    }
+
+    .hover-lift:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 20px -5px rgba(0, 0, 0, 0.15) !important;
+    }
+    
+    /* Asegurar que texto blanco se vea nítido sobre imagen */
+    .text-shadow-sm { text-shadow: 0 2px 4px rgba(0,0,0,0.3); }
+</style>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        const inputs = document.querySelectorAll('.form-group-modern input');
+        inputs.forEach(input => {
+            // Limpiamos estilos de Bootstrap por defecto para usar los nuestros modernos
+            input.classList.add('form-control', 'bg-white'); 
+            input.classList.remove('form-control-sm', 'border'); 
+            input.style.boxShadow = 'none';
+        });
+    });
+</script>
+
+{% endblock %}
