@@ -584,9 +584,10 @@ class MedicoEnfermedadView(SubElementoMedicoBaseView):
 
 
 
-class EditarEnfermedadPacienteView(View): # NO SE USA. PENDIENTE DE ELIMINAR
+class EditarEnfermedadPacienteView(BaseEstacionMixin, AuditoriaMixin, CustomPermissionRequiredMixin, View): # NO SE USA. PENDIENTE DE ELIMINAR
+    permission_required = 'gestion_usuarios.accion_gestion_medica_gestionar_fichas_medicas'
     def get(self, request, pk, enfermedad_id):
-        ficha = get_object_or_404(FichaMedica, pk=pk)
+        ficha = get_object_or_404(FichaMedica, pk=pk, voluntario__usuario__membresias__estacion=self.estacion_activa)
         # Buscamos la relación específica (la enfermedad asignada)
         item = get_object_or_404(FichaMedicaEnfermedad, id=enfermedad_id, ficha_medica=ficha)
         
@@ -599,13 +600,14 @@ class EditarEnfermedadPacienteView(View): # NO SE USA. PENDIENTE DE ELIMINAR
         })
 
     def post(self, request, pk, enfermedad_id):
-        ficha = get_object_or_404(FichaMedica, pk=pk)
+        ficha = get_object_or_404(FichaMedica, pk=pk, voluntario__usuario__membresias__estacion=self.estacion_activa)
         item = get_object_or_404(FichaMedicaEnfermedad, id=enfermedad_id, ficha_medica=ficha)
         
         form = FichaMedicaEnfermedadForm(request.POST, instance=item)
         
         if form.is_valid():
             form.save()
+            self.auditar("actualizó detalles de enfermedad de", ficha.voluntario.usuario, ficha.voluntario.usuario.get_full_name, {'enfermedad': item.enfermedad.nombre})
             messages.success(request, "Condición actualizada correctamente.")
             # Al guardar, volvemos a la lista de enfermedades
             return redirect('gestion_medica:ruta_enfermedad_paciente', pk=pk)
@@ -714,9 +716,10 @@ class MedicoMedicamentosView(SubElementoMedicoBaseView):
 
 
 
-class EditarMedicamentoPacienteView(View): # NO SE USA. PENDIENTE DE ELIMINAR
+class EditarMedicamentoPacienteView(BaseEstacionMixin, AuditoriaMixin, CustomPermissionRequiredMixin,View): # NO SE USA. PENDIENTE DE ELIMINAR
+    permission_required = 'gestion_usuarios.accion_gestion_medica_gestionar_fichas_medicas'
     def get(self, request, pk, medicamento_id):
-        ficha = get_object_or_404(FichaMedica, pk=pk)
+        ficha = get_object_or_404(FichaMedica, pk=pk, voluntario__usuario__membresias__estacion=self.estacion_activa)
         item = get_object_or_404(FichaMedicaMedicamento, id=medicamento_id, ficha_medica=ficha)
         
         form = FichaMedicaMedicamentoForm(instance=item)
@@ -728,15 +731,22 @@ class EditarMedicamentoPacienteView(View): # NO SE USA. PENDIENTE DE ELIMINAR
         })
 
     def post(self, request, pk, medicamento_id):
-        ficha = get_object_or_404(FichaMedica, pk=pk)
+        ficha = get_object_or_404(FichaMedica, pk=pk, voluntario__usuario__membresias__estacion=self.estacion_activa)
         item = get_object_or_404(FichaMedicaMedicamento, id=medicamento_id, ficha_medica=ficha)
         
         form = FichaMedicaMedicamentoForm(request.POST, instance=item)
         
         if form.is_valid():
             form.save()
+            self.auditar(
+                "actualizó la dosis/frecuencia del medicamento", 
+                ficha.voluntario.usuario, 
+                ficha.voluntario.usuario.get_full_name, 
+                {'medicamento': item.medicamento.nombre}
+            )
+            messages.success(request, "Medicamento actualizado.")
             return redirect('gestion_medica:ruta_medicamentos_paciente', pk=pk)
-            
+        
         return render(request, "gestion_medica/pages/editar_medicamento_paciente.html", {
             'ficha': ficha,
             'form': form,
@@ -793,9 +803,10 @@ class MedicoCirugiasView(SubElementoMedicoBaseView):
 
 
 
-class EditarCirugiaPacienteView(View): # NO SE USA. PENDIENTE DE ELIMINAR
+class EditarCirugiaPacienteView(BaseEstacionMixin, AuditoriaMixin, CustomPermissionRequiredMixin,View): # NO SE USA. PENDIENTE DE ELIMINAR
+    permission_required = 'gestion_usuarios.accion_gestion_medica_gestionar_fichas_medicas'
     def get(self, request, pk, cirugia_id):
-        ficha = get_object_or_404(FichaMedica, pk=pk)
+        ficha = get_object_or_404(FichaMedica, pk=pk, voluntario__usuario__membresias__estacion=self.estacion_activa)
         item = get_object_or_404(FichaMedicaCirugia, id=cirugia_id, ficha_medica=ficha)
         form = FichaMedicaCirugiaForm(instance=item)
         return render(request, "gestion_medica/pages/editar_cirugia_paciente.html", {
@@ -805,11 +816,18 @@ class EditarCirugiaPacienteView(View): # NO SE USA. PENDIENTE DE ELIMINAR
         })
 
     def post(self, request, pk, cirugia_id):
-        ficha = get_object_or_404(FichaMedica, pk=pk)
+        ficha = get_object_or_404(FichaMedica, pk=pk, voluntario__usuario__membresias__estacion=self.estacion_activa)
         item = get_object_or_404(FichaMedicaCirugia, id=cirugia_id, ficha_medica=ficha)
         form = FichaMedicaCirugiaForm(request.POST, instance=item)
         if form.is_valid():
             form.save()
+            self.auditar(
+                "actualizó detalles de cirugía", 
+                ficha.voluntario.usuario, 
+                ficha.voluntario.usuario.get_full_name, 
+                {'cirugia': item.cirugia.nombre}
+            )
+            messages.success(request, "Registro de cirugía actualizado.")
             return redirect('gestion_medica:ruta_cirugias_paciente', pk=pk)
         return render(request, "gestion_medica/pages/editar_cirugia_paciente.html", {
             'ficha': ficha,

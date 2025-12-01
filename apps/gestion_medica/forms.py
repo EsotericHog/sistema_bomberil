@@ -114,6 +114,13 @@ class FichaMedicaMedicamentoForm(forms.ModelForm):
             'medicamento': forms.Select(attrs={'class': 'form-select'}),
             'dosis_frecuencia': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Ej: 500mg cada 8hrs'}),
         }
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Si estamos editando, bloqueamos el medicamento
+        if self.instance and self.instance.pk:
+            self.fields['medicamento'].disabled = True
+            self.fields['medicamento'].widget.attrs['class'] += ' bg-light'
 
 class FichaMedicaEnfermedadForm(forms.ModelForm):
     """5. Asignación de Enfermedades (Relación Many-to-Many)"""
@@ -121,9 +128,18 @@ class FichaMedicaEnfermedadForm(forms.ModelForm):
         model = FichaMedicaEnfermedad
         fields = ['enfermedad', 'observaciones']
         widgets = {
-            'enfermedad': forms.Select(attrs={'class': 'form-select'}),
+            'enfermedad': forms.Select(attrs={'class': 'form-select select2-simple'}),
             'observaciones': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Ej: En tratamiento...'}),
         }
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Si la instancia ya tiene un ID (es decir, estamos editando un registro existente)
+        if self.instance and self.instance.pk:
+            # Deshabilitamos el campo enfermedad
+            self.fields['enfermedad'].disabled = True
+            # Opcional: Añadimos un estilo visual para que se note bloqueado
+            self.fields['enfermedad'].widget.attrs['class'] += ' bg-light'
 
 class FichaMedicaCirugiaForm(forms.ModelForm):
     """6. Asignación de Cirugías (Relación Many-to-Many)"""
@@ -135,6 +151,12 @@ class FichaMedicaCirugiaForm(forms.ModelForm):
             'fecha_cirugia': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
             'observaciones': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Detalles...'}),
         }
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Si estamos editando, bloqueamos el tipo de cirugía
+        if self.instance and self.instance.pk:
+            self.fields['cirugia'].disabled = True
+            self.fields['cirugia'].widget.attrs['class'] += ' bg-light'
 
 
 # ==============================================================================

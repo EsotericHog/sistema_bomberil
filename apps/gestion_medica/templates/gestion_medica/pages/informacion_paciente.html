@@ -79,7 +79,7 @@
 
             <div class="vitals-row mb-4">
                 <div class="vital-card-color vc-blue">
-                    <i class="fas fa-weight vc-icon"></i>
+                    <i class="fas fa-weight-hanging vc-icon"></i>
                     <div class="vc-value text-xl font-black">{{ ficha.peso_kg|default:"--" }}</div>
                     <div class="vc-label text-xs font-bold uppercase">Peso (kg)</div>
                 </div>
@@ -180,14 +180,14 @@
                     <div class="section-card h-100">
                         <div class="section-header header-gradient-cirugia">
                             <h3 class="section-title text-base font-bold">
-                                <i class="fas fa-heart-pulse"></i> Cirugías
+                                <i class="fas fa-heartbeat"></i> Cirugías
                             </h3>
                             <a href="{% url 'gestion_medica:ruta_cirugias_paciente' ficha.voluntario.usuario.id %}" class="btn-soft-add text-purple"><i class="fas fa-plus"></i></a>
                         </div>
                         <ul class="modern-list">
                             {% for item in cirugias %}
                             <li class="modern-item">
-                                <div class="item-icon-box bg-soft-purple"><i class="fas fa-scalpel"></i></div>
+                                <div class="item-icon-box bg-soft-purple"><i class="fas fa-user-md"></i></div>
                                 <div class="item-text">
                                     <h6 class="text-sm font-bold">{{ item.cirugia.nombre }}</h6>
                                     <p class="text-xs text-muted text-data-code">{{ item.fecha_cirugia|date:"d/m/Y"|default:"Fecha S/I" }}</p>
