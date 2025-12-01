@@ -11,6 +11,8 @@
     --med-dark: #5a5c69;
     --med-light: #f8f9fc;
     --med-bg-card: #ffffff;
+    --med-watermelon: #ff6b81;
+    --med-watermelon-dark: #e04f64;
 }
 
 /* --- Contenedor Principal --- */
@@ -212,4 +214,40 @@
     font-size: 0.75rem;
     padding: 0.5rem 1.5rem;
     letter-spacing: 1px;
+}
+
+/* Agregar el fondo suave para el icono sandía */
+.bg-soft-watermelon { 
+    background-color: rgba(255, 107, 129, 0.15); 
+    color: var(--med-watermelon); 
+}
+
+/* Agregar el comportamiento del borde hover para la tarjeta sandía */
+.action-card.border-watermelon { 
+    border-bottom-color: var(--med-watermelon) !important; 
+}
+
+/* 2. Al pasar el mouse, el borde se oscurece */
+.action-card.border-watermelon:hover { 
+    border-bottom-color: var(--med-watermelon-dark) !important; 
+    transform: translateY(-5px); /* Un pequeño salto extra si gustas */
+}
+
+/* Crear el botón outline sandía (porque bootstrap no lo trae) */
+.bg-soft-watermelon { 
+    background-color: rgba(255, 107, 129, 0.15); 
+    color: var(--med-watermelon); 
+}
+
+/* Estilo del botón */
+.btn-outline-watermelon {
+    color: var(--med-watermelon);
+    border-color: var(--med-watermelon);
+    background-color: transparent;
+}
+
+.btn-outline-watermelon:hover {
+    background-color: var(--med-watermelon);
+    color: #ffffff;
+    border-color: var(--med-watermelon);
 }
