@@ -2,21 +2,27 @@
 {# Cargar assets #}{% load static %}
 {# Cargar filtros #}{% load age_filters %}{% load humanize %}
 {# Título de la ventana #} {% block titulo_ventana %}{{rol.nombre|title}} - Asignar permisos{% endblock %}
-{# Título de la página #} {% block titulo_pagina %}Asignar permisos{% endblock %}
+{# Título de la página #} 
+{% block titulo_pagina %}
+    <span class="text-xl color_primario">
+        <i class="fas fa-check-double me-2"></i> Asignar permisos
+    </span>
+{% endblock %}
 
 {% block contenido %}
 
 <div class="caja_para_pagina_contenido_arriba">
 
 <div class="container mt-4">
-    <h1 class="color_primario">Asignar Permisos al Rol: <strong>{{ rol.nombre|title }}</strong></h1>
-    <p class="color_primario_variante fs_normal">Gestiona los permisos aplicables a la estación <strong>{{ rol.estacion.nombre }}</strong>.</p>
+    {# Título interno: limitado a text-xl #}
+    <h1 class="color_primario text-xl font-bold mb-2">Asignar Permisos al Rol: <strong>{{ rol.nombre|title }}</strong></h1>
+    <p class="color_primario_variante text-base">Gestiona los permisos aplicables a la estación <strong>{{ rol.estacion.nombre }}</strong>.</p>
 
     <form method="post">
         {% csrf_token %}
 
 {% for app_label, data in permissions_by_app.items %}
-<div class="card mb-4 fondo_secundario color_primario fs_normal">
+<div class="card mb-4 fondo_secundario color_primario text-base">
     <div class="card-header">
         <div class="form-check">
             {# El checkbox "maestro" ahora es un permiso REAL #}
@@ -25,14 +31,14 @@
                        type="checkbox" 
                        name="permisos"
                        value="{{ data.main_perm.id }}"
-                       id="module-{{ app_label }}" {# Usamos app_label #}
-                       data-module="{{ app_label }}" {# Usamos app_label #}
+                       id="module-{{ app_label }}" 
+                       data-module="{{ app_label }}" 
                        {% if data.main_perm.id in rol_permissions_ids %}checked{% endif %}>
-                <label class="form-check-label h5 fs_mediana" for="module-{{ app_label }}">
-                    {{ data.verbose_name }} {# Mostramos el nombre legible #}
+                <label class="form-check-label h5 text-lg font-medium" for="module-{{ app_label }}">
+                    {{ data.verbose_name }} 
                 </label>
             {% else %}
-                <h5 class="fs_mediana">{{ data.verbose_name }}</h5>
+                <h5 class="text-lg font-medium">{{ data.verbose_name }}</h5>
             {% endif %}
         </div>
     </div>
@@ -47,7 +53,7 @@
                            name="permisos" 
                            value="{{ perm.id }}" 
                            id="perm-{{ perm.id }}"
-                           data-module="{{ app_label }}" {# Usamos app_label consistente #}
+                           data-module="{{ app_label }}" 
                            {% if perm.id in rol_permissions_ids %}checked{% endif %}>
                     <label class="form-check-label" for="perm-{{ perm.id }}">
                         {{ perm.name }}
@@ -61,8 +67,11 @@
 {% endfor %}
 
         <div class="d-flex justify-content-end mb-5">
-            <a href="{% url 'gestion_usuarios:ruta_lista_roles' %}" class="boton_s fs_normal color_primario_variante">Cancelar</a>
-            <button type="submit" class="boton_s fondo_verde fs_normal color_blanco">Guardar Permisos</button>
+            <a href="{% url 'gestion_usuarios:ruta_lista_roles' %}" class="boton_s text-base color_primario_variante me-2">Cancelar</a>
+            
+            {% if perms.gestion_usuarios.accion_gestion_usuarios_gestionar_roles %}
+            <button type="submit" class="boton_s fondo_verde text-base color_blanco">Guardar Permisos</button>
+            {% endif %}
         </div>
     </form>
 </div>

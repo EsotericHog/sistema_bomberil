@@ -1,24 +1,28 @@
 {% extends 'gestion_usuarios/layouts/base.html' %}
 {% load static %}
 {% block titulo_ventana %}{{ usuario.get_full_name|title }} - Asignar Roles{% endblock %}
-{% block titulo_pagina %}Asignar Roles{% endblock %}
+{% block titulo_pagina %}
+    <span class="text-xl color_primario">
+        <i class="fas fa-user-tag me-2"></i> Asignar Roles
+    </span>
+{% endblock %}
 
 {% block contenido %}
 <div class="caja_para_pagina_contenido_arriba">
 <div class="container mt-4">
-    <h1 class="color_primario">Asignar Roles a: <strong>{{ usuario.get_full_name|title }}</strong></h1>
-    <p class="color_primario_variante fs_normal">Gestiona los roles del usuario en la estación <strong>{{ estacion.nombre }}</strong>.</p>
+    <h1 class="color_primario text-xl font-bold mb-2">Asignar Roles a: <strong>{{ usuario.get_full_name|title }}</strong></h1>
+    <p class="color_primario_variante text-base">Gestiona los roles del usuario en la estación <strong>{{ estacion.nombre }}</strong>.</p>
 
     <form method="post">
         {% csrf_token %}
 
         {# --- Grupo de Roles Universales --- #}
         {% with group_name="universales" group_title="Roles Universales" roles=roles_universales %}
-        <div class="card mb-4 fondo_secundario color_primario fs_normal">
+        <div class="card mb-4 fondo_secundario color_primario text-base">
             <div class="card-header">
                 <div class="form-check">
                     <input class="form-check-input check-all-group" type="checkbox" id="group-{{ group_name }}" data-group="{{ group_name }}">
-                    <label class="form-check-label h5 fs_mediana" for="group-{{ group_name }}">{{ group_title }}</label>
+                    <label class="form-check-label h5 text-lg font-medium" for="group-{{ group_name }}">{{ group_title }}</label>
                 </div>
             </div>
             <div class="card-body">
@@ -31,7 +35,7 @@
                         </div>
                     </div>
                     {% empty %}
-                    <p class="color_primario_variante">No hay roles universales definidos.</p>
+                    <p class="color_primario_variante text-sm fst-italic">No hay roles universales definidos.</p>
                     {% endfor %}
                 </div>
             </div>
@@ -40,11 +44,11 @@
 
         {# --- Grupo de Roles de la Estación --- #}
         {% with group_name="estacion" group_title="Roles de la Estación" roles=roles_de_estacion %}
-        <div class="card mb-4 fondo_secundario color_primario fs_normal">
+        <div class="card mb-4 fondo_secundario color_primario text-base">
             <div class="card-header">
                 <div class="form-check">
                     <input class="form-check-input check-all-group" type="checkbox" id="group-{{ group_name }}" data-group="{{ group_name }}">
-                    <label class="form-check-label h5 fs_mediana" for="group-{{ group_name }}">{{ group_title }}</label>
+                    <label class="form-check-label h5 text-lg font-medium" for="group-{{ group_name }}">{{ group_title }}</label>
                 </div>
             </div>
             <div class="card-body">
@@ -57,7 +61,7 @@
                         </div>
                     </div>
                     {% empty %}
-                    <p class="color_primario_variante">No hay roles personalizados definidos para esta estación.</p>
+                    <p class="color_primario_variante text-sm fst-italic">No hay roles personalizados definidos para esta estación.</p>
                     {% endfor %}
                 </div>
             </div>
@@ -65,8 +69,11 @@
         {% endwith %}
 
         <div class="d-flex justify-content-end mb-5">
-            <a href="{% url 'gestion_usuarios:ruta_ver_usuario' id=usuario.id %}" class="boton_s fs_normal color_primario_variante">Cancelar</a>
-            <button type="submit" class="boton_s fondo_verde fs_normal color_blanco">Guardar Roles</button>
+            <a href="{% url 'gestion_usuarios:ruta_ver_usuario' id=usuario.id %}" class="boton_s text-base color_primario_variante me-2">Cancelar</a>
+            
+            {% if perms.gestion_usuarios.accion_gestion_usuarios_asignar_roles %}
+            <button type="submit" class="boton_s fondo_verde text-base color_blanco">Guardar Roles</button>
+            {% endif %}
         </div>
     </form>
 </div>

@@ -5,7 +5,7 @@
 {% block titulo_ventana %}Eliminar Rol: {{rol.nombre|title}}{% endblock %}
 
 {% block titulo_pagina %}
-    <span class="fs_grande color_primario">
+    <span class="text-xl color_primario">
         <i class="fas fa-trash-alt me-2"></i> Eliminar Rol
     </span>
 {% endblock %}
@@ -18,13 +18,13 @@
         <div class="col-lg-7 col-md-9">
 
             {# 1. Alerta de Advertencia #}
-            <div class="alert alert-warning fs_normal" role="alert">
+            <div class="alert alert-warning text-base" role="alert">
                 <strong><i class="fas fa-exclamation-triangle me-1"></i> ¡Atención!</strong> Esta acción no se puede deshacer. Los usuarios que actualmente tengan este rol asignado lo perderán.
             </div>
 
             {# 2. Tarjeta de Confirmación #}
             <div class="card shadow-sm border-danger {% if request.session.dark_mode %}dark-mode{% endif %}">
-                <div class="card-header bg-danger text-white fs_normal fw-bold">
+                <div class="card-header bg-danger text-white text-lg font-bold">
                     <i class="fas fa-exclamation-triangle me-1"></i>
                     Confirmar Eliminación
                 </div>
@@ -32,27 +32,34 @@
                 <form method="post">
                     {% csrf_token %}
                     <div class="card-body">
-                        <p class="fs_normal">
+                        <p class="text-base text-center">
                             Estás a punto de eliminar permanentemente el rol:
                         </p>
 
-                        <h3 class="text-center my-4 text-danger">
-                            <strong>{{ rol.nombre|title }}</strong>
-                        </h3>
+                        {# Bloque destacado para el nombre del Rol (Estilo consistente) #}
+                        <div class="my-4 p-4 bg-light rounded text-center">
+                            <h3 class="mb-0 text-danger text-xl font-bold">
+                                <strong>{{ rol.nombre|title }}</strong>
+                            </h3>
+                        </div>
                     
-                        <p class="fs_normal text-center mt-3">
+                        <p class="text-base text-center mt-3">
                             ¿Estás seguro de que deseas continuar?
                         </p>
                     </div>
 
                     <div class="card-footer text-end">
-                        <a href="{% url 'gestion_usuarios:ruta_lista_roles' %}" class="btn btn-outline-secondary btn-sm fs_normal me-2">
+                        <a href="{% url 'gestion_usuarios:ruta_lista_roles' %}" class="btn btn-outline-secondary btn-sm text-base me-2">
                             Cancelar
                         </a>
-                        <button type="submit" class="btn btn-danger btn-sm fs_normal">
+                        
+                        {# PERMISO: Gestionar Roles (Eliminar) #}
+                        {% if perms.gestion_usuarios.accion_gestion_usuarios_gestionar_roles %}
+                        <button type="submit" class="btn btn-danger btn-sm text-base">
                             <i class="fas fa-trash-alt me-1"></i>
                             Sí, Eliminar Rol
                         </button>
+                        {% endif %}
                     </div>
                 </form>
             </div>

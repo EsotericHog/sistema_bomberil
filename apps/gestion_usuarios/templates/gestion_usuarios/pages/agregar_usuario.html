@@ -5,7 +5,7 @@
 {% block titulo_ventana %}Agregar Usuario{% endblock %}
 
 {% block titulo_pagina %}
-    <span class="fs_grande color_primario">
+    <span class="text-xl color_primario">
         <i class="fas fa-user-plus me-2"></i> Agregar Usuario a la Estación
     </span>
 {% endblock %}
@@ -16,9 +16,12 @@
     <div class="row justify-content-center">
         <div class="col-lg-7 col-md-10">
             
+            {# PERMISO: Crear/Registrar Usuario #}
+            {% if perms.gestion_usuarios.accion_gestion_usuarios_crear_usuario %}
+            
             {# 1. Tarjeta de Búsqueda #}
             <div class="card shadow-sm mb-4 {% if request.session.dark_mode %}dark-mode{% endif %}">
-                <div class="card-header fs_normal">
+                <div class="card-header text-lg font-medium">
                     <i class="fas fa-search me-1"></i>
                     Buscar Usuario por RUT
                 </div>
@@ -27,18 +30,18 @@
                         {% csrf_token %}
                         <div class="row g-3 align-items-end">
                             <div class="col-md-8">
-                                <label for="BuscarInputRUT" class="form-label fw-bold fs_pequena">RUT del Usuario</label>
-                                <input type="text" class="form-control fs_normal" id="BuscarInputRUT" 
+                                <label for="BuscarInputRUT" class="form-label font-bold text-sm">RUT del Usuario</label>
+                                <input type="text" class="form-control text-base" id="BuscarInputRUT" 
                                        placeholder="Ej: 12.345.678-9" required>
                             </div>
                             <div class="col-md-4 text-end">
-                                <button type="submit" class="btn btn-primary btn-sm fs_normal w-100">
+                                <button type="submit" class="btn btn-primary btn-sm text-base w-100">
                                     <i class="fas fa-search me-1"></i> Buscar
                                 </button>
                             </div>
                         </div>
 
-                        <div class="form-text fs_pequena mt-2">
+                        <div class="form-text text-xs mt-2">
                             Busca un usuario existente en el sistema para agregarlo a tu estación.
                         </div>
                     </form>
@@ -47,7 +50,24 @@
 
             {# 2. Contenedor de Resultados (poblado por JS) #}
             <div id="contenedorResultado">
+            </div>
+
+            {% else %}
+            
+            {# Mensaje de Acceso Denegado si no tiene permiso #}
+            <div class="alert alert-danger shadow-sm border-0" role="alert">
+                <div class="d-flex align-items-center">
+                    <div class="text-2xl me-3">
+                        <i class="fas fa-lock"></i>
+                    </div>
+                    <div>
+                        <strong class="text-base">Acceso Restringido</strong>
+                        <div class="text-sm">No tienes permisos para registrar nuevos usuarios en la estación.</div>
+                    </div>
                 </div>
+            </div>
+
+            {% endif %}
 
         </div>
     </div>
@@ -63,6 +83,9 @@
 document.addEventListener('DOMContentLoaded', () => {
     const formularioBuscarUsuario = document.getElementById("formularioBuscarUsuario");
     const contenedorResultado = document.getElementById("contenedorResultado");
+    // Verificamos si existe el formulario antes de añadir listeners (por si el permiso ocultó el form)
+    if (!formularioBuscarUsuario) return;
+
     const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
     
     // URLs (se obtienen del template de Django)
@@ -81,7 +104,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 <div class="spinner-border text-primary" role="status" style="width: 2rem; height: 2rem;">
                     <span class="visually-hidden">Buscando...</span>
                 </div>
-                <span class="ms-2 fs_normal">Buscando...</span>
+                <span class="ms-2 text-base">Buscando...</span>
             </div>
         `;
 
@@ -103,10 +126,10 @@ document.addEventListener('DOMContentLoaded', () => {
             let content = ''; // Variable para almacenar el HTML de resultado
 
             // 2. Generar HTML basado en la respuesta de la API
+            // NOTA: Aquí actualizamos las clases CSS dentro de los strings de JS
             
             if (data.status === 'EXISTE_DISPONIBLE') {
                 // --- Caso 1: Usuario encontrado y puede ser agregado ---
-                // Genera el formulario que tu vista 'UsuarioAgregarView' espera
                 const usuario = data.usuario;
                 content = `
                     <form action="${agregarUsuarioUrl}" method="post">
@@ -114,19 +137,19 @@ document.addEventListener('DOMContentLoaded', () => {
                         <input type="hidden" name="usuario_id" value="${usuario.id}">
                         
                         <div class="card shadow-sm border-success">
-                            <div class="card-header bg-success bg-opacity-10 fs_normal fw-bold text-success">
+                            <div class="card-header bg-success bg-opacity-10 text-base font-bold text-success">
                                 Usuario Encontrado y Disponible
                             </div>
                             <div class="card-body p-3">
                                 <div class="d-flex align-items-center">
                                     <img src="${usuario.avatar_url || defaultAvatarUrl}" alt="Avatar" class="rounded-circle me-3" style="width: 50px; height: 50px;">
                                     <div class="flex-grow-1">
-                                        <strong class="fs_normal">${usuario.nombre_completo}</strong>
-                                        <div class="fs_pequena text-muted">${usuario.email}</div>
-                                        <div class="fs_pequena"><span class="badge bg-success">Disponible</span></div>
+                                        <strong class="text-base">${usuario.nombre_completo}</strong>
+                                        <div class="text-sm text-muted text-data-code">${usuario.email}</div>
+                                        <div class="text-xs"><span class="badge bg-success">Disponible</span></div>
                                     </div>
                                     <div class="ms-auto">
-                                        <button type="submit" class="btn btn-success" title="Agregar Usuario a esta Estación">
+                                        <button type="submit" class="btn btn-success text-base" title="Agregar Usuario a esta Estación">
                                             <i class="fas fa-plus me-1"></i> Agregar
                                         </button>
                                     </div>
@@ -142,16 +165,16 @@ document.addEventListener('DOMContentLoaded', () => {
                 const membresia = data.membresia;
                 content = `
                     <div class="card shadow-sm border-warning">
-                        <div class="card-header bg-warning bg-opacity-10 fs_normal fw-bold text-dark">
+                        <div class="card-header bg-warning bg-opacity-10 text-base font-bold text-dark">
                             Usuario No Disponible
                         </div>
                         <div class="card-body p-3">
                             <div class="d-flex align-items-center">
                                 <img src="${membresia.avatar_url || defaultAvatarUrl}" alt="Avatar" class="rounded-circle me-3" style="width: 50px; height: 50px;">
                                 <div class="flex-grow-1">
-                                    <strong class="fs_normal">${membresia.nombre_completo}</strong>
-                                    <div class="fs_pequena text-muted">${membresia.email}</div>
-                                    <div class="fs_pequena">
+                                    <strong class="text-base">${membresia.nombre_completo}</strong>
+                                    <div class="text-sm text-muted text-data-code">${membresia.email}</div>
+                                    <div class="text-xs">
                                         <span class="badge bg-secondary">No Disponible</span>
                                         <span class="ms-2 fst-italic">Miembro de ${membresia.estacion}</span>
                                     </div>
@@ -166,19 +189,18 @@ document.addEventListener('DOMContentLoaded', () => {
                 // --- Caso 3: Usuario no encontrado ---
                 // 1. Capturamos el RUT que el usuario escribió
                 const rutBuscado = buscarInputRUT.value;
-                
                 // 2. Construimos la URL con el parámetro GET
                 // encodeURIComponent es vital para manejar caracteres especiales como puntos o guiones
                 const urlConRut = `${crearUsuarioUrl}?rut=${encodeURIComponent(rutBuscado)}`;
 
                 content = `
-                    <div class="alert alert-warning fs_normal" role="alert">
+                    <div class="alert alert-warning text-base" role="alert">
                         <i class="fas fa-info-circle me-1"></i> ${data.mensaje}
                     </div>
                     <div class="card shadow-sm">
                         <div class="card-body text-center p-4">
-                            <p class="fs_normal mb-3">Para agregarlo a la estación, primero debe crear su cuenta de usuario.</p>
-                            <a href="${urlConRut}" class="btn btn-success fs_normal">
+                            <p class="text-base mb-3">Para agregarlo a la estación, primero debe crear su cuenta de usuario.</p>
+                            <a href="${urlConRut}" class="btn btn-success text-base">
                                 <i class="fas fa-user-plus me-1"></i> Crear Nuevo Usuario con RUT ${rutBuscado}
                             </a>
                         </div>
@@ -193,7 +215,7 @@ document.addEventListener('DOMContentLoaded', () => {
             console.error('Error en fetch:', error);
             // --- Caso de Error (Fetch, red, etc.) ---
             contenedorResultado.innerHTML = `
-                <div class="alert alert-danger fs_normal" role="alert">
+                <div class="alert alert-danger text-base" role="alert">
                     <i class="fas fa-exclamation-triangle me-1"></i>
                     Ocurrió un error al buscar. Por favor, inténtalo de nuevo.
                 </div>

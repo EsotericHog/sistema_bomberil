@@ -5,7 +5,7 @@
 {% block titulo_ventana %}Gestión de Usuarios{% endblock %}
 
 {% block titulo_pagina %}
-    <span class="fs_grande color_primario">
+    <span class="text-xl color_primario">
         <i class="fas fa-users me-2"></i> Gestión de Usuarios
     </span>
 {% endblock %}
@@ -16,7 +16,7 @@
 
 {# Panel de Filtros y Búsqueda #}
 <div class="card shadow-sm mb-4">
-    <div class="card-header fs_normal">
+    <div class="card-header text-md font-medium">
         <i class="fas fa-filter me-1"></i>
         Filtros y Búsqueda
     </div>
@@ -26,10 +26,10 @@
                 
                 {# Buscar #}
                 <div class="col-md-6 col-lg-4">
-                    <label for="search_query" class="form-label fw-bold fs_pequena">Buscar</label>
+                    <label for="search_query" class="form-label font-bold text-sm">Buscar</label>
                     <div class="input-group input-group-sm">
                         <span class="input-group-text"><i class="fas fa-search"></i></span>
-                        <input type="text" class="form-control fs_normal" id="search_query" name="q" 
+                        <input type="text" class="form-control text-base" id="search_query" name="q" 
                                placeholder="Nombre, Apellido, Email..." 
                                value="{{ current_q|default:'' }}">
                     </div>
@@ -37,8 +37,8 @@
                 
                 {# Filtrar por Estado de Membresía #}
                 <div class="col-md-6 col-lg-3"> 
-                    <label for="filter_estado" class="form-label fw-bold fs_pequena">Estado Membresía</label>
-                    <select id="filter_estado" name="estado" class="form-select form-select-sm fs_normal">
+                    <label for="filter_estado" class="form-label font-bold text-sm">Estado Membresía</label>
+                    <select id="filter_estado" name="estado" class="form-select form-select-sm text-base">
                         <option value="">Todos</option>
                         <option value="ACTIVO" {% if current_estado == 'ACTIVO' %}selected{% endif %}>Activo</option>
                         <option value="INACTIVO" {% if current_estado == 'INACTIVO' %}selected{% endif %}>Inactivo</option>
@@ -47,8 +47,8 @@
 
                 {# Filtrar por Rol #}
                 <div class="col-md-6 col-lg-3"> 
-                    <label for="filter_rol" class="form-label fw-bold fs_pequena">Rol Asignado</label>
-                    <select id="filter_rol" name="rol" class="form-select form-select-sm fs_normal">
+                    <label for="filter_rol" class="form-label font-bold text-sm">Rol Asignado</label>
+                    <select id="filter_rol" name="rol" class="form-select form-select-sm text-base">
                         <option value="">Todos</option>
                         {% for rol in todos_los_roles %}
                         <option value="{{ rol.id }}" {% if current_rol == rol.id|stringformat:"s" %}selected{% endif %}>{{ rol.nombre|title }}</option>
@@ -58,8 +58,8 @@
                 
                 {# Botones #}
                 <div class="col-md-6 col-lg-2 text-end">
-                    <a href="{% url 'gestion_usuarios:ruta_lista_usuarios' %}" class="btn btn-outline-secondary btn-sm fs_normal me-1">Limpiar</a>
-                    <button type="submit" class="btn btn-primary btn-sm fs_normal">
+                    <a href="{% url 'gestion_usuarios:ruta_lista_usuarios' %}" class="btn btn-outline-secondary btn-sm text-base me-1">Limpiar</a>
+                    <button type="submit" class="btn btn-primary btn-sm text-base">
                         <i class="fas fa-filter me-1"></i> Filtrar
                     </button>
                 </div>
@@ -71,18 +71,22 @@
 {# Tabla de Usuarios #}
 <div class="card shadow-sm mb-4 {% if request.session.dark_mode %}dark-mode{% endif %}">
     <div class="card-header d-flex justify-content-between align-items-center">
-        <span class="fw-bold fs_normal">
+        <span class="font-bold text-lg"> {# fs_normal -> text-xl (destacado) #}
             <i class="fas fa-table me-1"></i>
             Usuarios de la Estación
         </span>
-        <a href="{% url 'gestion_usuarios:ruta_agregar_usuario' %}" class="btn btn-success btn-sm fs_normal">
+        
+        {# PERMISO: Crear usuario #}
+        {% if perms.gestion_usuarios.accion_gestion_usuarios_crear_usuario %}
+        <a href="{% url 'gestion_usuarios:ruta_agregar_usuario' %}" class="btn btn-success btn-sm text-base font-medium">
             <i class="fas fa-plus me-1"></i> Agregar Usuario
         </a>
+        {% endif %}
     </div>
     <div class="card-body">
         <div class="table-responsive">
             <table class="table table-striped table-hover table-sm align-middle">
-                <thead class="fs_pequena">
+                <thead class="text-sm"> {# fs_pequena -> text-sm #}
                     <tr>
                         <th style="width: 35%;">Usuario</th>
                         <th style="width: 25%;">Email</th>
@@ -91,7 +95,7 @@
                         <th style="width: 10%;" class="text-center">Acciones</th>
                     </tr>
                 </thead>
-                <tbody class="fs_normal">
+                <tbody class="text-base"> {# fs_normal -> text-base #}
                     {# El bucle itera sobre 'page_obj' (para paginación) o 'membresias' si no paginas #}
                     {% for membresia in page_obj %}
                     <tr>
@@ -112,7 +116,7 @@
                                     <strong class="d-block">{{ membresia.usuario.get_full_name|title }}</strong>
                                     
                                     {# --- ICONOS REQUERIDOS --- #}
-                                    <small class="text-muted" style="font-size: 0.8em;">
+                                    <small class="text-muted text-xs"> {# Ajuste fino para iconos #}
                                         {% if membresia.usuario.is_verified %}
                                             <i class="fas fa-check-circle color_azul me-1" title="Usuario verificado"></i>
                                         {% endif %}
@@ -129,7 +133,7 @@
                         </td>
                         
                         {# Columna Contacto #}
-                        <td class="fs_pequena">
+                        <td class="text-sm text-data-code">
                             {{ membresia.usuario.email|default:"N/A" }}
                         </td>
 
@@ -147,7 +151,7 @@
                         </td>
 
                         {# Columna Roles #}
-                        <td class="fs_normal">
+                        <td class="text-sm">
                             {% for rol in membresia.roles.all %}
                                 <span class="badge bg-primary me-1 mb-1">{{ rol.nombre|title }}</span>
                             {% empty %}
@@ -157,6 +161,7 @@
                         
                         {# Columna Acciones #}
                         <td class="text-center">
+                            {# El dropdown siempre visible, el contenido (include) debe manejar los permisos internos #}
                             <button class="boton_s boton-menu-acciones fondo_transparente">
                                 <i class="fa-solid fa-ellipsis-vertical color_primario"></i>
                             </button>
@@ -165,7 +170,7 @@
                     </tr>
                     {% empty %}
                     <tr>
-                        <td colspan="5" class="text-center fst-italic py-4">
+                        <td colspan="5" class="text-center fst-italic py-4 text-base">
                             No se encontraron usuarios que coincidan con los filtros seleccionados.
                         </td>
                     </tr>
