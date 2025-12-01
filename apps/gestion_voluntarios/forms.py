@@ -1,4 +1,6 @@
+import re
 from django import forms
+from django.core.exceptions import ValidationError
 from apps.gestion_usuarios.models import Usuario
 from apps.gestion_inventario.models import Estacion
 from .models import (
@@ -17,11 +19,18 @@ class UsuarioForm(forms.ModelForm):
         model = Usuario
         fields = ['first_name', 'last_name', 'rut', 'email', 'phone']
         widgets = {
-            'first_name': forms.TextInput(attrs={'class': 'form-control'}),
-            'last_name': forms.TextInput(attrs={'class': 'form-control'}),
-            'rut': forms.TextInput(attrs={'class': 'form-control'}),
-            'email': forms.EmailInput(attrs={'class': 'form-control'}),
-            'phone': forms.TextInput(attrs={'class': 'form-control'}),
+            # Se aplica text-base y font-regular a los inputs de texto
+            'first_name': forms.TextInput(attrs={'class': 'form-control text-base font-regular'}),
+            'last_name': forms.TextInput(attrs={'class': 'form-control text-base font-regular'}),
+            'rut': forms.TextInput(attrs={'class': 'form-control text-base font-regular'}),
+            'email': forms.EmailInput(attrs={'class': 'form-control text-base font-regular'}),
+            'phone': forms.TextInput(attrs={
+                'class': 'form-control text-base font-regular', 
+                'placeholder': 'Ej: 912345678',
+                'type': 'tel',            
+                'pattern': '[0-9]*',      
+                'maxlength': '12'         
+            }),
         }
         labels = {
             'first_name': 'Nombres',
@@ -51,15 +60,46 @@ class UsuarioForm(forms.ModelForm):
                     # Si está vacío, le avisamos que aproveche de llenarlo
                     self.fields[campo].help_text = "Complete este campo para asegurar su perfil."
 
+    # --- VALIDACIÓN Y ESTANDARIZACIÓN DE TELÉFONO ---
+    def clean_phone(self):
+        telefono = self.cleaned_data.get('phone')
+        
+        if not telefono:
+            return telefono 
+        
+        # 1. Limpieza básica
+        telefono_limpio = telefono.replace(" ", "").replace("-", "").replace("(", "").replace(")", "")
+        
+        # 2. Estandarización Inteligente (+569)
+        # Caso: 8 dígitos (ej: 87654321) -> +56987654321
+        if len(telefono_limpio) == 8 and telefono_limpio.isdigit():
+            telefono_limpio = f"+569{telefono_limpio}"
+            
+        # Caso: 9 dígitos empezando con 9 (ej: 987654321) -> +56987654321
+        elif len(telefono_limpio) == 9 and telefono_limpio.isdigit() and telefono_limpio.startswith('9'):
+            telefono_limpio = f"+56{telefono_limpio}"
+            
+        # Caso: 11 dígitos empezando con 569 -> +569...
+        elif len(telefono_limpio) == 11 and telefono_limpio.startswith('569') and telefono_limpio.isdigit():
+            telefono_limpio = f"+{telefono_limpio}"
+
+        # 3. Validación Final (Debe ser +569XXXXXXXX)
+        patron = re.compile(r'^\+569\d{8}$')
+        
+        if not patron.match(telefono_limpio):
+            raise ValidationError("Formato inválido. Ingrese un número chileno válido (Ej: 912345678).")
+            
+        return telefono_limpio
+
 
 class VoluntarioForm(ImageProcessingFormMixin, forms.ModelForm):
     fecha_nacimiento = forms.DateField(
-        widget=forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}),
+        widget=forms.DateInput(attrs={'type': 'date', 'class': 'form-control text-base font-regular'}),
         label="Fecha de Nacimiento",
         required=False
     )
     fecha_primer_ingreso = forms.DateField(
-        widget=forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}),
+        widget=forms.DateInput(attrs={'type': 'date', 'class': 'form-control text-base font-regular'}),
         label="Fecha Primer Ingreso",
         required=False
     )
@@ -72,16 +112,16 @@ class VoluntarioForm(ImageProcessingFormMixin, forms.ModelForm):
             'domicilio_numero', 'fecha_primer_ingreso', 'numero_registro_bomberil'
         ]
         widgets = {
-            'imagen': forms.ClearableFileInput(attrs={'class': 'form-control'}),
-            'nacionalidad': forms.Select(attrs={'class': 'form-control'}),
-            'profesion': forms.Select(attrs={'class': 'form-control'}),
-            'lugar_nacimiento': forms.TextInput(attrs={'class': 'form-control'}),
-            'genero': forms.Select(attrs={'class': 'form-control'}),
-            'estado_civil': forms.Select(attrs={'class': 'form-control'}),
-            'domicilio_comuna': forms.Select(attrs={'class': 'form-control'}),
-            'domicilio_calle': forms.TextInput(attrs={'class': 'form-control'}),
-            'domicilio_numero': forms.TextInput(attrs={'class': 'form-control'}),
-            'numero_registro_bomberil': forms.TextInput(attrs={'class': 'form-control'}),
+            'imagen': forms.ClearableFileInput(attrs={'class': 'form-control text-base font-regular'}),
+            'nacionalidad': forms.Select(attrs={'class': 'form-control text-base font-regular'}),
+            'profesion': forms.Select(attrs={'class': 'form-control text-base font-regular'}),
+            'lugar_nacimiento': forms.TextInput(attrs={'class': 'form-control text-base font-regular'}),
+            'genero': forms.Select(attrs={'class': 'form-control text-base font-regular'}),
+            'estado_civil': forms.Select(attrs={'class': 'form-control text-base font-regular'}),
+            'domicilio_comuna': forms.Select(attrs={'class': 'form-control text-base font-regular'}),
+            'domicilio_calle': forms.TextInput(attrs={'class': 'form-control text-base font-regular'}),
+            'domicilio_numero': forms.TextInput(attrs={'class': 'form-control text-base font-regular'}),
+            'numero_registro_bomberil': forms.TextInput(attrs={'class': 'form-control text-base font-regular'}),
         }
         labels = {
             'imagen': 'Foto de Perfil (Uniformado)',
@@ -106,8 +146,6 @@ class VoluntarioForm(ImageProcessingFormMixin, forms.ModelForm):
                 self.fields['fecha_primer_ingreso'].help_text = "Antigüedad registrada."
 
             # 3. Registro Bomberil
-            # Este a veces lo dejamos bloqueado siempre si queremos que SOLO lo ponga un admin,
-            # pero aplicaré tu regla: si está vacío, deja ponerlo.
             if self.instance.numero_registro_bomberil:
                 self.fields['numero_registro_bomberil'].disabled = True
                 self.fields['numero_registro_bomberil'].widget.attrs['readonly'] = True
@@ -124,20 +162,23 @@ class VoluntarioForm(ImageProcessingFormMixin, forms.ModelForm):
 # ==========================================================
 # 2. FORMULARIOS AUXILIARES (BITÁCORA Y OTROS)
 # ==========================================================
-# Se mantienen igual, incluyendo la validación de fechas de sanción.
 
 class ProfesionForm(forms.ModelForm):
     class Meta:
         model = Profesion
         fields = ['nombre']
-        widgets = {'nombre': forms.TextInput(attrs={'class': 'form-control'})}
+        widgets = {'nombre': forms.TextInput(attrs={'class': 'form-control text-base font-regular'})}
 
 class CargoForm(forms.ModelForm):
-    tipo_cargo = forms.ModelChoiceField(queryset=TipoCargo.objects.all().order_by('nombre'), widget=forms.Select(attrs={'class': 'form-control'}), label="Categoría del Rango")
+    tipo_cargo = forms.ModelChoiceField(
+        queryset=TipoCargo.objects.all().order_by('nombre'), 
+        widget=forms.Select(attrs={'class': 'form-control text-base font-regular'}), 
+        label="Categoría del Rango"
+    )
     class Meta:
         model = Cargo
         fields = ['nombre', 'tipo_cargo']
-        widgets = {'nombre': forms.TextInput(attrs={'class': 'form-control'})}
+        widgets = {'nombre': forms.TextInput(attrs={'class': 'form-control text-base font-regular'})}
 
 class HistorialCargoForm(forms.ModelForm):
     # Campo extra para activar el modo histórico
@@ -148,18 +189,26 @@ class HistorialCargoForm(forms.ModelForm):
     )
     # Fecha fin explícita (solo para históricos)
     fecha_fin = forms.DateField(
-        widget=forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}), 
+        widget=forms.DateInput(attrs={'type': 'date', 'class': 'form-control text-base font-regular'}), 
         label="Fecha de Término", 
         required=False
     )
     
-    fecha_inicio = forms.DateField(widget=forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}), label="Fecha de Nombramiento", required=True)
-    cargo = forms.ModelChoiceField(queryset=Cargo.objects.all().order_by('nombre'), widget=forms.Select(attrs={'class': 'form-control'}), label="Cargo / Rango")
+    fecha_inicio = forms.DateField(
+        widget=forms.DateInput(attrs={'type': 'date', 'class': 'form-control text-base font-regular'}), 
+        label="Fecha de Nombramiento", 
+        required=True
+    )
+    cargo = forms.ModelChoiceField(
+        queryset=Cargo.objects.all().order_by('nombre'), 
+        widget=forms.Select(attrs={'class': 'form-control text-base font-regular'}), 
+        label="Cargo / Rango"
+    )
     
     class Meta:
         model = HistorialCargo
         fields = ['cargo', 'fecha_inicio', 'fecha_fin', 'ambito'] # Agregamos fecha_fin
-        widgets = {'ambito': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Ej: Compañía, Comandancia'})}
+        widgets = {'ambito': forms.TextInput(attrs={'class': 'form-control text-base font-regular', 'placeholder': 'Ej: Compañía, Comandancia'})}
 
     def clean(self):
         cleaned_data = super().clean()
@@ -167,7 +216,7 @@ class HistorialCargoForm(forms.ModelForm):
         fecha_fin = cleaned_data.get('fecha_fin')
         fecha_inicio = cleaned_data.get('fecha_inicio')
 
-        # Si es histórico, EXIGIMOS fecha de término (un cargo antiguo debe estar cerrado)
+        # Si es histórico, EXIGIMOS fecha de término
         if es_antiguo and not fecha_fin:
             self.add_error('fecha_fin', "Si es un registro histórico, debe indicar cuándo terminó el cargo.")
         
@@ -184,13 +233,24 @@ class HistorialReconocimientoForm(forms.ModelForm):
         label="¿Es un premio antiguo?",
         initial=False
     )
-    fecha_evento = forms.DateField(widget=forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}), label="Fecha de Otorgamiento", required=True)
-    tipo_reconocimiento = forms.ModelChoiceField(queryset=TipoReconocimiento.objects.all().order_by('nombre'), widget=forms.Select(attrs={'class': 'form-control'}), label="Tipo de Premio")
+    fecha_evento = forms.DateField(
+        widget=forms.DateInput(attrs={'type': 'date', 'class': 'form-control text-base font-regular'}), 
+        label="Fecha de Otorgamiento", 
+        required=True
+    )
+    tipo_reconocimiento = forms.ModelChoiceField(
+        queryset=TipoReconocimiento.objects.all().order_by('nombre'), 
+        widget=forms.Select(attrs={'class': 'form-control text-base font-regular'}), 
+        label="Tipo de Premio"
+    )
     
     class Meta:
         model = HistorialReconocimiento
         fields = ['tipo_reconocimiento', 'fecha_evento', 'ambito', 'descripcion_personalizada']
-        widgets = {'ambito': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Ej: Municipalidad'}), 'descripcion_personalizada': forms.Textarea(attrs={'class': 'form-control', 'rows': 2})}
+        widgets = {
+            'ambito': forms.TextInput(attrs={'class': 'form-control text-base font-regular', 'placeholder': 'Ej: Municipalidad'}), 
+            'descripcion_personalizada': forms.Textarea(attrs={'class': 'form-control text-base font-regular', 'rows': 2})
+        }
 
 
 class HistorialSancionForm(forms.ModelForm):
@@ -199,19 +259,34 @@ class HistorialSancionForm(forms.ModelForm):
         label="¿Es una sanción antigua?",
         initial=False
     )
-    # ... (Resto de los campos igual que antes)
-    fecha_evento = forms.DateField(widget=forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}), label="Fecha de Sanción", required=True)
-    fecha_inicio_suspension = forms.DateField(widget=forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}), label="Inicio Suspensión", required=False)
-    fecha_fin_suspension = forms.DateField(widget=forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}), label="Fin Suspensión", required=False)
-    estacion_evento = forms.ModelChoiceField(queryset=Estacion.objects.all().order_by('nombre'), widget=forms.Select(attrs={'class': 'form-control'}), label="Estación que Sanciona")
+    fecha_evento = forms.DateField(
+        widget=forms.DateInput(attrs={'type': 'date', 'class': 'form-control text-base font-regular'}), 
+        label="Fecha de Sanción", 
+        required=True
+    )
+    fecha_inicio_suspension = forms.DateField(
+        widget=forms.DateInput(attrs={'type': 'date', 'class': 'form-control text-base font-regular'}), 
+        label="Inicio Suspensión", 
+        required=False
+    )
+    fecha_fin_suspension = forms.DateField(
+        widget=forms.DateInput(attrs={'type': 'date', 'class': 'form-control text-base font-regular'}), 
+        label="Fin Suspensión", 
+        required=False
+    )
+    estacion_evento = forms.ModelChoiceField(
+        queryset=Estacion.objects.all().order_by('nombre'), 
+        widget=forms.Select(attrs={'class': 'form-control text-base font-regular'}), 
+        label="Estación que Sanciona"
+    )
     
     class Meta:
         model = HistorialSancion
         fields = ['tipo_sancion', 'fecha_evento', 'estacion_evento', 'descripcion', 'fecha_inicio_suspension', 'fecha_fin_suspension', 'documento_adjunto']
         widgets = {
-            'tipo_sancion': forms.Select(attrs={'class': 'form-control'}), 
-            'descripcion': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}), 
-            'documento_adjunto': forms.ClearableFileInput(attrs={'class': 'form-control'})
+            'tipo_sancion': forms.Select(attrs={'class': 'form-control text-base font-regular'}), 
+            'descripcion': forms.Textarea(attrs={'class': 'form-control text-base font-regular', 'rows': 3}), 
+            'documento_adjunto': forms.ClearableFileInput(attrs={'class': 'form-control text-base font-regular'})
         }
         
     def clean(self):

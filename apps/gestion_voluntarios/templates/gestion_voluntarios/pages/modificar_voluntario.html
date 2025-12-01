@@ -18,14 +18,11 @@
             {# --- LÓGICA DE IMAGEN ROBUSTA --- #}
             {% if voluntario.imagen %}
                 <img src="{{ voluntario.imagen.url }}" alt="Foto actual" class="current-photo">
-                {# Texto de ayuda foto: Tamaño pequeño y regular (Reemplaza estilo inline) #}
                 <p class="text-sm font-regular" style="color: #666; margin-top: 10px;">Foto de perfil actual</p>
             {% else %}
-                {# Placeholder: Texto 3XL y Negrita para las iniciales #}
                 <div class="avatar-placeholder-large text-3xl font-bold">
                     {{ voluntario.usuario.first_name|slice:":1" }}{{ voluntario.usuario.last_name|slice:":1" }}
                 </div>
-                {# Texto de ayuda foto: Tamaño pequeño y regular #}
                 <p class="text-sm font-regular" style="color: #666; margin-top: 10px;">Sin foto de perfil asignada</p>
             {% endif %}
         </div>
@@ -35,7 +32,6 @@
 
             {% if usuario_form.non_field_errors or voluntario_form.non_field_errors %}
                 <div class="alert alert-danger">
-                    {# Texto de alerta: Tamaño base #}
                     <p class="text-base font-regular"><strong class="font-bold">Error al guardar:</strong> Por favor revise los siguientes errores:</p>
                     <div class="text-sm font-medium">
                         {{ usuario_form.non_field_errors }}
@@ -45,16 +41,20 @@
             {% endif %}
 
             <div class="form-section">
-                {# Título Sección: Tamaño XL y Negrita #}
                 <h2 class="text-xl font-bold">Datos de Acceso y Contacto</h2>
                 
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
                     {% for field in usuario_form %}
                         <div class="form-group" {% if field.name == 'email' %}style="grid-column: 1 / -1;"{% endif %}>
-                            {{ field.label_tag }}
+                            
+                            {# CAMBIO FINAL: text-base (Tamaño estándar) + font-bold (Negrita) #}
+                            <label for="{{ field.id_for_label }}" class="text-base font-bold" style="display:block; margin-bottom: 5px; color: #333;">
+                                {{ field.label }}:
+                            </label>
+                            
                             {{ field }}
+                            
                             {% if field.errors %}
-                                {# Error: Tamaño pequeño y Negrita #}
                                 <div class="error-message text-sm font-bold">{{ field.errors|first }}</div>
                             {% endif %}
                         </div>
@@ -63,7 +63,6 @@
             </div>
 
             <div class="form-section">
-                {# Título Sección: Tamaño XL y Negrita #}
                 <h2 class="text-xl font-bold">Información Bomberil y Personal</h2>
 
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
@@ -71,15 +70,17 @@
                         <div class="form-group" 
                              {% if field.name == 'imagen' or field.name == 'domicilio_calle' %}style="grid-column: 1 / -1;"{% endif %}>
                             
-                            {{ field.label_tag }}
+                            {# CAMBIO FINAL: text-base + font-bold #}
+                            <label for="{{ field.id_for_label }}" class="text-base font-bold" style="display:block; margin-bottom: 5px; color: #333;">
+                                {{ field.label }}:
+                            </label>
+                            
                             {{ field }}
                             
                             {% if field.errors %}
-                                {# Error: Tamaño pequeño y Negrita #}
                                 <div class="error-message text-sm font-bold">{{ field.errors|first }}</div>
                             {% endif %}
                             {% if field.help_text %}
-                                {# Ayuda: Texto extra pequeño y Regular #}
                                 <small class="help-text text-xs font-regular">{{ field.help_text }}</small>
                             {% endif %}
                         </div>
@@ -88,11 +89,9 @@
             </div>
 
             <div class="button-group">
-                {# Botón Cancelar: Tamaño Base y Medio #}
                 <a href="{% url 'gestion_voluntarios:ruta_ver_voluntario' id=voluntario.usuario.id %}" class="btn btn-secondary text-base font-medium">
                     <i class="fas fa-times" style="margin-right: 8px;"></i> Cancelar
                 </a>
-                {# Botón Guardar: Tamaño Base y Negrita #}
                 <button type="submit" class="btn btn-primary text-base font-bold">
                     <i class="fas fa-save" style="margin-right: 8px;"></i> Guardar Cambios
                 </button>
