@@ -4,7 +4,9 @@
 {% block titulo_ventana %}Crear Plan | Bomberos{% endblock %}
 
 {% block titulo_pagina %}
-    <i class="fas fa-plus-circle me-2"></i>Nuevo Plan de Mantenimiento
+    <span class="text-xl color_primario">
+        <i class="fas fa-plus-circle me-2"></i>Nuevo Plan de Mantenimiento
+    </span>
 {% endblock %}
 
 {% block contenido %}
@@ -13,7 +15,7 @@
         <div class="col-12 col-lg-8">
             <div class="card shadow-sm border-0">
                 <div class="card-header bg-white border-bottom py-3">
-                    <h5 class="card-title mb-0 text-primary fw-bold">Configuración del Plan</h5>
+                    <h5 class="card-title mb-0 text-primary font-bold text-lg">Configuración del Plan</h5>
                 </div>
                 <div class="card-body p-4">
                     
@@ -23,34 +25,34 @@
                         {# --- 1. Información Básica --- #}
                         <div class="row mb-3">
                             <div class="col-md-8">
-                                <label for="{{ form.nombre.id_for_label }}" class="form-label fw-bold">Nombre del Plan</label>
+                                <label for="{{ form.nombre.id_for_label }}" class="form-label font-bold text-sm">Nombre del Plan</label>
                                 {{ form.nombre }}
                                 {% if form.nombre.errors %}
-                                    <div class="text-danger fs_pequena mt-1">{{ form.nombre.errors.0 }}</div>
+                                    <div class="text-danger text-xs mt-1">{{ form.nombre.errors.0 }}</div>
                                 {% endif %}
-                                <div class="form-text">Ej: "Revisión de Mangueras - Martes"</div>
+                                <div class="form-text text-xs">Ej: "Revisión de Mangueras - Martes"</div>
                             </div>
                             <div class="col-md-4">
-                                <label for="{{ form.fecha_inicio.id_for_label }}" class="form-label fw-bold">Fecha Inicio</label>
+                                <label for="{{ form.fecha_inicio.id_for_label }}" class="form-label font-bold text-sm">Fecha Inicio</label>
                                 {{ form.fecha_inicio }}
                                 {% if form.fecha_inicio.errors %}
-                                    <div class="text-danger fs_pequena mt-1">{{ form.fecha_inicio.errors.0 }}</div>
+                                    <div class="text-danger text-xs mt-1">{{ form.fecha_inicio.errors.0 }}</div>
                                 {% endif %}
                             </div>
                         </div>
 
                         <div class="row mb-4 align-items-end">
                             <div class="col-md-6">
-                                <label for="{{ form.tipo_trigger.id_for_label }}" class="form-label fw-bold">Disparador (Trigger)</label>
+                                <label for="{{ form.tipo_trigger.id_for_label }}" class="form-label font-bold text-sm">Disparador (Trigger)</label>
                                 {{ form.tipo_trigger }}
                                 {% if form.tipo_trigger.errors %}
-                                    <div class="text-danger fs_pequena mt-1">{{ form.tipo_trigger.errors.0 }}</div>
+                                    <div class="text-danger text-xs mt-1">{{ form.tipo_trigger.errors.0 }}</div>
                                 {% endif %}
                             </div>
                             <div class="col-md-6">
                                 <div class="form-check form-switch mb-2">
                                     {{ form.activo_en_sistema }}
-                                    <label class="form-check-label" for="{{ form.activo_en_sistema.id_for_label }}">
+                                    <label class="form-check-label text-base" for="{{ form.activo_en_sistema.id_for_label }}">
                                         Plan Activo (Genera órdenes automáticas)
                                     </label>
                                 </div>
@@ -63,37 +65,37 @@
                         
                         {# SECCIÓN A: Configuración por TIEMPO #}
                         <div id="seccion-tiempo" class="config-section">
-                            <h6 class="text-secondary text-uppercase fs_pequena fw-bold mb-3">
+                            <h6 class="text-secondary text-uppercase text-xs font-bold mb-3">
                                 <i class="far fa-clock me-1"></i> Configuración de Tiempo
                             </h6>
                             
                             <div class="row g-3">
                                 <div class="col-md-4">
-                                    <label for="{{ form.intervalo.id_for_label }}" class="form-label">Cada cuánto (Intervalo)</label>
+                                    <label for="{{ form.intervalo.id_for_label }}" class="form-label text-sm">Cada cuánto (Intervalo)</label>
                                     {{ form.intervalo }}
                                 </div>
                                 <div class="col-md-4">
-                                    <label for="{{ form.frecuencia.id_for_label }}" class="form-label">Unidad de Tiempo</label>
+                                    <label for="{{ form.frecuencia.id_for_label }}" class="form-label text-sm">Unidad de Tiempo</label>
                                     {{ form.frecuencia }}
                                 </div>
                                 
                                 {# CAMPO EXTRA: Día de la semana (Solo visible si es SEMANAL) #}
                                 <div class="col-md-4 d-none" id="col-dia-semana">
-                                    <label for="{{ form.dia_semana.id_for_label }}" class="form-label text-primary fw-bold">
+                                    <label for="{{ form.dia_semana.id_for_label }}" class="form-label text-primary font-bold text-sm">
                                         ¿Qué día?
                                     </label>
                                     {{ form.dia_semana }}
-                                    <div class="form-text fs_pequena">Opcional. Prioriza este día.</div>
+                                    <div class="form-text text-xs">Opcional. Prioriza este día.</div>
                                 </div>
                             </div>
 
                             {% if form.intervalo.errors or form.frecuencia.errors %}
-                                <div class="alert alert-danger mt-2 py-1 fs_pequena">
+                                <div class="alert alert-danger mt-2 py-1 text-xs">
                                     {{ form.intervalo.errors }} {{ form.frecuencia.errors }}
                                 </div>
                             {% endif %}
 
-                            <div class="alert alert-info mt-3 py-2 fs_pequena color_blanco">
+                            <div class="alert alert-info mt-3 py-2 text-sm text-white">
                                 <i class="fas fa-info-circle me-1"></i>
                                 <span id="texto-ayuda-tiempo">Configure la frecuencia. Ej: Intervalo 1 + Semanal = Todas las semanas.</span>
                             </div>
@@ -101,20 +103,20 @@
 
                         {# SECCIÓN B: Configuración por USO #}
                         <div id="seccion-uso" class="config-section d-none">
-                            <h6 class="text-secondary text-uppercase fs_pequena fw-bold mb-3">
+                            <h6 class="text-secondary text-uppercase text-xs font-bold mb-3">
                                 <i class="fas fa-tachometer-alt me-1"></i> Configuración de Uso
                             </h6>
                             <div class="mb-3">
-                                <label for="{{ form.horas_uso_trigger.id_for_label }}" class="form-label">Disparar cada (Horas de Uso)</label>
+                                <label for="{{ form.horas_uso_trigger.id_for_label }}" class="form-label text-sm">Disparar cada (Horas de Uso)</label>
                                 <div class="input-group">
                                     {{ form.horas_uso_trigger }}
-                                    <span class="input-group-text">Hrs</span>
+                                    <span class="input-group-text text-sm">Hrs</span>
                                 </div>
                                 {% if form.horas_uso_trigger.errors %}
-                                    <div class="text-danger fs_pequena mt-1">{{ form.horas_uso_trigger.errors.0 }}</div>
+                                    <div class="text-danger text-xs mt-1">{{ form.horas_uso_trigger.errors.0 }}</div>
                                 {% endif %}
                             </div>
-                            <div class="alert alert-warning mt-3 py-2 fs_pequena">
+                            <div class="alert alert-warning mt-3 py-2 text-xs">
                                 <i class="fas fa-exclamation-triangle me-1"></i>
                                 El sistema monitoreará las horas acumuladas de cada activo y generará una orden cuando se cumpla el ciclo.
                             </div>
@@ -122,12 +124,16 @@
 
                         {# Botones de Acción #}
                         <div class="d-flex justify-content-end mt-5 gap-2">
-                            <a href="{% url 'gestion_mantenimiento:ruta_lista_planes' %}" class="btn btn-outline-secondary">
+                            <a href="{% url 'gestion_mantenimiento:ruta_lista_planes' %}" class="btn btn-outline-secondary text-base">
                                 Cancelar
                             </a>
-                            <button type="submit" class="btn btn-primary px-4">
+                            
+                            {# PERMISO: Gestionar Planes (Crear) #}
+                            {% if perms.gestion_mantenimiento.accion_gestion_mantenimiento_gestionar_planes %}
+                            <button type="submit" class="btn btn-primary px-4 text-base">
                                 <i class="fas fa-save me-1"></i> Guardar Plan
                             </button>
+                            {% endif %}
                         </div>
                     </form>
                 </div>

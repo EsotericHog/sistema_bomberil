@@ -67,6 +67,13 @@
     --color-blanco-transparente: rgba(255, 255, 255, 0.11);
     --color-amarillo: rgb(251, 201, 0);
     --color-morado: rgb(156, 30, 154);
+
+
+    --text-main:      #212529; 
+    --text-secondary: #6c757d; 
+    --brand-primary:  #0d6efd; 
+    --success:        #198754; 
+    --danger:         #dc3545;
     
     
     /* Dimensiones para estandarización */

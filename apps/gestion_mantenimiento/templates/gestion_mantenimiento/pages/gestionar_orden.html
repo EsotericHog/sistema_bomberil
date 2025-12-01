@@ -10,8 +10,8 @@
                 <i class="fas fa-arrow-left fa-lg"></i>
             </a>
             <div>
-                <span class="d-block">Ejecución de Orden <span class="text-muted">#{{ orden.id }}</span></span>
-                <small class="fs-6 text-muted fw-normal">
+                <span class="d-block text-xl font-bold color_primario">Ejecución de Orden <span class="text-muted">#{{ orden.id }}</span></span>
+                <small class="text-sm text-muted fw-normal">
                     {% if orden.plan_origen %}
                         {{ orden.plan_origen.nombre }}
                     {% else %}
@@ -24,13 +24,13 @@
         {# Badge de Estado Grande #}
         <div>
             {% if orden.estado == 'PENDIENTE' %}
-                <span class="badge bg-secondary fs-6 px-3 py-2">PENDIENTE</span>
+                <span class="badge bg-secondary text-sm px-3 py-2">PENDIENTE</span>
             {% elif orden.estado == 'EN_CURSO' %}
-                <span class="badge bg-warning text-dark fs-6 px-3 py-2"><i class="fas fa-spinner fa-spin me-2"></i>EN CURSO</span>
+                <span class="badge bg-warning text-dark text-sm px-3 py-2"><i class="fas fa-spinner fa-spin me-2"></i>EN CURSO</span>
             {% elif orden.estado == 'REALIZADA' %}
-                <span class="badge bg-success fs-6 px-3 py-2">REALIZADA</span>
+                <span class="badge bg-success text-sm px-3 py-2">REALIZADA</span>
             {% else %}
-                <span class="badge bg-dark fs-6 px-3 py-2">CANCELADA</span>
+                <span class="badge bg-dark text-sm px-3 py-2">CANCELADA</span>
             {% endif %}
         </div>
     </div>
@@ -45,15 +45,15 @@
             <div class="card shadow-sm border-0 h-100">
                 <div class="card-body">
                     <div class="d-flex justify-content-between align-items-end mb-2">
-                        <h6 class="text-muted text-uppercase small fw-bold mb-0">Progreso de Tareas</h6>
-                        <span class="fw-bold text-primary">{{ progreso.completados }} / {{ progreso.total }} Equipos</span>
+                        <h6 class="text-muted text-uppercase text-xs font-bold mb-0">Progreso de Tareas</h6>
+                        <span class="font-bold text-primary text-sm">{{ progreso.completados }} / {{ progreso.total }} Equipos</span>
                     </div>
                     <div class="progress" style="height: 10px;">
                         <div class="progress-bar bg-success" role="progressbar" style="width: {{ progreso.porcentaje }}%"></div>
                     </div>
                     
-                    <div class="mt-3 d-flex gap-4 text-small text-muted small">
-                        <div><i class="far fa-calendar me-1"></i> Programada: <strong>{{ orden.fecha_programada|date:"d M, Y" }}</strong></div>
+                    <div class="mt-3 d-flex gap-4 text-xs text-muted">
+                        <div><i class="far fa-calendar me-1"></i> Programada: <strong class="text-data-code">{{ orden.fecha_programada|date:"d M, Y" }}</strong></div>
                         <div><i class="far fa-user me-1"></i> Responsable: <strong>{{ orden.responsable.get_full_name|default:orden.responsable.email }}</strong></div>
                     </div>
                 </div>
@@ -64,33 +64,44 @@
         <div class="col-12 col-lg-4">
             <div class="card shadow-sm border-0 h-100 bg-light">
                 <div class="card-body d-flex flex-column justify-content-center align-items-stretch gap-2">
-                    {% if orden.estado == 'PENDIENTE' %}
-                        <button onclick="cambiarEstadoOrden('iniciar')" class="btn btn-primary btn-lg w-100 shadow-sm">
-                            <i class="fas fa-play me-2"></i> Iniciar Trabajo
-                        </button>
-                        <button onclick="cambiarEstadoOrden('cancelar')" class="btn btn-outline-danger w-100">
-                            Cancelar Orden
-                        </button>
-                    {% elif orden.estado == 'EN_CURSO' %}
-                        {% if progreso.porcentaje == 100 %}
-                            <button onclick="cambiarEstadoOrden('finalizar')" class="btn btn-success btn-lg w-100 shadow-sm pulse-animation">
-                                <i class="fas fa-check-circle me-2"></i> Finalizar Orden
+                    
+                    {# PERMISO: Gestionar Orden (Iniciar/Finalizar) #}
+                    {% if perms.gestion_mantenimiento.accion_gestion_mantenimiento_gestionar_ordenes %}
+                    
+                        {% if orden.estado == 'PENDIENTE' %}
+                            <button onclick="cambiarEstadoOrden('iniciar')" class="btn btn-primary btn-lg w-100 shadow-sm text-base">
+                                <i class="fas fa-play me-2"></i> Iniciar Trabajo
                             </button>
-                        {% else %}
-                            <button disabled class="btn btn-secondary w-100" title="Complete todas las tareas primero">
-                                Finalizar Orden (Incompleta)
+                            <button onclick="cambiarEstadoOrden('cancelar')" class="btn btn-outline-danger w-100 text-base">
+                                Cancelar Orden
                             </button>
+                        {% elif orden.estado == 'EN_CURSO' %}
+                            {% if progreso.porcentaje == 100 %}
+                                <button onclick="cambiarEstadoOrden('finalizar')" class="btn btn-success btn-lg w-100 shadow-sm pulse-animation text-base">
+                                    <i class="fas fa-check-circle me-2"></i> Finalizar Orden
+                                </button>
+                            {% else %}
+                                <button disabled class="btn btn-secondary w-100 text-base" title="Complete todas las tareas primero">
+                                    Finalizar Orden (Incompleta)
+                                </button>
+                            {% endif %}
+                            <div class="text-center text-xs text-muted mt-1">La orden está activa. Registre las tareas abajo.</div>
+                            {# Opción de escape para la orden vacía #}
+                            {% if progreso.total == 0 %}
+                                 <button onclick="cambiarEstadoOrden('cancelar')" class="btn btn-outline-danger btn-sm w-100 mt-2 text-sm">
+                                    Cancelar (Orden Vacía)
+                                </button>
+                            {% endif %}
+                        {% elif orden.estado == 'REALIZADA' %}
+                            <div class="alert alert-success mb-0 text-center py-2 text-sm">
+                                <i class="fas fa-check-double me-2"></i> Orden cerrada el {{ orden.fecha_cierre|date:"d/m/Y" }}
+                            </div>
                         {% endif %}
-                        <div class="text-center small text-muted mt-1">La orden está activa. Registre las tareas abajo.</div>
-                        {# Opción de escape para la orden bugueada (vacia) #}
-                        {% if progreso.total == 0 %}
-                             <button onclick="cambiarEstadoOrden('cancelar')" class="btn btn-outline-danger btn-sm w-100 mt-2">
-                                Cancelar (Orden Vacía)
-                            </button>
-                        {% endif %}
-                    {% elif orden.estado == 'REALIZADA' %}
-                        <div class="alert alert-success mb-0 text-center py-2">
-                            <i class="fas fa-check-double me-2"></i> Orden cerrada el {{ orden.fecha_cierre|date:"d/m/Y" }}
+
+                    {% else %}
+                        {# Si no tiene permiso, mensaje informativo #}
+                        <div class="alert alert-light border text-center mb-0 text-sm text-muted">
+                            <i class="fas fa-lock me-2"></i> Solo lectura
                         </div>
                     {% endif %}
                 </div>
@@ -100,40 +111,43 @@
 
     {# --- 3. SECCIÓN DE AÑADIR ACTIVOS (SOLO VISIBLE SI ESTÁ PENDIENTE) --- #}
     {% if orden.estado == 'PENDIENTE' %}
-    <div class="card shadow-sm border-0 mb-4 bg-primary text-white bg-opacity-100" 
-         style="background: linear-gradient(45deg, #1a237e 0%, #283593 100%);">
-        <div class="card-body p-4">
-            <h5 class="card-title fw-bold mb-3 text-white">
-                <i class="fas fa-plus-circle me-2"></i>Añadir Activos a la Orden
-            </h5>
-            <p class="small text-white-50 mb-3">Busque activos por nombre o código para añadirlos a esta orden de trabajo.</p>
-            
-            <div class="position-relative">
-                <div class="input-group">
-                    <span class="input-group-text border-0 bg-white text-muted">
-                        <i class="fas fa-search"></i>
-                    </span>
-                    <input type="text" id="buscador-activos" class="form-control border-0 py-2 shadow-none" 
-                           placeholder="Escriba código (E1-ACT...) o nombre del equipo..." autocomplete="off">
-                    {% csrf_token %} 
-                </div>
+        {# PERMISO: Gestionar Orden (Añadir activos) #}
+        {% if perms.gestion_mantenimiento.accion_gestion_mantenimiento_gestionar_ordenes %}
+        <div class="card shadow-sm border-0 mb-4 bg-primary text-white bg-opacity-100" 
+             style="background: linear-gradient(45deg, #1a237e 0%, #283593 100%);">
+            <div class="card-body p-4">
+                <h5 class="card-title font-bold mb-3 text-white text-lg">
+                    <i class="fas fa-plus-circle me-2"></i>Añadir Activos a la Orden
+                </h5>
+                <p class="text-sm text-white-50 mb-3">Busque activos por nombre o código para añadirlos a esta orden de trabajo.</p>
                 
-                <div id="resultados-busqueda" class="list-group position-absolute w-100 mt-1 shadow-lg d-none" 
-                     style="z-index: 1050; max-height: 300px; overflow-y: auto;">
+                <div class="position-relative">
+                    <div class="input-group">
+                        <span class="input-group-text border-0 bg-white text-muted">
+                            <i class="fas fa-search"></i>
+                        </span>
+                        <input type="text" id="buscador-activos" class="form-control border-0 py-2 shadow-none text-base" 
+                               placeholder="Escriba código (E1-ACT...) o nombre del equipo..." autocomplete="off">
+                        {% csrf_token %} 
+                    </div>
+                    
+                    <div id="resultados-busqueda" class="list-group position-absolute w-100 mt-1 shadow-lg d-none" 
+                         style="z-index: 1050; max-height: 300px; overflow-y: auto;">
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
+        {% endif %}
     {% endif %}
 
     {# --- 4. Lista de Tareas (Activos) --- #}
     <div class="card shadow-sm border-0">
         <div class="card-header bg-white py-3">
-            <h6 class="card-title mb-0 fw-bold text-secondary">Checklist de Equipos</h6>
+            <h6 class="card-title mb-0 font-bold text-secondary text-lg">Checklist de Equipos</h6>
         </div>
         <div class="table-responsive">
             <table class="table table-hover align-middle mb-0">
-                <thead class="bg-light small text-uppercase">
+                <thead class="bg-light text-sm text-uppercase">
                     <tr>
                         <th class="ps-4">Equipo / Activo</th>
                         <th>Ubicación</th>
@@ -142,62 +156,67 @@
                         <th class="text-end pe-4">Acción</th>
                     </tr>
                 </thead>
-                <tbody>
+                <tbody class="text-base">
                     {% for item in lista_activos_trabajo %}
                     <tr class="{% if item.registro %}bg-light{% endif %}">
                         <td class="ps-4">
                             <div class="d-flex align-items-center">
-                                <div class="me-3 text-center" style="width: 40px;">
+                                <div class="me-3 text-center" style="width: 60px;">
                                     {% if item.activo.producto.producto_global.imagen_thumb_small %}
-                                        <img src="{{ item.activo.producto.producto_global.imagen_thumb_small.url }}" class="rounded" width="40">
+                                        <img src="{{ item.activo.producto.producto_global.imagen_thumb_small.url }}" class="rounded" width="60">
                                     {% else %}
                                         <i class="fas fa-tools fa-lg text-muted opacity-50"></i>
                                     {% endif %}
                                 </div>
                                 <div>
-                                    <div class="fw-bold text-dark">{{ item.activo.producto.producto_global.nombre_oficial }}</div>
-                                    <div class="small text-muted font-monospace">{{ item.activo.codigo_activo }}</div>
+                                    <div class="font-bold text-dark text-base">{{ item.activo.producto.producto_global.nombre_oficial }}</div>
+                                    <div class="text-sm text-muted font-monospace text-data-code">{{ item.activo.codigo_activo }}</div>
                                 </div>
                             </div>
                         </td>
-                        <td class="text-muted small">
+                        <td class="text-muted text-xs">
                             {{ item.activo.compartimento.ubicacion.nombre|default:"--" }} > {{ item.activo.compartimento.nombre|default:"--" }}
                         </td>
                         <td>
-                            <span class="badge border text-dark fw-normal bg-white">{{ item.activo.estado.nombre }}</span>
+                            <span class="badge border text-dark fw-normal bg-white text-xs">{{ item.activo.estado.nombre }}</span>
                         </td>
                         <td>
                             {% if item.registro %}
                                 {% if item.registro.fue_exitoso %}
-                                    <span class="text-success fw-bold small"><i class="fas fa-check me-1"></i> OK</span>
+                                    <span class="text-success font-bold text-sm"><i class="fas fa-check me-1"></i> OK</span>
                                 {% else %}
-                                    <span class="text-danger fw-bold small"><i class="fas fa-times me-1"></i> Falló</span>
+                                    <span class="text-danger font-bold text-sm"><i class="fas fa-times me-1"></i> Falló</span>
                                 {% endif %}
                                 {% if item.registro.notas %}
                                     <i class="fas fa-comment-alt ms-2 text-muted" data-bs-toggle="tooltip" title="{{ item.registro.notas }}"></i>
                                 {% endif %}
                             {% else %}
-                                <span class="text-muted small">--</span>
+                                <span class="text-muted text-sm">--</span>
                             {% endif %}
                         </td>
                         <td class="text-end pe-4">
-                            {% if orden.estado == 'EN_CURSO' %}
-                                {% if item.registro %}
-                                    <button class="btn btn-sm btn-outline-secondary" onclick="abrirModalRegistro('{{ item.activo.id }}', '{{ item.activo.producto.producto_global.nombre_oficial }}', '{{ item.registro.notas|escapejs }}', '{{ item.registro.fue_exitoso|yesno:"true,false" }}')">
-                                        <i class="fas fa-edit"></i> Editar
+                            {# PERMISO: Gestionar Orden (Registrar Tareas) #}
+                            {% if perms.gestion_mantenimiento.accion_gestion_mantenimiento_gestionar_ordenes %}
+                                
+                                {% if orden.estado == 'EN_CURSO' %}
+                                    {% if item.registro %}
+                                        <button class="btn btn-sm btn-outline-secondary text-xs" onclick="abrirModalRegistro('{{ item.activo.id }}', '{{ item.activo.producto.producto_global.nombre_oficial }}', '{{ item.registro.notas|escapejs }}', '{{ item.registro.fue_exitoso|yesno:"true,false" }}')">
+                                            <i class="fas fa-edit"></i> Editar
+                                        </button>
+                                    {% else %}
+                                        <button class="btn btn-sm btn-primary px-3 text-xs" onclick="abrirModalRegistro('{{ item.activo.id }}', '{{ item.activo.producto.producto_global.nombre_oficial }}')">
+                                            Registrar <i class="fas fa-chevron-right ms-1"></i>
+                                        </button>
+                                    {% endif %}
+                                {% elif orden.estado == 'PENDIENTE' %}
+                                    {# Botón para Quitar (Solo en pendiente) #}
+                                    <button onclick="quitarActivo('{{ item.activo.id }}', '{{ item.activo.producto.producto_global.nombre_oficial }}')" class="btn btn-sm btn-outline-danger text-base" title="Quitar de la orden">
+                                        <i class="fas fa-times"></i>
                                     </button>
                                 {% else %}
-                                    <button class="btn btn-sm btn-primary px-3" onclick="abrirModalRegistro('{{ item.activo.id }}', '{{ item.activo.producto.producto_global.nombre_oficial }}')">
-                                        Registrar <i class="fas fa-chevron-right ms-1"></i>
-                                    </button>
+                                    <button disabled class="btn btn-sm btn-light text-muted border text-sm">--</button>
                                 {% endif %}
-                            {% elif orden.estado == 'PENDIENTE' %}
-                                {# Botón para Quitar (Solo en pendiente) #}
-                                <button onclick="quitarActivo('{{ item.activo.id }}', '{{ item.activo.producto.producto_global.nombre_oficial }}')" class="btn btn-sm btn-outline-danger" title="Quitar de la orden">
-                                    <i class="fas fa-times"></i>
-                                </button>
-                            {% else %}
-                                <button disabled class="btn btn-sm btn-light text-muted border">--</button>
+
                             {% endif %}
                         </td>
                     </tr>
@@ -208,46 +227,46 @@
     </div>
 </div>
 
-{# --- MODAL: Registrar Tarea (Igual que antes) --- #}
+{# --- MODAL: Registrar Tarea --- #}
 <div class="modal fade" id="modalRegistro" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content border-0 shadow">
             <div class="modal-header bg-primary text-white">
-                <h6 class="modal-title fw-bold"><i class="fas fa-clipboard-check me-2"></i>Registrar Mantenimiento</h6>
+                <h6 class="modal-title font-bold text-lg"><i class="fas fa-clipboard-check me-2"></i>Registrar Mantenimiento</h6>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body p-4">
                 <input type="hidden" id="modalActivoId">
-                <h5 id="modalActivoNombre" class="fw-bold mb-3 text-dark"></h5>
+                <h5 id="modalActivoNombre" class="font-bold mb-3 text-dark text-lg"></h5>
                 
                 <div class="mb-3">
-                    <label class="form-label fw-bold small text-uppercase text-secondary">Resultado</label>
+                    <label class="form-label font-bold text-xs text-uppercase text-secondary">Resultado</label>
                     <div class="d-flex gap-3">
                         <div class="form-check card-radio-select flex-fill">
                             <input class="form-check-input d-none" type="radio" name="resultadoMantencion" id="resExito" value="true" checked>
                             <label class="card p-3 text-center border cursor-pointer transition-all" for="resExito">
                                 <i class="fas fa-check-circle fs-4 text-success mb-2"></i>
-                                <div class="fw-bold small">Exitoso</div>
+                                <div class="font-bold text-sm">Exitoso</div>
                             </label>
                         </div>
                         <div class="form-check card-radio-select flex-fill">
                             <input class="form-check-input d-none" type="radio" name="resultadoMantencion" id="resFallo" value="false">
                             <label class="card p-3 text-center border cursor-pointer transition-all" for="resFallo">
                                 <i class="fas fa-times-circle fs-4 text-danger mb-2"></i>
-                                <div class="fw-bold small">Fallido</div>
+                                <div class="font-bold text-sm">Fallido</div>
                             </label>
                         </div>
                     </div>
                 </div>
 
                 <div class="mb-3">
-                    <label for="modalNotas" class="form-label fw-bold small text-uppercase text-secondary">Notas / Observaciones</label>
-                    <textarea class="form-control" id="modalNotas" rows="3" placeholder="Detalle lo realizado (ej: Cambio de bujía, limpieza, pruebas OK)..."></textarea>
+                    <label for="modalNotas" class="form-label font-bold text-xs text-uppercase text-secondary">Notas / Observaciones</label>
+                    <textarea class="form-control text-base" id="modalNotas" rows="3" placeholder="Detalle lo realizado (ej: Cambio de bujía, limpieza, pruebas OK)..."></textarea>
                 </div>
             </div>
             <div class="modal-footer bg-light border-0">
-                <button type="button" class="btn btn-link text-muted text-decoration-none" data-bs-dismiss="modal">Cancelar</button>
-                <button type="button" class="btn btn-primary px-4" onclick="guardarRegistro()">Guardar Registro</button>
+                <button type="button" class="btn btn-link text-muted text-decoration-none text-sm" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary px-4 text-base" onclick="guardarRegistro()">Guardar Registro</button>
             </div>
         </div>
     </div>
@@ -266,6 +285,12 @@
         70% { box-shadow: 0 0 0 10px rgba(25, 135, 84, 0); }
         100% { box-shadow: 0 0 0 0 rgba(25, 135, 84, 0); }
     }
+
+    /* FIX para Tom Select (Si se llegara a usar en algún futuro o extensión) */
+    .ts-wrapper .ts-control { font-size: var(--font-base) !important; line-height: 1.5 !important; }
+    .ts-dropdown .option { font-size: var(--font-base) !important; }
+    .ts-wrapper.multi .ts-control > div { font-size: var(--font-base) !important; }
+    .ts-control input { font-size: inherit !important; }
 </style>
 
 {% endblock %}
@@ -279,10 +304,16 @@
     let modalRegistro;
 
     document.addEventListener('DOMContentLoaded', () => {
-        modalRegistro = new bootstrap.Modal(document.getElementById('modalRegistro'));
+        // Inicializar modal
+        var modalEl = document.getElementById('modalRegistro');
+        if(modalEl) {
+            modalRegistro = new bootstrap.Modal(modalEl);
+        }
+        
+        // Tooltips
         [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]')).map(el => new bootstrap.Tooltip(el));
         
-        // Logica Buscador (Solo si existe el elemento, es decir, si es PENDIENTE)
+        // Logica Buscador (Solo si existe el elemento, es decir, si es PENDIENTE y tiene permisos)
         const inputBuscador = document.getElementById('buscador-activos');
         const divResultados = document.getElementById('resultados-busqueda');
 
@@ -303,19 +334,19 @@
                         .then(data => {
                             divResultados.innerHTML = '';
                             if (data.results.length === 0) {
-                                divResultados.innerHTML = '<div class="list-group-item text-muted small">No se encontraron activos disponibles.</div>';
+                                divResultados.innerHTML = '<div class="list-group-item text-muted text-sm">No se encontraron activos disponibles.</div>';
                             } else {
                                 data.results.forEach(item => {
                                     const btn = document.createElement('button');
                                     btn.className = 'list-group-item list-group-item-action d-flex justify-content-between align-items-center px-3 py-2';
                                     btn.innerHTML = `
                                         <div class="d-flex align-items-center">
-                                            <div class="me-3 text-center" style="width:30px;">
-                                                ${item.imagen_url ? `<img src="${item.imagen_url}" class="rounded" width="30">` : '<i class="fas fa-box text-muted"></i>'}
+                                            <div class="me-3 text-center" style="width:60px;">
+                                                ${item.imagen_url ? `<img src="${item.imagen_url}" class="rounded" width="60">` : '<i class="fas fa-box text-muted"></i>'}
                                             </div>
                                             <div>
-                                                <div class="fw-bold small">${item.nombre}</div>
-                                                <div class="text-muted extra-small font-monospace" style="font-size:0.75rem;">${item.codigo}</div>
+                                                <div class="font-bold text-base">${item.nombre}</div>
+                                                <div class="text-muted text-sm font-monospace text-data-code" style="font-size:0.75rem;">${item.codigo}</div>
                                             </div>
                                         </div>
                                         <span class="badge bg-primary rounded-pill"><i class="fas fa-plus"></i></span>

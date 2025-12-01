@@ -22,38 +22,64 @@ class PlanMantenimientoForm(forms.ModelForm):
         ]
         widgets = {
             'nombre': forms.TextInput(attrs={
-                'class': 'form-control', 
-                'placeholder': 'Ej: Mantenimiento Preventivo Motosierras'
+                'class': 'form-control form-control-sm text-base', 
+                'placeholder': 'Ej: Mantenimiento Preventivo Motosierras',
+                'autocomplete': 'off'
             }),
             'fecha_inicio': forms.DateInput(attrs={
-                'class': 'form-control',
+                'class': 'form-control form-control-sm text-base',
                 'type': 'date'
             }),
             'tipo_trigger': forms.Select(attrs={
-                'class': 'form-select',
+                'class': 'form-select form-select-sm text-base',
                 'id': 'id_tipo_trigger'
             }),
             'frecuencia': forms.Select(attrs={
-                'class': 'form-select',
+                'class': 'form-select form-select-sm text-base',
                 'id': 'id_frecuencia' # ID para JS
             }),
             'intervalo': forms.NumberInput(attrs={
-                'class': 'form-control',
+                'class': 'form-control form-control-sm text-base',
                 'min': '1'
             }),
             'dia_semana': forms.Select(attrs={
-                'class': 'form-select',
+                'class': 'form-select form-select-sm text-base',
                 'id': 'id_dia_semana' # ID para JS
             }),
             'horas_uso_trigger': forms.NumberInput(attrs={
-                'class': 'form-control',
+                'class': 'form-control form-control-sm text-base',
                 'placeholder': 'Ej: 50.0',
                 'step': '0.1'
             }),
             'activo_en_sistema': forms.CheckboxInput(attrs={
-                'class': 'form-check-input'
+                'class': 'form-check-input' # Los checkbox suelen heredar tamaño del contenedor o label
             }),
         }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        
+        # --- MEJORA VISUAL: Etiquetas legibles para Selects ---
+        # Reemplazamos el "---------" por defecto de Django por textos de ayuda
+        
+        # Diccionario campo -> texto placeholder
+        placeholders = {
+            'tipo_trigger': 'Seleccione un disparador...',
+            'frecuencia': 'Seleccione unidad de tiempo...',
+            'dia_semana': 'Seleccione día (opcional)...',
+        }
+
+        for field_name, label in placeholders.items():
+            if field_name in self.fields:
+                field = self.fields[field_name]
+                # Verificamos si el campo tiene opciones (choices)
+                if hasattr(field, 'choices'):
+                    # Convertimos a lista mutable
+                    choices = list(field.choices)
+                    # Si la primera opción es la vacía (valor '' o None)
+                    if choices and choices[0][0] in [None, '']:
+                        choices[0] = ('', label)
+                        field.choices = choices
 
     def clean(self):
         """
@@ -110,11 +136,11 @@ class OrdenCorrectivaForm(forms.ModelForm):
         fields = ['fecha_programada', 'responsable']
         widgets = {
             'fecha_programada': forms.DateInput(attrs={
-                'class': 'form-control',
+                'class': 'form-control form-control-sm text-base',
                 'type': 'date'
             }),
             'responsable': forms.Select(attrs={
-                'class': 'form-select'
+                'class': 'form-select form-select-sm text-base'
             }),
         }
 
@@ -127,3 +153,6 @@ class OrdenCorrectivaForm(forms.ModelForm):
         # Mejora Visual: Etiqueta más clara
         self.fields['fecha_programada'].label = "Fecha de Ejecución"
         self.fields['fecha_programada'].help_text = "Fecha estimada para realizar la reparación."
+
+        # Mejora Visual: Placeholder para el select de responsable (ForeignKey)
+        self.fields['responsable'].empty_label = "Seleccione un responsable..."

@@ -5,7 +5,7 @@
 {% block titulo_pagina %}
     <div class="d-flex align-items-center text-danger">
         <i class="fas fa-exclamation-triangle me-3"></i>
-        <span>Eliminar Plan de Mantenimiento</span>
+        <span class="text-xl font-bold">Eliminar Plan de Mantenimiento</span>
     </div>
 {% endblock %}
 
@@ -23,21 +23,21 @@
                         </span>
                     </div>
 
-                    <h3 class="fw-bold mb-3">¿Estás seguro?</h3>
+                    <h3 class="font-bold mb-3 text-lg">¿Estás seguro?</h3>
                     
-                    <p class="lead text-muted mb-4">
+                    <p class="text-base text-muted mb-4">
                         Estás a punto de eliminar el plan:
                         <br>
-                        <strong class="text-dark fs-4">"{{ object.nombre }}"</strong>
+                        <strong class="text-dark text-xl">"{{ object.nombre }}"</strong>
                     </p>
 
                     <div class="alert alert-warning text-start shadow-sm border-0 bg-warning bg-opacity-10">
-                        <h6 class="fw-bold text-warning-emphasis"><i class="fas fa-info-circle me-2"></i>Consecuencias:</h6>
-                        <ul class="mb-0 small text-muted">
+                        <h6 class="font-bold text-warning-emphasis text-base"><i class="fas fa-info-circle me-2"></i>Consecuencias:</h6>
+                        <ul class="mb-0 text-sm text-muted">
                             <li>Este plan dejará de generar órdenes automáticas.</li>
                             <li>La configuración de sus activos asignados se perderá.</li>
                             {% if ordenes_pendientes > 0 %}
-                                <li class="text-danger fw-bold mt-1">
+                                <li class="text-danger font-bold mt-1">
                                     ¡Atención! Hay {{ ordenes_pendientes }} orden(es) de trabajo activa(s) vinculada(s) a este plan.
                                     Estas órdenes NO se borrarán, pero quedarán desvinculadas.
                                 </li>
@@ -50,13 +50,16 @@
                     <form method="post" class="mt-5 d-flex justify-content-center gap-3">
                         {% csrf_token %}
                         
-                        <a href="{% url 'gestion_mantenimiento:ruta_lista_planes' %}" class="btn btn-lg btn-outline-secondary px-4">
+                        <a href="{% url 'gestion_mantenimiento:ruta_lista_planes' %}" class="btn btn-lg btn-outline-secondary px-4 text-base">
                             Cancelar
                         </a>
                         
-                        <button type="submit" class="btn btn-lg btn-danger px-4 fw-bold">
+                        {# PERMISO: Gestionar Planes (Eliminar) #}
+                        {% if perms.gestion_mantenimiento.accion_gestion_mantenimiento_gestionar_planes %}
+                        <button type="submit" class="btn btn-lg btn-danger px-4 font-bold text-base">
                             <i class="fas fa-trash-alt me-2"></i>Sí, Eliminar
                         </button>
+                        {% endif %}
                     </form>
 
                 </div>

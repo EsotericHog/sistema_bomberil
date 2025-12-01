@@ -8,7 +8,7 @@
         <a href="{% url 'gestion_mantenimiento:ruta_lista_planes' %}" class="btn btn-outline-light text-dark border-0 me-3" title="Volver">
             <i class="fas fa-arrow-left fa-lg"></i>
         </a>
-        <span>Editar Plan de Mantenimiento</span>
+        <span class="text-xl color_primario">Editar Plan de Mantenimiento</span>
     </div>
 {% endblock %}
 
@@ -18,7 +18,7 @@
         <div class="col-12 col-lg-8">
             
             {# Alerta informativa de edición #}
-            <div class="alert alert-warning border-0 shadow-sm d-flex align-items-center mb-4">
+            <div class="alert alert-warning border-0 shadow-sm d-flex align-items-center mb-4 text-sm">
                 <i class="fas fa-info-circle fs-4 me-3 opacity-50"></i>
                 <div>
                     <strong>Nota:</strong> Editar los parámetros de frecuencia afectará cuándo se generarán las futuras órdenes de trabajo.
@@ -27,8 +27,8 @@
 
             <div class="card shadow-sm border-0">
                 <div class="card-header bg-white border-bottom py-3 d-flex justify-content-between align-items-center">
-                    <h5 class="card-title mb-0 text-primary fw-bold">Modificar Configuración</h5>
-                    <span class="badge bg-light text-secondary border">ID: {{ form.instance.pk }}</span>
+                    <h5 class="card-title mb-0 text-primary font-bold text-lg">Modificar Configuración</h5>
+                    <span class="badge bg-light text-secondary border text-xs">ID: {{ form.instance.pk }}</span>
                 </div>
                 <div class="card-body p-4">
                     
@@ -38,33 +38,33 @@
                         {# --- 1. Información Básica --- #}
                         <div class="row mb-3">
                             <div class="col-md-8">
-                                <label for="{{ form.nombre.id_for_label }}" class="form-label fw-bold">Nombre del Plan</label>
+                                <label for="{{ form.nombre.id_for_label }}" class="form-label font-bold text-sm">Nombre del Plan</label>
                                 {{ form.nombre }}
                                 {% if form.nombre.errors %}
-                                    <div class="text-danger small mt-1">{{ form.nombre.errors.0 }}</div>
+                                    <div class="text-danger text-xs mt-1">{{ form.nombre.errors.0 }}</div>
                                 {% endif %}
                             </div>
                             <div class="col-md-4">
-                                <label for="{{ form.fecha_inicio.id_for_label }}" class="form-label fw-bold">Fecha Inicio</label>
+                                <label for="{{ form.fecha_inicio.id_for_label }}" class="form-label font-bold text-sm">Fecha Inicio</label>
                                 {{ form.fecha_inicio }}
                                 {% if form.fecha_inicio.errors %}
-                                    <div class="text-danger small mt-1">{{ form.fecha_inicio.errors.0 }}</div>
+                                    <div class="text-danger text-xs mt-1">{{ form.fecha_inicio.errors.0 }}</div>
                                 {% endif %}
                             </div>
                         </div>
 
                         <div class="row mb-4 align-items-end">
                             <div class="col-md-6">
-                                <label for="{{ form.tipo_trigger.id_for_label }}" class="form-label fw-bold">Disparador (Trigger)</label>
+                                <label for="{{ form.tipo_trigger.id_for_label }}" class="form-label font-bold text-sm">Disparador (Trigger)</label>
                                 {{ form.tipo_trigger }}
                                 {% if form.tipo_trigger.errors %}
-                                    <div class="text-danger small mt-1">{{ form.tipo_trigger.errors.0 }}</div>
+                                    <div class="text-danger text-xs mt-1">{{ form.tipo_trigger.errors.0 }}</div>
                                 {% endif %}
                             </div>
                             <div class="col-md-6">
                                 <div class="form-check form-switch mb-2">
                                     {{ form.activo_en_sistema }}
-                                    <label class="form-check-label" for="{{ form.activo_en_sistema.id_for_label }}">
+                                    <label class="form-check-label text-base" for="{{ form.activo_en_sistema.id_for_label }}">
                                         Plan Activo en Sistema
                                     </label>
                                 </div>
@@ -77,37 +77,37 @@
                         
                         {# SECCIÓN A: Configuración por TIEMPO #}
                         <div id="seccion-tiempo" class="config-section">
-                            <h6 class="text-secondary text-uppercase small fw-bold mb-3">
+                            <h6 class="text-secondary text-uppercase text-xs font-bold mb-3">
                                 <i class="far fa-clock me-1"></i> Configuración de Tiempo
                             </h6>
                             
                             <div class="row g-3">
                                 <div class="col-md-4">
-                                    <label for="{{ form.intervalo.id_for_label }}" class="form-label">Cada cuánto (Intervalo)</label>
+                                    <label for="{{ form.intervalo.id_for_label }}" class="form-label text-sm">Cada cuánto (Intervalo)</label>
                                     {{ form.intervalo }}
                                 </div>
                                 <div class="col-md-4">
-                                    <label for="{{ form.frecuencia.id_for_label }}" class="form-label">Unidad de Tiempo</label>
+                                    <label for="{{ form.frecuencia.id_for_label }}" class="form-label text-sm">Unidad de Tiempo</label>
                                     {{ form.frecuencia }}
                                 </div>
                                 
                                 {# CAMPO EXTRA: Día de la semana (Solo visible si es SEMANAL) #}
                                 <div class="col-md-4 d-none" id="col-dia-semana">
-                                    <label for="{{ form.dia_semana.id_for_label }}" class="form-label text-primary fw-bold">
+                                    <label for="{{ form.dia_semana.id_for_label }}" class="form-label text-primary font-bold text-sm">
                                         ¿Qué día?
                                     </label>
                                     {{ form.dia_semana }}
-                                    <div class="form-text small">Opcional. Prioriza este día.</div>
+                                    <div class="form-text text-xs">Opcional. Prioriza este día.</div>
                                 </div>
                             </div>
 
                             {% if form.intervalo.errors or form.frecuencia.errors %}
-                                <div class="alert alert-danger mt-2 py-1 small">
+                                <div class="alert alert-danger mt-2 py-1 text-xs">
                                     {{ form.intervalo.errors }} {{ form.frecuencia.errors }}
                                 </div>
                             {% endif %}
 
-                            <div class="alert alert-info mt-3 py-2 small">
+                            <div class="alert alert-info mt-3 py-2 text-xs">
                                 <i class="fas fa-info-circle me-1"></i>
                                 <span id="texto-ayuda-tiempo">Configure la frecuencia. Ej: Intervalo 1 + Semanal = Todas las semanas.</span>
                             </div>
@@ -115,20 +115,20 @@
 
                         {# SECCIÓN B: Configuración por USO #}
                         <div id="seccion-uso" class="config-section d-none">
-                            <h6 class="text-secondary text-uppercase small fw-bold mb-3">
+                            <h6 class="text-secondary text-uppercase text-xs font-bold mb-3">
                                 <i class="fas fa-tachometer-alt me-1"></i> Configuración de Uso
                             </h6>
                             <div class="mb-3">
-                                <label for="{{ form.horas_uso_trigger.id_for_label }}" class="form-label">Disparar cada (Horas de Uso)</label>
+                                <label for="{{ form.horas_uso_trigger.id_for_label }}" class="form-label text-sm">Disparar cada (Horas de Uso)</label>
                                 <div class="input-group">
                                     {{ form.horas_uso_trigger }}
-                                    <span class="input-group-text">Hrs</span>
+                                    <span class="input-group-text text-sm">Hrs</span>
                                 </div>
                                 {% if form.horas_uso_trigger.errors %}
-                                    <div class="text-danger small mt-1">{{ form.horas_uso_trigger.errors.0 }}</div>
+                                    <div class="text-danger text-xs mt-1">{{ form.horas_uso_trigger.errors.0 }}</div>
                                 {% endif %}
                             </div>
-                            <div class="alert alert-warning mt-3 py-2 small">
+                            <div class="alert alert-warning mt-3 py-2 text-xs">
                                 <i class="fas fa-exclamation-triangle me-1"></i>
                                 El sistema monitoreará las horas acumuladas de cada activo.
                             </div>
@@ -136,18 +136,27 @@
 
                         {# Botones de Acción #}
                         <div class="d-flex justify-content-between mt-5">
-                            {# Botón "Peligroso" a la izquierda #}
-                            <a href="{% url 'gestion_mantenimiento:ruta_eliminar_plan' form.instance.pk %}" class="btn btn-outline-danger border-0">
+                            
+                            {# PERMISO: Gestionar Planes (Eliminar) #}
+                            {% if perms.gestion_mantenimiento.accion_gestion_mantenimiento_gestionar_planes %}
+                            <a href="{% url 'gestion_mantenimiento:ruta_eliminar_plan' form.instance.pk %}" class="btn btn-outline-danger border-0 text-base">
                                 <i class="fas fa-trash-alt me-1"></i> Eliminar Plan
                             </a>
+                            {% else %}
+                            <div></div> {# Espaciador si no hay botón eliminar #}
+                            {% endif %}
 
                             <div class="d-flex gap-2">
-                                <a href="{% url 'gestion_mantenimiento:ruta_lista_planes' %}" class="btn btn-outline-secondary">
+                                <a href="{% url 'gestion_mantenimiento:ruta_lista_planes' %}" class="btn btn-outline-secondary text-base">
                                     Cancelar
                                 </a>
-                                <button type="submit" class="btn btn-primary px-4">
+                                
+                                {# PERMISO: Gestionar Planes (Guardar) #}
+                                {% if perms.gestion_mantenimiento.accion_gestion_mantenimiento_gestionar_planes %}
+                                <button type="submit" class="btn btn-primary px-4 text-base">
                                     <i class="fas fa-save me-1"></i> Guardar Cambios
                                 </button>
+                                {% endif %}
                             </div>
                         </div>
                     </form>
