@@ -106,16 +106,9 @@
                         
                         {# Total Permisos (de la anotación) #}
                         <td class="text-center">
-                            {% if rol.nombre == "ADMINISTRADOR" and not rol.estacion %}
-                                <span class="badge bg-info text-dark fst-italic text-xs" 
-                                      title="Este rol tiene acceso total (Superusuario)">
-                                    Todos
-                                </span>
-                            {% else %}
-                                <span class="badge bg-dark rounded-pill text-xs">
-                                    {{ rol.permisos_count }}
-                                </span>
-                            {% endif %}
+                            <span class="badge bg-dark rounded-pill text-xs">
+                                {{ rol.permisos_count }}
+                            </span>
                         </td>
 
                         {# Acciones (tu menú original) #}

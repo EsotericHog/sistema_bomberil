@@ -1348,10 +1348,22 @@ class UsuarioAsignarRolesView(BaseEstacionMixin, CustomPermissionRequiredMixin, 
         """
         Retorna el QuerySet de todos los roles que esta estación PUEDE usar.
         (Roles Globales + Roles creados en esta estación).
+
+        SEGURIDAD: 
+        Excluye el rol 'Administrador' si el usuario actual no es superusuario.
+        Esto protege tanto la visualización (GET) como la asignación (POST).
         """
-        return Rol.objects.filter(
+        queryset = Rol.objects.filter(
             Q(estacion__isnull=True) | Q(estacion=self.estacion_activa_id)
         ).order_by('nombre')
+
+        # --- VALIDACIÓN DE SUPERUSUARIO ---
+        if not self.request.user.is_superuser:
+            # Si no es superuser, ocultamos el rol "Administrador" (case-insensitive)
+            queryset = queryset.exclude(nombre__iexact="Administrador")
+            
+        return queryset
+
 
 
     # --- 3. Contexto ---
