@@ -1,6 +1,7 @@
 import base64
 import qrcode
 import csv 
+import json
 from io import BytesIO
 from django.shortcuts import render, redirect, get_object_or_404
 from django.views import View
@@ -689,10 +690,34 @@ class EliminarAlergiaPacienteView(SubElementoMedicoBaseView):
 
 # --- MEDICAMENTOS ---
 class MedicoMedicamentosView(SubElementoMedicoBaseView):
+    def get_units_map(self):
+        """
+        Helper para generar un JSON que mapea ID_MEDICAMENTO -> UNIDAD.
+        Analiza el final del nombre (ej: '... 500 mg') para detectar la unidad.
+        """
+        # Las mismas claves que definiste en forms.py
+        unidades_validas = ['mg', 'ml', 'gr', 'mcg', 'puff', 'comp', 'cap', 'gotas', 'amp', 'ui', 'unid']
+        
+        mapa = {}
+        medicamentos = Medicamento.objects.all()
+        
+        for med in medicamentos:
+            nombre = med.nombre.lower().strip()
+            for u in unidades_validas:
+                # Verificamos si termina con la unidad (ej: " paracetamol 500 mg")
+                # El espacio antes de {u} es clave para no confundir 'mg' con 'omg'
+                if nombre.endswith(f" {u}"):
+                    mapa[med.id] = u
+                    break
+        
+        return json.dumps(mapa)
     def get(self, request, pk):
         ficha = self.get_ficha(pk)
         return render(request, "gestion_medica/pages/medicamentos_paciente.html", {
-            'ficha': ficha, 'medicamentos_paciente': ficha.medicamentos.select_related('medicamento'), 'form': FichaMedicaMedicamentoForm()
+            'ficha': ficha, 
+            'medicamentos_paciente': ficha.medicamentos.select_related('medicamento'), 
+            'form': FichaMedicaMedicamentoForm(),
+            'units_map': self.get_units_map()# <--- PASAMOS EL MAPA AL TEMPLATE
         })
 
     def post(self, request, pk):
@@ -712,7 +737,12 @@ class MedicoMedicamentosView(SubElementoMedicoBaseView):
                 messages.error(request, f"Error al asignar medicamento: {str(e)}")
 
         messages.error(request, "Error al asignar medicamento. Revisa los datos.")
-        return render(request, "gestion_medica/pages/medicamentos_paciente.html", {'ficha': ficha, 'medicamentos_paciente': ficha.medicamentos.all(), 'form': form})
+        return render(request, "gestion_medica/pages/medicamentos_paciente.html", {
+            'ficha': ficha, 
+            'medicamentos_paciente': ficha.medicamentos.all(), 
+            'form': form,
+            'units_map': self.get_units_map() # <--- NO OLVIDAR PASARLO AQUÍ TAMBIÉN POR SI FALLA        
+        })
 
 
 

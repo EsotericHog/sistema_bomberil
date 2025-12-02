@@ -4,6 +4,21 @@
 {% block titulo_ventana %}Medicamentos del Paciente{% endblock %}
 
 {% block contenido %}
+<style>
+    .select-sin-flecha {
+        background-image: none !important; /* Quita la flecha SVG de Bootstrap */
+        padding-right: 0.75rem !important; /* Recupera el espacio a la derecha */
+        appearance: none;                  /* Quita la flecha nativa del navegador */
+        -webkit-appearance: none;
+        -moz-appearance: none;
+        cursor: pointer;                   /* Mantiene el cursor de mano */
+    }
+    
+    /* Opcional: Color de fondo suave al pasar el mouse para indicar que es clickable */
+    .select-sin-flecha:hover {
+        background-color: #f8f9fa;
+    }
+</style>
 <div class="container-fluid">
 
     <div class="card border-0 shadow-sm mb-4 bg-gradient-info text-white overflow-hidden" style="border-radius: 15px;">
@@ -45,33 +60,38 @@
                         {% csrf_token %}
                         
                         <div class="mb-4">
-                            <label class="form-label text-muted font-weight-bold small text-uppercase">Nombre del Medicamento</label>
-                            <div class="input-group input-group-lg shadow-sm rounded-pill overflow-hidden border input-group-focus-info">
+                            <label class="form-label text-muted font-weight-bold small text-uppercase">Medicamento</label>
+                            <div class="input-group input-group-lg shadow-sm rounded-pill border input-group-focus-info">
                                 <span class="input-group-text bg-white border-0 text-info-custom ps-4">
                                     <i class="fas fa-capsules"></i>
                                 </span>
                                 {{ form.medicamento }}
                             </div>
                             {% if form.medicamento.errors %}
-                                <div class="text-danger small mt-2 ms-3 fw-bold">
-                                    <i class="fas fa-exclamation-circle me-1"></i> {{ form.medicamento.errors.0 }}
-                                </div>
+                                <div class="text-danger small mt-2 ms-3 fw-bold">{{ form.medicamento.errors.0 }}</div>
                             {% endif %}
-                            <div class="form-text ms-3 mt-1 small text-muted">Seleccione del catálogo de farmacia.</div>
                         </div>
 
                         <div class="mb-4">
-                            <label class="form-label text-muted font-weight-bold small text-uppercase">Dosis y Frecuencia</label>
+                            <label class="form-label text-muted font-weight-bold small text-uppercase">2. Dosis</label>
                             <div class="input-group input-group-lg shadow-sm rounded-pill overflow-hidden border input-group-focus-info">
                                 <span class="input-group-text bg-white border-0 text-info-custom ps-4">
-                                    <i class="fas fa-stopwatch"></i>
+                                    <i class="fas fa-flask"></i>
                                 </span>
-                                {{ form.dosis_frecuencia }}
-                            </div>
-                            <div class="form-text ms-3 mt-2 small text-muted">
-                                <i class="fas fa-info-circle me-1"></i> Ej: 500mg cada 8 horas.
-                            </div>
+                                {{ form.cantidad }}
+                                {{ form.unidad }} </div>
                         </div>
+
+                        <div class="mb-4">
+                            <label class="form-label text-muted font-weight-bold small text-uppercase">3. Frecuencia</label>
+                            <div class="input-group input-group-lg shadow-sm rounded-pill overflow-hidden border input-group-focus-info">
+                                <span class="input-group-text bg-white border-0 text-info-custom ps-4">
+                                    <i class="fas fa-clock"></i>&nbsp;Cada
+                                </span>
+                                {{ form.freq_numero }}
+                                {{ form.freq_tiempo }} </div>
+                        </div>
+                        
 
                         <div class="d-grid mt-5">
                             <button type="submit" class="btn btn-info-custom w-100 btn-lg rounded-pill shadow-sm hover-elevate-info fw-bold py-3 text-white">
@@ -164,30 +184,78 @@
 
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        // 1. Limpieza visual de inputs (tu código existente)
+        // 1. Limpieza visual de inputs
         const inputs = document.querySelectorAll('input, select');
         inputs.forEach(input => {
-            // Evitamos agregar la clase clean al select de búsqueda para que TomSelect lo maneje mejor
             if (!input.classList.contains('select-busqueda')) {
                 input.classList.add('form-control-clean');
             }
         });
 
-        // 2. INICIALIZAR TOM SELECT (Buscador)
-        // Buscamos el elemento por la clase que pusimos en el forms.py
-        const selectMedicamento = document.querySelector('.select-busqueda');
+        // 2. MAPA DE UNIDADES (Inyectado desde Django)
+        const mapUnits = {{ units_map|safe }};
+        const selectUnidad = document.getElementById('id_unidad');
         
-        if (selectMedicamento) {
-            new TomSelect(selectMedicamento, {
-                create: false,              // No permitir crear nuevos, solo seleccionar existentes
-                sortField: {
-                    field: "text",
-                    direction: "asc"
-                },
+        // Función para gestionar el bloqueo
+        function bloquearUnidad(valor) {
+            // Nombre para el input oculto
+            const hiddenId = 'unidad_hidden_input';
+            let hiddenInput = document.getElementById(hiddenId);
+
+            if (valor) {
+                // A) BLOQUEAR: Si hay unidad detectada
+                selectUnidad.value = valor;
+                selectUnidad.classList.add('bg-light'); // Gris visual
+                selectUnidad.style.pointerEvents = 'none'; // No clickable
+                selectUnidad.setAttribute('readonly', true); // Solo lectura
+                
+                // Truco para enviar el dato aunque el select parezca bloqueado:
+                // Creamos un input oculto con el mismo nombre 'unidad'
+                if (!hiddenInput) {
+                    hiddenInput = document.createElement('input');
+                    hiddenInput.type = 'hidden';
+                    hiddenInput.name = 'unidad'; // El nombre que espera Django forms.py
+                    hiddenInput.id = hiddenId;
+                    selectUnidad.parentNode.appendChild(hiddenInput);
+                    
+                    // Al "deshabilitar" el select real, su valor no se envía,
+                    // así que enviamos el del oculto en su lugar.
+                    selectUnidad.disabled = true; 
+                }
+                hiddenInput.value = valor;
+
+            } else {
+                // B) DESBLOQUEAR: Si no hay unidad (medicamento manual o sin mapeo)
+                selectUnidad.disabled = false;
+                selectUnidad.classList.remove('bg-light');
+                selectUnidad.style.pointerEvents = 'auto';
+                selectUnidad.removeAttribute('readonly');
+                
+                // Borramos el input oculto para que valga lo que diga el select
+                if (hiddenInput) hiddenInput.remove();
+            }
+        }
+
+        // 3. INICIALIZAR TOM SELECT
+        const selectBuscable = document.querySelector('.select-busqueda');
+        
+        if (selectBuscable) {
+            new TomSelect(selectBuscable, {
+                create: false,
+                sortField: { field: "text", direction: "asc" },
                 placeholder: 'Escriba para buscar...',
                 allowEmptyOption: true,
                 maxOptions: 50,
-                dropdownParent: 'body'              // Limite de resultados para rendimiento
+                dropdownParent: 'body',
+                
+                onChange: function(value) {
+                    // Si encontramos el ID en el mapa, bloqueamos. Si no, liberamos.
+                    if (value && mapUnits[value]) {
+                        bloquearUnidad(mapUnits[value]);
+                    } else {
+                        bloquearUnidad(null); // Desbloquear si no tiene unidad definida
+                    }
+                }
             });
         }
     });

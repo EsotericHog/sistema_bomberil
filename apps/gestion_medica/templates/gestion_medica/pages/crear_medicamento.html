@@ -1,134 +1,129 @@
 {% extends 'gestion_medica/layouts/base.html' %}
 {% load static %}
 
-{% block titulo_ventana %}Nuevo Medicamento{% endblock %}
-{% block titulo_pagina %}Agregar al Catálogo{% endblock %}
+{% block titulo_ventana %}Gestión de Medicamentos{% endblock %}
 
 {% block contenido %}
-<div class="container-fluid py-4">
+<div class="container-fluid">
     <div class="row justify-content-center">
-        <div class="col-lg-6 col-md-8">
-
-            <div class="panel catalog-form" style="--catalog-color: #20c997; --catalog-text-color: white;">
-
-                <div class="panel-header">
-                    <i class="fa-solid fa-pills me-2 text-2xl"></i>
-                    <h3 class="text-xl font-bold mb-0">Crear Nuevo Medicamento</h3>
+        <div class="col-md-9 col-lg-7">
+            <div class="card shadow-lg border-0" style="border-radius: 15px;">
+                
+                <div class="card-header bg-gradient-info text-white py-3 border-0" style="border-top-left-radius: 15px; border-top-right-radius: 15px;">
+                    <h4 class="mb-0 fs_x_grande font-bold">
+                        <i class="fas fa-prescription-bottle-alt me-2"></i>
+                        {% if form.instance.pk %}Editar{% else %}Nuevo{% endif %} Medicamento
+                    </h4>
                 </div>
 
-                <div class="panel-body">
-
-                    <form method="post" id="formMedicamento" class="form-container">
-                        {% csrf_token %}
-
-                        <div class="d-none">
-                            {{ form.nombre }}
-                        </div>
-
-                        {% if form.nombre.errors %}
-                        <div class="alert-custom-error d-flex align-items-center mb-4">
-                            <i class="fa-solid fa-circle-exclamation fs-3 me-3"></i>
+                <div class="card-body p-4 bg-white">
+                    
+                    <div class="alert alert-info border-0 bg-info-soft text-info-custom mb-4 rounded-3">
+                        <div class="d-flex">
+                            <i class="fas fa-info-circle fa-lg me-3 mt-1"></i>
                             <div>
-                                <strong class="d-block font-bold text-base">No se pudo guardar el medicamento:</strong>
-                                <ul class="mb-0 ps-3 text-sm font-medium">
-                                    <li>{{ form.nombre.errors.0 }}</li>
-                                </ul>
+                                <h6 class="fs_normal font-bold mb-0">Nombre Automático</h6>
+                                <p class="mb-0 fs_pequena text-muted">El sistema generará el nombre final combinando los datos. <br>Ejemplo: <strong>"Warfarina 5 mg [ANTICOAGULANTE]"</strong>.</p>
                             </div>
                         </div>
-                        {% endif %}
+                    </div>
 
-                        <div class="form-group mb-3">
-                            <label class="form-label text-sm font-bold">Nombre del Medicamento *</label>
-                            <input type="text" id="visualNombre" class="form-control text-base font-regular" placeholder="Ej: Paracetamol" required>
+                    <form method="post" class="needs-validation" novalidate>
+                        {% csrf_token %}
+                        
+                        <div class="mb-4">
+                            <label class="form-label text-muted font-bold fs_normal text-uppercase mb-2">1. Principio Activo</label>
+                            <div class="input-group input-group-lg shadow-sm rounded-pill border input-group-focus-info">
+                                <span class="input-group-text bg-white border-0 text-info-custom ps-4">
+                                    <i class="fas fa-capsules"></i>
+                                </span>
+                                {{ form.nombre_base }}
+                            </div>
+                            {% if form.nombre_base.errors %}
+                                <div class="text-danger fs_pequena mt-1 ms-3 font-bold">{{ form.nombre_base.errors.0 }}</div>
+                            {% endif %}
                         </div>
 
-                        <div class="form-group mb-3">
-                            <label class="form-label text-sm font-bold">Dosis *</label>
-                            <div class="input-group">
-                                <input type="text" id="visualDosis" class="form-control text-base font-regular" placeholder="500" required>
-                                <span class="input-group-text bg-light text-sm font-medium">mg</span>
+                        <div class="form-group mb-4">
+                            <label class="form-label text-muted font-bold fs_normal text-uppercase mb-2">2. Dosis / Presentación</label>
+                            <div class="input-group shadow-sm rounded-pill overflow-hidden border input-group-focus-info">
+                                <span class="input-group-text bg-white border-0 text-info-custom ps-4">
+                                    <i class="fas fa-flask"></i>
+                                </span>
+                                {{ form.concentracion }}
+                                {{ form.unidad }}
                             </div>
                         </div>
 
                         <div class="form-group mb-4">
-                            <label class="form-label text-sm font-bold">Laboratorio / Marca (Opcional)</label>
-                            <input type="text" id="visualLab" class="form-control text-base font-regular" placeholder="Ej: Chile, Bagó">
+                            <label class="form-label text-warning font-bold fs_normal text-uppercase mb-2">
+                                <i class="fas fa-exclamation-triangle me-1"></i> Clasificación Triage
+                            </label>
+                            
+                            <div class="input-group shadow-sm rounded-pill border input-group-focus-warning">
+                                <span class="input-group-text bg-white border-0 text-warning ps-4">
+                                    <i class="fas fa-shield-heart"></i>
+                                </span>
+                                {{ form.clasificacion_riesgo }}
+                            </div>
                         </div>
+                    
 
-                        <div class="alert alert-light border text-sm text-muted mb-4 font-medium">
-                            <i class="fa-solid fa-eye me-1"></i>
-                            <strong>Se guardará como:</strong>
-                            <span id="vistaPrevia" class="font-bold text-success">---</span>
-                        </div>
+                        {% if form.non_field_errors %}
+                            <div class="alert alert-danger rounded-3 shadow-sm mt-4">
+                                <i class="fas fa-exclamation-triangle me-2"></i> 
+                                <span class="fs_normal font-bold">{{ form.non_field_errors.0 }}</span>
+                            </div>
+                        {% endif %}
 
-                        <div class="form-actions text-end">
+                        <div class="form-actions text-end mt-5 pt-3 border-top">
                             <a href="{% url 'gestion_medica:ruta_lista_medicamentos' %}"
-                               class="btn btn-outline-secondary btn-lg catalog-btn me-2 text-base font-bold">
-                                <i class="fa-solid fa-times me-1"></i> Cancelar
+                               class="btn btn-outline-secondary fs_normal font-bold me-2" 
+                               style="padding: 10px 20px;">
+                                <i class="fas fa-times me-1"></i> Cancelar
                             </a>
 
-                            <button type="submit" class="btn btn-catalog-turquoise btn-lg catalog-btn text-base font-bold">
-                                <i class="fa-solid fa-save me-1"></i> Guardar
+                            <button type="submit" class="btn fs_normal font-bold text-white" 
+                                    style="padding: 10px 20px; background-color: #36b9cc; border-color: #36b9cc;">
+                                <i class="fas fa-save me-1"></i> Guardar Medicamento
                             </button>
                         </div>
-
                     </form>
-
                 </div>
             </div>
-
         </div>
     </div>
 </div>
 
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-
-    const inputReal = document.querySelector('[name="nombre"]');
-    const vNombre = document.getElementById('visualNombre');
-    const vDosis = document.getElementById('visualDosis');
-    const vLab = document.getElementById('visualLab');
-    const vistaPrevia = document.getElementById('vistaPrevia');
-
-    if (inputReal.value) {
-        let texto = inputReal.value;
-
-        if (texto.includes("(")) {
-            const partesLab = texto.split("(");
-            vLab.value = partesLab[1].replace(")", "").trim();
-            texto = partesLab[0].trim();
-        }
-
-        const partes = texto.split(" ");
-        if (partes.length > 1) {
-            const posibleDosis = partes.pop();
-            if (/\d/.test(posibleDosis)) {
-                vDosis.value = posibleDosis.replace("mg", "").replace("g", "").trim();
-                vNombre.value = partes.join(" ");
-            } else {
-                vNombre.value = texto;
-            }
-        } else {
-            vNombre.value = texto;
-        }
-
-        actualizarReal();
-    }
-
-    function actualizarReal() {
-        let resultado = vNombre.value;
-
-        if (vDosis.value) resultado += ` ${vDosis.value}mg`;
-        if (vLab.value) resultado += ` (${vLab.value})`;
-
-        inputReal.value = resultado;
-        vistaPrevia.textContent = resultado || "---";
-    }
-
-    vNombre.addEventListener("input", actualizarReal);
-    vDosis.addEventListener("input", actualizarReal);
-    vLab.addEventListener("input", actualizarReal);
-});
+    document.addEventListener('DOMContentLoaded', function() {
+        // Mantenemos la limpieza visual de los inputs
+        const inputs = document.querySelectorAll('input, select');
+        inputs.forEach(input => {
+            input.classList.add('form-control-clean');
+            input.classList.add('border-0');
+            input.classList.add('bg-transparent'); 
+            // Aseguramos que el texto dentro del input también respete la tipografía
+            input.classList.add('fs_normal'); 
+        });
+    });
 </script>
+
+<style>
+    /* Efecto Hover para el botón personalizado */
+    button[type="submit"]:hover {
+        filter: brightness(90%); /* Oscurece un poco al pasar el mouse */
+        color: white !important;
+    }
+
+    /* Ajuste para que los inputs se vean alineados y limpios */
+    .input-group .form-control, .input-group .form-select, .input-group-text {
+        border-color: #5dd2e1;
+    }
+    .form-control:focus, .form-select:focus {
+        border-color: var(--catalog-color);
+        box-shadow: 0 0 0 0.25rem rgba(54, 185, 204, 0.25);
+    }
+</style>
 
 {% endblock %}
