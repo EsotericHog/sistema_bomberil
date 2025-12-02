@@ -29,7 +29,7 @@ class CustomUserManager(BaseUserManager):
         
         is_superuser = extra_fields.get('is_superuser')
 
-        user=self.model(rut=rut, email=email.lower(), first_name=first_name.upper(), last_name=last_name.upper(), **extra_fields)
+        user=self.model(rut=rut, email=email.lower(), first_name=first_name, last_name=last_name, **extra_fields)
         user.set_password(password)
         user.save(using=self._db)
 
