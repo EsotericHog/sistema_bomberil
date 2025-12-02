@@ -1,0 +1,113 @@
+{% extends 'core_admin/layouts/base.html' %}
+{% load static %}
+
+{% block titulo_ventana %}Categorías | Taxonomías{% endblock %}
+{% block titulo_pagina %}Gestión de Categorías{% endblock %}
+
+{% block contenido %}
+<div class="container-fluid mt-4">
+
+    <div class="card shadow-sm border-0 mb-4">
+        <div class="card-body d-flex justify-content-between align-items-center">
+            <div>
+                <h5 class="mb-0 font-bold text-secondary text-lg">Categorías Definidas</h5>
+                <small class="text-muted text-xs">{{ kpi_total }} categorías en el sistema</small>
+            </div>
+            <a href="{% url 'core_admin:ruta_crear_categoria' %}" class="btn btn-success font-bold text-sm">
+                <i class="fas fa-plus-circle me-2"></i>Nueva Categoría
+            </a>
+        </div>
+    </div>
+
+    <div class="card shadow-sm border-0">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="bg-light">
+                    <tr>
+                        <th class="ps-4 text-sm font-bold" style="width: 15%;">Código</th>
+                        <th class="text-sm font-bold" style="width: 25%;">Nombre</th>
+                        <th class="text-sm font-bold" style="width: 30%;">Descripción</th>
+                        <th class="text-center text-sm font-bold">Uso</th>
+                        <th class="text-end pe-4 text-sm font-bold">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for cat in categorias %}
+                    <tr>
+                        <td class="ps-4">
+                            {% if cat.codigo %}
+                                {# APLICACIÓN DE REGLA PARA DATOS/CÓDIGOS #}
+                                <span class="badge bg-light text-dark border text-data-code text-xs">
+                                    {{ cat.codigo }}
+                                </span>
+                            {% else %}
+                                <span class="text-muted text-sm fst-italic">-</span>
+                            {% endif %}
+                        </td>
+
+                        <td class="font-bold text-dark text-base">
+                            {{ cat.nombre }}
+                        </td>
+                        
+                        <td class="text-muted text-xs">
+                            {{ cat.descripcion|default:"-"|truncatechars:60 }}
+                        </td>
+                        
+                        <td class="text-center">
+                            {% if cat.total_productos > 0 %}
+                                <span class="badge bg-primary bg-opacity-10 text-primary border border-primary text-xs font-medium">
+                                    <i class="fas fa-box me-1"></i>{{ cat.total_productos }}
+                                </span>
+                            {% else %}
+                                <span class="badge bg-light text-muted border text-xs font-medium">0</span>
+                            {% endif %}
+                        </td>
+
+                        <td class="text-end pe-4">
+                            <div class="btn-group">
+                                <a href="{% url 'core_admin:ruta_editar_categoria' cat.pk %}" class="btn btn-sm btn-outline-secondary text-base" title="Editar">
+                                    <i class="fas fa-pencil-alt"></i>
+                                </a>
+                                
+                                {% if cat.total_productos > 0 %}
+                                    <span class="d-inline-block" tabindex="0" data-bs-toggle="tooltip" title="En uso: Contiene {{ cat.total_productos }} productos.">
+                                        <button class="btn btn-sm btn-outline-danger text-base" disabled style="pointer-events: none;">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </span>
+                                {% else %}
+                                    <a href="{% url 'core_admin:ruta_eliminar_categoria' cat.pk %}" class="btn btn-sm btn-outline-danger text-base" title="Eliminar">
+                                        <i class="fas fa-trash"></i>
+                                    </a>
+                                {% endif %}
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="5" class="text-center py-5 text-muted text-base">
+                            No hay categorías registradas en el sistema.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        
+        {% if is_paginated %}
+        <div class="card-footer bg-white py-3">
+            {% include 'core_admin/layouts/paginacion.html' %}
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function(){
+        var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+        var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+            return new bootstrap.Tooltip(tooltipTriggerEl)
+        })
+    });
+</script>
+{% endblock %}

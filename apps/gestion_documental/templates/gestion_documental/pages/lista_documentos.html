@@ -1,0 +1,353 @@
+{% extends 'gestion_documental/layouts/base.html' %}
+{% load static %}
+
+{% block titulo_ventana %}Archivo Histórico{% endblock %}
+{% block titulo_pagina %}{% endblock %}
+
+{% block contenido %}
+<div class="container-fluid mt-4">
+    
+    {# --- BARRA DE HERRAMIENTAS Y FILTROS --- #}
+    <div class="card mb-4 shadow-sm">
+        <div class="card-body py-3">
+            <form method="GET" action="{% url 'gestion_documental:ruta_lista_documentos' %}" class="row g-3 align-items-center">
+                
+                {# 1. Título y Contador #}
+                <div class="col-12 col-md-4">
+                    <h1 class="mb-0 text-xl font-bold text-dark">
+                        <i class="fas fa-history text-danger me-2"></i>Archivo Histórico
+                        <span class="badge bg-secondary ms-2 text-white text-xs font-medium" style="vertical-align: middle;">
+                            {{ page_obj.paginator.count }} docs
+                        </span>
+                    </h1>
+                </div>
+
+                {# 2. Buscador y Filtros #}
+                <div class="col-12 col-md-5 d-flex gap-2">
+                    <input type="text" name="q" class="form-control text-base font-regular" placeholder="Buscar por título o descripción..." value="{{ busqueda_actual|default:'' }}">
+                    
+                    <select name="tipo" class="form-select text-base font-regular" style="max-width: 150px;">
+                        <option value="todos">Todos los tipos</option>
+                        {% for tipo in tipos_documento %}
+                            <option value="{{ tipo.id }}" {% if filtro_actual == tipo.id %}selected{% endif %}>
+                                {{ tipo.nombre }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                    
+                    <button type="submit" class="btn btn-primary text-base font-medium">
+                        <i class="fas fa-search"></i>
+                    </button>
+                    
+                    {# Input oculto para mantener la vista actual al filtrar #}
+                    <input type="hidden" name="view" value="{{ view_mode }}">
+                </div>
+
+                {# 3. Botones de Acción y Cambio de Vista #}
+                <div class="col-12 col-md-3 text-end d-flex justify-content-end gap-2">
+                    <div class="btn-group" role="group">
+                        <a href="?view=grid&q={{ busqueda_actual|default:'' }}&tipo={{ filtro_actual }}" 
+                           class="btn btn-outline-secondary text-base {% if view_mode == 'grid' %}active{% endif %}" 
+                           title="Vista Galería">
+                            <i class="fas fa-th-large"></i>
+                        </a>
+                        <a href="?view=list&q={{ busqueda_actual|default:'' }}&tipo={{ filtro_actual }}" 
+                           class="btn btn-outline-secondary text-base {% if view_mode == 'list' %}active{% endif %}" 
+                           title="Vista Lista">
+                            <i class="fas fa-list"></i>
+                        </a>
+                    </div>
+
+                    {# PERMISO: GESTIONAR DOCUMENTOS (Crear/Subir) #}
+                    {% if perms.gestion_documental.accion_gestion_documental_gestionar_documentos %}
+                    <a href="{% url 'gestion_documental:ruta_subir_documento' %}" class="btn btn-danger text-base font-bold">
+                        <i class="fas fa-cloud-upload-alt me-1"></i> Subir
+                    </a>
+                    {% endif %}
+                </div>
+            </form>
+        </div>
+    </div>
+
+    {# --- CONTENIDO PRINCIPAL --- #}
+    
+    {% if view_mode == 'grid' %}
+        {# ================= VISTA GALERÍA (GRID) ================= #}
+        <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 g-4">
+            {% for doc in page_obj %}
+            <div class="col">
+                <div class="card h-100 shadow-sm hover-shadow transition-card">
+                    {# Zona de Imagen / Preview #}
+                    <div class="position-relative fondo_secundario" style="height: 220px; overflow: hidden;">
+                        {% if doc.preview_imagen %}
+                            <img src="{{ doc.preview_imagen.url }}" class="card-img-top h-100 w-100" style="object-fit: contain;" alt="Preview {{ doc.titulo }}">
+                        {% else %}
+                            {# IMAGEN STOCK / FALLBACK #}
+                            <img src="{% static 'gestion_documental/imagenes/stock_documento.png' %}" 
+                                 class="card-img-top h-100 w-100" 
+                                 style="object-fit: contain; opacity: 0.8;" 
+                                 alt="Sin imagen">
+                        {% endif %}
+                        
+                        {# Badge Tipo Flotante: Texto Pequeño (SM) y Peso Medio #}
+                        <span class="position-absolute top-0 end-0 badge bg-danger m-2 shadow-sm text-sm font-medium">
+                            {{ doc.tipo_documento.nombre }}
+                        </span>
+                    </div>
+
+                    <div class="card-body d-flex flex-column">
+                        {# Título Card: Texto Mediano (MD) y Negrita #}
+                        <h5 class="card-title text-truncate text-md font-bold mb-2" title="{{ doc.titulo }}">
+                            {{ doc.titulo }}
+                        </h5>
+
+                        {# BADGE DE CONFIDENCIALIDAD #}
+                        {% if doc.es_confidencial %}
+                            <span class="badge bg-warning text-dark border border-warning text-xs font-bold" title="Documento Confidencial">
+                                <i class="fas fa-lock"></i>
+                            </span>
+                        {% endif %}
+
+                        {# UBICACIÓN FÍSICA #}
+                        {% if doc.ubicacion_fisica %}
+                        <p class="text-xs font-medium text-muted mb-2">
+                            <i class="fas fa-map-marker-alt me-1"></i>{{ doc.ubicacion_fisica }}
+                        </p>
+                        {% endif %}
+                        
+                        {# Fecha: Texto Pequeño (SM) y formato código #}
+                        <p class="card-text text-sm text-data-code text-muted mb-2">
+                            <i class="far fa-calendar-alt me-1"></i> {{ doc.fecha_documento|date:"d/m/Y" }}
+                        </p>
+                        
+                        {# Descripción: Texto Pequeño (SM) y Regular #}
+                        <p class="card-text text-sm font-regular flex-grow-1">
+                            {{ doc.descripcion|truncatewords:10|default:"Sin descripción." }}
+                        </p>
+
+                        {# PALABRAS CLAVE / TAGS #}
+                        {% if doc.palabras_clave %}
+                        <div class="mb-3">
+                            {% for tag in doc.palabras_clave.split|slice:":3" %} 
+                            {# Truco: split convierte string a lista, slice muestra solo 3 tags #}
+                                <span class="badge bg-light text-dark border text-xs font-regular me-1">
+                                    {{ tag|cut:"," }} {# Limpiamos comas extra #}
+                                </span>
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+                        
+                        {# ACCIONES (GRID) #}
+                        <div class="mt-3 d-flex justify-content-between align-items-center">
+                            <small class="text-muted text-xs font-regular">
+                                <i class="fas fa-user-circle"></i> {{ doc.usuario_registra.get_full_name|default:"Sistema" }}
+                            </small>
+                            
+                            <div class="btn-group">
+                                {# LÓGICA DE ACCESO #}
+                                {# Si NO es confidencial O el usuario tiene permiso de gestionar, puede ver #}
+                                {% if not doc.es_confidencial or perms.gestion_documental.accion_gestion_documental_gestionar_documentos %}
+                                    <a href="{{ doc.archivo.url }}" target="_blank" class="btn btn-sm btn-outline-primary text-sm font-medium" title="Ver archivo">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                {% else %}
+                                    {# Acceso denegado (Solo visual) #}
+                                    <button class="btn btn-sm btn-outline-secondary text-sm font-medium disabled" title="Contenido Restringido" disabled>
+                                        <i class="fas fa-lock"></i>
+                                    </button>
+                                {% endif %}
+
+                                {# PERMISO: GESTIONAR DOCUMENTOS (Eliminar) #}
+                                {% if perms.gestion_documental.accion_gestion_documental_gestionar_documentos %}
+                                    <a href="{% url 'gestion_documental:ruta_eliminar_documento' doc.pk %}" class="btn btn-sm btn-outline-danger text-sm font-medium" title="Eliminar">
+                                        <i class="fas fa-trash-alt"></i>
+                                    </a>
+                                {% endif %}                               
+                            </div>
+                            
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% empty %}
+                <div class="col-12 w-100">
+                    {# Contenedor Flex para centrado perfecto vertical y horizontal #}
+                    <div class="d-flex flex-column align-items-center justify-content-center py-5 my-4 text-center">
+
+                        <i class="fas fa-folder-open mb-3 text-muted" style="font-size: 5rem; opacity: 0.3;"></i>
+
+                        <h3 class="text-lg font-bold text-dark mb-2">
+                            No se encontraron documentos
+                        </h3>
+
+                        <p class="text-base font-regular text-muted" style="max-width: 500px;">
+                            Aún no se han digitalizado documentos para esta estación o los filtros actuales no arrojaron resultados.
+                        </p>
+
+                        {# PERMISO: GESTIONAR DOCUMENTOS (Agregar en vacío) #}
+                        {% if perms.gestion_documental.accion_gestion_documental_gestionar_documentos %}
+                        <a href="{% url 'gestion_documental:ruta_subir_documento' %}" class="btn btn-outline-danger btn-sm mt-3 text-sm font-medium">
+                            <i class="fas fa-plus me-1"></i> Agregar Documento
+                        </a>
+                        {% endif %}
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+
+    {% else %}
+        {# ================= VISTA LISTA (TABLA) ================= #}
+        <div class="card shadow-sm">
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover table-striped align-middle mb-0">
+                        <thead class="bg-light">
+                            <tr>
+                                <th style="width: 80px;" class="text-center"><i class="fas fa-image text-muted"></i></th>
+                                {# Encabezados Tabla: Texto Pequeño (SM) y Negrita #}
+                                <th style="width: 35%;" class="text-sm font-bold">Documento</th>
+                                <th style="width: 15%;" class="text-sm font-bold">Tipo</th>
+                                <th style="width: 15%;" class="text-sm font-bold">Fecha Origen</th>
+                                <th style="width: 20%;" class="text-sm font-bold">Subido por</th>
+                                <th style="width: 10%;" class="text-center text-sm font-bold">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for doc in page_obj %}
+                            <tr>
+                                <td class="text-center p-1">
+                                    {% if doc.preview_imagen %}
+                                        <img src="{{ doc.preview_imagen.url }}" class="rounded border" style="width: 50px; height: 50px; object-fit: cover;">
+                                    {% else %}
+                                        {# IMAGEN STOCK PEQUEÑA (TABLA) #}
+                                        <img src="{% static 'gestion_documental/imagenes/stock_documento.png' %}" 
+                                             class="rounded border" 
+                                             style="width: 50px; height: 50px; object-fit: cover;"
+                                             alt="Sin preview">
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {# Título en tabla: Texto Base y Negrita #}
+                                    <div class="text-base font-bold text-dark">{{ doc.titulo }}</div>
+                                    {# Descripción: Texto Pequeño (SM) y Regular #}
+                                    <small class="text-muted d-block text-truncate text-sm font-regular" style="max-width: 300px;">
+                                        {{ doc.descripcion|default:"-" }}
+                                    </small>
+                                </td>
+                                <td>
+                                    {# Badge Tabla: Texto Extra Pequeño (XS) y Medio #}
+                                    <span class="badge bg-light text-dark border text-xs font-medium">{{ doc.tipo_documento.nombre }}</span>
+                                </td>
+                                <td class="text-sm text-data-code text-muted">
+                                    <i class="far fa-calendar me-1"></i>{{ doc.fecha_documento|date:"Y-m-d" }}
+                                </td>
+                                <td class="text-sm font-regular">
+                                    <div class="d-flex align-items-center">
+                                        <div class="bg-secondary text-white rounded-circle d-flex align-items-center justify-content-center me-2" style="width: 25px; height: 25px; font-size: 10px;">
+                                            {{ doc.usuario_registra.first_name|first|default:"S" }}
+                                        </div>
+                                        {{ doc.usuario_registra.get_full_name|default:"Sistema" }}
+                                    </div>
+                                </td>
+                                <td class="text-center">
+                                    {# ACCIONES (TABLA) #}
+                                    <div class="btn-group">
+                                        {# Lógica de Confidencialidad en Tabla #}
+                                        {% if not doc.es_confidencial or perms.gestion_documental.accion_gestion_documental_gestionar_documentos %}
+                                            <a href="{{ doc.archivo.url }}" target="_blank" class="btn btn-sm btn-outline-primary text-sm font-medium" title="Ver Documento">
+                                                <i class="fas fa-eye"></i>
+                                            </a>
+                                        {% else %}
+                                            <button class="btn btn-sm btn-outline-secondary text-sm font-medium disabled" title="Restringido" disabled>
+                                                <i class="fas fa-lock"></i>
+                                            </button>
+                                        {% endif %}
+
+                                        {# PERMISO: GESTIONAR DOCUMENTOS (Eliminar en Tabla) #}
+                                        {% if perms.gestion_documental.accion_gestion_documental_gestionar_documentos %}
+                                            <a href="{% url 'gestion_documental:ruta_eliminar_documento' doc.pk %}" class="btn btn-sm btn-outline-danger text-sm font-medium" title="Eliminar">
+                                                <i class="fas fa-trash-alt"></i>
+                                            </a>
+                                        {% endif %}
+                                    </div>
+                                </td>
+                            </tr>
+                            {% empty %}
+                                <tr>
+                                    <td colspan="6" class="py-5">
+                                        <div class="d-flex flex-column align-items-center justify-content-center text-center">
+
+                                            <i class="fas fa-search mb-3 text-muted" style="font-size: 4rem; opacity: 0.3;"></i>
+
+                                            <h3 class="text-lg font-bold text-dark mb-1">
+                                                Sin resultados
+                                            </h3>
+
+                                            <p class="text-base font-regular text-muted mb-0">
+                                                No hay documentos que coincidan con tu búsqueda.
+                                            </p>
+                                        </div>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    {% endif %}
+
+    {# --- PAGINACIÓN --- #}
+    {% if page_obj.has_other_pages %}
+    <nav class="d-flex justify-content-center mt-4">
+        <ul class="pagination shadow-sm">
+            {% if page_obj.has_previous %}
+                <li class="page-item">
+                    <a class="page-link text-base" href="?page={{ page_obj.previous_page_number }}&view={{ view_mode }}&q={{ busqueda_actual }}&tipo={{ filtro_actual }}">
+                        <i class="fas fa-chevron-left"></i>
+                    </a>
+                </li>
+            {% else %}
+                <li class="page-item disabled"><span class="page-link text-base"><i class="fas fa-chevron-left"></i></span></li>
+            {% endif %}
+
+            {% for i in page_obj.paginator.page_range %}
+                {% if page_obj.number == i %}
+                    <li class="page-item active"><span class="page-link bg-danger border-danger text-base font-bold">{{ i }}</span></li>
+                {% else %}
+                    <li class="page-item">
+                        <a class="page-link text-danger text-base font-medium" href="?page={{ i }}&view={{ view_mode }}&q={{ busqueda_actual }}&tipo={{ filtro_actual }}">{{ i }}</a>
+                    </li>
+                {% endif %}
+            {% endfor %}
+
+            {% if page_obj.has_next %}
+                <li class="page-item">
+                    <a class="page-link text-base" href="?page={{ page_obj.next_page_number }}&view={{ view_mode }}&q={{ busqueda_actual }}&tipo={{ filtro_actual }}">
+                        <i class="fas fa-chevron-right"></i>
+                    </a>
+                </li>
+            {% else %}
+                <li class="page-item disabled"><span class="page-link text-base"><i class="fas fa-chevron-right"></i></span></li>
+            {% endif %}
+        </ul>
+    </nav>
+    {% endif %}
+
+</div>
+
+<style>
+    /* Ajustes específicos de animación */
+    .hover-shadow:hover {
+        box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) !important;
+        transform: translateY(-2px);
+    }
+    .transition-card {
+        transition: all 0.3s ease;
+    }
+    /* Aseguramos que la clase text-data-code use la variable correcta si no está globalmente definida */
+    .text-data-code {
+        font-family: var(--font-data, 'Consolas', 'Monaco', monospace);
+    }
+</style>
+{% endblock %}

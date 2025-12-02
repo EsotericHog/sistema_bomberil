@@ -1,0 +1,209 @@
+{% extends 'gestion_inventario/layouts/base.html' %}
+{% load static %}
+
+{% block titulo_ventana %}Historial de Movimientos{% endblock %}
+
+{% block titulo_pagina %}
+    <span class="text-xl color_primario">
+        <i class="fas fa-history me-2"></i> Historial de Movimientos
+    </span>
+{% endblock %}
+
+{% block contenido %}
+<div class="container-fluid mt-4">
+
+    {# PERMISO: Ver Historial #}
+    {% if perms.gestion_usuarios.accion_gestion_inventario_ver_historial_movimientos %}
+
+        {# Panel de Filtros #}
+        <div class="card shadow-sm mb-4 border-0">
+            <div class="card-header bg-white border-bottom py-3">
+                <h5 class="mb-0 text-lg font-bold color_primario">
+                    <i class="fas fa-filter me-1"></i> Filtros de Búsqueda
+                </h5>
+            </div>
+            <div class="card-body p-4">
+                <form method="get" action="{% url 'gestion_inventario:ruta_historial_movimientos' %}">
+                    <div class="row g-3 align-items-end">
+                        <div class="col-md-3">
+                            <label for="{{ filter_form.q.id_for_label }}" class="form-label font-bold text-xs text-uppercase text-muted">{{ filter_form.q.label }}</label>
+                            {{ filter_form.q }}
+                        </div>
+                        <div class="col-md-2">
+                            <label for="{{ filter_form.tipo_movimiento.id_for_label }}" class="form-label font-bold text-xs text-uppercase text-muted">{{ filter_form.tipo_movimiento.label }}</label>
+                            {{ filter_form.tipo_movimiento }}
+                        </div>
+                        <div class="col-md-2">
+                            <label for="{{ filter_form.usuario.id_for_label }}" class="form-label font-bold text-xs text-uppercase text-muted">{{ filter_form.usuario.label }}</label>
+                            {{ filter_form.usuario }}
+                        </div>
+                        <div class="col-md-2">
+                            <label for="{{ filter_form.fecha_inicio.id_for_label }}" class="form-label font-bold text-xs text-uppercase text-muted">{{ filter_form.fecha_inicio.label }}</label>
+                            {{ filter_form.fecha_inicio }}
+                        </div>
+                        <div class="col-md-2">
+                            <label for="{{ filter_form.fecha_fin.id_for_label }}" class="form-label font-bold text-xs text-uppercase text-muted">{{ filter_form.fecha_fin.label }}</label>
+                            {{ filter_form.fecha_fin }}
+                        </div>
+                        <div class="col-md-1 d-flex">
+                            <button type="submit" class="btn btn-primary btn-sm w-100 me-1 text-sm" title="Filtrar"><i class="fas fa-search"></i></button>
+                            <a href="{% url 'gestion_inventario:ruta_historial_movimientos' %}" class="btn btn-outline-secondary btn-sm w-100 text-sm" title="Limpiar Filtros"><i class="fas fa-times"></i></a>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        {# Tabla de Resultados #}
+        <div class="card shadow-sm border-0">
+            <div class="card-header bg-white border-bottom py-3">
+                <h5 class="mb-0 text-lg font-bold color_primario">
+                    <i class="fas fa-table me-1"></i> Resultados
+                </h5>
+            </div>
+            <div class="card-body p-0">
+                
+                <div class="table-responsive">
+                    <table class="table table-striped table-hover align-middle mb-0">
+                        <thead class="bg-light text-secondary text-uppercase text-xs font-bold">
+                            <tr>
+                                <th class="ps-4">Fecha y Hora</th>
+                                <th>Tipo</th>
+                                <th>Producto (Ítem)</th>
+                                <th class="text-center">Cant.</th>
+                                <th>Origen</th>
+                                <th>Destino</th>
+                                <th>Usuario</th>
+                                <th class="pe-4">Notas</th>
+                            </tr>
+                        </thead>
+                        <tbody class="text-sm">
+                            {% for m in movimientos %}
+                            <tr>
+                                <td class="ps-4 text-data-code text-xs" style="min-width: 140px;">
+                                    {{ m.fecha_hora|date:"d/m/Y H:i" }}
+                                </td>
+                                
+                                <td>
+                                    <span class="badge text-xs
+                                        {% if m.tipo_movimiento == 'ENT' %}bg-success
+                                        {% elif m.tipo_movimiento == 'SAL' %}bg-danger
+                                        {% elif m.tipo_movimiento == 'TRA' %}bg-info text-dark
+                                        {% elif m.tipo_movimiento == 'AJU' %}bg-warning text-dark
+                                        {% elif m.tipo_movimiento == 'PRE' %}bg-primary
+                                        {% else %}bg-secondary
+                                        {% endif %}">
+                                        {{ m.get_tipo_movimiento_display }}
+                                    </span>
+                                </td>
+                                
+                                <td>
+                                    {% if m.activo %}
+                                        <strong class="text-dark">{{ m.activo.producto.producto_global.nombre_oficial }}</strong>
+                                        <br><small class="text-muted text-xs text-data-code">ID: {{ m.activo.codigo_activo }}</small>
+                                    {% elif m.lote_insumo %}
+                                        <strong class="text-dark">{{ m.lote_insumo.producto.producto_global.nombre_oficial }}</strong>
+                                        <br><small class="text-muted text-xs text-data-code">Lote: {{ m.lote_insumo.codigo_lote }}</small>
+                                    {% else %}
+                                        <span class="text-muted fst-italic">N/A</span>
+                                    {% endif %}
+                                </td>
+                                
+                                <td class="text-center font-bold text-base">
+                                    {% if m.cantidad_movida > 0 %}
+                                        <span class="text-success">+{{ m.cantidad_movida }}</span>
+                                    {% else %}
+                                        <span class="text-danger">{{ m.cantidad_movida }}</span>
+                                    {% endif %}
+                                </td>
+
+                                <td>
+                                    {% if m.tipo_movimiento == 'ENT' %}
+                                        <span class="text-muted"><i class="fas fa-truck me-1"></i> {{ m.proveedor_origen.nombre|default:"N/A" }}</span>
+                                    {% elif m.tipo_movimiento == 'TRA' or m.tipo_movimiento == 'AJU' or m.tipo_movimiento == 'SAL' %}
+                                        {{ m.compartimento_origen.ubicacion.nombre|default:"" }} 
+                                        <i class="fas fa-chevron-right mx-1 text-xs text-muted"></i> 
+                                        {{ m.compartimento_origen.nombre|default:"N/A" }}
+                                    {% else %}
+                                        <span class="text-muted">--</span>
+                                    {% endif %}
+                                </td>
+                                
+                                <td>
+                                    {% if m.tipo_movimiento == 'ENT' or m.tipo_movimiento == 'TRA' %}
+                                        {{ m.compartimento_destino.ubicacion.nombre|default:"" }} 
+                                        <i class="fas fa-chevron-right mx-1 text-xs text-muted"></i>
+                                        {{ m.compartimento_destino.nombre|default:"N/A" }}
+                                    {% elif m.tipo_movimiento == 'PRE' %}
+                                        <span class="text-primary"><i class="fas fa-user me-1"></i> {{ m.prestamo.destinatario.nombre_entidad|default:"Externo" }}</span>
+                                    {% else %}
+                                        <span class="text-muted">--</span>
+                                    {% endif %}
+                                </td>
+
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <div class="bg-light rounded-circle me-2 d-flex align-items-center justify-content-center" style="width:24px;height:24px;">
+                                            <i class="fas fa-user text-secondary text-xs"></i>
+                                        </div>
+                                        {{ m.usuario.get_full_name|default:"Sistema" }}
+                                    </div>
+                                </td>
+                                <td class="text-muted fst-italic pe-4">{{ m.notas|default:""|truncatechars:50 }}</td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="8" class="text-center py-5 text-muted">
+                                    <i class="fas fa-history fa-2x mb-3 opacity-25"></i>
+                                    <p class="text-base mb-0">No se encontraron movimientos que coincidan con los filtros.</p>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+                {% if page_obj.has_other_pages %}
+                <nav aria-label="Paginación de movimientos" class="py-3">
+                    <ul class="pagination pagination-sm justify-content-center mb-0">
+                        {% with params=request.GET.urlencode %}
+                            {% if page_obj.has_previous %}
+                                <li class="page-item"><a class="page-link text-xs" href="?page=1&{{ params }}">&laquo; Primero</a></li>
+                                <li class="page-item"><a class="page-link text-xs" href="?page={{ page_obj.previous_page_number }}&{{ params }}">Anterior</a></li>
+                            {% else %}
+                                <li class="page-item disabled"><span class="page-link text-xs">&laquo; Primero</span></li>
+                                <li class="page-item disabled"><span class="page-link text-xs">Anterior</span></li>
+                            {% endif %}
+                            
+                            <li class="page-item active" aria-current="page">
+                                <span class="page-link text-xs">Página {{ page_obj.number }} de {{ page_obj.paginator.num_pages }}</span>
+                            </li>
+                            
+                            {% if page_obj.has_next %}
+                                <li class="page-item"><a class="page-link text-xs" href="?page={{ page_obj.next_page_number }}&{{ params }}">Siguiente</a></li>
+                                <li class="page-item"><a class="page-link text-xs" href="?page={{ page_obj.paginator.num_pages }}&{{ params }}">Último &raquo;</a></li>
+                            {% else %}
+                                <li class="page-item disabled"><span class="page-link text-xs">Siguiente</span></li>
+                                <li class="page-item disabled"><span class="page-link text-xs">Último &raquo;</span></li>
+                            {% endif %}
+                        {% endwith %}
+                    </ul>
+                </nav>
+                {% endif %}
+
+            </div>
+        </div>
+
+    {% else %}
+        {# Mensaje Sin Permiso #}
+        <div class="alert alert-danger border-0 shadow-sm d-flex align-items-center" role="alert">
+            <i class="fas fa-lock fs-4 me-3"></i>
+            <div>
+                <h5 class="alert-heading font-bold text-base">Acceso Restringido</h5>
+                <p class="text-sm mb-0">No tienes permisos para ver el historial de movimientos de inventario.</p>
+            </div>
+        </div>
+    {% endif %}
+
+</div>
+{% endblock %}

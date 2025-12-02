@@ -1,0 +1,107 @@
+{% extends 'core_admin/layouts/base.html' %}
+{% load static %}
+
+{% block titulo_ventana %}Marcas | Taxonomías{% endblock %}
+{% block titulo_pagina %}Gestión de Marcas{% endblock %}
+
+{% block contenido %}
+<div class="container-fluid mt-4">
+
+    <div class="card shadow-sm border-0 mb-4">
+        <div class="card-body d-flex justify-content-between align-items-center">
+            <div>
+                <h5 class="mb-0 font-bold text-secondary text-lg">Marcas Registradas</h5>
+                <small class="text-muted text-xs">{{ kpi_total }} marcas en el sistema</small>
+            </div>
+            <a href="{% url 'core_admin:ruta_crear_marca' %}" class="btn btn-success font-bold text-sm">
+                <i class="fas fa-plus-circle me-2"></i>Nueva Marca
+            </a>
+        </div>
+    </div>
+
+    <div class="card shadow-sm border-0">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="bg-light">
+                    <tr>
+                        <th class="ps-4 text-sm font-bold">Nombre</th>
+                        <th class="text-center text-sm font-bold">Uso en Catálogo</th>
+                        <th class="text-center text-sm font-bold">Uso en Flota</th>
+                        <th class="text-end pe-4 text-sm font-bold">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for marca in marcas %}
+                    <tr>
+                        <td class="ps-4 font-bold text-dark text-base">{{ marca.nombre }}</td>
+                        
+                        <td class="text-center">
+                            {% if marca.total_productos > 0 %}
+                                <span class="badge bg-primary bg-opacity-10 text-primary border border-primary text-xs font-medium">
+                                    <i class="fas fa-box me-1"></i>{{ marca.total_productos }} Productos
+                                </span>
+                            {% else %}
+                                <span class="text-muted text-sm">-</span>
+                            {% endif %}
+                        </td>
+
+                        <td class="text-center">
+                            {% if marca.total_vehiculos > 0 %}
+                                <span class="badge bg-warning bg-opacity-10 text-dark border border-warning text-xs font-medium">
+                                    <i class="fas fa-truck me-1"></i>{{ marca.total_vehiculos }} Vehículos
+                                </span>
+                            {% else %}
+                                <span class="text-muted text-sm">-</span>
+                            {% endif %}
+                        </td>
+
+                        <td class="text-end pe-4">
+                            <div class="btn-group">
+                                <a href="{% url 'core_admin:ruta_editar_marca' marca.pk %}" class="btn btn-sm btn-outline-secondary text-base" title="Editar">
+                                    <i class="fas fa-pencil-alt"></i>
+                                </a>
+                                
+                                {% if marca.total_productos > 0 or marca.total_vehiculos > 0 %}
+                                    <span class="d-inline-block" tabindex="0" data-bs-toggle="tooltip" title="En uso: No se puede eliminar.">
+                                        <button class="btn btn-sm btn-outline-danger text-base" disabled style="pointer-events: none;">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </span>
+                                {% else %}
+                                    <a href="{% url 'core_admin:ruta_eliminar_marca' marca.pk %}" class="btn btn-sm btn-outline-danger text-base" title="Eliminar">
+                                        <i class="fas fa-trash"></i>
+                                    </a>
+                                {% endif %}
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="4" class="text-center py-5 text-muted text-base">
+                            No hay marcas registradas.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        
+        {# Paginación aquí (puedes reutilizar tu include) #}
+        {% if is_paginated %}
+        <div class="card-footer bg-white py-3">
+            {% include 'core_admin/layouts/paginacion.html' %}
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<script>
+    // Inicializar Tooltips
+    document.addEventListener("DOMContentLoaded", function(){
+        var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+        var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+            return new bootstrap.Tooltip(tooltipTriggerEl)
+        })
+    });
+</script>
+{% endblock %}

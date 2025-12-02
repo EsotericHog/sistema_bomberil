@@ -1,0 +1,55 @@
+{% extends 'core_admin/layouts/base.html' %}
+{% load static %}
+
+{% block titulo_ventana %}Eliminar Marca{% endblock %}
+{% block titulo_pagina %}Confirmar Eliminación{% endblock %}
+
+{% block contenido %}
+<div class="container-fluid mt-4">
+
+<div class="row justify-content-center mt-5">
+    <div class="col-lg-5 col-md-8">
+        <div class="card shadow border-danger">
+            <div class="card-header bg-danger text-white py-3">
+                <h5 class="mb-0 font-bold text-md"><i class="fas fa-trash-alt me-2"></i>Eliminar Marca</h5>
+            </div>
+            <div class="card-body text-center p-5">
+                
+                <h3 class="font-bold text-dark mb-3 text-xl">"{{ object.nombre }}"</h3>
+
+                {% if uso_productos > 0 or uso_vehiculos > 0 %}
+                    <div class="alert alert-danger text-start d-inline-block mb-4">
+                        <h6 class="font-bold text-base"><i class="fas fa-ban me-2"></i>Acción Bloqueada</h6>
+                        <ul class="mb-0 ps-3 text-sm">
+                            {% if uso_productos > 0 %}
+                                <li>Asignada a <strong class="font-bold">{{ uso_productos }}</strong> producto(s) globales.</li>
+                            {% endif %}
+                            {% if uso_vehiculos > 0 %}
+                                <li>Asignada a <strong class="font-bold">{{ uso_vehiculos }}</strong> vehículo(s).</li>
+                            {% endif %}
+                        </ul>
+                    </div>
+                    
+                    <div class="d-grid">
+                        <a href="{% url 'core_admin:ruta_lista_marcas' %}" class="btn btn-secondary font-bold text-sm">Volver</a>
+                    </div>
+                {% else %}
+                    <p class="text-muted mb-4 text-sm">
+                        ¿Estás seguro de eliminar esta marca permanentemente?
+                    </p>
+
+                    <form method="post">
+                        {% csrf_token %}
+                        <div class="d-grid gap-2 d-sm-flex justify-content-sm-center">
+                            <a href="{% url 'core_admin:ruta_lista_marcas' %}" class="btn btn-outline-secondary px-4 font-bold text-sm">Cancelar</a>
+                            <button type="submit" class="btn btn-danger px-4 font-bold text-sm">Confirmar</button>
+                        </div>
+                    </form>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+</div>
+{% endblock %}

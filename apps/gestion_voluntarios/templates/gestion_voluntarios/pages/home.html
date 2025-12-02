@@ -1,10 +1,206 @@
 {# Plantilla base #}{% extends 'gestion_voluntarios/layouts/base.html' %}
 {# Cargar assets #}{% load static %}
-{# Título de la ventana #} {% block titulo_ventana %}Módulo{% endblock %}
-{# Título de la página #} {% block titulo_pagina %}Título de la Página{% endblock %}
+{# Título de la ventana #} {% block titulo_ventana %}Dashboard Voluntarios{% endblock %}
+{# Título de la página #} {% block titulo_pagina %}Dashboard de Voluntarios{% endblock %}
 
 {% block contenido %}
+<div class="container-fluid mt-4"> 
+    <div class="container-fluid">
 
-    <div class="color_primario">VOLUNTARIOS HOME</div>
-    
+        <div class="row">
+
+            <div class="col-xl-4 col-md-6 mb-4">
+                <div class="card border-left-primary shadow h-100 py-2">
+                    <div class="card-body">
+                        <div class="row no-gutters align-items-center">
+                            <div class="col mr-2">
+                                {# Etiqueta: Texto pequeño y negrita #}
+                                <div class="text-sm font-bold text-primary text-uppercase mb-1">
+                                    Total Voluntarios (General)</div>
+                                {# Valor Numérico: Texto muy grande (3XL) y negrita para impacto #}
+                                <div class="text-3xl font-bold text-gray-800 mb-0">{{ total_voluntarios_general }}</div>
+                            </div>
+                            <div class="col-auto">
+                                <i class="fa-solid fa-users fa-2x text-gray-300"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-xl-4 col-md-6 mb-4">
+                <div class="card border-left-success shadow h-100 py-2">
+                    <div class="card-body">
+                        <div class="row no-gutters align-items-center">
+                            <div class="col mr-2">
+                                {# Etiqueta: Texto pequeño y negrita #}
+                                <div class="text-sm font-bold text-success text-uppercase mb-1">
+                                    Voluntarios Activos</div>
+                                {# Valor Numérico: Texto muy grande (3XL) y negrita #}
+                                <div class="text-3xl font-bold text-gray-800 mb-0">{{ voluntarios_activos }}</div>
+                            </div>
+                            <div class="col-auto">
+                                <i class="fa-solid fa-user-check fa-2x text-gray-300"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-xl-4 col-md-6 mb-4">
+                <div class="card border-left-warning shadow h-100 py-2">
+                    <div class="card-body">
+                        <div class="row no-gutters align-items-center">
+                            <div class="col mr-2">
+                                {# Etiqueta: Texto pequeño y negrita #}
+                                <div class="text-sm font-bold text-warning text-uppercase mb-1">
+                                    Voluntarios Inactivos</div>
+                                {# Valor Numérico: Texto muy grande (3XL) y negrita #}
+                                <div class="text-3xl font-bold text-gray-800 mb-0">{{ voluntarios_inactivos }}</div>
+                            </div>
+                            <div class="col-auto">
+                                <i class="fa-solid fa-user-clock fa-2x text-gray-300"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+
+            <div class="col-xl-7 col-lg-6">
+                <div class="card shadow mb-4">
+                    <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                        {# Título de Gráfico: Texto XL y negrita (reemplaza h6) #}
+                        <h6 class="m-0 text-xl font-bold text-primary">Voluntarios por Rango (Actual)</h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="chart-area" style="height: 350px;">
+                            <canvas id="graficoVoluntariosPorRango"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-xl-5 col-lg-6">
+                <div class="card shadow mb-4">
+                    <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                        {# Título de Gráfico: Texto XL y negrita #}
+                        <h6 class="m-0 text-xl font-bold text-primary">Top 5 Profesiones</h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="chart-pie pt-4 pb-2" style="height: 350px;">
+                            <canvas id="graficoVoluntariosPorProfesion"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+    {# Cargamos la librería Chart.js (ya estaba en tu plantilla) #}
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+{% endblock  %}
+
+
+{% block scripts %}
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        
+        // --- 1. Gráfico de Rangos (Barras) ---
+        try {
+            // Obtenemos los datos JSON que la vista 'VoluntariosInicioView' nos pasó
+            const rangosLabels = JSON.parse('{{ chart_rangos_labels|safe }}');
+            const rangosCounts = JSON.parse('{{ chart_rangos_counts|safe }}');
+
+            const ctxRango = document.getElementById('graficoVoluntariosPorRango').getContext('2d');
+            new Chart(ctxRango, {
+                type: 'bar',
+                data: {
+                    labels: rangosLabels,
+                    datasets: [{
+                        label: 'N° de Voluntarios',
+                        data: rangosCounts,
+                        backgroundColor: 'rgba(78, 115, 223, 0.8)',
+                        borderColor: 'rgba(78, 115, 223, 1)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    maintainAspectRatio: false,
+                    responsive: true,
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: false // Ocultamos la leyenda (es obvio)
+                        }
+                    }
+                }
+            });
+        } catch (e) {
+            console.error("Error al cargar gráfico de rangos:", e);
+        }
+
+        // --- 2. Gráfico de Profesiones (Torta/Doughnut) ---
+        try {
+            // Obtenemos los datos JSON de la vista
+            const profesLabels = JSON.parse('{{ chart_profes_labels|safe }}');
+            const profesCounts = JSON.parse('{{ chart_profes_counts|safe }}');
+            
+            const ctxProfesion = document.getElementById('graficoVoluntariosPorProfesion').getContext('2d');
+            new Chart(ctxProfesion, {
+                type: 'doughnut',
+                data: {
+                    labels: profesLabels,
+                    datasets: [{
+                        data: profesCounts,
+                        backgroundColor: [
+                            '#4e73df', 
+                            '#1cc88a', 
+                            '#36b9cc', 
+                            '#f6c23e', 
+                            '#e74a3b'
+                        ],
+                        hoverBackgroundColor: [
+                            '#2e59d9', 
+                            '#17a673', 
+                            '#2c9faf', 
+                            '#dda20a', 
+                            '#c0392b'
+                        ],
+                        hoverBorderColor: "rgba(234, 236, 244, 1)",
+                    }]
+                },
+                options: {
+                    maintainAspectRatio: false,
+                    responsive: true,
+                    tooltips: {
+                        backgroundColor: "rgb(255,255,255)",
+                        bodyFontColor: "#858796",
+                        borderColor: '#dddfeb',
+                        borderWidth: 1,
+                        xPadding: 15,
+                        yPadding: 15,
+                        displayColors: false,
+                        caretPadding: 10,
+                    },
+                    legend: {
+                        display: true,
+                        position: 'bottom'
+                    },
+                    cutoutPercentage: 80,
+                },
+            });
+        } catch (e) {
+            console.error("Error al cargar gráfico de profesiones:", e);
+        }
+
+    });
+</script>
 {% endblock  %}

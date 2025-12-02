@@ -2,127 +2,100 @@ from django import forms
 from django.contrib.auth.forms import UserCreationForm, UserChangeForm
 
 from .models import Usuario, Rol
+from apps.common.mixins import ImageProcessingFormMixin, BomberilFormMixin
+from apps.common.form_fields import RutField, NombrePropioField, TelefonoChileField
+from apps.common.validators import validar_edad
 
 
 
-class FormularioCrearUsuario(forms.Form):
+class FormularioCrearUsuario(BomberilFormMixin, forms.Form):
+    rut = RutField() 
+    nombre = NombrePropioField(required=True)
+    apellido = NombrePropioField(required=True)
     correo = forms.EmailField(
         required=True, 
-        widget=forms.TextInput(
-            attrs={
-                'id':'LoginInputCorreo',
-                'class':'input_box__input fs_normal color_primario fondo_secundario',
-                'autocomplete':'off',
-            }
-        )
-    )
-    nombre = forms.CharField(
-        required=True, 
-        widget=forms.TextInput(
-            attrs={
-                'id':'UsuarioInputNombre',
-                'class':'input_box__input fs_normal color_primario fondo_secundario',
-                'autocomplete':'off',
-            }
-        )
-    )
-    apellido = forms.CharField(
-        required=True, 
-        widget=forms.TextInput(
-            attrs={
-                'id':'UsuarioInputApellido',
-                'class':'input_box__input fs_normal color_primario fondo_secundario',
-                'autocomplete':'off',
-            }
-        )
-    )
-    rut = forms.CharField(
-        required=True, 
-        widget=forms.TextInput(
-            attrs={
-                'id':'UsuarioInputRut',
-                'class':'input_box__input fs_normal color_primario fondo_secundario',
-                'autocomplete':'off',
-            }
-        )
+        widget=forms.EmailInput(attrs={'placeholder': 'ejemplo@bomberos.cl'})
     )
     fecha_nacimiento = forms.DateField(
-        required=False, 
-        widget=forms.DateInput(
-            attrs={
-                'type':'date',
-                'id':'UsuarioInputFechaNacimiento',
-                'class':'input_box__input fs_normal color_primario fondo_secundario',
-                'autocomplete':'off',
-            }
-        )
+        required=False,
+        validators=[validar_edad], # <--- AQUÍ ESTÁ LA REGLA
+        widget=forms.DateInput(attrs={'type': 'date'})
     )
-    telefono = forms.CharField(
-        required=False, 
-        widget=forms.TextInput(
-            attrs={
-                'id':'UsuarioInputTelefono',
-                'class':'input_box__input fs_normal color_primario fondo_secundario',
-                'autocomplete':'off',
-            }
-        )
-    )
-    avatar = forms.ImageField(
-        required=False, 
-        widget=forms.ClearableFileInput(
-            attrs={
-                'id':'UsuarioInputAvatar',
-                'class':'input_box__input-file fs_normal color_primario fondo_secundario',
-                'autocomplete':'off',
-            }
-        )
-    )
+    telefono = TelefonoChileField(required=False)
 
 
 
-class FormularioEditarUsuario(forms.ModelForm):
-    class Meta:
-        model = Usuario
-        # Campos editables
-        fields = ['first_name', 'last_name', 'phone', 'birthdate', 'avatar']
 
-    # Campos de solo lectura
+class FormularioEditarUsuario(BomberilFormMixin, ImageProcessingFormMixin, forms.ModelForm):
+    # Campos Especiales (Reutilizamos tu lógica inteligente)
+    first_name = NombrePropioField(required=True, label="Nombre")
+    last_name = NombrePropioField(required=True, label="Apellido")
+    phone = TelefonoChileField(required=False, label="Teléfono")
+
+    # RUT: Solo lectura, visualización simple
     rut = forms.CharField(
         label='RUT',
+        required=False,
         widget=forms.TextInput(attrs={
-                'id':'UsuarioInputRut',
-                'class':'input_box__input fs_normal color_primario_variante fondo_secundario',
-                'autocomplete':'off',
-                'readonly':'readonly'
-            })
+            'readonly': 'readonly',
+            'tabindex': '-1',
+            'class': 'text-muted' # El Mixin agregará form-control automáticamente
+        })
     )
-    email = forms.EmailField(
-        label='Correo electrónico',
-        widget=forms.EmailInput(attrs={
-                'id':'UsuarioInputCorreo',
-                'class':'input_box__input fs_normal color_primario_variante fondo_secundario',
-                'autocomplete':'off',
-                'readonly':'readonly'
-            })
-    )
+
+    class Meta:
+        model = Usuario
+        fields = ['rut', 'email', 'first_name', 'last_name', 'phone', 'birthdate', 'avatar']
+        
+        widgets = {
+            'birthdate': forms.DateInput(attrs={'type': 'date'}),
+            # email y avatar son manejados automáticamente por el Mixin
+        }
 
     def __init__(self, *args, **kwargs):
+        # 1. Extraemos la instancia antes de iniciar para pre-llenar datos custom
+        instance = kwargs.get('instance')
+        
+        # 2. Inicializamos (El Mixin aquí inyectará estilos y sacará user/estacion)
         super().__init__(*args, **kwargs)
         
-        # El `instance` es el usuario que estamos editando
-        if self.instance:
-            self.fields['rut'].initial = self.instance.rut
-            self.fields['email'].initial = self.instance.email
+        # 3. Lógica específica de este form
+        if instance:
+            # Pre-llenar RUT visual (que no es parte del form editable)
+            self.fields['rut'].initial = instance.rut
+            
+            # Si el email es vital para el login, a veces se bloquea también. 
+            # Si permites editarlo, asegúrate que no choque con otro usuario.
 
-        # Personaliza otros campos si es necesario
-        self.fields['first_name'].widget.attrs.update({'class':'input_box__input fs_normal color_primario fondo_secundario'})
-        self.fields['last_name'].widget.attrs.update({'class':'input_box__input fs_normal color_primario fondo_secundario'})
-        self.fields['birthdate'].widget.attrs.update({'class':'input_box__input fs_normal color_primario fondo_secundario'})
-        self.fields['phone'].widget.attrs.update({'class':'input_box__input fs_normal color_primario fondo_secundario'})
+    def clean_email(self):
+        # Validación extra: Que el nuevo email no pertenezca a OTRO usuario
+        email = self.cleaned_data.get('email')
+        if self.instance and email:
+            if Usuario.objects.filter(email=email).exclude(pk=self.instance.pk).exists():
+                raise forms.ValidationError("Este correo electrónico ya está en uso por otro usuario.")
+        return email
+
+    def save(self, commit=True):
+        usuario = super().save(commit=False)
+        
+        # Procesamiento de imagen (Avatar)
+        self.process_image_upload(
+            instance=usuario, 
+            field_name='avatar',
+            max_dim=(800, 800), # Avatar no necesita ser 4K
+            crop=True,          # Avatar cuadrado se ve mejor
+            image_prefix='avatar_user'
+        )
+
+        if commit:
+            usuario.save()
+            
+        return usuario
 
 
 
 
+# FORMULARIO PARA DJANGO ADMIN
 class CustomUserCreationForm(UserCreationForm):
     """
     Formulario para crear nuevos usuarios. Hereda de UserCreationForm
@@ -165,6 +138,8 @@ class CustomUserCreationForm(UserCreationForm):
 
 
 
+
+# FORMULARIO PARA DJANGO ADMIN
 class CustomUserChangeForm(UserChangeForm):
     """
     Formulario para modificar usuarios existentes. Hereda de UserChangeForm
@@ -193,8 +168,8 @@ class FormularioRol(forms.ModelForm):
         super().__init__(*args, **kwargs)
 
         # Personaliza otros campos si es necesario
-        self.fields['nombre'].widget.attrs.update({'class':'input_box__input fs_normal color_primario fondo_secundario'})
-        self.fields['descripcion'].widget.attrs.update({'class':'input_box__input fs_normal color_primario fondo_secundario'})
+        self.fields['nombre'].widget.attrs.update({'class': 'form-control form-control-sm text-base', 'autocomplete': 'off'})
+        self.fields['descripcion'].widget.attrs.update({'class': 'form-control form-control-sm text-base', 'autocomplete': 'off', 'rows': 3})
 
 
     def save(self, commit=True):
@@ -209,6 +184,3 @@ class FormularioRol(forms.ModelForm):
             instance.save()
             # self.save_m2m() # Necesario si el form manejara campos ManyToMany
         return instance
-
-
-

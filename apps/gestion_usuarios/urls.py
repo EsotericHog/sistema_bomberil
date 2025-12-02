@@ -1,5 +1,29 @@
 from django.urls import path
-from .views import *
+from .views import (
+    UsuarioInicioView,
+    UsuarioListaView,
+    UsuarioObtenerView,
+    UsuarioAgregarView,
+    UsuarioCrearView,
+    UsuarioEditarView,
+    UsuarioDesactivarView,
+    UsuarioActivarView,
+    UsuarioAsignarRolesView,
+    UsuarioRestablecerContrasena,
+    UsuarioVerPermisos,
+    UsuarioFinalizarMembresiaView,
+    HistorialMembresiasView,
+    RolListaView,
+    RolObtenerView,
+    RolCrearView,
+    RolEditarView,
+    RolAsignarPermisosView,
+    RolEliminarView,
+    RegistroActividadView,
+    UsuarioForzarCierreSesionView,
+    UsuarioImpersonarView,
+    UsuarioDetenerImpersonacionView
+)
 
 app_name = "gestion_usuarios"
 
@@ -8,10 +32,10 @@ urlpatterns = [
     path('', UsuarioInicioView.as_view(), name="ruta_inicio"),
 
     # Lista de usuarios
-    path('usuarios/lista/', UsuarioListaView.as_view(), name="ruta_lista_usuarios"),
+    path('usuarios/', UsuarioListaView.as_view(), name="ruta_lista_usuarios"),
 
     # Ver detalle de usuario
-    path('usuarios/<int:id>/', UsuarioObtenerView.as_view(), name="ruta_ver_usuario"),
+    path('usuarios/<uuid:id>/', UsuarioObtenerView.as_view(), name="ruta_ver_usuario"),
 
     # Agregar usuario (enlistarlo en la compañía)
     path('usuarios/agregar/', UsuarioAgregarView.as_view(), name="ruta_agregar_usuario"),
@@ -20,17 +44,34 @@ urlpatterns = [
     path('usuarios/crear/', UsuarioCrearView.as_view(), name="ruta_crear_usuario"),
 
     # Modificar usuario
-    path('usuarios/<int:id>/editar/', UsuarioEditarView.as_view(), name="ruta_editar_usuario"),
+    path('usuarios/<uuid:id>/editar/', UsuarioEditarView.as_view(), name="ruta_editar_usuario"),
 
     # Desactivar usuario (No puede acceder al sistema)
-    path('usuarios/<int:id>/desactivar/', UsuarioDesactivarView.as_view(), name="ruta_desactivar_usuario"),
+    path('usuarios/<uuid:id>/desactivar/', UsuarioDesactivarView.as_view(), name="ruta_desactivar_usuario"),
 
     # Activar usuario (Puede acceder al sistema)
-    path('usuarios/<int:id>/activar/', UsuarioActivarView.as_view(), name="ruta_activar_usuario"),
+    path('usuarios/<uuid:id>/activar/', UsuarioActivarView.as_view(), name="ruta_activar_usuario"),
 
     # Asignar roles al usuario
-    path('usuarios/<int:id>/asignar-roles/', UsuarioAsignarRolesView.as_view(), name='ruta_asignar_roles_usuario'),
+    path('usuarios/<uuid:id>/asignar-roles/', UsuarioAsignarRolesView.as_view(), name='ruta_asignar_roles_usuario'),
 
+    # Restablecer contraseña a usuario
+    path('usuarios/<uuid:id>/restablecer-contrasena/', UsuarioRestablecerContrasena.as_view(), name='ruta_restablecer_contrasena'),
+
+    # Ver permisos de usuario
+    path('usuarios/<uuid:id>/permisos/', UsuarioVerPermisos.as_view(), name='ruta_ver_permisos_usuario'),
+
+    # Finalizar membresía de un usuario
+    path('usuarios/<uuid:id>/finalizar-membresia/', UsuarioFinalizarMembresiaView.as_view(), name='ruta_finalizar_membresia'),
+
+    # Historial de membresías
+    path('usuarios/historial/', HistorialMembresiasView.as_view(), name="ruta_historial_membresias"),
+
+    # Registro de Actividad (Auditoría)
+    path('auditoria/actividad/', RegistroActividadView.as_view(), name="ruta_registro_actividad"),
+
+    # Forzar cierre de sesión de usuario
+    path('usuarios/<uuid:id>/forzar-logout/', UsuarioForzarCierreSesionView.as_view(), name="ruta_forzar_logout"),
 
 
 
@@ -51,4 +92,11 @@ urlpatterns = [
 
     # Eliminar rol
     path('roles/<int:id>/eliminar/', RolEliminarView.as_view(), name="ruta_eliminar_rol"),
+
+
+    # Impersonar (Convertirse en) usuario
+    path('usuarios/<uuid:id>/impersonar/', UsuarioImpersonarView.as_view(), name="ruta_impersonar_usuario"),
+    
+    # Detener impersonación (Volver a ser admin)
+    path('usuarios/detener-impersonacion/', UsuarioDetenerImpersonacionView.as_view(), name="ruta_detener_impersonacion"),
 ]

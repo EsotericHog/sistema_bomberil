@@ -1,0 +1,91 @@
+{# Plantilla base #}{% extends 'gestion_documental/layouts/base.html' %}
+{# Cargar assets #}{% load static %}
+{# Título de la ventana #} {% block titulo_ventana %}Subir Documento{% endblock %}
+{# Título de la página #} {% block titulo_pagina %}{% endblock %}
+
+{% block contenido %}
+<div class="container-fluid mt-4"> 
+    <div class="container-form">
+        <div class="panel">
+            <div class="panel-header">
+                {# Título principal: Tamaño 3XL y Negrita #}
+                <h1 class="titulo-pagina text-xl font-bold">Subir Nuevo Documento</h1>
+                {# Enlace de volver: Tamaño base y peso medio #}
+                <a href="{% url 'gestion_documental:ruta_lista_documentos' %}" class="back-link text-base font-medium">
+                    <i class="fas fa-arrow-left"></i> Cancelar y Volver
+                </a>
+            </div>
+
+            <div class="panel-body">
+                <form method="POST" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    
+                    <div class="form-section">
+                        {# Título de sección: Tamaño XL y Negrita #}
+                        <h2 class="section-title text-lg font-bold">
+                            <i class="fas fa-info-circle" style="margin-right: 8px;"></i>
+                            Información del Documento
+                        </h2>
+                        
+                        {% for field in form %}
+                            <div class="form-group">
+                                <label for="{{ field.id_for_label }}" class="form-label text-sm font-bold text-dark">
+                                    {{ field.label }}
+                                </label>
+
+                                {{ field }}
+                                
+                                {% if field.errors %}
+                                    {# Errores: Texto pequeño y negrita para destacar #}
+                                    <div class="error-message text-sm font-bold">{{ field.errors|first }}</div>
+                                {% endif %}
+                                
+                                {% if field.help_text %}
+                                    {# Ayuda: Texto extra pequeño y regular #}
+                                    <small class="help-text text-xs font-regular">{{ field.help_text }}</small>
+                                {% endif %}
+                            </div>
+                        {% endfor %}
+                    </div>
+                    
+                    <div class="button-group">
+                        {# Botón cancelar: Tamaño base y peso medio #}
+                        <a href="{% url 'gestion_documental:ruta_lista_documentos' %}" class="btn btn-secondary text-base font-medium">
+                            Cancelar
+                        </a>
+                        {# Botón guardar: Tamaño base y peso negrita (acción principal) #}
+                        <button type="submit" class="btn btn-primary text-base font-bold">
+                            <i class="fas fa-save"></i> Guardar Documento
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.querySelector('form').addEventListener('submit', function(e) {
+        // 1. Verificamos si el formulario es válido (campos requeridos, etc.)
+        if (!this.checkValidity()) {
+            // Si falta algo, dejamos que el navegador muestre el error y NO activamos el spinner
+            return;
+        }
+
+        const btn = this.querySelector('button[type="submit"]');
+        const iconoOriginal = btn.innerHTML; // Guardamos el contenido por si acaso
+
+        // 2. Usamos setTimeout para no bloquear el envío
+        setTimeout(function() {
+            // Cambiamos texto e ícono
+            btn.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> Subiendo (Espere)...';
+            
+            // Deshabilitamos el botón REALMENTE para evitar doble clic
+            btn.classList.add('disabled');
+            btn.setAttribute('disabled', 'disabled');
+            btn.style.cursor = 'wait';
+        }, 10);
+    });
+</script>
+
+{% endblock  %}

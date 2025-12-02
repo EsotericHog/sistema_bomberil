@@ -1,97 +1,171 @@
-<nav id="barra_lateral" class="barra_lateral fondo_barra_lateral">
-    {# Botón para cerrar el menú en diseño móvil (una X) #}
+<nav id="barra_lateral" class="barra_lateral fondo_barra_lateral {% if request.session.is_impersonating %}barra_lateral_impersonacion{% endif %}">
+    
     {% include 'layouts/boton_cerrar_sidebar.html' %}
 
-
-    {# Sección: Gestión de inventario #}
+    {# Sección: Dashboard #}
+    {# Acceso básico al módulo #}
+    {% if perms.gestion_usuarios.acceso_gestion_inventario %}
     <section class="barra_lateral__seccion">
+        <div class="barra_lateral__modulo">
+            <a href="{% url 'gestion_inventario:ruta_inicio' %}" class="barra_lateral__modulo_nombre text-base color_primario hover_scale text-decoration-none">
+                <i class="fa-solid fa-house"></i>
+                <span>Inicio</span>
+            </a>
+        </div>
+    </section>
+    {% endif %}
 
+
+    {# Sección: Existencias (Catálogo y Stock) #}
+    {# Se muestra si tiene al menos permiso de ver stock o catálogos #}
+    {% if perms.gestion_usuarios.accion_gestion_inventario_ver_stock or perms.gestion_inventario.accion_gestion_inventario_ver_catalogos %}
+    <section class="barra_lateral__seccion">
         <div class="barra_lateral__modulo" data-toggle="modulo">
-            <a href="" class="barra_lateral__modulo_nombre fs_nav_seccion color_primario hover_scale">
-                <i class="fa-solid fa-truck-ramp-box"></i> 
+            <a href="{% url 'gestion_inventario:ruta_stock_actual' %}" class="barra_lateral__modulo_nombre text-base color_primario hover_scale text-decoration-none">
+                <i class="fa-solid fa-boxes-stacked"></i> 
                 <span>Existencias</span>
             </a>
-            <i class="fa-solid fa-chevron-down color_primario barra_lateral__flecha_modulo fs_nav_seccion"></i>
+            <i class="fa-solid fa-chevron-down color_primario barra_lateral__flecha_modulo"></i>
         </div>
 
-        <ul class="barra_lateral__lista_opciones oculto">
-            <li class="fondo_opcion_nav"><a class="color_primario fs_nav_opcion" href="">Lista de insumos</a></li>
-            <li class="fondo_opcion_nav"><a class="color_primario fs_nav_opcion" href="">Lista de insumos por lote</a></li>
-            <li class="fondo_opcion_nav"><a class="color_primario fs_nav_opcion" href="">Insumos de baja</a></li>
-            <li class="fondo_opcion_nav"><a class="color_primario fs_nav_opcion" href="">Agregar insumo</a></li>
-            <li class="fondo_opcion_nav"><a class="color_primario fs_nav_opcion" href="">Agregar insumos por lote</a></li>
+        <ul class="barra_lateral__lista_opciones oculto ps-0 list-unstyled">
+            
+            {% if perms.gestion_usuarios.accion_gestion_inventario_ver_catalogos %}
+            <li class="fondo_opcion_nav hover_color">
+                <a class="color_primario text-sm text-decoration-none" href="{% url 'gestion_inventario:ruta_catalogo_global' %}">
+                    <i class="fas fa-globe me-2 color_azul"></i>
+                    Catálogo Global
+                </a>
+            </li>
+            <li class="fondo_opcion_nav hover_color">
+                <a class="color_primario text-sm text-decoration-none" href="{% url 'gestion_inventario:ruta_catalogo_local' %}">
+                    <i class="fa-solid fa-clipboard-list me-2 color_morado"></i>
+                    Catálogo
+                </a>
+            </li>
+            {% endif %}
+
+            {% if perms.gestion_usuarios.accion_gestion_inventario_ver_stock %}
+            <li class="fondo_opcion_nav hover_color">
+                <a class="color_primario text-sm text-decoration-none" href="{% url 'gestion_inventario:ruta_stock_actual' %}">
+                    <i class="fas fa-boxes me-2 color_naranjo"></i>
+                    Stock actual
+                </a>
+            </li>
+            {% endif %}
+
+            {% if perms.gestion_usuarios.accion_gestion_inventario_recepcionar_stock %}
+            <li class="fondo_opcion_nav hover_color">
+                <a class="color_primario text-sm text-decoration-none" href="{% url 'gestion_inventario:ruta_recepcion_stock' %}">
+                    <i class="fa-solid fa-cart-flatbed me-2 color_verde"></i>
+                    Recepción / Agregar
+                </a>
+            </li>
+            {% endif %}
+
+            {% if perms.gestion_usuarios.accion_gestion_inventario_imprimir_etiquetas_qr %}
+            <li class="fondo_opcion_nav hover_color">
+                <a class="color_primario text-sm text-decoration-none" href="{% url 'gestion_inventario:ruta_imprimir_etiquetas' %}">
+                    <i class="fa-solid fa-qrcode me-2"></i>
+                    Imprimir etiquetas
+                </a>
+            </li>
+            {% endif %}
         </ul>
     </section>
+    {% endif %}
 
 
-    {# Sección: Gestión de catálogo de productos #}
+    {# Sección: Movimientos #}
+    {% if perms.gestion_usuarios.accion_gestion_inventario_ver_historial_movimientos %}
     <section class="barra_lateral__seccion">
-
         <div class="barra_lateral__modulo" data-toggle="modulo">
-            <a href="" class="barra_lateral__modulo_nombre fs_nav_seccion color_primario hover_scale">
-                <i class="fa-solid fa-book"></i>
-                <span>Catálogo</span>
+            <a href="{% url 'gestion_inventario:ruta_historial_movimientos' %}" class="barra_lateral__modulo_nombre text-base color_primario hover_scale text-decoration-none">
+                <i class="fa-solid fa-arrow-right-arrow-left"></i>
+                <span>Movimientos</span>
             </a>
-            <i class="fa-solid fa-chevron-down color_primario barra_lateral__flecha_modulo fs_nav_seccion"></i>
+        </div>
+    </section>
+    {% endif %}
+
+
+    {# Sección: Préstamos #}
+    {% if perms.gestion_usuarios.accion_gestion_inventario_ver_prestamos %}
+    <section class="barra_lateral__seccion">
+        <div class="barra_lateral__modulo" data-toggle="modulo">
+            <a href="{% url 'gestion_inventario:ruta_historial_prestamos' %}" class="barra_lateral__modulo_nombre text-base color_primario hover_scale text-decoration-none">
+                <i class="fa-solid fa-hand-holding-hand"></i>
+                <span>Préstamos</span>
+            </a>
+            <i class="fa-solid fa-chevron-down color_primario barra_lateral__flecha_modulo"></i>
         </div>
 
-        <ul class="barra_lateral__lista_opciones oculto">
-            <li class="fondo_opcion_nav"><a class="color_primario fs_nav_opcion" href="">Pendiente</a></li>
+        <ul class="barra_lateral__lista_opciones oculto ps-0 list-unstyled">
+            <li class="fondo_opcion_nav hover_color">
+                <a class="color_primario text-sm text-decoration-none" href="{% url 'gestion_inventario:ruta_historial_prestamos' %}">
+                    <i class="fa-solid fa-hand-holding-hand me-2 color_naranjo_claro"></i>
+                    Préstamos
+                </a>
+            </li>
+            {# Mostramos Destinatarios si puede ver préstamos (aunque gestionar requiere más permisos) #}
+            <li class="fondo_opcion_nav hover_color">
+                <a class="color_primario text-sm text-decoration-none" href="{% url 'gestion_inventario:ruta_lista_destinatarios' %}">
+                    <i class="fa-solid fa-address-book me-2 color_naranjo_claro"></i>
+                    Destinatarios
+                </a>
+            </li>
         </ul>
     </section>
+    {% endif %}
 
 
-    {# Sección: Gestión de Vehículos #}
+    {# Sección: Ubicaciones (Áreas, Vehículos, Compartimentos) #}
+    {% if perms.gestion_usuarios.accion_gestion_inventario_ver_ubicaciones %}
     <section class="barra_lateral__seccion">
-
         <div class="barra_lateral__modulo" data-toggle="modulo">
-            <a href="" class="barra_lateral__modulo_nombre fs_nav_seccion color_primario hover_scale">
-                <i class="fa-solid fa-truck-front"></i>
-                <span>Unidades</span>
-            </a>
-            <i class="fa-solid fa-chevron-down color_primario barra_lateral__flecha_modulo fs_nav_seccion"></i>
-        </div>
-
-        <ul class="barra_lateral__lista_opciones oculto">
-            <li class="fondo_opcion_nav"><a class="color_primario fs_nav_opcion" href="">Pendiente</a></li>
-    </section>
-
-
-    {# Sección: Gestión de Compartimentos #}
-    <section class="barra_lateral__seccion">
-
-        <div class="barra_lateral__modulo" data-toggle="modulo">
-            <a href="" class="barra_lateral__modulo_nombre fs_nav_seccion color_primario hover_scale">
-                <i class="fa-solid fa-toilet-portable"></i>
-                <span>Compartimentos</span>
-            </a>
-            <i class="fa-solid fa-chevron-down color_primario barra_lateral__flecha_modulo fs_nav_seccion"></i>
-        </div>
-
-        <ul class="barra_lateral__lista_opciones oculto">
-            <li class="fondo_opcion_nav"><a class="color_primario fs_nav_opcion" href="">Pendiente</a></li>
-    </section>
-
-
-    {# Sección: Gestión de Almacenes / bodegas / espacios físicos #}
-    <section class="barra_lateral__seccion">
-
-        <div class="barra_lateral__modulo" data-toggle="modulo">
-            <a href="" class="barra_lateral__modulo_nombre fs_nav_seccion color_primario hover_scale">
+            <a href="#" class="barra_lateral__modulo_nombre text-base color_primario hover_scale text-decoration-none">
                 <i class="fa-solid fa-warehouse"></i>
-                <span>Almacenes</span>
+                <span>Ubicaciones</span>
             </a>
-            <i class="fa-solid fa-chevron-down color_primario barra_lateral__flecha_modulo fs_nav_seccion"></i>
+            <i class="fa-solid fa-chevron-down color_primario barra_lateral__flecha_modulo"></i>
         </div>
 
-        <ul class="barra_lateral__lista_opciones oculto">
-            <li class="fondo_opcion_nav"><a class="color_primario fs_nav_opcion" href="">Pendiente</a></li>
+        <ul class="barra_lateral__lista_opciones oculto ps-0 list-unstyled">
+            <li class="fondo_opcion_nav hover_color">
+                <a class="color_primario text-sm text-decoration-none" href="{% url 'gestion_inventario:ruta_lista_areas' %}">
+                    <i class="fa-solid fa-building me-2 color_naranjo_claro"></i>
+                    Áreas
+                </a>
+            </li>
+
+            <li class="fondo_opcion_nav hover_color">
+                <a class="color_primario text-sm text-decoration-none" href="{% url 'gestion_inventario:ruta_lista_vehiculos' %}">
+                    <i class="fa-solid fa-truck-front me-2 color_naranjo_claro"></i>
+                    Vehículos
+                </a>
+            </li>
+
+            <li class="fondo_opcion_nav hover_color">
+                <a class="color_primario text-sm text-decoration-none" href="{% url 'gestion_inventario:ruta_lista_compartimentos' %}">
+                    <i class="fa-solid fa-box me-2 color_naranjo_claro"></i>
+                    Compartimentos
+                </a>
+            </li>
+        </ul>
     </section>
+    {% endif %}
 
 
-
-
-
-
+    {# Sección: Proveedores (Enlace Directo) #}
+    {% if perms.gestion_usuarios.accion_gestion_inventario_ver_proveedores %}
+    <section class="barra_lateral__seccion">
+        <div class="barra_lateral__modulo">
+            <a href="{% url 'gestion_inventario:ruta_lista_proveedores' %}" class="barra_lateral__modulo_nombre text-base color_primario hover_scale text-decoration-none">
+                <i class="fa-solid fa-truck-field"></i>
+                <span>Proveedores</span>
+            </a>
+        </div>
+    </section>
+    {% endif %}
     
 </nav>

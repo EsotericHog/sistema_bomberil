@@ -1,45 +1,55 @@
-<div class="menu-acciones-usuarios">
+<div class="modern-context-menu" role="menu">
+    <ul class="modern-menu-list">
+        
+        {# --- CABECERA --- #}
+        <li class="menu-header text-xs font-bold text-data-code">
+            ROL #{{ rol.id }}
+        </li>
 
-    {# Ver rol #}
-    <a 
-    class="menu-acciones-usuarios__accion acciones-usuarios-ver color_negro" 
-    href="{% url 'gestion_usuarios:ruta_ver_rol' id=rol.id %}"
-    >
-        <i class="fa-solid fa-eye"></i> 
-        Ver
-    </a>
+        {# Ver rol #}
+        {% if perms.gestion_usuarios.accion_gestion_usuarios_ver_roles %}
+        <li>
+            <a class="menu-item text-sm font-medium" 
+               href="{% url 'gestion_usuarios:ruta_ver_rol' id=rol.id %}">
+                <i class="fa-solid fa-eye menu-icon"></i> 
+                <span>Ver Detalles</span>
+            </a>
+        </li>
+        {% endif %}
 
-    {# Modificar rol #}
-    {% if rol.estacion %}
-    <a 
-    class="menu-acciones-usuarios__accion acciones-usuarios-editar color_negro" 
-    href="{% url 'gestion_usuarios:ruta_editar_rol' id=rol.id %}"
-    >
-        <i class="fa-solid fa-pen-to-square"></i> 
-        Modificar
-    </a>
-    {% endif %}
+        {% if perms.gestion_usuarios.accion_gestion_usuarios_gestionar_roles %}
 
-    {# Asignar permisos #}
-    {% if rol.estacion %}
-    <a 
-    class="menu-acciones-usuarios__accion acciones-usuarios-editar color_negro" 
-    href="{% url 'gestion_usuarios:ruta_asignar_permisos' id=rol.id %}"
-    >
-        <i class="fa-solid fa-file-pen"></i>
-        Asignar permisos
-    </a>
-    {% endif %}
+            {# Modificar rol #}
+            {% if rol.estacion %}
+            <li>
+                <a class="menu-item text-sm font-medium" 
+                   href="{% url 'gestion_usuarios:ruta_editar_rol' id=rol.id %}">
+                    <i class="fa-solid fa-pen-to-square menu-icon"></i> 
+                    <span>Modificar</span>
+                </a>
+            </li>
 
-    {# Eliminar rol #}
-    {% if rol.estacion %}
-    <a 
-    class="menu-acciones-usuarios__accion acciones-usuarios-editar color_rojo" 
-    href="{% url 'gestion_usuarios:ruta_eliminar_rol' id=rol.id %}"
-    >
-        <i class="fa-solid fa-trash"></i>
-        Eliminar
-    </a>
-    {% endif %}
+            {# Asignar permisos #}
+            <li>
+                <a class="menu-item text-sm font-medium" 
+                   href="{% url 'gestion_usuarios:ruta_asignar_permisos' id=rol.id %}">
+                    <i class="fa-solid fa-file-pen menu-icon"></i>
+                    <span>Asignar Permisos</span>
+                </a>
+            </li>
 
+            {# Eliminar rol (Peligro) #}
+            <li class="menu-divider"></li>
+            <li>
+                <a class="menu-item item-danger text-sm font-medium" 
+                   href="{% url 'gestion_usuarios:ruta_eliminar_rol' id=rol.id %}">
+                    <i class="fa-solid fa-trash menu-icon"></i>
+                    <span>Eliminar Rol</span>
+                </a>
+            </li>
+            {% endif %}
+
+        {% endif %}
+
+    </ul>
 </div>

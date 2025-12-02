@@ -1,12 +1,197 @@
-{# Plantilla base #}{% extends 'gestion_medica/layouts/base.html' %}
-{# Cargar assets #}{% load static %}
-{# Título de la ventana #} {% block titulo_ventana %}Lista Voluntarios{% endblock %}
-{# Título de la página #} {% block titulo_pagina %}Creación ficha medica de voluntario{% endblock %}
+{% extends 'gestion_medica/layouts/base.html' %}
+{% load static %}
+
+{% block titulo_ventana %}Enfermedades del Paciente{% endblock %}
 
 {% block contenido %}
+<div class="container-fluid">
 
-    <div class="contenedor_medico">
-        <div class="color_primario">FICHAS MEDICAS HOME</div>
+    <div class="card border-0 shadow-sm mb-4 bg-gradient-warning text-white overflow-hidden" style="border-radius: 15px;">
+        <div class="card-body p-4 position-relative">
+            <i class="fas fa-procedures position-absolute text-white-50" style="font-size: 10rem; right: -20px; top: -30px; opacity: 0.15;"></i>
+            
+            <div class="row align-items-center position-relative">
+                <div class="col-md-8">
+                    <h5 class="text-white-50 text-uppercase font-weight-bold mb-1 ls-1">
+                        <i class="fas fa-notes-medical me-2"></i>Historial Clínico
+                    </h5>
+                    <h1 class="display-6 font-weight-bold text-white mb-0">
+                        {{ ficha.voluntario.usuario.get_full_name|default:ficha.voluntario.usuario.rut|title }}
+                    </h1>
+                    <p class="mb-0 text-white-50 mt-2" style="font-size: 1.1rem;">
+                        <i class="fas fa-id-card me-2"></i>RUT: {{ ficha.voluntario.usuario.rut }}
+                    </p>
+                </div>
+                <div class="col-md-4 text-md-end mt-3 mt-md-0">
+                    <a href="{% url 'gestion_medica:ruta_informacion_paciente' pk=ficha.voluntario.usuario.id %}" class="btn btn-light text-warning-dark fw-bold shadow-sm rounded-pill px-4 py-2">
+                        <i class="fas fa-arrow-left me-2"></i> Volver a Ficha
+                    </a>
+                </div>
+            </div>
+        </div>
     </div>
-    
-{% endblock  %}
+
+    <div class="row g-4">
+        
+        <div class="col-lg-4">
+            <div class="card shadow border-0 h-100" style="border-radius: 15px;">
+                <div class="card-header bg-white border-bottom-0 pt-4 pb-0">
+                    <h5 class="font-weight-bold text-secondary mb-0">
+                        <i class="fas fa-plus-circle text-warning-dark me-2"></i>Nueva Enfermedad
+                    </h5>
+                </div>
+                <div class="card-body p-4">
+                    <form method="post" class="needs-validation">
+                        {% csrf_token %}
+                        
+                        <div class="mb-4">
+                            <label class="form-label text-muted font-weight-bold small text-uppercase">Diagnóstico / Enfermedad</label>
+                            <div class="input-group input-group-lg shadow-sm rounded-pill overflow-hidden border input-group-focus-warning">
+                                <span class="input-group-text bg-white border-0 text-warning-dark ps-4">
+                                    <i class="fas fa-stethoscope"></i>
+                                </span>
+                                {{ form.enfermedad }}
+                            </div>
+                            {% if form.enfermedad.errors %}
+                                <div class="text-danger small mt-2 ms-3 fw-bold">
+                                    <i class="fas fa-exclamation-circle me-1"></i> {{ form.enfermedad.errors.0 }}
+                                </div>
+                            {% endif %}
+                            <div class="form-text ms-3 mt-1 small text-muted">Seleccione del catálogo médico.</div>
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="form-label text-muted font-weight-bold small text-uppercase">Estado / Tratamiento</label>
+                            <div class="input-group input-group-lg shadow-sm rounded-pill overflow-hidden border input-group-focus-warning">
+                                <span class="input-group-text bg-white border-0 text-warning-dark ps-4">
+                                    <i class="fas fa-comment-medical"></i>
+                                </span>
+                                {{ form.observaciones }}
+                            </div>
+                            <div class="form-text ms-3 mt-2 small text-muted">
+                                <i class="fas fa-info-circle me-1"></i> Ej: Crónica, En tratamiento, Controlada.
+                            </div>
+                        </div>
+
+                        <div class="d-grid mt-5">
+                            <button type="submit" class="btn btn-warning-custom w-100 btn-lg rounded-pill shadow-sm hover-elevate-warning fw-bold py-3 text-white">
+                                <i class="fas fa-save me-2"></i> REGISTRAR ENFERMEDAD
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-8">
+            <div class="card shadow border-0 h-100" style="border-radius: 15px;">
+                <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center border-bottom">
+                    <h5 class="font-weight-bold text-gray-800 mb-0">Historial de Enfermedades</h5>
+                    <span class="badge bg-warning-soft text-warning-dark border border-warning rounded-pill px-3 py-2">
+                        {{ enfermedades.count }} Registradas
+                    </span>
+                </div>
+
+                <div class="card-body p-0">
+                    {% if enfermedades %}
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle mb-0">
+                                <thead class="bg-light">
+                                    <tr>
+                                        <th class="ps-4 py-3 text-uppercase text-muted small font-weight-bold" style="width: 35%;">Diagnóstico</th>
+                                        <th class="py-3 text-uppercase text-muted small font-weight-bold">Observación Clínica</th>
+                                        <th class="pe-4 py-3 text-end text-uppercase text-muted small font-weight-bold">Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for item in enfermedades %}
+                                    <tr class="border-bottom-light">
+                                        <td class="ps-4 py-4">
+                                            <div class="d-flex align-items-center">
+                                                <div class="rounded-circle bg-warning-soft text-warning-dark d-flex align-items-center justify-content-center me-3" 
+                                                     style="width: 45px; height: 45px; font-size: 1.2rem;">
+                                                    <i class="fas fa-heartbeat"></i>
+                                                </div>
+                                                <div>
+                                                    <span class="h5 mb-0 font-weight-bold text-dark d-block">{{ item.enfermedad.nombre }}</span>
+                                                </div>
+                                            </div>
+                                        </td>
+
+                                        <td class="py-4">
+                                            {% if item.observaciones %}
+                                                <div class="d-flex align-items-center text-secondary">
+                                                    <i class="fas fa-clipboard-check me-2 text-warning-dark opacity-50"></i>
+                                                    <span class="fw-bold">{{ item.observaciones }}</span>
+                                                </div>
+                                            {% else %}
+                                                <span class="badge bg-light text-muted border">Sin observaciones</span>
+                                            {% endif %}
+                                        </td>
+
+                                        <td class="pe-4 text-end">
+                                            <a href="{% url 'gestion_medica:ruta_editar_enfermedad_paciente' pk=ficha.voluntario.usuario.id enfermedad_id=item.id %}" 
+                                               class="btn btn-white btn-sm text-warning-dark shadow-sm border me-1" 
+                                               data-bs-toggle="tooltip" title="Editar registro"
+                                               style="width: 35px; height: 35px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center;">
+                                                <i class="fas fa-pen"></i>
+                                            </a>
+
+                                            <form action="{% url 'gestion_medica:ruta_eliminar_enfermedad_paciente' pk=ficha.voluntario.usuario.id enfermedad_id=item.id %}" method="POST" class="d-inline" onsubmit="return confirm('¿Eliminar el registro de {{ item.enfermedad.nombre }}?');">
+                                                {% csrf_token %}
+                                                <button type="submit" class="btn btn-white btn-sm text-danger shadow-sm border" 
+                                                        data-bs-toggle="tooltip" title="Eliminar registro" 
+                                                        style="width: 35px; height: 35px; border-radius: 50%;">
+                                                    <i class="fas fa-trash-alt"></i>
+                                                </button>
+                                            </form>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="text-center py-5">
+                            <div class="mb-3 p-4 rounded-circle bg-light d-inline-block">
+                                <i class="fas fa-user-md fa-3x text-warning-dark opacity-50"></i>
+                            </div>
+                            <h4 class="text-gray-600 font-weight-bold mt-2">Sin Enfermedades Registradas</h4>
+                            <p class="text-muted mb-0">El paciente no presenta enfermedades crónicas o antecedentes registrados.</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // 1. Limpieza visual de inputs
+        const inputs = document.querySelectorAll('input, select');
+        inputs.forEach(input => {
+            if (!input.classList.contains('select-busqueda')) {
+                input.classList.add('form-control-clean');
+            }
+        });
+
+        // 2. INICIALIZAR TOM SELECT (Buscador)
+        const selectBuscable = document.querySelector('.select-busqueda');
+        
+        if (selectBuscable) {
+            new TomSelect(selectBuscable, {
+                create: false,
+                sortField: {
+                    field: "text",
+                    direction: "asc"
+                },
+                placeholder: 'Escriba para buscar...',
+                allowEmptyOption: true,
+                maxOptions: 50,
+                dropdownParent: 'body' // <--- CLAVE: Para que no se corte
+            });
+        }
+    });
+</script>
+{% endblock %}

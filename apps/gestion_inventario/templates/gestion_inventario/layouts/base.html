@@ -36,14 +36,16 @@
 
         {# Contenido #}
         <main class="main fondo_main">
-            {# Mensaje Flash #}
-            {% include "layouts/flash.html" %}
+            <h1 class="main__titulo_pagina fs_grande color_primario">{% block titulo_pagina %}{% endblock  %}</h1>
 
             {% block contenido %} {% endblock %}
         </main>
 
         {# Importación de Scripts #}
         {% include 'layouts/scripts.html' %}
+
+        {# Scripts de página #}
+        {% block scripts %}{% endblock %}
 
     </div>
 </body>

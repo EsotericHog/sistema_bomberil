@@ -1,0 +1,107 @@
+{# Plantilla base #}{% extends 'gestion_inventario/layouts/base.html' %}
+{# Cargar assets #}{% load static %}
+
+{# Título de la ventana #} {% block titulo_ventana %}Crear Almacén{% endblock %}
+
+{# Título de la página #} 
+{% block titulo_pagina %}
+    <span class="text-xl color_primario">
+        <i class="fas fa-warehouse me-2"></i> Crear Nuevo Almacén (Área)
+    </span>
+{% endblock %}
+
+{% block contenido %}
+<div class="container-fluid mt-4">
+    <div class="row justify-content-center">
+        <div class="col-12 col-md-8 col-lg-6">
+
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-white border-bottom py-3">
+                    <h5 class="card-title mb-0 text-primary font-bold text-lg">
+                        <i class="fas fa-plus me-2"></i>Datos del Almacén
+                    </h5>
+                </div>
+                
+                <div class="card-body p-4">
+                    <form method="post" action="{% url 'gestion_inventario:ruta_crear_area' %}" novalidate>
+                        {% csrf_token %}
+
+                        {# Bloque de Errores Generales #}
+                        {% if formulario.non_field_errors %}
+                            <div class="alert alert-danger text-sm mb-4" role="alert">
+                                {% for error in formulario.non_field_errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+
+                        {# Nombre #}
+                        <div class="mb-3">
+                            <label for="{{ formulario.nombre.id_for_label }}" class="form-label font-bold text-sm">
+                                Nombre <span class="text-danger fw-bold" title="Campo Obligatorio">*</span>
+                            </label>
+                            {{ formulario.nombre }}
+                            {% if formulario.nombre.errors %}
+                                <div class="invalid-feedback d-block text-xs mt-1">
+                                    {{ formulario.nombre.errors.0 }}
+                                </div>
+                            {% endif %}
+                            <div class="form-text text-xs text-muted">Ej: "Bodega Central", "Pañol de Herramientas".</div>
+                        </div>
+
+                        {# Descripción #}
+                        <div class="mb-3">
+                            <label for="{{ formulario.descripcion.id_for_label }}" class="form-label font-bold text-sm">
+                                Descripción
+                            </label>
+                            {{ formulario.descripcion }}
+                            {% if formulario.descripcion.errors %}
+                                <div class="invalid-feedback d-block text-xs mt-1">
+                                    {{ formulario.descripcion.errors.0 }}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        {# Dirección #}
+                        <div class="mb-4">
+                            <label for="{{ formulario.direccion.id_for_label }}" class="form-label font-bold text-sm">
+                                Dirección (Opcional)
+                            </label>
+                            {{ formulario.direccion }}
+                            {% if formulario.direccion.errors %}
+                                <div class="invalid-feedback d-block text-xs mt-1">
+                                    {{ formulario.direccion.errors.0 }}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="alert alert-info text-xs d-flex align-items-center mb-0">
+                            <i class="fas fa-info-circle me-2 fs-5"></i>
+                            <div class="color_blanco">
+                                <strong>Nota:</strong> Este almacén se asociará automáticamente a tu estación actual. Podrás añadir una imagen representativa después de crearlo, en la opción "Editar".
+                            </div>
+                        </div>
+
+                        <hr class="my-4">
+
+                        <div class="d-flex justify-content-end gap-2">
+                            <a href="{% url 'gestion_inventario:ruta_lista_areas' %}" class="btn btn-outline-secondary text-base">
+                                Cancelar
+                            </a>
+                            
+                            {# PERMISO: Crear Ubicaciones #}
+                            {% if perms.gestion_usuarios.accion_gestion_inventario_gestionar_ubicaciones %}
+                            <button type="submit" class="btn btn-success text-base px-4">
+                                <i class="fas fa-save me-1"></i> Crear Almacén
+                            </button>
+                            {% endif %}
+                        </div>
+
+                    </form>
+                </div>
+            </div>  
+
+        </div>
+    </div>
+</div>
+{% endblock %}

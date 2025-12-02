@@ -1,0 +1,197 @@
+{% extends "gestion_inventario/layouts/base.html" %}
+{% load static %}
+
+{% block titulo_ventana %}Detalle de {{ proveedor.nombre }}{% endblock %}
+
+{% block titulo_pagina %}
+    <div class="d-flex align-items-center justify-content-between">
+        <div class="d-flex align-items-center">
+            <a href="{% url 'gestion_inventario:ruta_lista_proveedores' %}" class="btn btn-light rounded-circle me-3 shadow-sm" title="Volver a la Lista">
+                <i class="fas fa-arrow-left text-muted"></i>
+            </a>
+            <div>
+                <span class="text-xl font-bold color_primario">
+                    <i class="fas fa-truck me-2"></i> {{ proveedor.nombre }}
+                </span>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block contenido %}
+<div class="container-fluid mt-4">
+
+    <div class="row g-4">
+        {# --- COLUMNA IZQUIERDA: DATOS GLOBALES --- #}
+        <div class="col-lg-6">
+            
+            {# Tarjeta: Datos de la Entidad #}
+            <div class="card shadow-sm mb-4 border-0">
+                <div class="card-header bg-white border-bottom py-3">
+                    <h5 class="mb-0 text-md font-bold color_primario">Datos Globales de la Entidad</h5>
+                </div>
+                <div class="card-body p-4">
+                    <dl class="row mb-0">
+                        <dt class="col-sm-4 text-sm font-bold text-muted text-uppercase">Razón Social</dt>
+                        <dd class="col-sm-8 text-base text-dark fw-bold">{{ proveedor.nombre }}</dd>
+
+                        <dt class="col-sm-4 text-sm font-bold text-muted text-uppercase">RUT</dt>
+                        <dd class="col-sm-8 text-base text-dark text-data-code">{{ proveedor.rut|default:"No especificado" }}</dd>
+
+                        <dt class="col-sm-4 text-sm font-bold text-muted text-uppercase">Estación Creadora</dt>
+                        <dd class="col-sm-8 text-sm text-muted">
+                            {% if proveedor.estacion_creadora %}
+                                {{ proveedor.estacion_creadora.nombre|title }}
+                            {% else %}
+                                <span class="badge bg-secondary">Sistema</span>
+                            {% endif %}
+                        </dd>
+                    </dl>
+                </div>
+            </div>
+
+            {# Tarjeta: Contacto Principal #}
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-white border-bottom py-3 d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0 text-md font-bold color_primario">Contacto Principal (Global)</h5>
+                    
+                    {# Solo mostramos botón si es la estación creadora Y tiene permisos #}
+                    {% if es_estacion_creadora %}
+                        {% if perms.gestion_usuarios.accion_gestion_inventario_gestionar_proveedores %}
+                        <a href="#" class="btn btn-sm btn-outline-primary text-xs" title="Editar contacto principal (Próximamente)">
+                            <i class="fas fa-edit me-1"></i> Editar
+                        </a>
+                        {% endif %}
+                    {% endif %}
+                </div>
+                <div class="card-body p-4">
+                    {% if contacto_principal %}
+                        <dl class="row mb-0">
+                            <dt class="col-sm-4 text-sm font-bold text-muted text-uppercase">Nombre</dt>
+                            <dd class="col-sm-8 text-base text-dark font-bold">{{ contacto_principal.nombre_contacto }}</dd>
+
+                            <dt class="col-sm-4 text-sm font-bold text-muted text-uppercase">Teléfono</dt>
+                            <dd class="col-sm-8 text-base text-dark text-data-code">{{ contacto_principal.telefono|default:"No especificado" }}</dd>
+
+                            <dt class="col-sm-4 text-sm font-bold text-muted text-uppercase">Email</dt>
+                            <dd class="col-sm-8 text-base text-dark text-data-code">{{ contacto_principal.email|default:"No especificado" }}</dd>
+
+                            <dt class="col-sm-4 text-sm font-bold text-muted text-uppercase">Dirección</dt>
+                            <dd class="col-sm-8 text-base text-dark">{{ contacto_principal.direccion|default:"No especificada" }}</dd>
+                            
+                            <dt class="col-sm-4 text-sm font-bold text-muted text-uppercase">Ubicación</dt>
+                            <dd class="col-sm-8 text-base text-dark">
+                                {{ contacto_principal.comuna.nombre|default:"-" }}, {{ contacto_principal.comuna.region.nombre|default:"-" }}
+                            </dd>
+                            
+                            <dt class="col-sm-4 text-sm font-bold text-muted text-uppercase">Notas</dt>
+                            <dd class="col-sm-8 text-sm text-muted mb-0 fst-italic">{{ contacto_principal.notas|default:"Sin notas." }}</dd>
+                        </dl>
+                    {% else %}
+                        <div class="text-center py-3">
+                            <i class="fas fa-user-slash fs-3 text-muted opacity-25 mb-2"></i>
+                            <p class="text-muted fst-italic mb-0 text-sm">Este proveedor no tiene un contacto principal asignado.</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
+        </div>
+
+        {# --- COLUMNA DERECHA: DATOS LOCALES --- #}
+        <div class="col-lg-6">
+            
+            {# Tarjeta: Contacto Local (Mi Estación) #}
+            <div class="card shadow-sm mb-4 border-0 bg-primary bg-opacity-10">
+                <div class="card-header bg-transparent border-bottom py-3 d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0 text-md font-bold color_primario"><i class="fas fa-star me-2"></i>Contacto para mi Estación</h5>
+                </div>
+                <div class="card-body p-4">
+                    {% if not request.session.active_estacion_id %}
+                        <div class="alert alert-info text-base mb-0">
+                            <i class="fas fa-info-circle me-2"></i>
+                            Debes tener una estación activa para gestionar contactos personalizados.
+                        </div>
+                    {% elif contacto_estacion_actual %}
+                        
+                        <div class="d-flex justify-content-end mb-3">
+                            {# PERMISO: Gestionar Proveedores #}
+                            {% if perms.gestion_usuarios.accion_gestion_inventario_gestionar_proveedores %}
+                            <a href="{% url 'gestion_inventario:ruta_editar_contacto_personalizado' pk=contacto_estacion_actual.pk %}" class="btn btn-sm btn-primary text-xs shadow-sm">
+                                <i class="fas fa-edit me-1"></i> Editar mi Contacto
+                            </a>
+                            {% endif %}
+                        </div>
+
+                        <dl class="row mb-0">
+                            <dt class="col-sm-4 text-sm font-bold text-muted text-uppercase">Nombre</dt>
+                            <dd class="col-sm-8 text-base text-dark fw-bold">{{ contacto_estacion_actual.nombre_contacto }}</dd>
+
+                            <dt class="col-sm-4 text-sm font-bold text-muted text-uppercase">Teléfono</dt>
+                            <dd class="col-sm-8 text-base text-dark text-data-code">{{ contacto_estacion_actual.telefono|default:"No especificado" }}</dd>
+
+                            <dt class="col-sm-4 text-sm font-bold text-muted text-uppercase">Email</dt>
+                            <dd class="col-sm-8 text-base text-dark text-data-code">{{ contacto_estacion_actual.email|default:"No especificado" }}</dd>
+
+                            <dt class="col-sm-4 text-sm font-bold text-muted text-uppercase">Dirección</dt>
+                            <dd class="col-sm-8 text-base text-dark">{{ contacto_estacion_actual.direccion|default:"No especificada" }}</dd>
+                            
+                            <dt class="col-sm-4 text-sm font-bold text-muted text-uppercase">Ubicación</dt>
+                            <dd class="col-sm-8 text-base text-dark">
+                                {{ contacto_estacion_actual.comuna.nombre|default:"-" }}
+                            </dd>
+                            
+                            <dt class="col-sm-4 text-sm font-bold text-muted text-uppercase">Notas</dt>
+                            <dd class="col-sm-8 text-sm text-muted mb-0 fst-italic">{{ contacto_estacion_actual.notas|default:"Sin notas." }}</dd>
+                        </dl>
+                    {% else %}
+                        <div class="text-center py-3">
+                            <p class="text-base color_primario fw-bold mb-1">Tu estación no tiene un contacto personalizado.</p>
+                            <p class="text-xs text-muted mb-3">Puedes agregar un contacto específico (ej: vendedor local) que solo verá tu estación.</p>
+                            
+                            {# PERMISO: Gestionar Proveedores #}
+                            {% if perms.gestion_usuarios.accion_gestion_inventario_gestionar_proveedores %}
+                            <a href="{% url 'gestion_inventario:ruta_crear_contacto_personalizado' proveedor_pk=proveedor.pk %}" class="btn btn-success text-sm shadow-sm">
+                                <i class="fas fa-plus me-1"></i> Crear Contacto para mi Estación
+                            </a>
+                            {% endif %}
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            {# Tarjeta: Otros Contactos #}
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-white border-bottom py-3">
+                    <h5 class="mb-0 text-md font-bold text-muted">Contactos de Otras Estaciones</h5>
+                </div>
+                <div class="card-body p-0">
+                    {% if otros_contactos_personalizados %}
+                        <div class="list-group list-group-flush">
+                            {% for contacto in otros_contactos_personalizados %}
+                                <div class="list-group-item px-4 py-3">
+                                    <div class="d-flex w-100 justify-content-between align-items-center mb-1">
+                                        <h6 class="mb-0 text-sm font-bold color_primario">{{ contacto.estacion_personalizada.nombre_completo }}</h6>
+                                        <span class="badge bg-light text-muted border text-xs">{{ contacto.comuna.nombre|default:'-' }}</span>
+                                    </div>
+                                    <p class="mb-1 text-base text-dark">{{ contacto.nombre_contacto }}</p>
+                                    <small class="text-muted text-xs text-data-code">
+                                        {{ contacto.telefono|default:'-' }}
+                                        {% if contacto.telefono and contacto.email %} &bull; {% endif %}
+                                        {{ contacto.email|default:'' }}
+                                    </small>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="p-4 text-center">
+                            <p class="text-muted fst-italic mb-0 text-sm">Ninguna otra estación ha registrado contactos para este proveedor.</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
+        </div> 
+    </div> 
+</div>
+{% endblock %}

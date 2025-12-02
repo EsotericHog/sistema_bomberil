@@ -1,0 +1,126 @@
+from django.urls import path
+from .views import (
+    AdministracionInicioView, 
+    EstacionListaView, 
+    EstacionDetalleView, 
+    EstacionEditarView, 
+    EstacionCrearView, 
+    EstacionEliminarView, 
+    EstacionSwitchView, 
+    ProductoGlobalListView, 
+    ProductoGlobalCreateView, 
+    ProductoGlobalUpdateView, 
+    ProductoGlobalDeleteView, 
+    UsuarioListView, 
+    UsuarioCreateView,
+    UsuarioUpdateView,
+    UsuarioResetPasswordView,
+    ApiRolesPorEstacionView,
+    MembresiaCreateView,
+    UsuarioFinalizarMembresiasView,
+    RolGlobalListView,
+    RolGlobalCreateView,
+    RolGlobalUpdateView,
+    RolGlobalDeleteView,
+    MarcaListView,
+    MarcaCreateView,
+    MarcaUpdateView,
+    MarcaDeleteView,
+    CategoriaListView,
+    CategoriaCreateView,
+    CategoriaUpdateView,
+    CategoriaDeleteView
+)
+
+app_name = 'core_admin'
+
+urlpatterns = [
+    # Página Inicial
+    path('', AdministracionInicioView.as_view(), name="ruta_inicio"),
+
+    # Lista de estaciones
+    path('estaciones/', EstacionListaView.as_view(), name='ruta_lista_estaciones'),
+
+    # Ver detalle de estación
+    path('estaciones/<int:pk>/', EstacionDetalleView.as_view(), name='ruta_ver_estacion'),
+
+    # Editar estación
+    path('estaciones/<int:pk>/editar/', EstacionEditarView.as_view(), name='ruta_editar_estacion'),
+
+    # Crear estación
+    path('estaciones/crear/', EstacionCrearView.as_view(), name='ruta_crear_estacion'),
+
+    # Eliminar estación
+    path('estaciones/<int:pk>/eliminar/', EstacionEliminarView.as_view(), name='ruta_eliminar_estacion'),
+
+    # Acceder a una estación
+    path('estaciones/<int:pk>/ingresar/', EstacionSwitchView.as_view(), name='ruta_acceder_estacion'),
+
+
+
+    # Catálogo global de productos
+    path('catalogo-global/', ProductoGlobalListView.as_view(), name='ruta_catalogo_global'),
+
+    # Crear producto global
+    path('catalogo-global/crear/', ProductoGlobalCreateView.as_view(), name='ruta_crear_producto_global'),
+
+    # Editar producto global
+    path('catalogo-global/<int:pk>/editar/', ProductoGlobalUpdateView.as_view(), name='ruta_editar_producto_global'),
+
+    # Eliminar producto global
+    path('catalogo-global/<int:pk>/eliminar/', ProductoGlobalDeleteView.as_view(), name='ruta_eliminar_producto_global'),
+
+
+
+    # Lista de usuarios
+    path('usuarios/', UsuarioListView.as_view(), name='ruta_lista_usuarios'),
+
+    # Crear usuario
+    path('usuarios/crear/', UsuarioCreateView.as_view(), name='ruta_crear_usuario'),
+
+    # Editar usuario
+    path('usuarios/<uuid:pk>/editar/', UsuarioUpdateView.as_view(), name='ruta_editar_usuario'),
+
+    # Restablecer contraseña
+    path('usuarios/<uuid:pk>/reset-password/', UsuarioResetPasswordView.as_view(), name='ruta_restablecer_contraseña'),
+
+    # API Roles por estación
+    path('api/roles-estacion/', ApiRolesPorEstacionView.as_view(), name='api_roles_estacion'),
+
+    # Asignar membresía a usuario
+    path('membresias/asignar/', MembresiaCreateView.as_view(), name='ruta_crear_membresia'),
+
+    # Finalizar todas las membresías activas de un usuario
+    path('usuarios/<uuid:pk>/finalizar-membresias/', UsuarioFinalizarMembresiasView.as_view(), name='ruta_finalizar_membresias_usuario'),
+
+
+
+    # Lista de roles
+    path('roles-globales/', RolGlobalListView.as_view(), name='ruta_lista_roles'),
+    # Crear rol global
+    path('roles-globales/crear/', RolGlobalCreateView.as_view(), name='ruta_crear_rol'),
+    # Editar rol global
+    path('roles-globales/<int:pk>/editar/', RolGlobalUpdateView.as_view(), name='ruta_editar_rol'),
+    # Eliminar rol
+    path('roles-globales/<int:pk>/eliminar/', RolGlobalDeleteView.as_view(), name='ruta_eliminar_rol'),
+
+    # Gestión de marcas
+    path('marcas/', MarcaListView.as_view(), name='ruta_lista_marcas'),
+    path('marcas/crear/', MarcaCreateView.as_view(), name='ruta_crear_marca'),
+    path('marcas/<int:pk>/editar/', MarcaUpdateView.as_view(), name='ruta_editar_marca'),
+    path('marcas/<int:pk>/eliminar/', MarcaDeleteView.as_view(), name='ruta_eliminar_marca'),
+
+    # Gestión de categorías
+    path('categorias/', CategoriaListView.as_view(), name='ruta_lista_categorias'),
+    path('categorias/crear/', CategoriaCreateView.as_view(), name='ruta_crear_categoria'),
+    path('categorias/<int:pk>/editar/', CategoriaUpdateView.as_view(), name='ruta_editar_categoria'),
+    path('categorias/<int:pk>/eliminar/', CategoriaDeleteView.as_view(), name='ruta_eliminar_categoria'),
+]
+
+
+# PENDIENTE
+# - CRUD para los modelos de normalización: Nacionalidad, Profesion, TipoCargo, TipoReconocimiento.
+
+# - Área: Inteligencia y Auditoría (Logs)
+#   - Visor Global de Movimientos: Una tabla filtrable de MovimientoInventario de todas las estaciones. Permite detectar patrones anómalos (ej: una estación dando de baja masiva de equipos).
+#   - Auditoría de Bitácoras: Visualización de los registros firmados en las hojas de vida (HistorialSancion, HistorialCargo). Solo lectura, para resolver disputas entre estaciones o usuarios.

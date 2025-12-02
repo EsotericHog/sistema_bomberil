@@ -1,0 +1,30 @@
+/* TOM SELECT TEMPORAL: PROBABLEMENTE TENGA QUE QUITAR ESTO */
+.ts-dropdown, .ts-dropdown.form-control {
+    z-index: 9999 !important; /* Por encima de todo */
+}
+
+/* Forzar que Tom Select use tus variables CSS globales */
+.ts-wrapper .ts-control {
+    font-size: var(--font-base) !important;
+    line-height: 1.5 !important;
+    border: 0 !important; /* Coincidir con tus inputs sin borde en forms.py */
+    background-color: var(--fondo-secundario-variante) !important; /* Asumiendo esta variable por tus clases */
+}
+.ts-dropdown .option {
+    font-size: var(--font-base) !important;
+}
+.ts-control input {
+    font-size: inherit !important;
+}
+
+/* Forzar que Tom Select use tus variables CSS globales */
+.ts-wrapper .ts-control {
+    font-size: var(--font-base) !important;
+    line-height: 1.5 !important;
+}
+.ts-dropdown .option {
+    font-size: var(--font-base) !important;
+}
+.ts-control input {
+    font-size: inherit !important;
+}

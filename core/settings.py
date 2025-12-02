@@ -20,7 +20,8 @@ DJANGO_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
-    'django.contrib.sessions',
+    # 'django.contrib.sessions',
+    'user_sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'django.contrib.humanize',
@@ -28,29 +29,32 @@ DJANGO_APPS = [
 # Aplicaciones del proyecto
 PROJECT_APPS = [
     'apps.common',
-    'apps.utilidades',
     'apps.gestion_inventario',
     'apps.gestion_mantenimiento',
     'apps.gestion_voluntarios',
     'apps.gestion_medica',
     'apps.gestion_usuarios',
+    'apps.gestion_documental',
     'apps.portal',
     'apps.acceso',
     'apps.api',
     'apps.perfil',
+    'apps.core_admin',
 ]
 # Aplicaciones de terceros
 THIRD_PARTY_APPS = [
     #'jazzmin',
     'storages',
     'rest_framework',
+    'django_cleanup.apps.CleanupConfig',
 ]
 INSTALLED_APPS = THIRD_PARTY_APPS + DJANGO_APPS + PROJECT_APPS
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware',
-    'django.contrib.sessions.middleware.SessionMiddleware',
+    # 'django.contrib.sessions.middleware.SessionMiddleware',
+    'user_sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
@@ -98,17 +102,32 @@ DATABASES = {
 
 # Validaciones de contraseña
 AUTH_PASSWORD_VALIDATORS = [
+    # 1. Similitud con el usuario: Evita que la contraseña se parezca al RUT, Email o Nombre.
     {
         'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
+        'OPTIONS': {
+            'user_attributes': ('rut', 'email', 'first_name', 'last_name'),
+            'max_similarity': 0.7,
+        }
     },
+    # 2. Longitud Mínima: Tu regla de 12 caracteres.
     {
         'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
+        'OPTIONS': {
+            'min_length': 12,
+        }
     },
+    # 3. Contraseñas Comunes: Bloquea las 20,000 contraseñas más usadas (ej: "123456", "bomberos1").
     {
         'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
     },
+    # 4. Evitar solo números: (Opcional, pero buena práctica básica)
     {
         'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
+    },
+    # 5. NUESTRO VALIDADOR PERSONALIZADO (Mayúsculas, Símbolos, etc.)
+    {
+        'NAME': 'apps.common.password_validation.BomberilPasswordValidator',
     },
 ]
 
@@ -156,9 +175,11 @@ MODULOS = {
     'gestion_medica': 'Gestión Médica',
     'gestion_usuarios': 'Usuarios y Permisos',
     'gestion_voluntarios': 'Gestión Voluntarios',
-    'portal': 'Bomberil',
+    'gestion_documental': 'Gestión Documental',
+    'portal': 'Portal',
     'acceso': 'Acceso',
     'api': 'api',
+    'core_admin': 'Administración del sistema',
 }
 
 
@@ -264,3 +285,12 @@ REST_FRAMEWORK = {
         'rest_framework.permissions.DjangoModelPermissionsOrAnonReadOnly'
     ]
 }
+
+# Configurar el motor de sesión
+SESSION_ENGINE = 'user_sessions.backends.db'
+SILENCED_SYSTEM_CHECKS = ['admin.E410']
+
+# Configuración de Inventario
+INVENTARIO_UBICACION_AREA_NOMBRE = "ÁREA"
+INVENTARIO_UBICACION_VEHICULO_NOMBRE = "VEHÍCULO"
+INVENTARIO_UBICACION_ADMIN_NOMBRE = "ADMINISTRATIVA"

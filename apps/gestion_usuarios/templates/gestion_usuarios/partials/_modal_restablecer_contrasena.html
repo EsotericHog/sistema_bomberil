@@ -1,0 +1,29 @@
+{# --- MODAL RESTABLECER CONTRASEÑA (ESTANDARIZADO) --- #}
+<div class="modal fade" id="confirmResetModal" tabindex="-1" aria-labelledby="confirmResetModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content shadow-sm {% if request.session.dark_mode %}dark-mode{% endif %}">
+            
+            <div class="modal-header bg-warning bg-opacity-10 border-0">
+                <h5 class="modal-title fs_normal fw-bold text-dark" id="confirmResetModalLabel">
+                    <i class="fas fa-key me-2 text-warning"></i>Confirmar Acción
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+
+            <div class="modal-body fs_normal">
+                <p>Estás a punto de iniciar un restablecimiento de contraseña para el usuario <strong id="modalUserName" class="text-dark"></strong>.</p>
+                <p class="text-muted fs_pequena mb-0">
+                    Se le enviará un correo electrónico con un enlace para establecer una nueva contraseña. ¿Deseas continuar?
+                </p>
+            </div>
+
+            <div class="modal-footer border-0">
+                {# Este botón no es un form, porque el JS de 'lista_usuarios.html' hace submit #}
+                <button type="button" class="btn btn-outline-secondary btn-sm fs_normal" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-warning btn-sm fs_normal text-dark" id="modalConfirmResetBtn">
+                    <i class="fas fa-envelope me-1"></i>Sí, Enviar Correo
+                </button>
+            </div>
+        </div>
+    </div>
+</div>

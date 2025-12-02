@@ -1,52 +1,58 @@
-{# PLANTILLA BASE PARA EL MÓDULO DE GESTIÓN DE INVENTARIO #}
+{# PLANTILLA BASE MÓDULO MÉDICO (ESTANDARIZADA) #}
 {% load static %}
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
 
-    {# Importación de Estilos #}
+    {# 1. Importación de Estilos Globales #}
     {% include 'layouts/estilos.html' %}
-    {# Importación de Estilos de aplicación #}
-    <link rel="stylesheet" href="{% static 'gestion_medica/css/medica_estilos.css' %}">
-
-    {# Título de la ventana #}
-    <title>{% block titulo_ventana %}{% endblock %}</title>
-
-    {# Descripción #}
-    <meta name="description" content="Sistema de inventario diseñado para la Segunda Compañía de Bomberos de Iquique">
-
+    
+    {# 2. Estilos específicos del módulo (tarjetas, etc.) #}
+    <link rel="stylesheet" href="{% static 'gestion_medica/css/formularios_medica.css' %}">
+    <link rel="stylesheet" href="{% static 'gestion_medica/css/temas_medico.css' %}"> 
+    <link rel="stylesheet" href="{% static 'gestion_medica/css/home_medico.css' %}">
+    <link rel="stylesheet" href="{% static 'gestion_medica/css/catalogos.css' %}">
+    <link rel="stylesheet" href="{% static 'gestion_medica/css/compatibilidad.css' %}">
+    <link rel="stylesheet" href="{% static 'gestion_medica/css/lista_medico.css' %}">
+    <link rel="stylesheet" href="{% static 'gestion_medica/css/ficha_medica.css' %}">
+    <link rel="stylesheet" href="{% static 'css/base/texto.css' %}">
+    
+    <title>{% block titulo_ventana %}Gestión Médica{% endblock %}</title>
 </head>
 <body class="{% if request.session.dark_mode|default:False %}dark-mode{% endif %}">
-    {# Contenedor principal #}
+    
+    {# Contenedor Principal #}
     <div id="root">
 
-        {# Header/Encabezado #}
+        {# A. HEADER SUPERIOR (Donde sale el logo y el usuario) #}
+        {# Al incluir esto, aparecerá el usuario a la derecha automáticamente #}
         {% include "layouts/header.html" %}
 
-        {# Menú desplegable con más opciones de cuenta/usuario. Por defecto está oculto #}
+        {# B. MENÚ DESPLEGABLE DE USUARIO #}
+        {# Este es el componente flotante que no te salía #}
         {% include "layouts/menu_desplegable_usuario.html" %}
         
-        {# Menú lateral de navegación #}
+        {# C. BARRA LATERAL IZQUIERDA #}
         {% include "gestion_medica/layouts/barra_lateral.html" %}
 
-        {# Contenido #}
+        {# D. CONTENIDO PRINCIPAL (Fondo gris y márgenes correctos) #}
         <main class="main fondo_main">
+            
             <h1 class="main__titulo_pagina fs_grande color_primario">
-            {% block titulo_pagina %}{% endblock  %}
+                {% block titulo_pagina %}{% endblock %}
             </h1>
-
-            {# Mensaje Flash #}
-            {% include "layouts/flash.html" %}
             
             {% block contenido %} {% endblock %}
         </main>
 
-        {# Importación de Scripts #}
+        {# Scripts Globales #}
         {% include 'layouts/scripts.html' %}
+        
+        {# Script para que funcione el menú desplegable de la barra lateral #}
+        <script src="{% static 'js/nav.js' %}"></script>
 
     </div>
 </body>

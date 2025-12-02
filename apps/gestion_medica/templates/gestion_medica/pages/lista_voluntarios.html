@@ -1,39 +1,198 @@
-{# Plantilla base #}{% extends 'gestion_medica/layouts/base.html' %}
-{# Cargar assets #}{% load static %}
-{# Título de la ventana #} {% block titulo_ventana %}Lista Voluntarios{% endblock %}
-{# Título de la página #} {% block titulo_pagina %}Lista de Voluntarios{% endblock %}
+{% extends 'gestion_medica/layouts/base.html' %}
+{% load static %}
+
+{% block titulo_ventana %}Listado de Pacientes{% endblock %}
 
 {% block contenido %}
 
-    <div class="contenedor_medico">
-        <div class="contenedor_tabla">
-            <table>
-                <tr>
-                    <th>Nombre</th>
-                    <th>Peso</th>
-                    <th>Altura</th>
-                    <th>Mostrar</th>
-                </tr>
-                <tr>
-                    <td>Pepe</td>
-                    <td>65</td>
-                    <td>1.75</td>
-                    <td><button>Mostrar</button></td>
-                </tr>
-                <tr>
-                    <td>Juan</td>
-                    <td>70</td>
-                    <td>1.90</td>
-                    <td><button>Mostrar</button></td>
-                </tr>
-                <tr>
-                    <td>Ana</td>
-                    <td>55</td>
-                    <td>1.65</td>
-                    <td><button>Mostrar</button></td>
-                </tr>
+<div class="container-fluid lista-container">
+    
+    <div class="page-header">
+        <div class="header-content">
+            <h1 class="page-title text-3xl font-black">Directorio Clínico</h1>
+            <p class="page-subtitle text-md font-regular">Gestión de fichas médicas del personal activo.</p>
+        </div>
+        <div class="header-icon-bg">
+            <i class="fa-solid fa-file-medical"></i>
+        </div>
+    </div>
+
+    <div class="card-table">
+        
+        <div class="card-table-header">
+            <h5 class="m-0 text-turquoise text-xl font-bold">
+                <i class="fa-solid fa-list-ul me-2"></i>Pacientes Registrados
+            </h5>
+            
+            <div class="controls-wrapper">
+                <select id="filtroOrden" class="form-select-custom text-base font-medium">
+                    <option value="default" disabled>Ordenar por...</option>
+                    <option value="asc" selected>Nombre (A-Z)</option>
+                    <option value="desc">Nombre (Z-A)</option>
+                </select>
+
+                <div class="search-wrapper">
+                    <i class="fas fa-search search-icon"></i>
+                    <input type="text" id="buscadorTabla" class="search-input text-base font-regular" placeholder="Buscar nombre o RUT...">
+                </div>
+            </div>
+
+            <a href="{% url 'gestion_medica:ruta_exportar_lista_medica' %}" class="btn btn-success">
+                <i class="fas fa-file-csv"></i> Exportar Excel/CSV
+            </a>
+        </div>
+
+        <div class="table-responsive">
+            <table class="table table-custom" id="dataTablePacientes">
+                <thead>
+                    <tr>
+                        <th class="avatar-cell"></th>
+                        <th class="text-sm font-bold">Voluntario / Identificación</th>
+                        <th class="text-center text-sm font-bold">Grupo Sanguíneo</th>
+                        <th class="text-center text-sm font-bold">Sistema Salud</th>
+                        <th class="text-center text-sm font-bold">Estado Ficha</th>
+                        <th class="text-center text-sm font-bold">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody id="tablaCuerpo">
+                    {% for paciente in pacientes %}
+                    <tr class="paciente-row">
+                        <td class="avatar-cell">
+                            {% static 'imagenes/default_avatar.png' as default_img %}
+                            {% with foto=paciente.voluntario.imagen_thumb_small|default:paciente.voluntario.usuario.avatar %}
+                                {% if foto %}
+                                    <img src="{{ foto.url }}" alt="Avatar" class="user-avatar-small" onerror="this.onerror=null; this.src='{{ default_img }}';">
+                                {% else %}
+                                    <div class="user-avatar-small d-flex align-items-center justify-content-center bg-light text-turquoise border rounded-circle" style="width: 50px; height: 50px; font-size: 1.2rem;">
+                                        <i class="fas fa-user"></i>
+                                    </div>
+                                {% endif %}
+                            {% endwith %}
+                        </td>
+
+                        <td>
+                            <div class="user-info">
+                                <h6 class="data-search-name text-lg font-bold">{{ paciente.voluntario.usuario.get_full_name }}</h6>
+                                <small class="text-muted text-sm font-regular">RUT: <span class="data-search-rut text-data-code">{{ paciente.voluntario.usuario.rut }}</span></small>
+                            </div>
+                        </td>
+
+                        <td class="text-center">
+                            {% if paciente.grupo_sanguineo %}
+                                <span class="badge badge-blood bg-danger text-white shadow-sm rounded-pill text-xs font-bold">
+                                    <i class="fas fa-tint me-1"></i> {{ paciente.grupo_sanguineo.nombre }}
+                                </span>
+                            {% else %}
+                                <span class="text-muted text-sm font-regular">--</span>
+                            {% endif %}
+                        </td>
+
+                        <td class="text-center">
+                            {% if paciente.sistema_salud %}
+                                <span class="badge badge-system bg-light text-dark border rounded text-xs font-medium">
+                                    {{ paciente.sistema_salud.nombre }}
+                                </span>
+                            {% else %}
+                                <span class="text-muted text-sm font-regular">S/I</span>
+                            {% endif %}
+                        </td>
+
+                        <td class="text-center">
+                            <span class="badge bg-success rounded-pill px-3 py-2 text-xs font-bold">Activo</span>
+                        </td>
+
+                        <td class="text-center">
+                            <div class="d-flex justify-content-center gap-1">
+                                <a href="{% url 'gestion_medica:ruta_informacion_paciente' paciente.voluntario.usuario.id %}" 
+                                   class="btn btn-action-icon text-info bg-light rounded-circle" 
+                                   data-bs-toggle="tooltip" title="Ver Ficha">
+                                    <i class="fas fa-eye"></i>
+                                </a>
+
+                                <a href="{% url 'gestion_medica:ruta_modificar_paciente' paciente.voluntario.usuario.id %}" 
+                                   class="btn btn-action-icon text-warning bg-light rounded-circle" 
+                                   data-bs-toggle="tooltip" title="Editar">
+                                    <i class="fas fa-pen"></i>
+                                </a>
+
+                                <a href="{% url 'gestion_medica:ruta_contacto_emergencia' paciente.voluntario.usuario.id %}" 
+                                   class="btn btn-action-icon text-danger bg-light rounded-circle" 
+                                   data-bs-toggle="tooltip" title="Emergencia">
+                                    <i class="fas fa-phone"></i>
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6">
+                            <div class="py-5 text-center text-muted">
+                                <i class="fa-solid fa-folder-open fa-3x mb-3 opacity-50"></i>
+                                <h5 class="text-xl font-medium">No hay fichas médicas registradas</h5>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+
+                    <tr id="noResultsRow" class="no-results-row" style="display: none;">
+                        <td colspan="6">
+                            <div class="no-results-content text-center">
+                                <i class="fa-solid fa-user-slash"></i>
+                                <h6 class="text-lg font-bold mt-3">Usuario no encontrado</h6>
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
             </table>
         </div>
     </div>
-    
-{% endblock  %}
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const buscador = document.getElementById('buscadorTabla');
+        const filtroOrden = document.getElementById('filtroOrden');
+        const tableBody = document.getElementById('tablaCuerpo');
+        const noResultsRow = document.getElementById('noResultsRow');
+        
+        let rows = Array.from(document.querySelectorAll('.paciente-row'));
+
+        buscador.addEventListener('keyup', function() {
+            const term = this.value.toLowerCase().trim();
+            let visibleCount = 0;
+
+            rows.forEach(row => {
+                const name = row.querySelector('.data-search-name').innerText.toLowerCase();
+                const rut = row.querySelector('.data-search-rut').innerText.toLowerCase();
+
+                if (name.includes(term) || rut.includes(term)) {
+                    row.style.display = '';
+                    visibleCount++;
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+
+            if (visibleCount === 0 && rows.length > 0) {
+                noResultsRow.style.display = '';
+            } else {
+                noResultsRow.style.display = 'none';
+            }
+        });
+
+        filtroOrden.addEventListener('change', function() {
+            const orden = this.value;
+            rows.sort((a, b) => {
+                const nameA = a.querySelector('.data-search-name').innerText.toLowerCase();
+                const nameB = b.querySelector('.data-search-name').innerText.toLowerCase();
+                return orden === 'asc' ? nameA.localeCompare(nameB) : nameB.localeCompare(nameA);
+            });
+            rows.forEach(row => tableBody.insertBefore(row, noResultsRow));
+        });
+        
+        if(rows.length > 0) {
+             filtroOrden.dispatchEvent(new Event('change'));
+        }
+    });
+</script>
+{% endblock contenido %}

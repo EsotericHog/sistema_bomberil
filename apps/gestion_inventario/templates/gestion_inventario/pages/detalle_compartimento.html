@@ -1,0 +1,206 @@
+{% extends 'gestion_inventario/layouts/base.html' %}
+{% load static %}
+{% load tz %} {# Carga la librería de timezone para fechas #}
+
+{% block titulo_ventana %}Detalle Compartimento: {{ compartimento.nombre }}{% endblock %}
+
+{% block titulo_pagina %}
+    <span class="text-xl color_primario">
+        <i class="fas fa-box me-2"></i> Detalle de Compartimento
+    </span>
+{% endblock %}
+
+
+{% block contenido %}
+<div class="container-fluid mt-4">
+
+    <div class="row g-4 align-items-start">
+        
+        {# --- COLUMNA IZQUIERDA: INFORMACIÓN DEL COMPARTIMENTO --- #}
+        <div class="col-12 col-lg-4">
+            <div class="card shadow-sm mb-4 border-0">
+                
+                <div class="bg-light text-center">
+                    <img src="{% if compartimento.imagen %}{{ compartimento.imagen.url }}{% else %}{% static 'gestion_inventario/imagenes/default_compartimento.png' %}{% endif %}"
+                         class="card-img-top img-fluid" alt="Imagen {{ compartimento.nombre }}" style="max-height: 250px; object-fit: contain;">
+                </div>
+                
+                <div class="card-body p-4">
+                    <h3 class="card-title text-xl font-bold color_primario mb-1">{{ compartimento.nombre }}</h3>
+                    <p class="card-text mb-2 color_primario_variante text-sm font-bold text-uppercase">{{ compartimento.codigo|default:"Sin código" }}</p>
+                    <p class="card-text mb-3 color_primario_variante text-base text-muted">{{ compartimento.descripcion|default:"Sin descripción" }}</p>
+                    
+                    <div class="alert alert-light border d-flex align-items-center p-2 mb-3">
+                        {% if compartimento.ubicacion.tipo_ubicacion.nombre == 'VEHÍCULO' %}
+                            <i class="fas fa-truck fs-4 text-primary me-3 ms-2"></i>
+                        {% else %}
+                            <i class="fas fa-landmark fs-4 text-primary me-3 ms-2"></i>
+                        {% endif %}
+                        <div>
+                            <small class="text-xs text-uppercase font-bold text-muted">Ubicación</small><br>
+                            <a href="{% url 'gestion_inventario:ruta_gestionar_ubicacion' compartimento.ubicacion.id %}" class="text-base font-bold text-dark text-decoration-none">
+                                {{ compartimento.ubicacion.nombre }}
+                            </a>
+                        </div>
+                    </div>
+                    
+                    <p class="text-xs text-muted mt-2">Creado: {{ compartimento.created_at|date:"d/m/Y" }}</p>
+
+                    <h5 class="text-base font-bold color_primario mt-3 pt-3 border-top">Resumen del Compartimento</h5>
+                    <ul class="list-group list-group-flush text-sm mb-3">
+                        <li class="list-group-item d-flex justify-content-between align-items-center px-0 border-0">
+                            Total Activos
+                            <span class="badge bg-info rounded-pill text-dark">{{ resumen_activos }}</span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between align-items-center px-0 border-0">
+                            Total Insumos (Unidades)
+                            <span class="badge bg-warning text-dark rounded-pill">{{ resumen_insumos }}</span>
+                        </li>
+                         <li class="list-group-item d-flex justify-content-between align-items-center px-0 fw-bold border-top">
+                            Total Existencias
+                            <span class="badge bg-primary rounded-pill">{{ resumen_total }}</span>
+                        </li>
+                    </ul>
+
+                    <div class="d-grid gap-2 d-md-flex mt-3 pt-3 border-top flex-wrap">
+                        {# PERMISO: Recepcionar Stock (Añadir) #}
+                        {% if perms.gestion_usuarios.accion_gestion_inventario_recepcionar_stock %}
+                        <a class="btn btn-primary btn-sm text-base flex-fill" href="{% url 'gestion_inventario:ruta_agregar_stock_compartimento' compartimento.id %}">
+                            <i class="fa-solid fa-plus me-1"></i> Añadir Stock
+                        </a>
+                        {% endif %}
+
+                        {# PERMISO: Gestionar Ubicaciones (Editar/Eliminar) #}
+                        {% if perms.gestion_usuarios.accion_gestion_inventario_gestionar_ubicaciones %}
+                            <a class="btn btn-outline-secondary btn-sm text-base flex-fill" href="{% url 'gestion_inventario:ruta_editar_compartimento' compartimento.id %}">
+                                <i class="fa-solid fa-pen-to-square me-1"></i> Editar
+                            </a>
+                            <a class="btn btn-outline-danger btn-sm text-base flex-fill" href="{% url 'gestion_inventario:ruta_eliminar_compartimento' compartimento.id %}">
+                                <i class="fa-solid fa-trash me-1"></i> Eliminar
+                            </a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {# --- COLUMNA DERECHA: TABLA DE EXISTENCIAS --- #}
+        <div class="col-12 col-lg-8">
+            <div class="card shadow-sm mb-4 border-0">
+                <div class="card-header bg-white border-bottom py-3 d-flex justify-content-between align-items-center">
+                    <span class="font-bold text-lg color_primario">
+                        <i class="fas fa-table me-1"></i> Existencias en {{ compartimento.nombre }}
+                    </span>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        
+                        <table class="table table-hover table-sm align-middle mb-0" id="tablaStockEnCompartimento">
+                            <thead class="bg-light text-secondary text-uppercase text-xs font-bold">
+                                <tr>
+                                    <th class="ps-4">Producto</th>
+                                    <th>ID Interno / Lote</th>
+                                    <th class="text-center">Tipo</th>
+                                    <th class="text-center">Cantidad</th>
+                                    <th class="text-center">Estado</th>
+                                    <th>Recepción</th>
+                                    <th>Fecha Relevante</th>
+                                    <th class="text-center pe-4">Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody class="text-base">
+                                {% for item in stock_items %}
+                                <tr>
+                                    <td class="ps-4">
+                                        <strong class="text-sm">{{ item.producto.producto_global.nombre_oficial }}</strong>
+                                        <br><small class="text-muted text-xs text-data-code">SKU: {{ item.producto.sku|default:"N/A" }}</small>
+                                    </td>
+                                    
+                                    {% if item.producto.es_serializado %}
+                                        <td class="text-sm">
+                                            <span class="text-muted text-xs">ID:</span> <strong class="text-data-code">{{ item.codigo_activo|default:"N/A" }}</strong>
+                                            <br><small class="text-muted text-xs">N/S: <span class="text-data-code">{{ item.numero_serie_fabricante|default:"N/A" }}</span></small>
+                                        </td>
+                                    {% else %}
+                                        <td class="text-sm">
+                                            <span class="text-muted text-xs">Lote:</span> <strong class="text-data-code">{{ item.numero_lote_fabricante|default:"N/A" }}</strong>
+                                        </td>
+                                    {% endif %}
+                                    
+                                    <td class="text-center">
+                                        {% if item.producto.es_serializado %}
+                                            <span class="badge bg-info text-dark text-xs">Activo</span>
+                                        {% else %}
+                                            <span class="badge bg-warning text-dark text-xs">Insumo</span>
+                                        {% endif %}
+                                    </td>
+                                    
+                                    <td class="text-center">
+                                        {% if item.producto.es_serializado %} 
+                                            <strong>1</strong> 
+                                        {% else %} 
+                                            <strong class="text-lg">{{ item.cantidad }}</strong> 
+                                        {% endif %}
+                                    </td>
+                                    
+                                    <td class="text-center">
+                                        {% if item.producto.es_serializado %}
+                                            <span class="badge text-xs {% if item.estado.nombre == 'DISPONIBLE' %}bg-success{% elif item.estado.nombre == 'MANTENIMIENTO' %}bg-warning text-dark{% elif item.estado.nombre == 'DE BAJA' %}bg-danger{% else %}bg-secondary{% endif %}">
+                                                {{ item.estado.nombre|default:'N/A'|title }}
+                                            </span>
+                                        {% else %}
+                                            <span class="badge bg-success text-xs">Operativo</span>
+                                        {% endif %}
+                                    </td>
+                                    
+                                    <td class="text-xs text-data-code">
+                                       {{ item.fecha_recepcion|date:"d/m/Y"|default:"N/A" }} 
+                                    </td>
+
+                                    <td class="text-xs">
+                                        {% if item.producto.es_serializado %}
+                                            {% if item.fin_vida_util %} 
+                                                <span class="text-muted">Vida Útil:</span> <span class="text-data-code">{{ item.fin_vida_util|date:"d/m/Y" }}</span>
+                                            {% elif item.fecha_expiracion %} 
+                                                <span class="text-muted">Expira:</span> <span class="text-data-code">{{ item.fecha_expiracion|date:"d/m/Y" }}</span>
+                                            {% else %} <span class="text-muted text-italic">N/A</span> {% endif %}
+                                        {% else %}
+                                            {% if item.fecha_expiracion %} 
+                                                {% timezone None %}
+                                                    {% if item.fecha_expiracion < today %}
+                                                        <strong class="text-danger">Venció: {{ item.fecha_expiracion|date:"d/m/Y" }}</strong>
+                                                    {% else %}
+                                                        Vence: {{ item.fecha_expiracion|date:"d/m/Y" }}
+                                                    {% endif %}
+                                                {% endtimezone %}
+                                            {% else %} <span class="text-muted text-italic">N/A</span> {% endif %}
+                                        {% endif %}
+                                    </td>
+                                    
+                                    <td class="text-center pe-4">
+                                        {# Botón activador del menú #}
+                                        <button class="boton_s boton-menu-acciones fondo_transparente">
+                                            <i class="fa-solid fa-ellipsis-vertical color_primario"></i>
+                                        </button>
+                                        
+                                        {# Inclusión del Partial de Acciones #}
+                                        {% include 'gestion_inventario/partials/_menu_acciones_existencias.html' with item=item %}
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="8" class="text-center py-5 text-muted">
+                                        <i class="fas fa-box-open fa-2x mb-3 opacity-25"></i>
+                                        <p class="text-base mb-0">No se encontraron existencias en este compartimento.</p>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div> 
+</div>
+{% endblock %}

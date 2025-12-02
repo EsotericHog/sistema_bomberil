@@ -1,0 +1,68 @@
+{% extends 'gestion_inventario/layouts/base.html' %}
+{% load static %}
+
+{% block titulo_ventana %}Anular Existencia{% endblock %}
+
+{% block titulo_pagina %}
+    <span class="text-xl color_primario">
+        <i class="fas fa-times-circle me-2 text-danger"></i> Anular Registro de Existencia
+    </span>
+{% endblock %}
+
+{% block contenido %}
+<div class="container-fluid mt-4">
+    <div class="row justify-content-center">
+        <div class="col-12 col-lg-8 col-xl-6">
+
+            <div class="card shadow-sm mb-4">
+                <div class="card-body p-4 p-md-5 text-center">
+
+                    <form method="POST" novalidate>
+                        {% csrf_token %}
+
+                        <h2 class="text-lg font-bold color_primario">
+                            ¿Estás seguro de que deseas anular esta existencia?
+                        </h2>
+                        
+                        <div class="my-3 p-3 fondo_secundario_variante rounded-2">
+                            <h3 class="text-md font-bold color_primario_variante mb-1">
+                                {{ item.producto.producto_global.nombre_oficial }}
+                            </h3>
+                            
+                            {% if tipo_item == 'activo' %}
+                                <p class="text-base text-muted mb-0 text-data-code">ID: {{ item.codigo_activo }}</p>
+                            {% else %}
+                                <p class="text-base text-muted mb-0 text-data-code">ID Lote: {{ item.codigo_lote }} (Cant: {{ item.cantidad }})</p>
+                            {% endif %}
+                        </div>
+
+                        <div class="alert alert-warning mt-4 text-start" role="alert">
+                            <h5 class="alert-heading font-bold text-base"><i class="fas fa-exclamation-triangle me-1"></i> Acción de Corrección</h5>
+                            <p class="text-sm mb-0">
+                                Esta acción es para corregir un **error de ingreso** (ej. un ítem que nunca debió registrarse).
+                                El ítem se marcará como <strong>"ANULADO POR ERROR"</strong> y desaparecerá del stock disponible.
+                            </p>
+                        </div>
+
+                        <div class="d-flex justify-content-center mt-4 pt-4 border-top">
+                            <a href="{% url 'gestion_inventario:ruta_stock_actual' %}" class="btn btn-secondary text-base me-3">
+                                <i class="fas fa-times me-1"></i> Cancelar
+                            </a>
+                            
+                            {# PERMISO: Gestionar Bajas (Anular) #}
+                            {% if perms.gestion_usuarios.accion_gestion_inventario_gestionar_bajas_stock %}
+                            <button type="submit" class="btn btn-danger text-base">
+                                <i class="fas fa-check me-1"></i> Sí, anular este registro
+                            </button>
+                            {% endif %}
+                        </div>
+
+                    </form>
+
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+{% endblock %}

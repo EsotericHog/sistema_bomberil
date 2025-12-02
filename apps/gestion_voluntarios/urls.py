@@ -41,31 +41,39 @@ urlpatterns = [
     path('', VoluntariosInicioView.as_view(), name="ruta_inicio"),
 
     # Lista de voluntarios de la compañía
-    path('lista/', VoluntariosListaView.as_view(), name="ruta_lista"),
-
-    # Ingresar voluntario al sistema
-    path('crear/', VoluntariosCrearView.as_view(), name="ruta_crear"),
+    path('lista/', VoluntariosListaView.as_view(), name="ruta_lista_voluntarios"),
 
     # Ver información de un voluntario
-    path('voluntario/<int:id>/', VoluntariosVerView.as_view(), name="ruta_ver"),
+    path('voluntario/<uuid:id>/', VoluntariosVerView.as_view(), name="ruta_ver_voluntario"),
 
     # Modificar información de un voluntario
-    path('voluntario/<int:id>/editar', VoluntariosModificarView.as_view(), name="ruta_modificar"),
+    path('voluntario/<uuid:id>/editar', VoluntariosModificarView.as_view(), name="ruta_modificar_voluntario"),
 
-    # Eliminar voluntario del sistema (A EVALUAR. PROBABLEMENTE TERMINE QUITANDO ESTE ENDPOINT)
-    path('voluntario/<int:id>/editar', VoluntariosEliminarView.as_view(), name="ruta_eliminar"),
+    path('voluntario/<uuid:id>/agregar_cargo/', VoluntarioAgregarCargoView.as_view(), name="ruta_agregar_cargo"),
+    path('voluntario/<uuid:id>/agregar_reconocimiento/', VoluntarioAgregarReconocimientoView.as_view(), name="ruta_agregar_reconocimiento"),
+    path('voluntario/<uuid:id>/agregar_sancion/', VoluntarioAgregarSancionView.as_view(), name="ruta_agregar_sancion"),
 
+    # Lista de cargos y profesiones
+    path('cargos_lista/', CargosListaView.as_view(), name="ruta_cargos_lista"),
 
+      # Ingresar profesion al sistema
+    path('crear_profesion/', ProfesionesCrearView.as_view(), name="ruta_profesion_crear"),
 
-    # Lista de cargos/rangos bomberiles
-    path('lista/', CargosListaView.as_view(), name="ruta_cargos_lista"),
+    # Modificar profesion
+    path('profesion/<int:id>/editar', ProfesionesModificarView.as_view(), name="ruta_profesion_modificar"),
 
     # Ingresar cargo al sistema
-    path('crear/', CargosCrearView.as_view(), name="ruta_cargos_crear"),
+    path('crear_cargos/', CargosCrearView.as_view(), name="ruta_cargos_crear"),
 
     # Modificar cargo
-    path('voluntario/<int:id>/editar', CargosModificarView.as_view(), name="ruta_cargos_modificar"),
+    path('cargo/<int:id>/editar', CargosModificarView.as_view(), name="ruta_cargos_modificar"),
 
-    # Eliminar cargo (PROTEGIDO)
-    path('voluntario/<int:id>/eliminar', CargosEliminarView.as_view(), name="ruta_cargos_eliminar"),
+
+
+    # Generar hoja de vida
+    path('voluntario/<uuid:id>/generar_hoja_vida/', HojaVidaView.as_view(), name="ruta_hoja_vida"),
+
+    # Generar exportar listado
+    path('voluntario/exportar_listado', ExportarListadoView.as_view(), name="ruta_exportar_listado"),
+
 ]

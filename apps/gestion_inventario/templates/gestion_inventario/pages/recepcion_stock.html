@@ -1,0 +1,480 @@
+{% extends 'gestion_inventario/layouts/base.html' %}
+{% load static %}
+
+{% block titulo_ventana %}Recepción de Stock{% endblock %}
+
+{% block titulo_pagina %}
+    <span class="text-xl color_primario">
+        <i class="fas fa-dolly-flatbed me-2"></i> Registrar Recepción de Stock
+    </span>
+{% endblock %}
+
+{% block contenido %}
+<div class="container-fluid mt-4">
+
+<form method="post">
+    {% csrf_token %}
+    {{ detalle_formset.management_form }}
+
+    {# TARJETA 1: CABECERA #}
+    <div class="card shadow-sm mb-4 border-0">
+        <div class="card-header bg-white border-bottom py-3">
+            <h5 class="mb-0 text-lg font-bold color_primario">
+                <i class="fas fa-info-circle me-1"></i> Datos Generales
+            </h5>
+        </div>
+        <div class="card-body p-4">
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <label for="id_proveedor_select" class="form-label font-bold text-sm">{{ cabecera_form.proveedor.label }} <span class="text-danger">*</span></label>
+                    {# Renderizado manual para control total de Tom Select #}
+                    <div class="tom-select-wrapper">
+                        {# CORRECCIÓN: Agregadas clases 'form-select form-select-sm text-base' #}
+                        <select name="{{ cabecera_form.proveedor.name }}" 
+                                id="id_proveedor_select" 
+                                class="tom-select-basic form-select form-select-sm text-base" 
+                                required>
+                            <option value="">Seleccione un proveedor...</option>
+                            {% for proveedor in cabecera_form.proveedor.field.queryset %}
+                            <option value="{{ proveedor.pk }}" {% if cabecera_form.proveedor.value|stringformat:"s" == proveedor.pk|stringformat:"s" %}selected{% endif %}>
+                                {{ proveedor.nombre }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    {% if cabecera_form.proveedor.errors %}
+                        <div class="text-danger text-xs mt-1">{{ cabecera_form.proveedor.errors.0 }}</div>
+                    {% endif %}
+                </div>
+                <div class="col-md-4">
+                    <label for="{{ cabecera_form.fecha_recepcion.id_for_label }}" class="form-label font-bold text-sm">{{ cabecera_form.fecha_recepcion.label }}</label>
+                    {{ cabecera_form.fecha_recepcion }}
+                    {% if cabecera_form.fecha_recepcion.errors %}
+                        <div class="text-danger text-xs mt-1">{{ cabecera_form.fecha_recepcion.errors.0 }}</div>
+                    {% endif %}
+                </div>
+                <div class="col-md-4">
+                    <label for="{{ cabecera_form.notas.id_for_label }}" class="form-label font-bold text-sm">{{ cabecera_form.notas.label }}</label>
+                    {{ cabecera_form.notas }}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {# TARJETA 2: DETALLES (Sin cambios, pero incluido para contexto completo) #}
+    <div class="card shadow-sm mb-4 border-0">
+        <div class="card-header bg-white border-bottom py-3 d-flex justify-content-between align-items-center">
+            <h5 class="mb-0 text-lg font-bold color_primario">
+                <i class="fas fa-boxes me-1"></i> Detalles de los Productos
+            </h5>
+            <button type="button" class="btn btn-sm btn-outline-primary text-sm" id="add-detalle-form">
+                <i class="fas fa-plus me-1"></i> Agregar Producto
+            </button>
+        </div>
+        <div class="card-body p-4">
+            
+            <div id="detalle-formset-container">
+                {% for form in detalle_formset %}
+                <div class="detalle-form mb-3 p-3 border rounded-2 bg-light position-relative" id="form-{{ forloop.counter0 }}">
+                    
+                    {% if form.can_delete %}
+                        <div class="d-none">{{ form.DELETE }}</div> 
+                        <button type="button" 
+                                class="btn btn-sm btn-link text-danger btn-eliminar-fila position-absolute top-0 end-0 m-2" 
+                                title="Eliminar fila">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    {% endif %}
+
+                    <div class="row g-2 align-items-end">
+                        <div class="col-lg-3">
+                            <label class="form-label font-bold text-xs text-uppercase text-muted">Producto</label>
+                            <div class="tom-select-wrapper">
+                                {{ form.producto }}
+                            </div>
+                            {% if form.producto.errors %}<div class="invalid-feedback d-block text-xs">{{ form.producto.errors.0 }}</div>{% endif %}
+                        </div>
+
+                        <div class="col-lg-2">
+                            <label class="form-label font-bold text-xs text-uppercase text-muted">Filtrar Ubicación</label>
+                            <select class="form-select form-select-sm text-base select-ubicacion-filter">
+                                <option value="">Todas...</option>
+                            </select>
+                        </div>
+
+                        <div class="col-lg-2">
+                            <label class="form-label font-bold text-xs text-uppercase text-muted">Destino Final</label>
+                            {{ form.compartimento_destino }}
+                            {% if form.compartimento_destino.errors %}<div class="invalid-feedback d-block text-xs">{{ form.compartimento_destino.errors.0 }}</div>{% endif %}
+                        </div>
+
+                        <div class="col-6 col-lg-1">
+                            <label class="form-label font-bold text-xs text-uppercase text-muted">Costo U.</label>
+                            <div class="input-group input-group-sm">
+                                <span class="input-group-text">$</span>
+                                {{ form.costo_unitario }}
+                            </div>
+                        </div>
+                        
+                        <div class="col-6 col-lg-2 div-numero-serie">
+                            <label class="form-label font-bold text-xs text-uppercase text-muted">N° Serie Fab.</label>
+                            {{ form.numero_serie }}
+                        </div>
+                        <div class="col-6 col-lg-2 div-numero-lote">
+                            <label class="form-label font-bold text-xs text-uppercase text-muted">N° Lote</label>
+                            {{ form.numero_lote }}
+                        </div>
+
+                        <div class="col-6 col-lg-1">
+                            <label class="form-label font-bold text-xs text-uppercase text-muted">Cantidad</label>
+                            {{ form.cantidad }}
+                        </div>
+                        
+                        <div class="col-6 col-lg-2 div-fecha-fabricacion">
+                            <label class="form-label font-bold text-xs text-uppercase text-muted">F. Fabricación</label>
+                            {{ form.fecha_fabricacion }}
+                        </div>
+                         <div class="col-6 col-lg-2 div-fecha-vencimiento">
+                            <label class="form-label font-bold text-xs text-uppercase text-muted">F. Vencimiento</label>
+                            {{ form.fecha_vencimiento }}
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+
+            <div class="d-flex justify-content-end mt-4 pt-4 border-top gap-2">
+                <a href="{% url 'gestion_inventario:ruta_stock_actual' %}" class="btn btn-outline-secondary text-base">Cancelar</a>
+                
+                {% if perms.gestion_usuarios.accion_gestion_inventario_recepcionar_stock %}
+                <button type="submit" class="btn btn-primary text-base px-4">
+                    <i class="fas fa-save me-1"></i> Guardar Recepción
+                </button>
+                {% endif %}
+            </div>
+            
+        </div>
+    </div>
+</form>
+
+</div> 
+
+{# TEMPLATE OCULTO PARA JS #}
+<div id="detalle-form-template" class="detalle-form mb-3 p-3 border rounded-2 bg-light position-relative d-none">
+    <div class="d-none">{{ detalle_formset.empty_form.DELETE }}</div>
+    <button type="button" class="btn btn-sm btn-link text-danger btn-eliminar-fila position-absolute top-0 end-0 m-2">
+        <i class="fas fa-times"></i>
+    </button>
+
+    <div class="row g-2 align-items-end">
+        <div class="col-lg-3">
+            <label class="form-label font-bold text-xs text-uppercase text-muted">Producto</label>
+            <div class="tom-select-wrapper">
+                {{ detalle_formset.empty_form.producto }}
+            </div>
+        </div>
+        <div class="col-lg-2">
+            <label class="form-label font-bold text-xs text-uppercase text-muted">Filtrar Ubicación</label>
+            <select class="form-select form-select-sm text-base select-ubicacion-filter">
+                <option value="">Todas...</option>
+            </select>
+        </div>
+        <div class="col-lg-2">
+            <label class="form-label font-bold text-xs text-uppercase text-muted">Destino Final</label>
+            {{ detalle_formset.empty_form.compartimento_destino }}
+        </div>
+        <div class="col-6 col-lg-1">
+            <label class="form-label font-bold text-xs text-uppercase text-muted">Costo U.</label>
+            <div class="input-group input-group-sm">
+                <span class="input-group-text">$</span>
+                {{ detalle_formset.empty_form.costo_unitario }}
+            </div>
+        </div>
+
+        <div class="col-6 col-lg-2 div-numero-serie">
+            <label class="form-label font-bold text-xs text-uppercase text-muted">N° Serie Fab.</label>
+            {{ detalle_formset.empty_form.numero_serie }}
+        </div>
+        <div class="col-6 col-lg-2 div-numero-lote">
+            <label class="form-label font-bold text-xs text-uppercase text-muted">N° Lote</label>
+            {{ detalle_formset.empty_form.numero_lote }}
+        </div>
+
+        <div class="col-6 col-lg-1">
+            <label class="form-label font-bold text-xs text-uppercase text-muted">Cant.</label>
+            {{ detalle_formset.empty_form.cantidad }}
+        </div>
+
+        <div class="col-6 col-lg-2 div-fecha-fabricacion">
+            <label class="form-label font-bold text-xs text-uppercase text-muted">F. Fabricación</label>
+            {{ detalle_formset.empty_form.fecha_fabricacion }}
+        </div>
+        <div class="col-6 col-lg-2 div-fecha-vencimiento">
+            <label class="form-label font-bold text-xs text-uppercase text-muted">F. Vencimiento</label>
+            {{ detalle_formset.empty_form.fecha_vencimiento }}
+        </div>
+    </div>
+</div>
+
+<style>
+    /* FIX para Tom Select */
+    .ts-wrapper .ts-control {
+        font-size: var(--font-base) !important;
+        line-height: 1.5 !important;
+        border-radius: 0.25rem;
+        padding: 0.375rem 0.75rem;
+    }
+    .ts-dropdown .option {
+        font-size: var(--font-base) !important;
+    }
+    .ts-control input {
+        font-size: inherit !important;
+    }
+</style>
+
+{% endblock %}
+
+
+{% block scripts %}
+
+<script id="product-data" type="application/json">
+    {{ product_data_json|safe }}
+</script>
+<script id="ubicaciones-data" type="application/json">
+    {{ ubicaciones_data_json|safe }}
+</script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    
+    // --- DATOS Y SELECTORES ---
+    const productData = JSON.parse(document.getElementById('product-data').textContent);
+    const formsetContainer = document.getElementById('detalle-formset-container');
+    const addButton = document.getElementById('add-detalle-form');
+    const totalFormsInput = document.getElementById('id_detalles-TOTAL_FORMS'); 
+    const ubicacionesData = JSON.parse(document.getElementById('ubicaciones-data').textContent);
+    
+    const template = document.getElementById('detalle-form-template');
+    if (!template) {
+        console.error("No se encontró el template del formset.");
+        return;
+    }
+
+    const tomSelectConfig = {
+        create: false,
+        sortField: { field: "text", direction: "asc" },
+        placeholder: "Buscar..."
+    };
+
+    function toggleAllFields(formRow, disabled) {
+        const fields = formRow.querySelectorAll(
+            'input[name]:not([name$="-producto"]):not([type="checkbox"]), ' +
+            'select[name]:not([name$="-producto"]):not([name$="-compartimento_destino"]), ' +
+            'textarea[name]'
+        );
+
+        fields.forEach(field => {
+            field.disabled = disabled;
+            field.classList.toggle('bg-light', disabled); 
+        });
+
+        if (disabled) {
+            formRow.querySelectorAll('.div-numero-serie, .div-numero-lote, .div-fecha-fabricacion, .div-fecha-vencimiento')
+                   .forEach(div => div.classList.add('d-none'));
+        }
+    }
+
+    function updateFormRowUI(formRow) {
+        const productoSelect = formRow.querySelector('select[name$="-producto"]');
+        const selectedProductId = productoSelect.value;
+        const producto = productData[selectedProductId];
+        
+        if (!producto) {
+            toggleAllFields(formRow, true);
+            return;
+        }
+
+        toggleAllFields(formRow, false);
+        
+        const esSerializado = producto.es_serializado;
+        const esExpirable = producto.es_expirable; 
+
+        const inputCantidad = formRow.querySelector('input[name$="-cantidad"]');
+        const divNumSerie = formRow.querySelector('.div-numero-serie');
+        const inputNumSerie = formRow.querySelector('input[name$="-numero_serie"]');
+        const divNumLote = formRow.querySelector('.div-numero-lote');
+        const inputNumLote = formRow.querySelector('input[name$="-numero_lote"]');
+        
+        const divFechaFab = formRow.querySelector('.div-fecha-fabricacion');
+        const inputFechaFab = formRow.querySelector('input[name$="-fecha_fabricacion"]');
+        const divFechaVenc = formRow.querySelector('.div-fecha-vencimiento');
+        const inputFechaVenc = formRow.querySelector('input[name$="-fecha_vencimiento"]');
+
+        if (esSerializado) {
+            inputCantidad.value = 1;
+            inputCantidad.disabled = true;
+            inputCantidad.classList.add('bg-light'); 
+
+            divNumSerie.classList.remove('d-none'); 
+            inputNumSerie.disabled = false;
+            divNumLote.classList.add('d-none'); 
+            inputNumLote.disabled = true;
+
+            divFechaFab.classList.remove('d-none'); 
+            inputFechaFab.disabled = false;
+            divFechaVenc.classList.add('d-none'); 
+            inputFechaVenc.disabled = true;
+            inputFechaVenc.value = '';
+
+        } else {
+            // Es INSUMO
+            if (inputCantidad.value === '1') inputCantidad.value = '';
+            inputCantidad.disabled = false;
+            inputCantidad.classList.remove('bg-light');
+
+            divNumSerie.classList.add('d-none'); 
+            inputNumSerie.disabled = true;
+            inputNumSerie.value = '';
+            divNumLote.classList.remove('d-none'); 
+            inputNumLote.disabled = false;
+
+            divFechaFab.classList.add('d-none'); 
+            inputFechaFab.disabled = true;
+            inputFechaFab.value = ''; 
+
+            if (esExpirable) {
+                divFechaVenc.classList.remove('d-none'); 
+                inputFechaVenc.disabled = false;
+            } else {
+                divFechaVenc.classList.add('d-none'); 
+                inputFechaVenc.disabled = true;
+                inputFechaVenc.value = '';
+            }
+        }
+    }
+
+    function initializeFormRow(formRow) {
+        // 1. Selector de UBICACIÓN
+        const ubicacionSelect = formRow.querySelector('.select-ubicacion-filter');
+        if (ubicacionSelect && ubicacionSelect.options.length <= 1) { 
+            for (const [id, data] of Object.entries(ubicacionesData)) {
+                const option = document.createElement('option');
+                option.value = id;
+                option.textContent = data.nombre;
+                ubicacionSelect.appendChild(option);
+            }
+        }
+
+        // 2. Selector de COMPARTIMENTO
+        const compartimentoSelect = formRow.querySelector('select[name$="-compartimento_destino"]');
+        let tsCompartimento;
+
+        if (compartimentoSelect) {
+            if (compartimentoSelect.tomselect) {
+                var initialValue = compartimentoSelect.tomselect.getValue();
+                compartimentoSelect.tomselect.destroy();
+            }
+
+            tsCompartimento = new TomSelect(compartimentoSelect, { 
+                ...tomSelectConfig, 
+                placeholder: "Seleccione ubicación primero...",
+                valueField: 'id',
+                labelField: 'nombre',
+                searchField: 'nombre',
+                options: [], 
+                create: false
+            });
+            
+            const valorActual = compartimentoSelect.getAttribute('value') || initialValue;
+            
+            if (valorActual) {
+                for (const [ubiId, ubiData] of Object.entries(ubicacionesData)) {
+                    const compEncontrado = ubiData.compartimentos.find(c => c.id == valorActual);
+                    if (compEncontrado) {
+                        ubicacionSelect.value = ubiId; 
+                        tsCompartimento.addOption(ubiData.compartimentos);
+                        tsCompartimento.setValue(valorActual); 
+                        tsCompartimento.settings.placeholder = "Seleccione compartimento...";
+                        tsCompartimento.inputState(); 
+                        break;
+                    }
+                }
+            } else {
+                 tsCompartimento.disable();
+            }
+        }
+
+        if (ubicacionSelect && tsCompartimento) {
+            ubicacionSelect.addEventListener('change', function() {
+                const ubicacionId = this.value;
+                tsCompartimento.clear();
+                tsCompartimento.clearOptions();
+
+                if (ubicacionId && ubicacionesData[ubicacionId]) {
+                    tsCompartimento.enable();
+                    tsCompartimento.addOption(ubicacionesData[ubicacionId].compartimentos);
+                    tsCompartimento.settings.placeholder = "Seleccione compartimento...";
+                } else {
+                    tsCompartimento.disable();
+                    tsCompartimento.settings.placeholder = "Seleccione ubicación primero...";
+                }
+                tsCompartimento.sync(); 
+            });
+        }
+        
+        // 3. TomSelect para PRODUCTO
+        const productoSelectTS = formRow.querySelector('select[name$="-producto"]');
+        if (productoSelectTS && !productoSelectTS.tomselect) {
+            new TomSelect(productoSelectTS, { 
+                ...tomSelectConfig,
+                placeholder: "Buscar producto...",
+                onChange: function() {
+                    updateFormRowUI(formRow);
+                }
+            });
+        }
+
+        updateFormRowUI(formRow);
+    }
+    
+    function addForm() {
+        const formIndex = parseInt(totalFormsInput.value);
+        const newFormRow = template.cloneNode(true);
+        newFormRow.classList.remove('d-none');
+        newFormRow.id = `form-${formIndex}`;
+        newFormRow.innerHTML = newFormRow.innerHTML.replace(/__prefix__/g, formIndex);
+        formsetContainer.appendChild(newFormRow);
+        totalFormsInput.value = formIndex + 1;
+        initializeFormRow(newFormRow);
+    }
+    
+    // --- INICIALIZACIÓN ---
+    
+    // 1. TomSelect Proveedor (Cabecera)
+    document.querySelectorAll('.tom-select-basic').forEach(el => {
+        if (!el.tomselect) new TomSelect(el, {...tomSelectConfig, placeholder: "Buscar proveedor..."});
+    });
+
+    // 2. Filas iniciales
+    formsetContainer.querySelectorAll('.detalle-form').forEach(formRow => {
+        initializeFormRow(formRow);
+    });
+
+    addButton.addEventListener('click', addForm);
+
+    formsetContainer.addEventListener('click', function(e) {
+        const deleteButton = e.target.closest('.btn-eliminar-fila');
+        if (deleteButton) {
+            e.preventDefault();
+            const formRow = deleteButton.closest('.detalle-form');
+            if (!formRow) return;
+            const deleteCheckbox = formRow.querySelector('input[type="checkbox"][name$="-DELETE"]');
+            if (deleteCheckbox) deleteCheckbox.checked = true;
+            formRow.classList.add('d-none');
+        }
+    });
+
+});
+</script>
+
+{% endblock %}

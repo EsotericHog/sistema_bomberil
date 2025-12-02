@@ -1,0 +1,40 @@
+{% extends 'core_admin/layouts/base.html' %}
+{% load static %}
+
+{% block titulo_ventana %}{{ titulo_pagina }}{% endblock %}
+{% block titulo_pagina %}{{ titulo_pagina }}{% endblock %}
+
+{% block contenido %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-white py-3">
+                    <h5 class="mb-0 font-bold text-primary text-lg"><i class="fas fa-tag me-2"></i>Datos de la Marca</h5>
+                </div>
+                <div class="card-body p-4">
+                    <form method="post" novalidate>
+                        {% csrf_token %}
+                        
+                        <div class="mb-4">
+                            <label class="form-label font-bold text-sm">Nombre *</label>
+                            {{ form.nombre }}
+                            {% if form.nombre.errors %}
+                                <div class="text-danger text-xs mt-1">{{ form.nombre.errors.0 }}</div>
+                            {% endif %}
+                            <div class="form-text text-xs text-muted">El nombre del fabricante o marca comercial.</div>
+                        </div>
+
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary font-bold text-sm">
+                                <i class="fas fa-save me-2"></i>{{ accion }}
+                            </button>
+                            <a href="{% url 'core_admin:ruta_lista_marcas' %}" class="btn btn-outline-secondary font-bold text-sm">Cancelar</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

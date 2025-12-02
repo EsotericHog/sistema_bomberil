@@ -1,0 +1,124 @@
+{% extends 'gestion_inventario/layouts/base.html' %}
+{% load static %}
+
+{% block titulo_ventana %}Lista de Áreas{% endblock %}
+
+{% block titulo_pagina %}
+    <span class="text-xl color_primario">
+        <i class="fa-solid fa-warehouse me-2"></i> Áreas
+    </span>
+{% endblock %}
+
+
+{% block contenido %}
+
+{# Slider de secciones #}
+<div class="slider-container mb-4">
+    <div class="slider-viewport">
+        <div class="slider">
+            {% if ubicaciones %}
+                {% for ubicacion in ubicaciones %}
+                    {% include 'gestion_inventario/partials/_area_card.html' with ubicacion=ubicacion almacen=ubicacion %}
+                {% endfor %}
+            {% endif %}
+        </div>
+    </div>
+
+    <button class="slider-btn prev-btn" aria-label="Anterior">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/>
+        </svg>
+    </button>
+    <button class="slider-btn next-btn" aria-label="Siguiente">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/>
+        </svg>
+    </button>
+</div>
+
+
+<div class="container-fluid mt-4">
+    <div class="card shadow-sm mb-4 border-0">
+        <div class="card-header bg-white border-bottom py-3 d-flex justify-content-between align-items-center">
+            <span class="font-bold text-lg color_primario">
+                <i class="fas fa-table me-1"></i>
+                Lista de Áreas
+            </span>
+            
+            {# PERMISO: Crear Área (Gestionar Ubicaciones) #}
+            {% if perms.gestion_usuarios.accion_gestion_inventario_gestionar_ubicaciones %}
+            <a href="{% url 'gestion_inventario:ruta_crear_area' %}" class="btn btn-success btn-sm text-base">
+                <i class="fas fa-plus me-1"></i> Añadir Área
+            </a>
+            {% endif %}
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="bg-light text-secondary text-uppercase text-sm font-bold">
+                        <tr>
+                            <th class="ps-4">Código</th>
+                            <th>Nombre</th>
+                            <th class="text-center">Compartimentos</th>
+                            <th class="text-center">Existencias</th>
+                            <th class="text-center pe-4">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody class="text-base">
+                        {% for ubicacion in ubicaciones %}
+                        <tr>
+                            <td class="ps-4 text-data-code text-sm">{{ ubicacion.codigo }}</td>
+                            <td>
+                                <strong class="text-dark">{{ ubicacion.nombre|title }}</strong>
+                            </td>
+                            
+                            <td class="text-center">
+                                <span class="badge bg-light text-dark border text-xs">{{ ubicacion.total_compartimentos }}</span>
+                            </td>
+                            
+                            <td class="text-center">
+                                <span class="badge bg-light text-dark border text-xs">{{ ubicacion.total_existencias }}</span>
+                            </td>
+
+                            <td class="text-center pe-4">
+                                <div class="btn-group">
+                                    {# Botón Gestionar: Visible para ver detalles #}
+                                    <a class="btn btn-sm btn-outline-primary text-sm" 
+                                       href="{% url 'gestion_inventario:ruta_gestionar_ubicacion' ubicacion.id %}"
+                                       title="Ver detalles y compartimentos">
+                                        Gestionar
+                                    </a>
+                                    
+                                    {# PERMISO: Editar Área (Gestionar Ubicaciones) #}
+                                    {% if perms.gestion_usuarios.accion_gestion_inventario_gestionar_ubicaciones %}
+                                    <a class="btn btn-sm btn-outline-secondary text-sm" 
+                                       href="{% url 'gestion_inventario:ruta_editar_area' ubicacion.id %}"
+                                       title="Editar nombre o imagen">
+                                        Editar
+                                    </a>
+                                    {% endif %}
+                                </div>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="5" class="text-center py-5">
+                                <div class="text-muted opacity-50">
+                                    <i class="fas fa-warehouse fa-3x mb-3"></i>
+                                    <h5 class="text-lg">No hay áreas registradas</h5>
+                                    <p class="text-sm">Añade bodegas, pañoles o salas para comenzar.</p>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+{# Script del Slider #}
+<script src="{% static 'js/slider.js' %}"></script>
+
+{% endblock %}

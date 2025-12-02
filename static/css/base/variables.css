@@ -1,11 +1,29 @@
 :root {
-    /* Tamaños de fuente de texto */
+    /* Tamaños de fuente de texto antiguos */
     --fs-small: 1.2rem;
     --fs-normal: 1.5rem;
     --fs-medium: 1.9rem;
     --fs-large: 2.3rem;
     --fs-x-large: 3.0rem;
     --fs-xx-large: 4.0rem;
+
+    /* --- TYPOGRAPHY SCALE (Modular: 1.25) --- */
+    /* Asumiendo base 1.6rem (16px) */
+    --font-xs:   1.2rem;
+    --font-sm:   1.4rem;
+    --font-base: 1.6rem;
+    --font-md:   2.0rem;
+    --font-lg:   2.5rem;
+    --font-xl:   3.1rem;
+    --font-2xl:  3.9rem;
+    --font-3xl:  4.8rem;
+
+    /* --- FONT WEIGHTS --- */
+    --weight-regular: 400;
+    --weight-medium:  500;
+    --weight-bold:    700;
+    --weight-black:   900;
+
 
     --fs-layout-icon: 3.0rem;
     --fs-header-title: 2.3rem;
@@ -17,6 +35,7 @@
     --color-primary-variant: rgb(78, 78, 78);
     --color-secondary: rgb(255, 255, 255);
     --color-secondary-variant: rgb(245, 245, 245);
+    --color-primary-muted: rgba(33, 37, 41, 0.75);
     
     --color-header: rgb(255, 255, 255);
     --color-header-inventario: rgb(255, 255, 255);
@@ -48,11 +67,19 @@
     --color-blanco-transparente: rgba(255, 255, 255, 0.11);
     --color-amarillo: rgb(251, 201, 0);
     --color-morado: rgb(156, 30, 154);
+
+
+    --text-main:      #212529; 
+    --text-secondary: #6c757d; 
+    --brand-primary:  #0d6efd; 
+    --success:        #198754; 
+    --danger:         #dc3545;
     
     
     /* Dimensiones para estandarización */
+    --banner-height: 48px;
     --header-height: 80px;
-    --user-avatar-width: 40px;
+    --user-avatar-width: 45px;
     --company-logo-width: 20px;
     
     --navbar-width: 325px;
@@ -81,8 +108,10 @@
     --portal-menu-z-index: 1;
     --panel-z-index: 3;
     --navbar-z-index: 4;
-    --header-z-index: 5;
-    --dropdown-user-menu-z-index: 6;
+    --header-z-index: 9991;
+    --banner-z-index: 9991;
+    --contextual-menu-z-index:9990;
+    --dropdown-user-menu-z-index: 9992;
     --flash-message-z-index: 200;
 }
 
@@ -99,9 +128,9 @@
 @media (max-width: 1400px) {
     :root {
         /* Tamaños de fuente de texto */
+        --fs-small: 1.1rem;
         /*
-        --fs-small: 1.2rem;
-        --fs-normal: 1.4rem;
+        --font-base: 1.4rem;
         --fs-medium: 1.8rem;
         --fs-large: 2.2rem;
         --fs-x-large: 2.9rem;
@@ -148,6 +177,7 @@
         --fs-nav-option: 1.7rem;
         /* Dimensiones para estandarización */
         --header-height: 70px;
+        --banner-height: 69px;
         --user-avatar-width: 35px;
     }
 }

@@ -1,102 +1,238 @@
-{# Plantilla base #}{% extends 'gestion_usuarios/layouts/base.html' %}
-{# Cargar assets #}{% load static %}
-{# Título de la ventana #} {% block titulo_ventana %}Lista de usuarios{% endblock %}
-{# Título de la página #} {% block titulo_pagina %}Lista de usuarios{% endblock %}
+{% extends 'gestion_usuarios/layouts/base.html' %}
+{% load static %}
+{% load i18n %} 
+
+{% block titulo_ventana %}Gestión de Usuarios{% endblock %}
+
+{% block titulo_pagina %}
+    <span class="text-xl color_primario">
+        <i class="fas fa-users me-2"></i> Gestión de Usuarios
+    </span>
+{% endblock %}
 
 {% block contenido %}
 
-<table id="myTable" class="display tabla_1">
-    <thead class="color_blanco fondo_negro">
-        <tr>
-            <th>ID</th>
-            <th>Usuario</th>
-            <th>Correo Electrónico</th>
-            <th>Estado</th>
-            <th>Roles</th>
-            <th>Fecha creación</th>
-            <th></th>
-        </tr>
-    </thead>
-    <tbody class="fondo_secundario_variante">
-        {% if membresias %}
-        {% for membresia in membresias %}
-        <tr>
-            {# ID #}
-            <td>{{membresia.usuario.id}}</td>
-            
-            {# Avatar + Nombre completo + verificado #}
-            <td>
-            {% if membresia.usuario.avatar_thumb_small %}
-                <img 
-                class="avatar_small" 
-                src="{{ membresia.usuario.avatar_thumb_small.url|default:'/static/imagenes/default_avatar.png' }}" 
-                >
-            {% else %}
-                <img 
-                class="avatar_small" 
-                src="{% static 'imagenes/default_avatar.png' %}"
-                >
-            {% endif %}
+<div class="container-fluid mt-4">
+
+{# Panel de Filtros y Búsqueda #}
+<div class="card shadow-sm mb-4">
+    <div class="card-header text-md font-medium">
+        <i class="fas fa-filter me-1"></i>
+        Filtros y Búsqueda
+    </div>
+    <div class="card-body">
+        <form method="get" action="{% url 'gestion_usuarios:ruta_lista_usuarios' %}">
+            <div class="row g-3 align-items-end"> 
                 
-                <span class="tabla_1__nombre_usuario">
-                    {{membresia.usuario.get_full_name|title}}
-                </span>
+                {# Buscar #}
+                <div class="col-md-6 col-lg-4">
+                    <label for="search_query" class="form-label font-bold text-sm">Buscar</label>
+                    <div class="input-group input-group-sm">
+                        <span class="input-group-text"><i class="fas fa-search"></i></span>
+                        <input type="text" class="form-control text-base" id="search_query" name="q" 
+                               placeholder="Nombre, Apellido, Email..." 
+                               value="{{ current_q|default:'' }}">
+                    </div>
+                </div>
                 
-            {% if membresia.usuario.is_verified %}
-                <span title="Usuario verificado" class="etiqueta_icono">
-                    <i class="fa-solid fa-circle-check color_azul"></i>
-                </span>
-            {% endif %}
+                {# Filtrar por Estado de Membresía #}
+                <div class="col-md-6 col-lg-3"> 
+                    <label for="filter_estado" class="form-label font-bold text-sm">Estado Membresía</label>
+                    <select id="filter_estado" name="estado" class="form-select form-select-sm text-base">
+                        <option value="">Todos</option>
+                        <option value="ACTIVO" {% if current_estado == 'ACTIVO' %}selected{% endif %}>Activo</option>
+                        <option value="INACTIVO" {% if current_estado == 'INACTIVO' %}selected{% endif %}>Inactivo</option>
+                    </select>
+                </div>
 
-            {% if membresia.usuario.is_superuser %}
-                <span title="Administrador" class="etiqueta_icono">
-                    <i class="fa-solid fa-shield-halved color_primario"></i>
-                </span>
-            {% endif %}
-
-            {% if membresia.usuario.is_staff %}
-                <span title="Staff" class="etiqueta_icono">
-                    <i class="fa-solid fa-clipboard-user color_naranjo"></i>
-                </span>
-            {% endif %}
+                {# Filtrar por Rol #}
+                <div class="col-md-6 col-lg-3"> 
+                    <label for="filter_rol" class="form-label font-bold text-sm">Rol Asignado</label>
+                    <select id="filter_rol" name="rol" class="form-select form-select-sm text-base">
+                        <option value="">Todos</option>
+                        {% for rol in todos_los_roles %}
+                        <option value="{{ rol.id }}" {% if current_rol == rol.id|stringformat:"s" %}selected{% endif %}>{{ rol.nombre|title }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
                 
-            </td>
-            
-            
-            {# Correo #}
-            <td>{{membresia.usuario.email}}</td>
+                {# Botones #}
+                <div class="col-md-6 col-lg-2 text-end">
+                    <a href="{% url 'gestion_usuarios:ruta_lista_usuarios' %}" class="btn btn-outline-secondary btn-sm text-base me-1">Limpiar</a>
+                    <button type="submit" class="btn btn-primary btn-sm text-base">
+                        <i class="fas fa-filter me-1"></i> Filtrar
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
 
-            {# Estado #}
-            <td>
-            {% if membresia.estado == 'ACTIVO' %}
-                <span title="El usuario puede iniciar sesión" class="etiqueta fondo_verde color_blanco">Activo</span>
-            {% elif membresia.estado == 'INACTIVO' %}
-            <span title="El usuario no puede iniciar sesión" class="etiqueta color_primario">Desactivado</span>
-            {% elif membresia.estado == 'FINALIZADO' %}
-            <span title="El usuario no puede iniciar sesión" class="etiqueta fondo_negro color_blanco">Finalizado</span>
-            {% endif %}
-            </td>
-
-            {# Roles asignados en la compañía #}
-            <td>
-                {% if membresia.roles %}
-                {% for rol in membresia.roles.all %}
-                {{rol.nombre|title}}
-                <br>
-                {% endfor %}
-                {% endif %}
-            </td>
-            <td>{{membresia.created_at}}</td>
-            <td>
-                <button class="boton_s boton-menu-acciones fondo_transparente">
-                    <i class="fa-solid fa-ellipsis-vertical color_primario"></i>
-                </button>
-                {% include 'gestion_usuarios/partials/_menu_acciones_usuarios.html' with membresia=membresia %}
-            </td>
-        </tr>
-            {% endfor %}
+{# Tabla de Usuarios #}
+<div class="card shadow-sm mb-4 {% if request.session.dark_mode %}dark-mode{% endif %}">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <span class="font-bold text-lg"> {# fs_normal -> text-xl (destacado) #}
+            <i class="fas fa-table me-1"></i>
+            Usuarios de la Estación
+        </span>
+        
+        {# PERMISO: Crear usuario #}
+        {% if perms.gestion_usuarios.accion_gestion_usuarios_crear_usuario %}
+        <a href="{% url 'gestion_usuarios:ruta_agregar_usuario' %}" class="btn btn-success btn-sm text-base font-medium">
+            <i class="fas fa-plus me-1"></i> Agregar Usuario
+        </a>
         {% endif %}
-    </tbody>
-</table>
-    
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-striped table-hover table-sm align-middle">
+                <thead class="text-sm"> {# fs_pequena -> text-sm #}
+                    <tr>
+                        <th style="width: 35%;">Usuario</th>
+                        <th style="width: 25%;">Email</th>
+                        <th style="width: 15%;" class="text-center">Estado</th>
+                        <th style="width: 15%;">Roles</th>
+                        <th style="width: 10%;" class="text-center">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody class="text-base"> {# fs_normal -> text-base #}
+                    {# El bucle itera sobre 'page_obj' (para paginación) o 'membresias' si no paginas #}
+                    {% for membresia in page_obj %}
+                    <tr>
+                        {# Columna Usuario (Avatar, Nombre, Iconos de Estado) #}
+                        <td>
+                            <div class="d-flex align-items-center">
+                                {% if membresia.usuario.avatar_thumb_small %}
+                                    <img class="rounded-circle me-2" 
+                                         src="{{ membresia.usuario.avatar_thumb_small.url }}" 
+                                         alt="Avatar" style="width: 32px; height: 32px; object-fit: cover;">
+                                {% else %}
+                                    <img class="rounded-circle me-2" 
+                                         src="{% static 'imagenes/default_avatar.png' %}" 
+                                         alt="Avatar" style="width: 32px; height: 32px;">
+                                {% endif %}
+                                
+                                <div>
+                                    <strong class="d-block">{{ membresia.usuario.get_full_name }}</strong>
+                                    
+                                    {# --- ICONOS REQUERIDOS --- #}
+                                    <small class="text-muted text-xs"> {# Ajuste fino para iconos #}
+                                        {% if membresia.usuario.is_verified %}
+                                            <i class="fas fa-check-circle color_azul me-1" title="Usuario verificado"></i>
+                                        {% endif %}
+                                        {% if membresia.usuario.is_superuser %}
+                                            <i class="fas fa-shield-alt text-danger me-1" title="Super Administrador"></i>
+                                        {% endif %}
+                                        {% if membresia.usuario.is_staff %}
+                                            <i class="fas fa-clipboard-user text-warning me-1" title="Acceso al Admin"></i>
+                                        {% endif %}
+                                    </small>
+                                    {# --- FIN ICONOS --- #}
+                                </div>
+                            </div>
+                        </td>
+                        
+                        {# Columna Contacto #}
+                        <td class="text-sm text-data-code">
+                            {{ membresia.usuario.email|default:"N/A" }}
+                        </td>
+
+                        {# Columna Estado (de la Membresía) #}
+                        <td class="text-center">
+                            {% if membresia.estado == 'ACTIVO' %}
+                                <span class="badge bg-success" title="El usuario puede iniciar sesión">Activo</span>
+                            {% elif membresia.estado == 'INACTIVO' %}
+                                <span class="badge bg-warning text-dark" title="El usuario no puede iniciar sesión">Inactivo</span>
+                            {% elif membresia.estado == 'FINALIZADO' %}
+                                <span class="badge bg-secondary" title="La membresía del usuario ha finalizado">Finalizado</span>
+                            {% else %}
+                                <span class="badge bg-light text-dark">{{ membresia.estado|default:"N/A" }}</span>
+                            {% endif %}
+                        </td>
+
+                        {# Columna Roles #}
+                        <td class="text-sm">
+                            {% for rol in membresia.roles.all %}
+                                <span class="badge bg-primary me-1 mb-1">{{ rol.nombre|title }}</span>
+                            {% empty %}
+                                <span class="text-muted fst-italic">Sin roles</span>
+                            {% endfor %}
+                        </td>
+                        
+                        {# Columna Acciones #}
+                        <td class="text-center">
+                            {# El dropdown siempre visible, el contenido (include) debe manejar los permisos internos #}
+                            <button class="boton_s boton-menu-acciones fondo_transparente">
+                                <i class="fa-solid fa-ellipsis-vertical color_primario"></i>
+                            </button>
+                            {% include 'gestion_usuarios/partials/_menu_acciones_usuarios.html' with membresia=membresia %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="5" class="text-center fst-italic py-4 text-base">
+                            No se encontraron usuarios que coincidan con los filtros seleccionados.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        {% include 'gestion_usuarios/partials/_paginacion.html' with page_obj=page_obj %}
+
+    </div>
+</div>
+
+</div>
+
+{# Colocamos el formulario y el modal UNA SOLA VEZ, al final de la plantilla (del template original) #}
+<form id="resetPasswordForm" method="post" class="d-none">
+    {% csrf_token %}
+</form>
+
+{# Ventanas modales #}
+{% include "gestion_usuarios/partials/_modal_restablecer_contrasena.html" %}
+{% include 'gestion_usuarios/partials/_modal_desactivar_usuario.html' %}
+{% include 'gestion_usuarios/partials/_modal_activar_usuario.html' %}
+{% include 'gestion_usuarios/partials/_modal_forzar_logout.html' %}
+
 {% endblock  %}
+
+
+
+{% block scripts %}
+{{ block.super }} {# Importante si tu 'base.html' tiene scripts #}
+
+<script>
+// Este script es el mismo de tu plantilla original, 
+// ya que la lógica para el modal es correcta.
+document.addEventListener('DOMContentLoaded', () => {
+    const resetPasswordForm = document.getElementById('resetPasswordForm');
+    const modalUserName = document.getElementById('modalUserName');
+    const modalConfirmButton = document.getElementById('modalConfirmResetBtn');
+
+    // Escuchamos clics en CUALQUIER botón de restablecer de la lista
+    document.querySelectorAll('.js-reset-password-btn').forEach(button => {
+        button.addEventListener('click', () => {
+            // Obtenemos los datos del botón que fue presionado
+            const userName = button.dataset.userName;
+            const formAction = button.dataset.formAction;
+
+            // Actualizamos el contenido del modal y la URL del formulario
+            if (modalUserName) modalUserName.textContent = userName;
+            if (resetPasswordForm) resetPasswordForm.action = formAction;
+        });
+    });
+
+    // Hacemos que el botón del modal envíe el formulario
+    if (modalConfirmButton && resetPasswordForm) {
+        modalConfirmButton.addEventListener('click', () => {
+            // Al hacer clic en "Sí, Enviar Correo", enviamos el formulario
+            // que ya tiene la URL correcta.
+            resetPasswordForm.submit();
+        });
+    }
+});
+</script>
+{% endblock %}

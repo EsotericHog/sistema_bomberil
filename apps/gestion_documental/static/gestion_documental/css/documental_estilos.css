@@ -1,0 +1,337 @@
+/* =========================================================
+   ESTILOS DEL MÓDULO DE GESTIÓN DOCUMENTAL (ROBUSTO)
+   ========================================================= */
+
+:root {
+    /* Paleta de Colores Corporativa */
+    --primary-color: #D72600;       /* Rojo Institucional */
+    --primary-hover: #b01f00;
+    --secondary-color: #2c3e50;     /* Azul Oscuro */
+    --text-color: #333333;
+    --text-muted: #6c757d;
+    --bg-light: #f8f9fa;
+    --border-color: #eef2f7;
+    --white: #ffffff;
+
+    /* Sombras y Bordes */
+    --card-radius: 12px;
+    --card-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+    --card-shadow-hover: 0 8px 15px rgba(0, 0, 0, 0.1);
+    --input-radius: 6px;
+}
+
+/* ---------------------------------------------------------
+   1. PANELES Y LAYOUT GENERAL
+   --------------------------------------------------------- */
+
+.container-fluid {
+    padding: 20px;
+    max-width: 1400px;
+    margin: 0 auto;
+}
+
+/* Panel Principal (Contenedor blanco) */
+.panel {
+    background-color: var(--white);
+    border: 1px solid var(--border-color);
+    border-radius: var(--card-radius);
+    box-shadow: var(--card-shadow);
+    margin-bottom: 30px;
+    overflow: hidden;
+    transition: box-shadow 0.3s ease;
+}
+
+/* Cabecera del Panel */
+.panel-header {
+    background: linear-gradient(to right, #ffffff, #fcfcfc);
+    padding: 1.5rem 2rem;
+    border-bottom: 1px solid var(--border-color);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.titulo-pagina {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--secondary-color);
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.panel-body {
+    padding: 2rem;
+}
+
+/* Enlace de "Volver" */
+.back-link {
+    color: var(--text-muted);
+    text-decoration: none;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.9rem;
+    transition: color 0.2s;
+}
+
+.back-link:hover {
+    color: var(--primary-color);
+}
+
+
+/* ---------------------------------------------------------
+   2. TABLAS DE DATOS (LISTA DE DOCUMENTOS)
+   --------------------------------------------------------- */
+
+.data-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    margin-top: 10px;
+}
+
+.styled-table thead tr {
+    background-color: var(--bg-light);
+}
+
+.styled-table th {
+    padding: 15px 20px;
+    text-align: left;
+    font-weight: 700;
+    text-transform: uppercase;
+    font-size: 0.8rem;
+    letter-spacing: 0.5px;
+    color: var(--secondary-color);
+    border-bottom: 2px solid var(--border-color);
+}
+
+.styled-table td {
+    padding: 15px 20px;
+    border-bottom: 1px solid var(--border-color);
+    vertical-align: middle;
+    color: var(--text-color);
+}
+
+.styled-table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+.styled-table tbody tr {
+    transition: background-color 0.2s ease;
+}
+
+.styled-table tbody tr:hover {
+    background-color: #fff9f8; /* Tinte rojo muy suave al pasar el mouse */
+}
+
+/* Elementos dentro de la tabla */
+.doc-title {
+    display: block;
+    font-size: 1.05rem;
+    font-weight: 600;
+    color: var(--secondary-color);
+    margin-bottom: 4px;
+}
+
+.text-muted {
+    color: var(--text-muted);
+    font-size: 0.9rem;
+    margin: 0;
+    line-height: 1.4;
+}
+
+/* Badges (Etiquetas de Tipo) */
+.badge-type {
+    display: inline-block;
+    padding: 5px 10px;
+    border-radius: 20px;
+    background-color: var(--bg-light);
+    color: var(--secondary-color);
+    font-size: 0.8rem;
+    font-weight: 600;
+    border: 1px solid #e2e8f0;
+}
+
+/* Estado Vacío */
+.empty-state {
+    text-align: center;
+    padding: 50px 20px;
+    background-color: #fcfcfc;
+    border: 2px dashed var(--border-color);
+    border-radius: var(--card-radius);
+    color: var(--text-muted);
+    margin: 20px 0;
+}
+
+.empty-state i {
+    font-size: 3rem;
+    color: #e2e8f0;
+    margin-bottom: 15px;
+    display: block;
+}
+
+
+/* ---------------------------------------------------------
+   3. FORMULARIOS (SUBIR DOCUMENTO)
+   --------------------------------------------------------- */
+
+.form-horizontal {
+    max-width: 100%;
+}
+
+.form-section {
+    margin-bottom: 2.5rem;
+}
+
+.form-section__titulo {
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: var(--primary-color);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 1.5rem;
+    border-bottom: 2px solid var(--border-color);
+    padding-bottom: 10px;
+}
+
+.form-group {
+    margin-bottom: 1.5rem;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 600;
+    color: var(--secondary-color);
+    font-size: 0.95rem;
+}
+
+.form-control {
+    width: 100%;
+    padding: 10px 15px;
+    font-size: 1rem;
+    line-height: 1.5;
+    color: #495057;
+    background-color: var(--white);
+    border: 1px solid #ced4da;
+    border-radius: var(--input-radius);
+    transition: border-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+    box-sizing: border-box;
+    font-family: inherit;
+}
+
+.form-control:focus {
+    border-color: var(--primary-color);
+    outline: 0;
+    box-shadow: 0 0 0 3px rgba(215, 38, 0, 0.15);
+}
+
+textarea.form-control {
+    resize: vertical;
+    min-height: 100px;
+}
+
+/* Input de Archivo Personalizado (Estilo "Drop Zone") */
+input[type="file"].form-control {
+    padding: 2rem;
+    height: auto;
+    border: 2px dashed #ced4da;
+    background-color: #fdfdfd;
+    text-align: center;
+    cursor: pointer;
+    color: var(--text-muted);
+}
+
+input[type="file"].form-control:hover {
+    border-color: var(--primary-color);
+    background-color: #fff5f5;
+}
+
+.help-text {
+    display: block;
+    margin-top: 0.25rem;
+    font-size: 0.85rem;
+    color: var(--text-muted);
+}
+
+.error-message {
+    color: #dc3545;
+    font-size: 0.875rem;
+    margin-top: 0.25rem;
+    font-weight: 600;
+}
+
+
+/* ---------------------------------------------------------
+   4. BOTONES
+   --------------------------------------------------------- */
+
+.button-group {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    padding-top: 20px;
+    border-top: 1px solid var(--border-color);
+}
+
+.btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.6rem 1.2rem;
+    font-size: 0.95rem;
+    font-weight: 600;
+    line-height: 1.5;
+    text-align: center;
+    text-decoration: none;
+    border-radius: 6px;
+    border: 1px solid transparent;
+    cursor: pointer;
+    transition: all 0.2s ease-in-out;
+    gap: 8px;
+}
+
+/* Botón Principal (Rojo) */
+.btn-principal {
+    background-color: var(--primary-color);
+    color: var(--white);
+    box-shadow: 0 2px 4px rgba(215, 38, 0, 0.2);
+}
+
+.btn-principal:hover {
+    background-color: var(--primary-hover);
+    box-shadow: 0 4px 8px rgba(215, 38, 0, 0.3);
+    transform: translateY(-1px);
+}
+
+/* Botón Secundario (Gris/Blanco) */
+.btn-secondary {
+    background-color: var(--white);
+    color: var(--text-muted);
+    border-color: #ced4da;
+}
+
+.btn-secondary:hover {
+    background-color: var(--bg-light);
+    color: var(--secondary-color);
+    border-color: #b0b8c0;
+}
+
+/* Botón Info (Azul) */
+.btn-info {
+    background-color: #17a2b8;
+    color: var(--white);
+}
+
+.btn-info:hover {
+    background-color: #138496;
+}
+
+/* Tamaño Pequeño */
+.btn-sm {
+    padding: 0.35rem 0.7rem;
+    font-size: 0.85rem;
+}

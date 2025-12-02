@@ -1,0 +1,295 @@
+{% extends "gestion_inventario/layouts/base.html" %}
+{% load static %}
+{% block titulo_ventana %}Catálogo de {{ estacion.nombre|title }}{% endblock %}
+
+{% block contenido %}
+
+<div class="container-fluid mt-4">
+    
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-3">
+        <h2 class="color_primario text-xl font-bold"><i class="fas fa-clipboard-list me-2"></i> Catálogo Local: {{ estacion.nombre|title }}</h2>
+        
+        <div class="btn-group shadow-sm" role="group">
+            <a href="?{{ query_params }}&view=gallery" class="btn text-base {% if view_mode == 'gallery' %}btn-primary{% else %}btn-outline-secondary{% endif %}">
+                <i class="fas fa-th-large me-1"></i> Galería
+            </a>
+            <a href="?{{ query_params }}&view=table" class="btn text-base {% if view_mode == 'gallery' %}btn-outline-secondary{% else %}btn-primary{% endif %}">
+                <i class="fas fa-list me-1"></i> Tabla
+            </a>
+        </div>
+    </div>
+
+    {# Panel de Filtros #}
+    <div class="card shadow-sm mb-3">
+        <div class="card-body">
+            <form method="GET" action="{% url 'gestion_inventario:ruta_catalogo_local' %}">
+                <input type="hidden" name="view" value="{{ view_mode }}">
+                
+                <div class="row g-2 align-items-end">
+                    <div class="col-md-3">
+                        <label for="q" class="form-label font-bold text-sm">Buscar</label>
+                        <input type="text" name="q" id="q" class="form-control form-control-sm text-base" 
+                               value="{{ current_search|default:'' }}" placeholder="SKU, Nombre, Modelo, Marca...">
+                    </div>
+                    
+                    <div class="col-md-2">
+                        <label for="categoria" class="form-label font-bold text-sm">Categoría</label>
+                        <select name="categoria" id="categoria" class="form-select form-select-sm text-base">
+                            <option value="">Todas</option>
+                            {% for cat in all_categorias %}
+                                <option value="{{ cat.id }}" {% if cat.id|stringformat:"s" == current_categoria_id %}selected{% endif %}>{{ cat.nombre }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="col-md-2">
+                        <label for="marca" class="form-label font-bold text-sm">Marca</label>
+                        <select name="marca" id="marca" class="form-select form-select-sm text-base">
+                            <option value="">Todas</option>
+                            {% for marca in all_marcas %}
+                                <option value="{{ marca.id }}" {% if marca.id|stringformat:"s" == current_marca_id %}selected{% endif %}>{{ marca.nombre }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="col-md-1">
+                        <label for="serializado" class="form-label font-bold text-sm">Tipo</label>
+                        <select name="serializado" id="serializado" class="form-select form-select-sm text-base">
+                            <option value="" {% if not current_serializado %}selected{% endif %}>Ambos</option>
+                            <option value="si" {% if current_serializado == 'si' %}selected{% endif %}>Activo</option>
+                            <option value="no" {% if current_serializado == 'no' %}selected{% endif %}>Insumo</option>
+                        </select>
+                    </div>
+                    
+                    <div class="col-md-1">
+                        <label for="expirable" class="form-label font-bold text-sm">Expiración</label>
+                        <select name="expirable" id="expirable" class="form-select form-select-sm text-base">
+                            <option value="" {% if not current_expirable %}selected{% endif %}>Ambos</option>
+                            <option value="si" {% if current_expirable == 'si' %}selected{% endif %}>Sí</option>
+                            <option value="no" {% if current_expirable == 'no' %}selected{% endif %}>No</option>
+                        </select>
+                    </div>
+
+                    <div class="col-md-2">
+                        <label for="sort" class="form-label font-bold text-sm">Ordenar por</label>
+                        <select name="sort" id="sort" class="form-select form-select-sm text-base">
+                            <option value="fecha_desc" {% if current_sort == 'fecha_desc' %}selected{% endif %}>Más Reciente</option>
+                            <option value="fecha_asc" {% if current_sort == 'fecha_asc' %}selected{% endif %}>Más Antiguo</option>
+                            <option value="costo_desc" {% if current_sort == 'costo_desc' %}selected{% endif %}>Mayor Costo</option>
+                            <option value="costo_asc" {% if current_sort == 'costo_asc' %}selected{% endif %}>Menor Costo</option>
+                        </select>
+                    </div>
+
+                    <div class="col-md-1 d-flex gap-1">
+                        <button type="submit" class="btn btn-primary btn-sm w-100 text-base" title="Aplicar filtros y orden">
+                            <i class="fas fa-filter"></i>
+                        </button>
+                        <a href="{% url 'gestion_inventario:ruta_catalogo_local' %}?view={{ view_mode }}" 
+                           class="btn btn-outline-secondary btn-sm w-100 text-base" title="Limpiar filtros y orden">
+                            <i class="fas fa-times"></i>
+                        </a>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    {% if productos %}
+
+        {% if view_mode == 'gallery' %}
+            {# VISTA GALERÍA #}
+            <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 row-cols-xl-5 g-4">
+                {% for prod_local in productos %}
+                <div class="col">
+                    <div class="card h-100 shadow-sm product-card">
+                        {% with prod_global=prod_local.producto_global %}
+                        {% if prod_global.imagen_thumb_medium %}
+                            <img src="{{ prod_global.imagen_thumb_medium.url }}" class="card-img-top" alt="{{ prod_global.nombre_oficial }}">
+                        {% else %}
+                            <div class="card-img-top-placeholder d-flex align-items-center justify-content-center bg-light text-muted">
+                                <i class="fas fa-image fa-3x"></i>
+                            </div>
+                        {% endif %}
+
+                        <div class="card-body d-flex flex-column">
+                            <h5 class="card-title text-md font-bold text-dark">{{ prod_global.nombre_oficial }}</h5>
+                            
+                            <ul class="list-unstyled text-muted text-sm mb-3 flex-grow-1">
+                                <li><strong>SKU:</strong> <span class="text-data-code">{{ prod_local.sku|default:"N/A" }}</span></li>
+                                <li>
+                                    <strong>Marca:</strong> 
+                                    {% if prod_global.marca %}{{ prod_global.marca.nombre }}{% else %}<span class="fst-italic">Genérico</span>{% endif %}
+                                </li>
+                                <li>
+                                    <strong>Modelo:</strong> 
+                                    {% if prod_global.modelo %}{{ prod_global.modelo }}{% else %}<span class="fst-italic">N/A</span>{% endif %}
+                                </li>
+                                <li><strong>Categoría:</strong> {{ prod_global.categoria.nombre }}</li>
+                                <li>
+                                    <strong>Tipo:</strong> 
+                                    {% if prod_local.es_serializado %}
+                                        <span class="badge bg-info text-dark text-xs">Activo</span>
+                                    {% else %}
+                                        <span class="badge bg-warning text-dark text-xs">Insumo</span>
+                                    {% endif %}
+                                    {% if prod_local.es_expirable %}
+                                        <span class="badge bg-secondary text-xs">Expirable</span>
+                                    {% endif %}
+                                </li>
+                            </ul>
+
+                            <div class="d-grid gap-1 mt-auto">
+                                {# PERMISO: Ver Stock #}
+                                {% if perms.gestion_usuarios.accion_gestion_inventario_ver_stock %}
+                                <a href="{% url 'gestion_inventario:ruta_detalle_producto_local' prod_local.pk %}" class="btn btn-sm btn-outline-primary text-base">
+                                    <i class="fas fa-eye me-1"></i> Ver Stock
+                                </a>
+                                {% endif %}
+                                
+                                {# PERMISO: Gestionar Catálogo Local (Editar) #}
+                                {% if perms.gestion_usuarios.accion_gestion_inventario_gestionar_catalogo_local %}
+                                <a href="{% url 'gestion_inventario:ruta_editar_producto_local' prod_local.pk %}" class="btn btn-sm btn-outline-secondary text-base">
+                                    <i class="fas fa-edit me-1"></i> Editar
+                                </a>
+                                {% endif %}
+                            </div>
+                        </div>
+                        {% endwith %}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+
+        {% else %}
+            {# VISTA TABLA #}
+            <div class="card shadow-sm">
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0 {% if request.session.dark_mode %}table-dark{% endif %}">
+                            <thead class="bg-light text-sm text-uppercase">
+                                <tr>
+                                    <th style="width: 8%;" class="ps-4">Imagen</th>
+                                    <th>SKU</th>
+                                    <th>Nombre Oficial</th>
+                                    <th>Marca</th>
+                                    <th>Modelo</th>
+                                    <th>Categoría</th>
+                                    <th>Tipo</th>
+                                    <th>Expirable</th>
+                                    <th>Costo</th>
+                                    <th style="width: 12%;" class="text-end pe-4">Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody class="text-sm">
+                                {% for prod_local in productos %}
+                                <tr>
+                                    {% with prod_global=prod_local.producto_global %}
+                                    <td class="ps-4">
+                                        {% if prod_global.imagen_thumb_small %}
+                                            <img src="{{ prod_global.imagen_thumb_small.url }}" alt="{{ prod_global.nombre_oficial }}" class="rounded border" style="width: 40px; height: 40px; object-fit: cover;">
+                                        {% else %}
+                                            <div class="d-flex align-items-center justify-content-center bg-light text-muted rounded border" style="width: 40px; height: 40px;">
+                                                <i class="fas fa-image"></i>
+                                            </div>
+                                        {% endif %}
+                                    </td>
+                                    <td class="text-data-code font-monospace">{{ prod_local.sku|default:"N/A" }}</td>
+
+                                    <td class="font-bold text-dark">{{ prod_global.nombre_oficial }}</td>
+
+                                    <td class="text-muted">
+                                        {% if prod_global.marca %}
+                                        {{ prod_global.marca.nombre }}
+                                        {% else %}
+                                        <span class="fst-italic">Genérico</span>
+                                        {% endif %}
+                                    </td>
+
+                                    <td class="text-muted">
+                                        {% if prod_global.modelo %}
+                                        {{ prod_global.modelo }}
+                                        {% else %}
+                                        <span class="fst-italic">N/A</span>
+                                        {% endif %}
+                                    </td>
+
+                                    <td>{{ prod_global.categoria.nombre }}</td>
+                                    <td>
+                                        {% if prod_local.es_serializado %}
+                                            <span class="badge bg-info text-dark text-xs">Activo</span>
+                                        {% else %}
+                                            <span class="badge bg-warning text-dark text-xs">Insumo</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if prod_local.es_expirable %}
+                                            <i class="fas fa-check text-success"></i>
+                                        {% else %}
+                                            <i class="fas fa-times text-muted opacity-25"></i>
+                                        {% endif %}
+                                    </td>
+                                    <td class="text-data-code">${{ prod_local.costo_compra|default:"N/A" }}</td>
+                                    <td class="text-end pe-4">
+                                        {# PERMISO: Ver Stock #}
+                                        {% if perms.gestion_usuarios.accion_gestion_inventario_ver_stock %}
+                                        <a href="#" class="btn btn-sm btn-outline-primary text-xs" title="Ver Stock"><i class="fas fa-eye"></i></a>
+                                        {% endif %}
+                                        
+                                        {# PERMISO: Gestionar Catálogo Local (Editar) #}
+                                        {% if perms.gestion_usuarios.accion_gestion_inventario_gestionar_catalogo_local %}
+                                        <a href="{% url 'gestion_inventario:ruta_editar_producto_local' prod_local.pk %}" class="btn btn-sm btn-outline-secondary text-xs" title="Editar"><i class="fas fa-edit"></i></a>
+                                        {% endif %}
+                                    </td>
+                                    {% endwith %}
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        {% endif %}
+
+        {# PAGINACIÓN #}
+        {% if is_paginated %}
+        <nav aria-label="Paginación del catálogo local" class="mt-4">
+            <ul class="pagination justify-content-center text-base">
+                {% if page_obj.has_previous %}
+                    <li class="page-item"><a class="page-link" href="?{{ query_params }}&page={{ page_obj.previous_page_number }}">Anterior</a></li>
+                {% else %}
+                    <li class="page-item disabled"><span class="page-link">Anterior</span></li>
+                {% endif %}
+                <li class="page-item active"><span class="page-link">Página {{ page_obj.number }} de {{ page_obj.paginator.num_pages }}</span></li>
+                {% if page_obj.has_next %}
+                    <li class="page-item"><a class="page-link" href="?{{ query_params }}&page={{ page_obj.next_page_number }}">Siguiente</a></li>
+                {% else %}
+                    <li class="page-item disabled"><span class="page-link">Siguiente</span></li>
+                {% endif %}
+            </ul>
+        </nav>
+        {% endif %}
+
+    {% else %}
+        <div class="alert alert-warning text-center text-base py-4" role="alert">
+            <i class="fas fa-info-circle me-2"></i>
+            {% if request.GET %} {# Si hay filtros activos #}
+                No se encontraron productos en tu catálogo que coincidan con los filtros aplicados.
+                <a href="{% url 'gestion_inventario:ruta_catalogo_local' %}?view={{ view_mode }}" class="alert-link ms-2">Limpiar filtros</a>
+            {% else %} {# Si no hay filtros, el catálogo está vacío #}
+                Aún no has añadido ningún producto a tu catálogo local.
+                <a href="{% url 'gestion_inventario:ruta_catalogo_global' %}" class="alert-link ms-2">Explorar el Catálogo Global</a>
+            {% endif %}
+        </div>
+    {% endif %}
+
+</div>
+
+<style>
+    .product-card .card-img-top { height: 180px; object-fit: contain; background-color: white; }
+    .product-card .card-img-top-placeholder { height: 180px; }
+</style>
+{% endblock %}
+
+{% block scripts %}
+    {# Bloque de scripts vacío, se mantiene #}
+{% endblock %}

@@ -1,0 +1,278 @@
+{% extends 'gestion_mantenimiento/layouts/base.html' %}
+{% load static %}
+
+{# Bloque de Título de la ventana del navegador #}
+{% block titulo_ventana %}Planes de Mantenimiento | Bomberos{% endblock %}
+
+{# Bloque de Título de la página (h1) #}
+{% block titulo_pagina %}
+    <span class="text-xl color_primario">
+        <i class="fas fa-clipboard-list me-2"></i>Planes de Mantenimiento
+    </span>
+{% endblock %}
+
+{% block contenido %}
+<!-- Renderiza el token oculto para que JS lo encuentre -->
+<div style="display:none;">
+    {% csrf_token %}
+</div>
+
+<div class="container-fluid px-0">
+
+    <!-- Barra de Herramientas y Filtros -->
+    <div class="card shadow-sm mb-4 border-0">
+        <div class="card-body p-3">
+            <div class="row g-3 align-items-center">
+                <!-- Buscador -->
+                <div class="col-12 col-md-6">
+                    <form method="get" action="" class="d-flex">
+                        <div class="input-group">
+                            <span class="input-group-text bg-light border-end-0">
+                                <i class="fas fa-search text-muted"></i>
+                            </span>
+                            <input type="text" name="q" class="form-control border-start-0 ps-0 text-base" 
+                                   placeholder="Buscar plan por nombre..." 
+                                   value="{{ busqueda }}">
+                            <button class="btn btn-primary text-base" type="submit">Buscar</button>
+                            {% if busqueda %}
+                                <a href="{% url 'gestion_mantenimiento:ruta_lista_planes' %}" class="btn btn-outline-secondary" title="Limpiar filtro">
+                                    <i class="fas fa-times"></i>
+                                </a>
+                            {% endif %}
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Botones de Acción -->
+                <div class="col-12 col-md-6 text-md-end">
+                    {# PERMISO: Crear Plan #}
+                    {% if perms.gestion_usuarios.accion_gestion_mantenimiento_gestionar_planes %}
+                    <a href="{% url 'gestion_mantenimiento:ruta_crear_plan' %}" class="btn btn-success text-base">
+                        <i class="fas fa-plus me-1"></i> Nuevo Plan
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tabla de Resultados -->
+    <div class="card shadow-sm border-0">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="bg-light text-secondary">
+                        <tr>
+                            <th class="ps-4 text-uppercase text-sm font-bold" style="width: 25%;">Nombre del Plan</th>
+                            <th class="text-uppercase text-sm font-bold">Disparador (Trigger)</th>
+                            <th class="text-uppercase text-sm font-bold">Configuración</th>
+                            <th class="text-uppercase text-sm font-bold text-center">Estado</th>
+                            <th class="text-uppercase text-sm font-bold text-center">Activos</th>
+                            <th class="pe-4 text-end text-uppercase text-sm font-bold">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody class="text-base">
+                        {% for plan in planes %}
+                        <tr>
+                            <td class="ps-4">
+                                <div class="font-bold text-dark text-base">{{ plan.nombre }}</div>
+                                <small class="text-muted text-xs">Creado: {{ plan.fecha_creacion|date:"d/m/Y" }}</small>
+                            </td>
+                            
+                            <!-- Columna Trigger -->
+                            <td>
+                                {% if plan.tipo_trigger == 'TIEMPO' %}
+                                    <span class="badge bg-info text-dark text-xs">
+                                        <i class="far fa-clock me-1"></i> Tiempo
+                                    </span>
+                                {% else %}
+                                    <span class="badge bg-warning text-dark text-xs">
+                                        <i class="fas fa-tachometer-alt me-1"></i> Uso
+                                    </span>
+                                {% endif %}
+                            </td>
+
+                            <!-- Columna Configuración -->
+                            <td class="text-sm">
+                                {% if plan.tipo_trigger == 'TIEMPO' %}
+                                    <span class="text-secondary">
+                                        Cada <strong>{{ plan.intervalo }}</strong> {{ plan.get_frecuencia_display }}(s)
+                                    </span>
+                                {% else %}
+                                    <span class="text-secondary">
+                                        Cada <strong>{{ plan.horas_uso_trigger }}</strong> horas
+                                    </span>
+                                {% endif %}
+                            </td>
+
+                            <!-- Columna Estado (INTERACTIVO) -->
+                            <td class="text-center">
+                                <div class="form-check form-switch d-flex justify-content-center">
+                                    {# PERMISO: Toggle Estado (Deshabilitado si no tiene permiso) #}
+                                    <input class="form-check-input toggle-plan-activo" type="checkbox" 
+                                           data-plan-id="{{ plan.pk }}" 
+                                           id="switchPlan{{ plan.pk }}" 
+                                           {% if plan.activo_en_sistema %}checked{% endif %}
+                                           {% if not perms.gestion_mantenimiento.accion_gestion_mantenimiento_gestionar_planes %}disabled{% endif %}>
+                                    
+                                    <label class="form-check-label ms-2 text-xs text-muted" for="switchPlan{{ plan.pk }}" id="labelPlan{{ plan.pk }}">
+                                        {% if plan.activo_en_sistema %}Activo{% else %}Inactivo{% endif %}
+                                    </label>
+                                </div>
+                            </td>
+
+                            <!-- Columna Cantidad Activos (usamos related_name) -->
+                            <td class="text-center">
+                                <span class="badge bg-light text-dark border text-xs">
+                                    {{ plan.activos.count }}
+                                </span>
+                            </td>
+
+                            <!-- Columna Acciones -->
+                            <td class="pe-4 text-end">
+                                <div class="btn-group">
+                                    <!-- Botón Gestionar (Ver activos) - Visible siempre o bajo permiso específico? -->
+                                    <!-- Asumimos que ver detalle es parte de ver_planes o gestionar -->
+                                    <a href="{% url 'gestion_mantenimiento:ruta_gestionar_plan' plan.pk %}" 
+                                       class="btn btn-sm btn-outline-primary text-xs" 
+                                       data-bs-toggle="tooltip" title="Gestionar Activos">
+                                        <i class="fas fa-cogs"></i>
+                                    </a>
+                                    
+                                    {# PERMISO: Editar y Eliminar #}
+                                    {% if perms.gestion_usuarios.accion_gestion_mantenimiento_gestionar_planes %}
+                                    <!-- Botón Editar -->
+                                    <a href="{% url 'gestion_mantenimiento:ruta_editar_plan' plan.pk %}" 
+                                       class="btn btn-sm btn-outline-secondary text-xs"
+                                       data-bs-toggle="tooltip" title="Editar Configuración">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+
+                                    <!-- Botón Eliminar -->
+                                    <a href="{% url 'gestion_mantenimiento:ruta_eliminar_plan' plan.pk %}" 
+                                       class="btn btn-sm btn-outline-danger text-xs"
+                                       data-bs-toggle="tooltip" title="Eliminar Plan">
+                                        <i class="fas fa-trash-alt"></i>
+                                    </a>
+                                    {% endif %}
+                                </div>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="6" class="text-center py-5">
+                                <div class="text-muted">
+                                    <i class="fas fa-clipboard-list fa-3x mb-3 opacity-50"></i>
+                                    <h5 class="text-lg">No se encontraron planes de mantenimiento</h5>
+                                    <p class="text-sm">Utiliza el botón "Nuevo Plan" para comenzar.</p>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Paginación -->
+        {% if is_paginated %}
+        <div class="card-footer bg-white border-top-0 py-3">
+            <nav aria-label="Navegación de páginas">
+                <ul class="pagination justify-content-center mb-0 text-sm">
+                    {% if page_obj.has_previous %}
+                        <li class="page-item">
+                            <a class="page-link border-0 text-secondary" href="?page={{ page_obj.previous_page_number }}&q={{ busqueda }}">
+                                <i class="fas fa-chevron-left"></i> Anterior
+                            </a>
+                        </li>
+                    {% else %}
+                        <li class="page-item disabled">
+                            <span class="page-link border-0 text-muted"><i class="fas fa-chevron-left"></i> Anterior</span>
+                        </li>
+                    {% endif %}
+
+                    <li class="page-item disabled">
+                        <span class="page-link border-0 font-bold text-dark">
+                            Página {{ page_obj.number }} de {{ page_obj.paginator.num_pages }}
+                        </span>
+                    </li>
+
+                    {% if page_obj.has_next %}
+                        <li class="page-item">
+                            <a class="page-link border-0 text-primary" href="?page={{ page_obj.next_page_number }}&q={{ busqueda }}">
+                                Siguiente <i class="fas fa-chevron-right"></i>
+                            </a>
+                        </li>
+                    {% else %}
+                        <li class="page-item disabled">
+                            <span class="page-link border-0 text-muted">Siguiente <i class="fas fa-chevron-right"></i></span>
+                        </li>
+                    {% endif %}
+                </ul>
+            </nav>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+{% endblock %}
+
+
+{% block scripts %}
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Inicializar Tooltips
+        var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+        var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+          return new bootstrap.Tooltip(tooltipTriggerEl)
+        });
+
+        // Lógica para Toggle Activo
+        const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+        
+        document.querySelectorAll('.toggle-plan-activo').forEach(switchEl => {
+            // Si está deshabilitado por permisos, no añadimos el listener
+            if (switchEl.disabled) return;
+
+            switchEl.addEventListener('change', function() {
+                const planId = this.dataset.planId;
+                const label = document.getElementById('labelPlan' + planId);
+                const originalState = !this.checked; // Para revertir si falla
+                
+                // Deshabilitar mientras carga
+                this.disabled = true;
+
+                // URL construida manualmente o mejor usando un data attribute con la url completa si es posible
+                const url = `{% url 'api:api_toggle_plan_activo' 0 %}`.replace('0', planId);
+
+                fetch(url, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': csrfToken
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    this.disabled = false;
+                    if (data.status === 'ok') {
+                        // Actualizar texto visualmente
+                        label.textContent = data.nuevo_estado ? 'Activo' : 'Inactivo';
+                    } else {
+                        // Revertir y mostrar error
+                        this.checked = originalState;
+                        alert('Error: ' + data.message);
+                    }
+                })
+                .catch(error => {
+                    this.disabled = false;
+                    this.checked = originalState;
+                    console.error('Error:', error);
+                    alert('Ocurrió un error de conexión.');
+                });
+            });
+        });
+    });
+</script>
+
+{% endblock scripts %}

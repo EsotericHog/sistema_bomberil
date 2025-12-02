@@ -1,0 +1,191 @@
+{% extends 'core_admin/layouts/base.html' %}
+{% load static %}
+
+{# Títulos #}
+{% block titulo_ventana %}Administración de Estaciones{% endblock %}
+{% block titulo_pagina %}Estaciones del Sistema{% endblock %}
+
+{% block contenido %}
+<div class="container-fluid mt-4">
+
+
+<div class="row mb-4">
+    <div class="col-md-8">
+        <p class="text-muted text-base">
+            Gestione las Compañías y el Cuerpo de Bomberos registrados. 
+            Estas entidades definen la estructura operativa del sistema.
+        </p>
+    </div>
+    <div class="col-md-4 text-end">
+        {# Enlace provisional, luego lo conectaremos a EstacionCreateView #}
+        <a href="{% url 'core_admin:ruta_crear_estacion' %}" class="btn btn-primary shadow-sm font-bold text-sm">
+            <i class="fas fa-plus-circle me-2"></i>Nueva Estación
+        </a>
+    </div>
+</div>
+
+<div class="card shadow-sm border-0">
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="bg-light text-dark">
+                    <tr>
+                        <th scope="col" class="ps-4 py-3 text-sm font-bold" style="width: 10%;">Identidad</th>
+                        <th scope="col" class="text-sm font-bold" style="width: 30%;">Nombre / Descripción</th>
+                        <th scope="col" class="text-sm font-bold" style="width: 25%;">Ubicación</th>
+                        <th scope="col" class="text-sm font-bold" style="width: 15%;">Tipo</th>
+                        <th scope="col" class="text-end pe-4 text-sm font-bold" style="width: 20%;">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for estacion in estaciones %}
+                    <tr>
+                        {# 1. LÓGICA DE IMAGEN ROBUSTA #}
+                        <td class="ps-4">
+                            <div class="avatar-contenedor">
+                                {% if estacion.logo %}
+                                    <img src="{{ estacion.logo.url }}" 
+                                         alt="Logo {{ estacion.nombre }}"
+                                         class="rounded shadow-sm img-estacion"
+                                         onerror="this.onerror=null;this.src='{% static 'portal/imagenes/default-station-logo.png' %}';">
+                                {% else %}
+                                    {# Imagen de stock por defecto si no hay logo subido #}
+                                    <img src="{% static 'portal/imagenes/default-station-logo.png' %}" 
+                                         alt="Logo por defecto"
+                                         class="rounded shadow-sm img-estacion opacity-75">
+                                {% endif %}
+                            </div>
+                        </td>
+
+                        <td>
+                            <a href="{% url 'core_admin:ruta_ver_estacion' pk=estacion.id %}">
+                                <h6 class="mb-0 font-bold text-primary text-base">{{ estacion.nombre }}</h6>
+                            </a>
+
+                            {% if estacion.descripcion %}
+                                <small class="text-muted d-block text-truncate text-xs" style="max-width: 250px;">
+                                    {{ estacion.descripcion }}
+                                </small>
+                            {% else %}
+                                <small class="text-muted fst-italic text-xs">Sin descripción registrada</small>
+                            {% endif %}
+                        </td>
+
+                        <td>
+                            <div class="d-flex align-items-center">
+                                <i class="fas fa-map-marker-alt text-secondary me-2"></i>
+                                <div>
+                                    <span class="d-block text-sm">{{ estacion.comuna.nombre }}</span>
+                                    <small class="text-muted text-xs">
+                                        {{ estacion.comuna.region.nombre }}
+                                    </small>
+                                </div>
+                            </div>
+                        </td>
+
+                        <td>
+                            {# Badge condicional basado en si es Cuerpo o Compañía #}
+                            {% if estacion.es_departamento %}
+                                <span class="badge rounded-pill bg-dark border border-secondary text-xs font-medium">
+                                    <i class="fas fa-university me-1"></i>Cuerpo / Admin
+                                </span>
+                            {% else %}
+                                <span class="badge rounded-pill bg-danger bg-opacity-10 text-danger border border-danger text-xs font-medium">
+                                    <i class="fas fa-fire-extinguisher me-1"></i>Compañía
+                                </span>
+                            {% endif %}
+                        </td>
+
+                        <td class="text-end pe-4">
+                            <div class="btn-group" role="group">
+                                <a href="{% url 'core_admin:ruta_acceder_estacion' estacion.pk %}" 
+                                   class="btn btn-sm btn-outline-success text-base" 
+                                   data-bs-toggle="tooltip" 
+                                   title="Ingresar a gestionar">
+                                    <i class="fas fa-sign-in-alt"></i>
+                                </a>
+                                <a href="{% url 'core_admin:ruta_editar_estacion' estacion.pk %}" class="btn btn-sm btn-outline-secondary text-base" data-bs-toggle="tooltip" title="Editar información">
+                                    <i class="fas fa-pencil-alt"></i>
+                                </a>
+                                <a href="#" class="btn btn-sm btn-outline-secondary text-base" data-bs-toggle="tooltip" disabled style="pointer-events: none;" title="Gestionar Usuarios">
+                                    <i class="fas fa-users"></i>
+                                </a>
+                                {# Solo el superusuario debería ver el botón eliminar #}
+                                <a href="{% url 'core_admin:ruta_eliminar_estacion' estacion.pk %}" class="btn btn-sm btn-outline-danger text-base" data-bs-toggle="tooltip" title="Eliminar Estación">
+                                    <i class="fas fa-trash"></i>
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="5" class="text-center py-5 bg-light">
+                            <div class="text-muted">
+                                <i class="fas fa-building fa-3x mb-3 text-secondary opacity-25"></i>
+                                <h5 class="font-bold text-xl">No hay estaciones registradas</h5>
+                                <p class="text-sm">Comience agregando el Cuerpo de Bomberos o la Primera Compañía.</p>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    {# Paginación (Igual que antes) #}
+    {% if is_paginated %}
+    <div class="card-footer bg-white py-3">
+        <nav aria-label="Navegación">
+            <ul class="pagination justify-content-center mb-0">
+                {% if page_obj.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link border-0 text-secondary" href="?page={{ page_obj.previous_page_number }}">
+                            <i class="fas fa-chevron-left"></i>
+                        </a>
+                    </li>
+                {% endif %}
+                <li class="page-item disabled">
+                    <span class="page-link border-0 font-bold text-dark text-sm">
+                        {{ page_obj.number }} / {{ page_obj.paginator.num_pages }}
+                    </span>
+                </li>
+                {% if page_obj.has_next %}
+                    <li class="page-item">
+                        <a class="page-link border-0 text-secondary" href="?page={{ page_obj.next_page_number }}">
+                            <i class="fas fa-chevron-right"></i>
+                        </a>
+                    </li>
+                {% endif %}
+            </ul>
+        </nav>
+    </div>
+    {% endif %}
+</div>
+
+<style>
+    /* Estilos inline rápidos para ajustar las imágenes - Idealmente mover al CSS */
+    .img-estacion {
+        width: 48px;
+        height: 48px;
+        object-fit: cover; /* Evita deformación */
+        object-position: center;
+    }
+    .table > :not(caption) > * > * {
+        padding: 1rem 0.5rem; /* Espaciado más aireado */
+    }
+</style>
+
+<script>
+    // Inicializar Tooltips de Bootstrap (si usas Bootstrap 5)
+    document.addEventListener("DOMContentLoaded", function(){
+        var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+        var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+            return new bootstrap.Tooltip(tooltipTriggerEl)
+        })
+    });
+</script>
+
+
+</div>
+{% endblock %}

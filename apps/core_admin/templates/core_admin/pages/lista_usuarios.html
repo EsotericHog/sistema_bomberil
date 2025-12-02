@@ -1,0 +1,353 @@
+{% extends 'core_admin/layouts/base.html' %}
+{% load static %}
+
+{% block titulo_ventana %}Usuarios | Administración{% endblock %}
+{% block titulo_pagina %}Directorio de Usuarios{% endblock %}
+
+{% block contenido %}
+<div class="container-fluid mt-4">
+
+<div class="row mb-4">
+    <!-- KPI Total -->
+    <div class="col-md-4">
+        <div class="card border-0 shadow-sm border-start border-4 border-primary">
+            <div class="card-body d-flex justify-content-between align-items-center">
+                <div>
+                    <h6 class="text-muted text-uppercase text-xs font-bold">Total Registrados</h6>
+                    <h3 class="mb-0 font-bold text-2xl">{{ kpi_total_usuarios }}</h3>
+                </div>
+                <div class="icon-shape bg-primary bg-opacity-10 text-primary rounded-circle p-3">
+                    <i class="fas fa-users fa-lg"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- KPI Activos -->
+    <div class="col-md-4">
+        <div class="card border-0 shadow-sm border-start border-4 border-success">
+            <div class="card-body d-flex justify-content-between align-items-center">
+                <div>
+                    <h6 class="text-muted text-uppercase text-xs font-bold">Usuarios Activos</h6>
+                    <h3 class="mb-0 font-bold text-2xl">{{ kpi_activos }}</h3>
+                </div>
+                <div class="icon-shape bg-success bg-opacity-10 text-success rounded-circle p-3">
+                    <i class="fas fa-user-check fa-lg"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- KPI Staff -->
+    <div class="col-md-4">
+        <div class="card border-0 shadow-sm border-start border-4 border-warning">
+            <div class="card-body d-flex justify-content-between align-items-center">
+                <div>
+                    <h6 class="text-muted text-uppercase text-xs font-bold">Staff / Admins</h6>
+                    <h3 class="mb-0 font-bold text-2xl">{{ kpi_staff }}</h3>
+                </div>
+                <div class="icon-shape bg-warning bg-opacity-10 text-warning rounded-circle p-3">
+                    <i class="fas fa-user-shield fa-lg"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card shadow-sm border-0 mb-4">
+    <div class="card-body">
+        <form method="get">
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <div class="input-group">
+                        <span class="input-group-text bg-white border-end-0"><i class="fas fa-search text-muted"></i></span>
+                        <input type="text" name="q" class="form-control border-start-0 text-sm" placeholder="Buscar por nombre, email o usuario..." value="{{ current_search }}">
+                        <button type="submit" class="btn btn-primary font-bold text-sm">Buscar</button>
+                    </div>
+                </div>
+                <div class="col-md-6 text-end">
+                    {# Placeholder para futura creación de usuario #}
+                    <a href="{% url 'core_admin:ruta_crear_usuario' %}" class="btn btn-success font-bold text-sm">
+                        <i class="fas fa-user-plus me-2"></i>Nuevo Usuario
+                    </a>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="card shadow-sm border-0">
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead class="bg-light">
+                <tr>
+                    <th class="ps-4 text-sm font-bold">Usuario</th>
+                    <th class="text-sm font-bold">Estado</th>
+                    <th class="text-sm font-bold">Acceso / Membresías</th>
+                    <th class="text-sm font-bold">Registro</th>
+                    <th class="text-end pe-4 text-sm font-bold">Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for usuario in usuarios %}
+                <tr>
+                    <td class="ps-4">
+                        <div class="d-flex align-items-center">
+                            <div class="rounded-circle bg-light d-flex align-items-center justify-content-center me-3 text-secondary font-bold border text-sm" 
+                                 style="width: 40px; height: 40px;">
+                                {{ usuario.username|slice:":2"|upper }}
+                            </div>
+                            <div>
+                                <div class="font-bold text-dark text-base">
+                                    {{ usuario.get_full_name|default:usuario.rut }}
+                                </div>
+                                <div class="text-muted text-xs">{{ usuario.email }}</div>
+                            </div>
+                        </div>
+                    </td>
+                    
+                    <td>
+                        {% if usuario.is_superuser %}
+                            <span class="badge bg-dark border border-secondary text-xs font-medium">Superuser</span>
+                        {% elif usuario.is_staff %}
+                            <span class="badge bg-info text-dark text-xs font-medium">Staff</span>
+                        {% endif %}
+
+                        {% if usuario.is_active %}
+                            <span class="badge bg-success bg-opacity-10 text-success text-xs font-medium">Activo</span>
+                        {% else %}
+                            <span class="badge bg-danger bg-opacity-10 text-danger text-xs font-medium">Inactivo</span>
+                        {% endif %}
+                    </td>
+
+                    <td>
+                        {# Lógica para mostrar estaciones asociadas #}
+                        {% with membresias=usuario.membresias.all %}
+                            <div class="d-flex flex-wrap gap-1">
+                                {% for membresia in membresias %}
+                                    {# CORRECCIÓN 1: Solo mostrar membresías ACTIVAS #}
+                                    {% if membresia.estado == 'ACTIVO' %}
+                                        <span class="badge bg-light text-secondary border text-xs" 
+                                              data-bs-toggle="tooltip" 
+                                              {# CORRECCIÓN 2: Iterar sobre la relación ManyToMany de roles #}
+                                              title="Roles: {% for r in membresia.roles.all %}{{ r.nombre }}{% if not forloop.last %}, {% endif %}{% endfor %}">
+                                            <i class="fas fa-building me-1 text-muted"></i>{{ membresia.estacion.nombre|truncatechars:15 }}
+                                        </span>
+                                    {% endif %}
+                                {% endfor %}
+                            </div>
+                            
+                            {# Mensaje opcional si no tiene ninguna activa (requiere lógica extra o dejar en blanco) #}
+                            {% if not membresias %}
+                                <small class="text-muted fst-italic text-xs">Sin asignación</small>
+                            {% endif %}
+                        {% endwith %}
+                    </td>
+
+                    <td class="text-muted text-xs">
+                        {{ usuario.created_at|date:"d/m/Y" }}
+                    </td>
+
+                    <td class="text-end pe-4">
+                        <div class="btn-group">
+                            <a href="{% url 'core_admin:ruta_editar_usuario' usuario.pk %}" class="btn btn-sm btn-outline-secondary text-base" title="Editar Usuario">
+                                <i class="fas fa-pencil-alt"></i>
+                            </a>
+                            <button type="button" 
+                            class="btn btn-sm btn-outline-warning btn-reset-password text-base" 
+                            data-bs-toggle="modal" 
+                            data-bs-target="#modalResetPassword"
+                            data-usuario-id="{{ usuario.pk }}"
+                            data-usuario-nombre="{{ usuario.get_full_name|default:usuario.rut }}"
+                            data-usuario-email="{{ usuario.email|default:'Sin correo' }}"
+                            title="Enviar correo de recuperación">
+                                <i class="fas fa-key"></i>
+                            </button>
+
+                            <a 
+                            href="{% url 'core_admin:ruta_crear_membresia' %}?usuario_id={{ usuario.pk }}" 
+                            class="btn btn-sm btn-outline-success text-base" 
+                            title="Dar Acceso / Crear Membresía">
+                                <i class="fas fa-id-badge"></i>
+                            </a>
+
+                            <button 
+                            type="button" 
+                            class="btn btn-sm btn-outline-danger text-base" 
+                            data-bs-toggle="modal" 
+                            data-bs-target="#modalFinalizarMembresias"
+                            data-usuario-id="{{ usuario.pk }}"
+                            data-usuario-nombre="{{ usuario.get_full_name|default:usuario.email }}"
+                            title="Revocar accesos / Finalizar membresías">
+                                <i class="fas fa-user-slash"></i>
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="5" class="text-center py-5 text-muted text-base">
+                        No se encontraron usuarios.
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    
+    {# Paginación estándar #}
+    {% if is_paginated %}
+    <div class="card-footer bg-white py-3">
+        {% include 'core_admin/layouts/paginacion.html' %} {# O tu bloque de paginación habitual #}
+        <nav>
+            <ul class="pagination justify-content-center mb-0">
+                {% if page_obj.has_previous %}
+                    <li class="page-item"><a class="page-link text-sm" href="?page={{ page_obj.previous_page_number }}&q={{ current_search }}">Ant</a></li>
+                {% endif %}
+                <li class="page-item disabled"><span class="page-link text-sm font-bold">{{ page_obj.number }} / {{ page_obj.paginator.num_pages }}</span></li>
+                {% if page_obj.has_next %}
+                    <li class="page-item"><a class="page-link text-sm" href="?page={{ page_obj.next_page_number }}&q={{ current_search }}">Sig</a></li>
+                {% endif %}
+            </ul>
+        </nav>
+    </div>
+    {% endif %}
+</div>
+
+
+<div class="modal fade" id="modalResetPassword" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-warning bg-opacity-10">
+                <h5 class="modal-title text-dark font-bold text-lg">
+                    <i class="fas fa-key me-2"></i>Restablecer Contraseña
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p class="text-sm">¿Está seguro de que desea forzar el restablecimiento de contraseña para el siguiente usuario?</p>
+                
+                <div class="alert alert-light border text-center">
+                    <h5 class="font-bold text-base mb-1" id="modal_usuario_nombre"></h5>
+                    <small class="text-muted text-xs" id="modal_usuario_email"></small>
+                </div>
+
+                <p class="text-muted mb-0 text-xs">
+                    <i class="fas fa-info-circle me-1"></i>
+                    El sistema enviará un correo electrónico a la dirección registrada con un enlace seguro para que el usuario defina una nueva clave.
+                </p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary font-bold text-sm" data-bs-dismiss="modal">Cancelar</button>
+                
+                <form method="post" id="formResetPassword" action="">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-warning font-bold text-sm">
+                        <i class="fas fa-paper-plane me-2"></i>Enviar Correo
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<div class="modal fade" id="modalFinalizarMembresias" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title font-bold text-lg">
+                    <i class="fas fa-user-slash me-2"></i>Revocar Accesos
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p class="text-sm">¿Está seguro de que desea finalizar <strong>TODAS</strong> las membresías activas de este usuario?</p>
+                
+                <div class="alert alert-light border text-center font-bold text-danger text-base" id="modal_finalizar_usuario_nombre">
+                    </div>
+
+                <div class="alert alert-warning mb-0 text-xs">
+                    <i class="fas fa-exclamation-triangle me-1"></i>
+                    El usuario perderá el acceso inmediato a todas las estaciones donde esté activo actualmente. 
+                    Esta acción no elimina el historial, solo cambia el estado a "Finalizado".
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary font-bold text-sm" data-bs-dismiss="modal">Cancelar</button>
+                
+                <form method="post" id="formFinalizarMembresias" action="">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger font-bold text-sm">
+                        <i class="fas fa-check-circle me-2"></i>Confirmar Revocación
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+</div>
+{% endblock %}
+
+{% block scripts %}
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        var modalReset = document.getElementById('modalResetPassword');
+        if (modalReset) {
+            modalReset.addEventListener('show.bs.modal', function(event) {
+                // Botón que activó el modal
+                var button = event.relatedTarget;
+                
+                // Extraer datos
+                var userId = button.getAttribute('data-usuario-id');
+                var userName = button.getAttribute('data-usuario-nombre');
+                var userEmail = button.getAttribute('data-usuario-email');
+                
+                // Actualizar textos del modal
+                document.getElementById('modal_usuario_nombre').textContent = userName;
+                document.getElementById('modal_usuario_email').textContent = userEmail;
+                
+                // Construir la URL dinámica para el POST
+                // OJO: Usamos un placeholder '0' en la URL de django y lo reemplazamos por JS
+                var dummyUuid = '00000000-0000-0000-0000-000000000000';
+                var urlBase = "{% url 'core_admin:ruta_restablecer_contraseña' '00000000-0000-0000-0000-000000000000' %}";
+                var urlFinal = urlBase.replace(dummyUuid, userId);
+                
+                document.getElementById('formResetPassword').action = urlFinal;
+                
+                // Deshabilitar botón si no hay email
+                var btnSubmit = modalReset.querySelector('button[type="submit"]');
+                if(userEmail === 'Sin correo' || userEmail === '') {
+                    btnSubmit.disabled = true;
+                    btnSubmit.innerHTML = "Usuario sin Email";
+                } else {
+                    btnSubmit.disabled = false;
+                    btnSubmit.innerHTML = '<i class="fas fa-paper-plane me-2"></i>Enviar Correo';
+                }
+            });
+        }
+
+
+        // Lógica para Modal Finalizar Membresías
+        var modalFinalizar = document.getElementById('modalFinalizarMembresias');
+        if (modalFinalizar) {
+            modalFinalizar.addEventListener('show.bs.modal', function(event) {
+                var button = event.relatedTarget;
+                var userId = button.getAttribute('data-usuario-id');
+                var userName = button.getAttribute('data-usuario-nombre');
+                
+                // Actualizar texto
+                document.getElementById('modal_finalizar_usuario_nombre').textContent = userName;
+                
+                // Actualizar Action del Form
+                var dummyUuid = '00000000-0000-0000-0000-000000000000';
+                var urlBase = "{% url 'core_admin:ruta_finalizar_membresias_usuario' '00000000-0000-0000-0000-000000000000' %}";
+                var urlFinal = urlBase.replace(dummyUuid, userId);
+                document.getElementById('formFinalizarMembresias').action = urlFinal;
+            });
+        }
+    });
+</script>
+
+{% endblock scripts %}

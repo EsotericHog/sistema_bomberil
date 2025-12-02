@@ -1,0 +1,37 @@
+{# Plantilla base #}{% extends 'gestion_voluntarios/layouts/base.html' %}
+{# Cargar assets #}{% load static %}
+{# Título de la ventana #} {% block titulo_ventana %}Modificar Rango{% endblock %}
+{# Título de la página #} {% block titulo_pagina %}Modificar Rango{% endblock %}
+
+{% block contenido %}
+<div class="container-fluid mt-4"> 
+    <div class="container">
+        {# Título Principal: Tamaño 3XL y Negrita #}
+        <h1 class="text-3xl font-bold">Modificar Rango: {{ cargo.nombre }}</h1>
+        
+        <form method="POST">
+            {% csrf_token %}
+            
+            <div class="form-section">
+                {% for field in form %}
+                    <div class="form-group">
+                        {{ field.label_tag }}
+                        {{ field }}
+                        {% if field.errors %}
+                            {# Errores: Texto pequeño y negrita #}
+                            <div class="error-message text-sm font-bold" style="color: red;">{{ field.errors|first }}</div>
+                        {% endif %}
+                    </div>
+                {% endfor %}
+            </div>
+            
+            <div class="button-group">
+                {# Botón Guardar: Tamaño base y Negrita #}
+                <button type="submit" class="btn-primary text-base font-bold">Guardar Cambios</button>
+                {# Botón Cancelar: Tamaño base y Medio #}
+                <a href="{% url 'gestion_voluntarios:ruta_cargos_lista' %}" class="btn-secondary text-base font-medium">Cancelar</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock  %}

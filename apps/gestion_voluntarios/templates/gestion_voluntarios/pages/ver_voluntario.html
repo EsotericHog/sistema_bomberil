@@ -1,0 +1,654 @@
+{# Plantilla base #}{% extends 'gestion_voluntarios/layouts/base.html' %}
+{# Cargar assets #}{% load static %}
+{# Título de la ventana #} {% block titulo_ventana %}Perfil de {{ voluntario.usuario.get_full_name }}{% endblock %}
+{# Título de la página #} {% block titulo_pagina %}Hoja de Vida del Voluntario{% endblock %}
+
+{% block contenido %}
+
+    <style>
+        :root {
+            --card-border-radius: 12px;
+            --card-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+            --primary-color: #D72600;
+            --secondary-color: #2c3e50;
+            --bg-gray: #f8f9fa;
+        }
+
+        .profile-container {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding-bottom: 50px;
+        }
+
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            margin-bottom: 20px;
+            color: #6c757d;
+            text-decoration: none;
+            /* font-weight: 600; Reemplazado por clase font-medium */
+            transition: color 0.2s;
+        }
+        .back-link:hover { color: var(--primary-color); }
+        .back-link i { margin-right: 8px; }
+
+        /* --- CABECERA DEL PERFIL --- */
+        .profile-header-main {
+            background: #fff;
+            border-radius: var(--card-border-radius);
+            box-shadow: var(--card-shadow);
+            padding: 40px;
+            display: flex;
+            align-items: center;
+            gap: 30px;
+            margin-bottom: 30px;
+            position: relative;
+            border: 1px solid #eef2f7;
+            flex-wrap: wrap;
+        }
+
+        .profile-image-container {
+            position: relative;
+            flex-shrink: 0;
+        }
+
+        .profile-image-container img {
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            border: 5px solid #fff;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.15);
+            object-fit: cover;
+        }
+
+        /* Placeholder con Iniciales (Estilo Robusto) */
+        .avatar-placeholder-large {
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            border: 5px solid #fff;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.15);
+            background-color: #2c3e50;
+            color: #fff;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            /* font-size: 4rem; Reemplazado por clase text-3xl */
+            /* font-weight: 700; Reemplazado por clase font-bold */
+            text-transform: uppercase;
+        }
+
+        /* Indicador de Estado */
+        .status-indicator {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            border: 4px solid #fff;
+            position: absolute;
+            bottom: 10px;
+            right: 10px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+        .status-indicator.active { background-color: #28a745; }
+        .status-indicator.inactive { background-color: #dc3545; }
+
+        .profile-main-info {
+            flex-grow: 1;
+        }
+
+        .profile-main-info h1 {
+            margin: 0 0 10px 0;
+            /* font-size: 2.2rem; Reemplazado por text-3xl */
+            color: var(--secondary-color);
+            /* font-weight: 800; Reemplazado por font-bold */
+        }
+
+        .profile-badges {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 6px 12px;
+            border-radius: 20px;
+            /* font-size: 0.9rem; Reemplazado por text-xs */
+            /* font-weight: 600; Reemplazado por font-bold */
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .badge-rank { background-color: rgba(215, 38, 0, 0.1); color: var(--primary-color); }
+        .badge-station { background-color: #eef2f7; color: #555; }
+
+        .profile-actions {
+            display: flex;
+            gap: 15px;
+        }
+
+        /* --- BOTONES GENERALES --- */
+        .btn {
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            border: none;
+            /* font-weight: 600; Reemplazado por font-bold */
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.2s;
+            /* font-size: 0.95rem; Reemplazado por text-sm */
+        }
+        .btn:hover { transform: translateY(-2px); }
+        
+        .btn-principal { background-color: var(--primary-color); color: white; box-shadow: 0 4px 6px rgba(215, 38, 0, 0.2); }
+        .btn-principal:hover { background-color: #b01f00; box-shadow: 0 6px 8px rgba(215, 38, 0, 0.3); }
+
+        .btn-secondary { background-color: #fff; color: #555; border: 1px solid #ccc; }
+        .btn-secondary:hover { background-color: #f8f9fa; border-color: #aaa; }
+
+        .btn-pdf { background-color: #dc3545; color: white; }
+        .btn-pdf:hover { background-color: #c82333; }
+
+        .btn-edit { background-color: #ffc107; color: #212529; }
+        .btn-edit:hover { background-color: #e0a800; }
+
+        .btn-add-item { 
+            background-color: #28a745; 
+            color: white; 
+            /* font-size: 0.85rem; Reemplazado por text-xs */
+            padding: 6px 12px; 
+            border-radius: 6px;
+            width: fit-content;
+            white-space: nowrap;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .btn-add-item:hover { background-color: #218838; transform: none; }
+
+        /* --- PESTAÑAS --- */
+        .profile-tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 25px;
+            border-bottom: 2px solid #eef2f7;
+            padding-bottom: 2px;
+            overflow-x: auto;
+        }
+
+        .tab-btn {
+            background: none;
+            border: none;
+            padding: 12px 20px;
+            /* font-size: 1rem; Reemplazado por text-base */
+            /* font-weight: 600; Reemplazado por font-medium */
+            color: #6c757d;
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+            transition: all 0.3s;
+            margin-bottom: -2px;
+            white-space: nowrap;
+        }
+
+        .tab-btn:hover { color: var(--primary-color); }
+        
+        .tab-btn.active {
+            color: var(--primary-color);
+            border-bottom-color: var(--primary-color);
+        }
+
+        /* --- CONTENIDO DE PESTAÑAS --- */
+        .tab-content {
+            display: none;
+            background: #fff;
+            padding: 30px;
+            border-radius: var(--card-border-radius);
+            box-shadow: var(--card-shadow);
+            border: 1px solid #eef2f7;
+            animation: fadeIn 0.3s ease;
+        }
+        .tab-content.active { display: block; }
+        
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        .tab-content h2 {
+            margin-top: 0;
+            color: var(--secondary-color);
+            /* font-size: 1.5rem; Reemplazado por text-xl */
+            margin-bottom: 25px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #f0f0f0;
+            padding-bottom: 15px;
+        }
+
+        /* --- Grilla de Información --- */
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 25px;
+        }
+
+        .info-item {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .info-item strong {
+            color: #6c757d;
+            /* font-size: 0.85rem; Reemplazado por text-xs */
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 5px;
+        }
+
+        .info-item span {
+            /* font-size: 1.1rem; Reemplazado por text-base */
+            color: #2c3e50;
+            /* font-weight: 500; Reemplazado por font-medium */
+            background: #f8f9fa;
+            padding: 10px 15px;
+            border-radius: 8px;
+            border: 1px solid #e9ecef;
+        }
+        
+        .info-item.full-width { grid-column: 1 / -1; }
+
+        /* --- Listas de Historial --- */
+        .history-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .history-list li {
+            position: relative;
+            padding-left: 25px;
+            margin-bottom: 20px;
+            border-left: 2px solid #eef2f7;
+        }
+        
+        .history-list li::before {
+            content: '';
+            position: absolute;
+            left: -6px;
+            top: 5px;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background-color: var(--primary-color);
+            border: 2px solid #fff;
+            box-shadow: 0 0 0 2px rgba(215, 38, 0, 0.2);
+        }
+
+        .history-list strong {
+            display: block;
+            /* font-size: 1.1rem; Reemplazado por text-base */
+            color: #2c3e50;
+            margin-bottom: 2px;
+        }
+
+        .history-list .date-range {
+            /* font-size: 0.9rem; Reemplazado por text-sm */
+            color: #6c757d;
+            /* font-weight: 500; Reemplazado por font-medium */
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        .history-list p, .history-list small {
+            color: #555;
+            margin: 0;
+            /* font-size: 0.95rem; Reemplazado por text-sm */
+        }
+
+        /* --- MODALES --- */
+        .modal-backdrop { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; display: none; backdrop-filter: blur(2px); }
+        .modal { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; width: 90%; max-width: 500px; border-radius: 12px; z-index: 1050; display: none; padding: 25px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); max-height: 90vh; overflow-y: auto; }
+        .modal.show, .modal-backdrop.show { display: block; }
+        
+        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding-bottom: 10px; border-bottom: 1px solid #eee; }
+        .modal-header h3 { margin: 0; color: var(--primary-color); }
+        .close-btn { cursor: pointer; font-size: 1.5rem; color: #aaa; transition: color 0.2s; }
+        .close-btn:hover { color: #333; }
+        
+        .form-group { margin-bottom: 15px; }
+        .form-group label { display: block; margin-bottom: 5px; font-weight: 600; color: #333; }
+        .form-control { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 6px; font-size: 1rem; box-sizing: border-box; }
+        .form-control:focus { border-color: var(--primary-color); outline: none; box-shadow: 0 0 0 3px rgba(215, 38, 0, 0.1); }
+        
+        /* Estilo especial para los Checkbox (Modo Histórico) */
+        .checkbox-row {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            background-color: #f1f3f5;
+            padding: 12px;
+            border-radius: 6px;
+            border: 1px dashed #ced4da;
+            margin-bottom: 20px;
+        }
+        .checkbox-row input[type="checkbox"] { width: 20px; height: 20px; accent-color: var(--primary-color); }
+        .checkbox-row label { margin: 0; cursor: pointer; font-size: 0.95rem; color: #495057; }
+        
+        .modal-footer { text-align: right; margin-top: 25px; padding-top: 15px; border-top: 1px solid #eee; display: flex; justify-content: flex-end; gap: 10px; }
+        .modal-footer .btn { width: fit-content; white-space: nowrap; display: inline-flex; align-items: center; justify-content: center; min-width: 80px; }
+    </style>
+
+<div class="container-fluid mt-4"> 
+    <div class="container profile-container">
+        
+        {# --- MENSAJES DE ERROR/EXITO --- #}
+        {% if messages %}
+            <div class="messages-container" style="margin-bottom: 20px;">
+                {% for message in messages %}
+                    <div class="alert {% if message.tags %}alert-{{ message.tags }}{% endif %} text-sm font-medium">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+
+        {# Enlace volver: Tamaño base y peso medio #}
+        <a href="{% url 'gestion_voluntarios:ruta_lista_voluntarios' %}" class="back-link text-base font-medium">
+            <i class="fas fa-arrow-left"></i> Volver al Listado
+        </a>
+
+        <div class="profile-header-main">
+            <div class="profile-image-container">
+                {# LÓGICA DE IMAGEN #}
+                {% if voluntario.imagen %}
+                    <img src="{{ voluntario.imagen.url }}" alt="Foto de perfil">
+                {% else %}
+                    {# Placeholder: Texto muy grande (3XL) y Negrita #}
+                    <div class="avatar-placeholder-large text-3xl font-bold">
+                        {{ voluntario.usuario.first_name|slice:":1" }}{{ voluntario.usuario.last_name|slice:":1" }}
+                    </div>
+                {% endif %}
+                
+                {# Indicador de Estado #}
+                {% if membresia and membresia.estado == 'ACTIVO' %}
+                    <span class="status-indicator active" title="Estado: Activo"></span>
+                {% else %}
+                    <span class="status-indicator inactive" title="Estado: Inactivo"></span>
+                {% endif %}
+            </div>
+
+            <div class="profile-main-info">
+                {# Nombre: Texto 3XL y Negrita #}
+                <h1 class="text-3xl font-bold">{{ voluntario.usuario.get_full_name }}</h1>
+                
+                <div class="profile-badges">
+                    {# Badges: Texto extra pequeño y Negrita #}
+                    <span class="badge badge-rank text-xs font-bold">
+                        <i class="fas fa-star" style="margin-right:5px;"></i>
+                        {% if cargo_actual %}{{ cargo_actual.cargo.nombre }}{% else %}Sin Rango{% endif %}
+                    </span>
+                    <span class="badge badge-station text-xs font-bold">
+                        <i class="fas fa-building" style="margin-right:5px;"></i>
+                        {% if membresia %}{{ membresia.estacion.nombre }}{% else %}Sin Estación{% endif %}
+                    </span>
+                </div>
+
+                <div class="profile-actions">
+                    {# Botones: Tamaño pequeño y Negrita #}
+                    <a href="{% url 'gestion_voluntarios:ruta_hoja_vida' id=voluntario.usuario.id %}" target="_blank" class="btn btn-pdf text-sm font-bold">
+                        <i class="fas fa-file-pdf"></i> Generar Hoja de Vida
+                    </a>
+                    <a href="{% url 'gestion_voluntarios:ruta_modificar_voluntario' id=voluntario.usuario.id %}" class="btn btn-edit text-sm font-bold">
+                        <i class="fas fa-pen"></i> Modificar Perfil
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="profile-tabs">
+            {# Botones Tabs: Tamaño base y Medio #}
+            <button class="tab-btn active text-base font-medium" onclick="openTab('info')">Información General</button>
+            <button class="tab-btn text-base font-medium" onclick="openTab('experience')">Experiencia Bomberil</button>
+            <button class="tab-btn text-base font-medium" onclick="openTab('recognitions')">Reconocimientos</button>
+            <button class="tab-btn text-base font-medium" onclick="openTab('sanctions')">Sanciones</button>
+        </div>
+
+        <div id="info" class="tab-content active">
+            {# Título Sección: Tamaño XL y Negrita #}
+            <h2 class="text-xl font-bold">Datos Personales y de Contacto</h2>
+            <div class="info-grid">
+                {# Items Grid: Etiqueta (XS, Bold) y Valor (Base, Medium) + Data Code para datos técnicos #}
+                <div class="info-item"><strong class="text-xs font-bold">RUT / DNI</strong><span class="text-base font-medium text-data-code">{{ voluntario.usuario.rut|default:"No registrado" }}</span></div>
+                <div class="info-item"><strong class="text-xs font-bold">Fecha Nacimiento</strong><span class="text-base font-medium text-data-code">{{ voluntario.fecha_nacimiento|date:"d/m/Y"|default:"-" }}</span></div>
+                <div class="info-item"><strong class="text-xs font-bold">Teléfono</strong><span class="text-base font-medium text-data-code">{{ voluntario.usuario.phone|default:"-" }}</span></div>
+                <div class="info-item"><strong class="text-xs font-bold">Correo</strong><span class="text-base font-medium text-data-code">{{ voluntario.usuario.email|default:"-" }}</span></div>
+                <div class="info-item"><strong class="text-xs font-bold">Profesión Civil</strong><span class="text-base font-medium">{{ voluntario.profesion.nombre|default:"-" }}</span></div>
+                <div class="info-item"><strong class="text-xs font-bold">Nacionalidad</strong><span class="text-base font-medium">{{ voluntario.nacionalidad.gentilicio|default:"-" }}</span></div>
+                <div class="info-item"><strong class="text-xs font-bold">Género</strong><span class="text-base font-medium">{{ voluntario.get_genero_display|default:"-" }}</span></div>
+                <div class="info-item"><strong class="text-xs font-bold">Estado Civil</strong><span class="text-base font-medium">{{ voluntario.get_estado_civil_display|default:"-" }}</span></div>
+                
+                <div class="info-item"><strong class="text-xs font-bold">Fecha Primer Ingreso</strong><span class="text-base font-medium text-data-code">{{ voluntario.fecha_primer_ingreso|date:"d/m/Y"|default:"-" }}</span></div>
+                <div class="info-item"><strong class="text-xs font-bold">N° Registro General</strong><span class="text-base font-medium text-data-code">{{ voluntario.numero_registro_bomberil|default:"-" }}</span></div>
+
+                <div class="info-item full-width"><strong class="text-xs font-bold">Dirección</strong><span class="text-base font-medium">{{ voluntario.domicilio_calle|default:"" }} {{ voluntario.domicilio_numero|default:"" }} {{ voluntario.domicilio_comuna.nombre|default:"" }}</span></div>
+            </div>
+        </div>
+
+        <div id="experience" class="tab-content">
+            <h2 class="text-xl font-bold">
+                Historial de Cargos
+                <button class="btn btn-add-item text-xs font-bold" onclick="abrirModal('modalAgregarCargo')">
+                    <i class="fas fa-plus" style="margin-right: 5px;"></i> Registrar Ascenso
+                </button>
+            </h2>
+            <ul class="history-list">
+                {% for cargo in voluntario.historial_cargos.all %}
+                    <li>
+                        {# Título item: Base y Bold #}
+                        <strong class="text-base font-bold">{{ cargo.cargo.nombre }}</strong>
+                        {# Fecha: Pequeña, Medium y código #}
+                        <span class="date-range text-sm font-medium text-data-code">
+                            {{ cargo.fecha_inicio|date:"d/m/Y" }} — 
+                            {% if cargo.fecha_fin %}{{ cargo.fecha_fin|date:"d/m/Y" }}{% else %}Actualidad{% endif %}
+                        </span>
+                        {# Detalles: Pequeño y Regular #}
+                        <small class="text-sm font-regular">Ámbito: {{ cargo.ambito }} | Registrado por: {{ cargo.estacion_registra.nombre }}
+                            {% if cargo.es_historico %}<span style="color: #6c757d; margin-left:5px;">(Reg. Histórico)</span>{% endif %}
+                        </small>
+                    </li>
+                {% empty %}
+                    <p class="text-sm font-regular" style="color:#888; font-style:italic;">No hay cargos registrados en el historial.</p>
+                {% endfor %}
+            </ul>
+        </div>
+
+        <div id="recognitions" class="tab-content">
+            <h2 class="text-xl font-bold">
+                Reconocimientos y Logros
+                <button class="btn btn-add-item text-xs font-bold" onclick="abrirModal('modalAgregarReconocimiento')">
+                    <i class="fas fa-plus" style="margin-right: 5px;"></i> Agregar
+                </button>
+            </h2>
+            <ul class="history-list">
+                {% for reco in voluntario.historial_reconocimientos.all %}
+                    <li>
+                        <strong class="text-base font-bold">{{ reco.tipo_reconocimiento.nombre }}</strong>
+                        <span class="date-range text-sm font-medium text-data-code">Fecha: {{ reco.fecha_evento|date:"d/m/Y" }}</span>
+                        {% if reco.descripcion_personalizada %}<p class="text-sm font-regular">{{ reco.descripcion_personalizada }}</p>{% endif %}
+                        <small class="text-sm font-regular">Otorgado por: {{ reco.ambito }}
+                            {% if reco.es_historico %}<span style="color: #6c757d; margin-left:5px;">(Reg. Histórico)</span>{% endif %}
+                        </small>
+                    </li>
+                {% empty %}
+                    <p class="text-sm font-regular" style="color:#888; font-style:italic;">No hay reconocimientos registrados.</p>
+                {% endfor %}
+            </ul>
+        </div>
+        
+        <div id="sanctions" class="tab-content">
+            <h2 class="text-xl font-bold">
+                Registro de Sanciones
+                <button class="btn btn-add-item text-xs font-bold" style="background-color: var(--danger-color);" onclick="abrirModal('modalAgregarSancion')">
+                    <i class="fas fa-gavel" style="margin-right: 5px;"></i> Registrar
+                </button>
+            </h2>
+            <ul class="history-list">
+                {% for sancion in voluntario.historial_sanciones.all %}
+                     <li>
+                        <strong class="text-base font-bold" style="color: var(--primary-color);">{{ sancion.get_tipo_sancion_display }}</strong>
+                        <span class="date-range text-sm font-medium text-data-code">Fecha: {{ sancion.fecha_evento|date:"d/m/Y" }}</span>
+                        <p class="text-sm font-regular" style="margin: 5px 0;">{{ sancion.descripcion }}</p>
+                        <small class="text-sm font-regular">Emitida por: {{ sancion.estacion_evento.nombre }}
+                            {% if sancion.es_historico %}<span style="color: #6c757d; margin-left:5px;">(Reg. Histórico)</span>{% endif %}
+                        </small>
+                    </li>
+                {% empty %}
+                    <p class="text-sm font-regular" style="color:#888; font-style:italic;">No existen sanciones registradas (¡Excelente!).</p>
+                {% endfor %}
+            </ul>
+        </div>
+
+    </div>
+
+    <div id="modalAgregarCargo" class="modal">
+        {# Header Modal: XL y Bold #}
+        <div class="modal-header"><h3 class="text-xl font-bold">Registrar Ascenso</h3><span class="close-btn" onclick="cerrarModal('modalAgregarCargo')">&times;</span></div>
+        <form method="POST" action="{% url 'gestion_voluntarios:ruta_agregar_cargo' id=voluntario.usuario.id %}">
+            {% csrf_token %}
+            
+            {% for field in form_cargo %}
+                {% if field.name == 'es_registro_antiguo' %}
+                    <div class="checkbox-row">
+                        {{ field }}
+                        {# Label Checkbox: Pequeño y Regular #}
+                        <label for="{{ field.id_for_label }}" class="text-sm font-regular">{{ field.label }}</label>
+                    </div>
+                {% else %}
+                    <div class="form-group">
+                        {# Label Input: Pequeño y Bold #}
+                        <label class="text-sm font-bold">{{ field.label }}</label>
+                        {{ field }}
+                        {% if field.help_text %}<small class="text-xs font-regular" style="color:#777;">{{ field.help_text }}</small>{% endif %}
+                        {% if field.errors %}<small class="text-xs font-bold" style="color:red;">{{ field.errors.0 }}</small>{% endif %}
+                    </div>
+                {% endif %}
+            {% endfor %}
+
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary text-base font-medium" onclick="cerrarModal('modalAgregarCargo')">Cancelar</button>
+                <button type="submit" class="btn btn-principal text-base font-bold">Guardar</button>
+            </div>
+        </form>
+    </div>
+
+    <div id="modalAgregarReconocimiento" class="modal">
+        <div class="modal-header"><h3 class="text-xl font-bold">Agregar Reconocimiento</h3><span class="close-btn" onclick="cerrarModal('modalAgregarReconocimiento')">&times;</span></div>
+        <form method="POST" action="{% url 'gestion_voluntarios:ruta_agregar_reconocimiento' id=voluntario.usuario.id %}">
+            {% csrf_token %}
+            
+            {% for field in form_reconocimiento %}
+                {% if field.name == 'es_registro_antiguo' %}
+                    <div class="checkbox-row">
+                        {{ field }}
+                        <label for="{{ field.id_for_label }}" class="text-sm font-regular">{{ field.label }}</label>
+                    </div>
+                {% else %}
+                    <div class="form-group">
+                        <label class="text-sm font-bold">{{ field.label }}</label>
+                        {{ field }}
+                    </div>
+                {% endif %}
+            {% endfor %}
+
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary text-base font-medium" onclick="cerrarModal('modalAgregarReconocimiento')">Cancelar</button>
+                <button type="submit" class="btn btn-principal text-base font-bold">Guardar</button>
+            </div>
+        </form>
+    </div>
+
+    <div id="modalAgregarSancion" class="modal">
+        <div class="modal-header"><h3 class="text-xl font-bold">Registrar Sanción</h3><span class="close-btn" onclick="cerrarModal('modalAgregarSancion')">&times;</span></div>
+        <form method="POST" action="{% url 'gestion_voluntarios:ruta_agregar_sancion' id=voluntario.usuario.id %}" enctype="multipart/form-data">
+            {% csrf_token %}
+            
+            {% for field in form_sancion %}
+                {% if field.name == 'es_registro_antiguo' %}
+                    <div class="checkbox-row">
+                        {{ field }}
+                        <label for="{{ field.id_for_label }}" class="text-sm font-regular">{{ field.label }}</label>
+                    </div>
+                {% else %}
+                    <div class="form-group">
+                        <label class="text-sm font-bold">{{ field.label }}</label>
+                        {{ field }}
+                        {% if field.help_text %}<small class="text-xs font-regular" style="color:#777;">{{ field.help_text }}</small>{% endif %}
+                    </div>
+                {% endif %}
+            {% endfor %}
+
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary text-base font-medium" onclick="cerrarModal('modalAgregarSancion')">Cancelar</button>
+                <button type="submit" class="btn btn-principal text-base font-bold">Guardar</button>
+            </div>
+        </form>
+    </div>
+    
+    <div id="modalBackdrop" class="modal-backdrop"></div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+{# Mantenemos el script externo si existe, o usamos este bloque unificado #}
+<script src="{% static 'gestion_voluntarios/js/ver.js' %}"></script>
+<script>
+    // Lógica rápida para asegurar funcionamiento de modales y pestañas sin depender de caché externo
+    document.addEventListener('DOMContentLoaded', function() {
+        const backdrop = document.getElementById('modalBackdrop');
+        const modals = document.querySelectorAll('.modal');
+        const tabBtns = document.querySelectorAll('.tab-btn');
+        const tabContents = document.querySelectorAll('.tab-content');
+
+        // --- FUNCIONES GLOBALES (para que funcionen los onclick del HTML) ---
+        window.abrirModal = function(modalId) {
+            document.getElementById(modalId).classList.add('show');
+            backdrop.classList.add('show');
+            document.body.style.overflow = 'hidden'; // Evitar scroll
+        }
+
+        window.cerrarModal = function(modalId) {
+            document.getElementById(modalId).classList.remove('show');
+            backdrop.classList.remove('show');
+            document.body.style.overflow = 'auto';
+        }
+
+        window.openTab = function(tabId) {
+            tabContents.forEach(tab => tab.style.display = 'none');
+            tabBtns.forEach(btn => btn.classList.remove('active'));
+            
+            const activeContent = document.getElementById(tabId);
+            const activeBtn = document.querySelector(`button[onclick="openTab('${tabId}')"]`);
+            
+            if(activeContent) activeContent.style.display = 'block';
+            if(activeBtn) activeBtn.classList.add('active');
+            
+            // Guardar en localStorage para persistencia al recargar
+            localStorage.setItem('activeTab', tabId);
+        }
+
+        // --- CERRAR AL CLICK EN BACKDROP ---
+        backdrop.addEventListener('click', function() {
+            modals.forEach(modal => modal.classList.remove('show'));
+            backdrop.classList.remove('show');
+            document.body.style.overflow = 'auto';
+        });
+
+        // --- RECUPERAR PESTAÑA ACTIVA ---
+        const savedTab = localStorage.getItem('activeTab');
+        if (savedTab) {
+            openTab(savedTab);
+        }
+    });
+</script>
+{% endblock %}

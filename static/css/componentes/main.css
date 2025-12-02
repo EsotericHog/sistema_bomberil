@@ -44,6 +44,13 @@
     justify-content: center;
     align-items: center;
 }
+.main__titulo_pagina:empty {
+    height: 0;
+    min-height: 0;
+    padding: 0;
+    margin: 0;
+    border: none;
+}
 
 .main_pruebas_container {
     grid-row: 1/-1;

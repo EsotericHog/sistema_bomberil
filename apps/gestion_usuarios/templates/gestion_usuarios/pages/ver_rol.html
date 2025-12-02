@@ -1,87 +1,130 @@
-{# Plantilla base #}{% extends 'gestion_usuarios/layouts/base.html' %}
-{# Cargar assets #}{% load static %}
-{# Cargar filtros #}{% load age_filters %}{% load humanize %}
-{# Título de la ventana #} {% block titulo_ventana %}{{rol.nombre|title}}{% endblock %}
-{# Título de la página #} {% block titulo_pagina %}Ver rol{% endblock %}
+{% extends 'gestion_usuarios/layouts/base.html' %}
+{% load static %}
+{% load humanize %}
+
+{% block titulo_ventana %}Detalle del Rol: {{rol.nombre|title}}{% endblock %}
+
+{% block titulo_pagina %}
+    <span class="text-xl color_primario">
+        <i class="fas fa-user-tag me-2"></i> Detalle del Rol
+    </span>
+{% endblock %}
 
 {% block contenido %}
 
-<div class="caja_para_pagina_contenido_arriba">
-    <div class="usuarios_ver_rol__flexbox panel_base fondo_secundario_variante">
-
-        {# Nombre #}
-        <div class="usuarios_ver_rol__nombre">
-            <h1 class="fs_grande color_primario">
-                {{rol.nombre|title}}
-                {% if rol.estacion %}
-                <span class="etiqueta fondo_morado fs_normal color_blanco" title="Este rol pertenece a la {{rol.estacion.nombre|title}}">Personalizado</span>
-                {% else %}
-                <span class="etiqueta fondo_azul fs_normal color_blanco">Por defecto</span>
-                {% endif %}
-            </h1>
-        </div>
-
-        {# Información #}
-        <div class="informacion__seccion">
-
-            {# Estación #}
-        {% if rol.estacion %}
-            <div class="informacion__campo fs_normal">
-                <span class="informacion__label color_primario_variante">Compañía:</span>
-                <span class="color_primario">{{rol.estacion.nombre|title}}</span>
-            </div>
-        {% endif %}
-
-            {# Descripción #}
-            <div class="informacion__campo fs_normal">
-                    <span class="informacion__label color_primario_variante">Descripción:</span>
-                    <p class="informacion__dato color_primario">
-                        {% if rol.descripcion %}
-                        {{rol.descripcion}}
-                        {% else %}
-                        Sin descripción
-                        {% endif %}
-                    </p>
-            </div>
-        </div>
-
-        {# Permisos #}
-        <div class="usuarios_ver_rol__permisos">
-            <div class="usuarios_ver_rol__titulo_permisos">
-                <h2 class="fs_mediana color_primario">Permisos Asignados</h2>
-            </div>
-
-            {% for modulo, permisos in permisos_por_modulo.items %}
-                <div class="permisos_modulo">
-                    <h3 class="permisos_modulo__titulo fs_normal color_primario">{{ modulo }}</h3>
-                    <ul class="permisos_modulo__lista">
-                        {% for nombre_permiso in permisos %}
-                            <li class="fs_normal color_primario_variante">
-                                {{ nombre_permiso }}
-                            </li>
-                        {% endfor %}
-                    </ul>
+<div class="container-fluid mt-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-10 col-md-12">
+            
+            <div class="card shadow-sm {% if request.session.dark_mode %}dark-mode{% endif %}">
+                
+                {# --- CABECERA: Perfil del Rol --- #}
+                <div class="card-header bg-white p-4 border-0">
+                    <div class="d-flex align-items-center">
+                        {# Icono del Rol #}
+                        <div class="me-3">
+                            <span class="d-inline-flex justify-content-center align-items-center bg-primary bg-opacity-10 text-primary rounded-circle" style="width: 50px; height: 50px;">
+                                <i class="fas fa-shield-alt fs-4"></i>
+                            </span>
+                        </div>
+                        {# Nombre, Tipo y Descripción #}
+                        <div class="flex-grow-1">
+                            <h4 class="mb-0 font-bold color_primario d-flex align-items-center text-lg">
+                                {{rol.nombre|title}}
+                                
+                                {# Etiqueta de Tipo #}
+                                {% if rol.estacion %}
+                                    <span class="badge bg-primary fw-normal text-xs ms-3" title="Este rol pertenece a la {{rol.estacion.nombre|title}}">Personalizado</span>
+                                {% else %}
+                                    <span class="badge bg-secondary fw-normal text-xs ms-3">Global</span>
+                                {% endif %}
+                            </h4>
+                            <p class="text-muted text-base mb-0 mt-1">
+                                {% if rol.descripcion %}
+                                    {{ rol.descripcion }}
+                                {% else %}
+                                    <span class="fst-italic">Este rol no tiene descripción.</span>
+                                {% endif %}
+                            </p>
+                        </div>
+                    </div>
                 </div>
-            {% empty %}
-                <p class="fs_normal color_primario">Este rol no tiene ningún permiso asignado.</p>
-            {% endfor %}
-        </div>
 
-        {# Botones #}
-        <div class="caja_botones_derecha_pagina">
-            {# Modificar rol #}
-            <a class="boton_s color_blanco fondo_azul fs_normal" href="{% url 'gestion_usuarios:ruta_editar_rol' id=rol.id %}">Modificar</a>
-            {# Asignar permisos #}
-            <a class="boton_s color_blanco fondo_azul fs_normal" href="{% url 'gestion_usuarios:ruta_asignar_permisos' id=rol.id %}">Asignar permisos</a>
-            {# Eliminar rol #}
-            <a class="boton_s color_blanco fondo_rojo fs_normal" href="{% url 'gestion_usuarios:ruta_eliminar_rol' id=rol.id %}">Eliminar</a>
-            {# Volver #}
-            <a class="boton_s color_primario_variante fs_normal" href="{% url 'gestion_usuarios:ruta_lista_roles' %}">Volver</a>
-        </div>
+                <hr class="my-0">
+                
+                {# --- CUERPO: Acordeón de Permisos --- #}
+                <div class="card-body p-4">
+                    <h5 class="text-md font-bold mb-3">Permisos Asignados</h5>
+                    
+                    <div class="accordion" id="accordionPermisos">
+                        {% for app_label, data in permisos_por_modulo.items %}
+                            <div class="accordion-item">
+                                <h2 class="accordion-header" id="heading-{{ forloop.counter }}">
+                                    <button class="accordion-button collapsed text-base" type="button" data-bs-toggle="collapse" data-bs-target="#collapse-{{ forloop.counter }}" aria-expanded="false" aria-controls="collapse-{{ forloop.counter }}">
+                                        <span class="flex-grow-1">{{ data.verbose_name }}</span>
+                                        <span class="badge bg-primary rounded-pill me-3">{{ data.children|length }}</span>
+                                    </button>
+                                </h2>
+                                <div id="collapse-{{ forloop.counter }}" class="accordion-collapse collapse" aria-labelledby="heading-{{ forloop.counter }}" data-bs-parent="#accordionPermisos">
+                                    <div class="accordion-body">
+                                        {# Lista de Permisos 'hijos' (accion_) #}
+                                        <div class="d-flex flex-wrap gap-2">
+                                            {% for perm in data.children %}
+                                                <span class="badge bg-light text-dark border fw-normal text-sm py-2 px-3">
+                                                    {{ perm.name }}
+                                                </span>
+                                            {% empty %}
+                                                <span class="text-muted fst-italic text-xs">No hay permisos de acción específicos asignados para este módulo.</span>
+                                            {% endfor %}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        {% empty %}
+                            {# Estado Vacío #}
+                            <div class="text-center p-4 rounded" style="background-color: #f8f9fa;">
+                                <p class="text-base text-muted fst-italic mb-0">Este rol no tiene ningún permiso individual asignado.</p>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                
+                {# --- FOOTER: Botones de Acción --- #}
+                <div class="card-footer text-end bg-light p-3">
+                    <a href="{% url 'gestion_usuarios:ruta_lista_roles' %}" class="btn btn-outline-secondary btn-sm text-base me-2">
+                        <i class="fas fa-arrow-left me-1"></i> Volver
+                    </a>
 
+                    {# PERMISO: Gestionar roles (incluye editar, asignar permisos y eliminar) #}
+                    {% if perms.gestion_usuarios.accion_gestion_usuarios_gestionar_roles %}
+                        {% if rol.estacion %}
+                            <a href="{% url 'gestion_usuarios:ruta_editar_rol' id=rol.id %}" class="btn btn-primary btn-sm text-base me-2">
+                                <i class="fas fa-edit me-1"></i> Modificar
+                            </a>
+                            <a href="{% url 'gestion_usuarios:ruta_asignar_permisos' id=rol.id %}" class="btn btn-info btn-sm text-base me-2">
+                                <i class="fas fa-check-double me-1"></i> Asignar Permisos
+                            </a>
+                            <a href="{% url 'gestion_usuarios:ruta_eliminar_rol' id=rol.id %}" class="btn btn-danger btn-sm text-base">
+                                <i class="fas fa-trash-alt me-1"></i> Eliminar
+                            </a>
+                        {% endif %}
+                    {% endif %}
+                </div>
+            </div>
+            
+        </div>
     </div>
-
-
 </div>
+
+<style>
+    /* Estilo para las etiquetas de permisos */
+    .badge.bg-light {
+        border-color: #dee2e6 !important;
+    }
+    .accordion-button:not(.collapsed) {
+        color: var(--bs-primary);
+        background-color: var(--bs-primary-bg-subtle);
+    }
+</style>
 
 {% endblock  %}

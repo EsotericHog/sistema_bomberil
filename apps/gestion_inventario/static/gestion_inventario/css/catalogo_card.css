@@ -1,0 +1,64 @@
+.catalogo-card {
+    /* Cálculo del ancho basado en la variable --cards-per-view */
+    flex: 0 0 calc((100% / var(--cards-per-view)) - (20px * (var(--cards-per-view) - 1) / var(--cards-per-view)));
+    
+    /* Estilos visuales */
+    background-color: white;
+    border-radius: 15px;
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+    overflow: hidden; /* Asegura que la imagen respete los bordes redondeados */
+    
+    /* Estructura interna */
+    display: flex;
+    flex-direction: column;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.catalogo-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+}
+
+.catalogo-card img {
+    width: 100%;
+    height: 180px;
+    object-fit: cover; /* Clave para que la imagen se vea bien sin deformarse */
+}
+
+.catalogo-card-content {
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1; /* Hace que este contenedor ocupe el espacio vertical disponible */
+}
+
+.catalogo-card-content h3 {
+    margin: 0 0 10px 0;
+    font-size: 1.2rem;
+    color: #2c3e50; /* Un color oscuro pero no negro puro */
+}
+
+.catalogo-card-content p {
+    margin: 0 0 20px 0;
+    font-size: 0.95rem;
+    color: #7f8c8d; /* Un gris suave para el texto secundario */
+    line-height: 1.5;
+    flex-grow: 1; /* Empuja el botón hacia el fondo, alineando todos los botones */
+}
+
+.catalogo-card-btn {
+    display: block;
+    background-color: #3498db; /* Un azul atractivo */
+    color: white;
+    text-align: center;
+    padding: 12px 15px;
+    border-radius: 8px;
+    text-decoration: none;
+    font-weight: bold;
+    margin-top: auto; /* Asegura que se alinee al fondo */
+    transition: background-color 0.3s;
+}
+
+.catalogo-card-btn:hover {
+    background-color: #2980b9; /* Un azul más oscuro al pasar el mouse */
+}

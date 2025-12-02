@@ -1,0 +1,280 @@
+{% extends 'gestion_inventario/layouts/base.html' %}
+{% load static %}
+{% load tz %} {# Carga la librería de timezone para fechas #}
+
+{# Título de la ventana del navegador dinámico #}
+{% block titulo_ventana %}Gestionar {{ ubicacion.tipo_ubicacion.nombre|title }}: {{ ubicacion.nombre }}{% endblock %}
+
+{% block titulo_pagina %}
+    <span class="text-xl color_primario">
+        {# Título e icono de la página dinámicos #}
+        {% if ubicacion.tipo_ubicacion.nombre == 'VEHÍCULO' %}
+            <i class="fas fa-truck me-2"></i> Gestionar Vehículo
+        {% else %}
+            <i class="fas fa-landmark me-2"></i> Gestionar Área
+        {% endif %}
+    </span>
+{% endblock %}
+
+
+{% block contenido %}
+<div class="container-fluid mt-4">
+
+    <div class="row g-4 align-items-start">
+        
+        {# --- COLUMNA IZQUIERDA: DETALLES DE LA UBICACIÓN --- #}
+        <div class="col-12 col-lg-4">
+            <div class="card shadow-sm mb-4 border-0">
+                
+                {# Imagen por defecto dinámica #}
+                <div class="bg-light text-center">
+                    <img src="{% if ubicacion.imagen_thumb_medium %}{{ ubicacion.imagen_thumb_medium.url }}{% elif ubicacion.tipo_ubicacion.nombre == 'VEHÍCULO' %}{% static 'gestion_inventario/imagenes/default_vehiculo.png' %}{% else %}{% static 'gestion_inventario/imagenes/default_almacen.png' %}{% endif %}"
+                         class="card-img-top img-fluid" alt="Imagen {{ ubicacion.nombre }}" style="max-height: 250px; object-fit: contain;">
+                </div>
+                
+                <div class="card-body p-4">
+                    <h3 class="card-title text-xl font-bold color_primario mb-1">{{ ubicacion.nombre }}</h3>
+                    <p class="card-text mb-1 color_primario_variante text-sm font-bold text-uppercase">{{ ubicacion.codigo|default:"Sin código" }}</p>
+                    <p class="card-text mb-3 color_primario_variante text-base text-muted">{{ ubicacion.descripcion|default:"Sin descripción" }}</p>
+                    
+                    {# Mostramos detalles extra si es un vehículo #}
+                    {% if ubicacion.tipo_ubicacion.nombre == 'VEHÍCULO' and ubicacion.detalles_vehiculo %}
+                    <div class="text-sm color_primario_variante bg-light p-3 rounded mb-3 border">
+                        <div class="d-flex justify-content-between mb-1">
+                            <strong>Tipo:</strong> <span>{{ ubicacion.detalles_vehiculo.tipo_vehiculo.nombre|default:"N/A" }}</span>
+                        </div>
+                        <div class="d-flex justify-content-between mb-1">
+                            <strong>Patente:</strong> <span class="text-data-code">{{ ubicacion.detalles_vehiculo.patente|default:"N/A" }}</span>
+                        </div>
+                        <div class="d-flex justify-content-between">
+                            <strong>Año:</strong> <span>{{ ubicacion.detalles_vehiculo.anho|default:"N/A" }}</span>
+                        </div>
+                    </div>
+                    {% endif %}
+                    
+                    <p class="text-xs text-muted mt-2">Creado: {{ ubicacion.created_at|date:"d/m/Y" }}</p>
+
+                    {# Resumen #}
+                    <h5 class="text-base font-bold color_primario mt-3 pt-3 border-top">Resumen del {{ ubicacion.tipo_ubicacion.nombre|lower }}</h5>
+                    <ul class="list-group list-group-flush text-sm mb-3">
+                        <li class="list-group-item d-flex justify-content-between align-items-center px-0 border-0">
+                            Total Activos
+                            <span class="badge bg-info rounded-pill text-dark">{{ resumen_activos_area }}</span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between align-items-center px-0 border-0">
+                            Total Insumos (Unidades)
+                            <span class="badge bg-warning text-dark rounded-pill">{{ resumen_insumos_area }}</span>
+                        </li>
+                         <li class="list-group-item d-flex justify-content-between align-items-center px-0 fw-bold border-top">
+                            Total Existencias
+                            <span class="badge bg-primary rounded-pill">{{ resumen_total_area }}</span>
+                        </li>
+                    </ul>
+
+                    {# PERMISO: Gestionar Ubicaciones (Crear, Editar, Eliminar) #}
+                    {% if ubicacion.tipo_ubicacion.nombre != 'ADMINISTRATIVA' %}
+                        {% if perms.gestion_usuarios.accion_gestion_inventario_gestionar_ubicaciones %}
+                        <div class="d-grid gap-2 d-md-flex mt-3 pt-3 border-top flex-wrap">
+                            <a class="btn btn-primary btn-sm text-base flex-fill" href="{% url 'gestion_inventario:ruta_crear_compartimento' ubicacion.id %}">
+                                <i class="fa-solid fa-plus me-1"></i> Compartimento
+                            </a>
+
+                            {% if ubicacion.tipo_ubicacion.nombre == 'VEHÍCULO' %}
+                                <a class="btn btn-outline-secondary btn-sm text-base flex-fill" href="{% url 'gestion_inventario:ruta_editar_vehiculo' ubicacion.id %}">
+                                    <i class="fa-solid fa-pen-to-square me-1"></i> Editar
+                                </a>
+                            {% else %}
+                                 <a class="btn btn-outline-secondary btn-sm text-base flex-fill" href="{% url 'gestion_inventario:ruta_editar_area' ubicacion.id %}">
+                                    <i class="fa-solid fa-pen-to-square me-1"></i> Editar
+                                </a>
+                            {% endif %}
+                            
+                            <a class="btn btn-outline-danger btn-sm text-base flex-fill" href="{% url 'gestion_inventario:ruta_eliminar_ubicacion' ubicacion.id %}">
+                                <i class="fa-solid fa-trash me-1"></i> Eliminar
+                            </a>
+                        </div>
+                        {% endif %}
+                    {% endif %}
+                    
+                </div>
+            </div>
+        </div>
+
+        {# --- COLUMNA DERECHA: LISTA DE COMPARTIMENTOS --- #}
+        <div class="col-12 col-lg-8">
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-white border-bottom py-3">
+                    <span class="text-lg font-bold color_primario">
+                        <i class="fas fa-box me-1"></i> Compartimentos en est{% if ubicacion.tipo_ubicacion.nombre|lower|slice:"-1" == "a" %}a{% else %}e{% endif %} {{ ubicacion.tipo_ubicacion.nombre|lower }}
+                    </span>
+                </div>
+                <div class="card-body p-4">
+                    {% if compartimentos.exists %}
+                    <div class="row row-cols-1 row-cols-md-2 g-3">
+                        {% for c in compartimentos %}
+                        <div class="col">
+                            <div class="card h-100 shadow-sm hover-shadow transition-all border">
+                                <div class="card-body d-flex flex-column">
+                                    <div class="d-flex justify-content-between align-items-start mb-2">
+                                        <h5 class="card-title mb-0 color_primario font-bold text-base">{{ c.nombre }}</h5>
+                                        {# PERMISO: Ver Stock (para ver detalle del compartimento) #}
+                                        {% if perms.gestion_usuarios.accion_gestion_inventario_ver_stock %}
+                                        <a href="{% url 'gestion_inventario:ruta_detalle_compartimento' c.id %}" class="btn btn-sm btn-light text-primary border rounded-circle" title="Ver contenido">
+                                            <i class="fas fa-chevron-right"></i>
+                                        </a>
+                                        {% endif %}
+                                    </div>
+                                    
+                                    <p class="card-text mb-3 text-muted text-sm flex-grow-1">{{ c.descripcion|default:"Sin descripción" }}</p>
+                                    
+                                    <div class="mt-auto pt-2 border-top">
+                                        <div class="d-flex justify-content-between text-xs text-muted mb-1">
+                                            <span>Activos:</span> <span class="fw-bold text-dark">{{ c.total_activos }}</span>
+                                        </div>
+                                        <div class="d-flex justify-content-between text-xs text-muted">
+                                            <span>Insumos:</span> <span class="fw-bold text-dark">{{ c.total_cantidad_insumos }}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <div class="alert alert-info mb-0 text-base" role="alert">
+                        <i class="fas fa-info-circle me-2"></i>
+                        No hay compartimentos creados para est{% if ubicacion.tipo_ubicacion.nombre|lower|slice:"-1" == "a" %}a{% else %}e{% endif %} {{ ubicacion.tipo_ubicacion.nombre|lower }}.
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div> 
+
+    {# --- FILA INFERIOR: TABLA DE EXISTENCIAS --- #}
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card shadow-sm mb-4 border-0">
+                <div class="card-header bg-white border-bottom py-3 d-flex justify-content-between align-items-center">
+                    <span class="font-bold text-lg color_primario">
+                        <i class="fas fa-table me-1"></i> Existencias Detalladas en {{ ubicacion.nombre }}
+                    </span>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover table-sm align-middle mb-0" id="tablaStockEnArea">
+                            <thead class="bg-light text-secondary text-uppercase text-xs font-bold">
+                                <tr>
+                                    <th class="ps-4">Compartimento</th>
+                                    <th>Producto</th>
+                                    <th>ID Interno / Lote</th>
+                                    <th class="text-center">Tipo</th>
+                                    <th class="text-center">Cantidad</th>
+                                    <th class="text-center">Estado</th>
+                                    <th>Recepción</th>
+                                    <th>Fecha Relevante</th>
+                                    <th class="text-center pe-4">Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody class="text-base">
+                                {% for item in stock_items %}
+                                <tr>
+                                    <td class="ps-4">
+                                        <a href="{% url 'gestion_inventario:ruta_detalle_compartimento' item.compartimento.id %}" class="text-decoration-none text-dark font-bold text-sm">
+                                            {{ item.compartimento.nombre }}
+                                        </a>
+                                    </td>
+
+                                    <td>
+                                        <strong class="text-sm">{{ item.producto.producto_global.nombre_oficial }}</strong>
+                                        <br><small class="text-muted text-xs text-data-code">SKU: {{ item.producto.sku|default:"N/A" }}</small>
+                                    </td>
+                                    
+                                    {% if item.producto.es_serializado %}
+                                        <td class="text-sm">
+                                            <span class="text-muted text-xs">ID:</span> <strong class="text-data-code">{{ item.codigo_activo|default:"N/A" }}</strong>
+                                            <br><small class="text-muted text-xs">N/S: <span class="text-data-code">{{ item.numero_serie_fabricante|default:"N/A" }}</span></small>
+                                        </td>
+                                    {% else %}
+                                        <td class="text-sm">
+                                            <span class="text-muted text-xs">Lote:</span> <strong class="text-data-code">{{ item.numero_lote_fabricante|default:"N/A" }}</strong>
+                                        </td>
+                                    {% endif %}
+                                    
+                                    <td class="text-center">
+                                        {% if item.producto.es_serializado %}
+                                            <span class="badge bg-info text-dark text-xs">Activo</span>
+                                        {% else %}
+                                            <span class="badge bg-warning text-dark text-xs">Insumo</span>
+                                        {% endif %}
+                                    </td>
+                                    
+                                    <td class="text-center">
+                                        {% if item.producto.es_serializado %} 
+                                            <strong>1</strong> 
+                                        {% else %} 
+                                            <strong class="text-lg">{{ item.cantidad }}</strong> 
+                                        {% endif %}
+                                    </td>
+                                    
+                                    <td class="text-center">
+                                        {% if item.producto.es_serializado %}
+                                            <span class="badge text-xs {% if item.estado.nombre == 'DISPONIBLE' %}bg-success{% elif item.estado.nombre == 'MANTENIMIENTO' %}bg-warning text-dark{% elif item.estado.nombre == 'DE BAJA' %}bg-danger{% else %}bg-secondary{% endif %}">
+                                                {{ item.estado.nombre|default:'N/A'|title }}
+                                            </span>
+                                        {% else %}
+                                            <span class="badge bg-success text-xs">Operativo</span>
+                                        {% endif %}
+                                    </td>
+                                    
+                                    <td class="text-xs text-data-code">
+                                       {{ item.fecha_recepcion|date:"d/m/Y"|default:"N/A" }} 
+                                    </td>
+
+                                    <td class="text-xs">
+                                        {% if item.producto.es_serializado %}
+                                            {% if item.fin_vida_util %} 
+                                                <span class="text-muted">Vida Útil:</span> <span class="text-data-code">{{ item.fin_vida_util|date:"d/m/Y" }}</span>
+                                            {% elif item.fecha_expiracion %} 
+                                                <span class="text-muted">Expira:</span> <span class="text-data-code">{{ item.fecha_expiracion|date:"d/m/Y" }}</span>
+                                            {% else %} <span class="text-muted text-italic">N/A</span> {% endif %}
+                                        {% else %}
+                                            {% if item.fecha_expiracion %} 
+                                                {% timezone None %}
+                                                    {% if item.fecha_expiracion < today %}
+                                                        <strong class="text-danger">Venció: {{ item.fecha_expiracion|date:"d/m/Y" }}</strong>
+                                                    {% else %}
+                                                        Vence: {{ item.fecha_expiracion|date:"d/m/Y" }}
+                                                    {% endif %}
+                                                {% endtimezone %}
+                                            {% else %} <span class="text-muted text-italic">N/A</span> {% endif %}
+                                        {% endif %}
+                                    </td>
+                                    
+                                    <td class="text-center pe-4">
+                                        {# Botón activador del menú #}
+                                        <button class="btn btn-sm btn-link text-dark p-0 border-0" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                            <i class="fa-solid fa-ellipsis-vertical fs-5"></i>
+                                        </button>
+                                        
+                                        {# Inclusión del Partial de Acciones #}
+                                        {% include 'gestion_inventario/partials/_menu_acciones_existencias.html' with item=item %}
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="9" class="text-center py-5 text-muted">
+                                        <i class="fas fa-boxes fa-2x mb-3 opacity-25"></i>
+                                        <p class="mb-0 text-base">No se encontraron existencias en est{% if ubicacion.tipo_ubicacion.nombre|lower|slice:"-1" == "a" %}a{% else %}e{% endif %} {{ ubicacion.tipo_ubicacion.nombre|lower }}.</p>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div> 
+</div>
+{% endblock %}

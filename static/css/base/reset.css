@@ -1,7 +1,7 @@
-/* RESET DE ESTILOS PERSONALIZADO (ACTUALIZADO - MAYO DE 2024) */
+/* RESET DE ESTILOS PERSONALIZADO (ACTUALIZADO - NOVIEMBRE DE 2025) */
 /* Aquí se definen estilos los base que tendrán ciertos elementos en el proyecto. */
 
-* {
+*, *::before, *::after {
     /* Ajustar tamaño de los elementos para incluir el contenido, los bordes y el relleno */
     box-sizing: border-box;
     /* Sin márgenes de elemento por defecto */
@@ -13,14 +13,6 @@
 
     /* Ancho mínimo*/
     min-width: 0;
-}
-
-
-/* Establecer altura mínima del body para que ocupe la totalidad del viewport dinámico (Útil para móviles) */
-body {
-    position: relative;
-    height: 100%;
-    /*min-height: 100dvh;*/
 }
 
 
@@ -67,6 +59,21 @@ table, tr, td {
 html {
     height: 100%;
     font-size: 62.5%;
+}
+
+
+/* Establecer altura mínima del body para que ocupe la totalidad del viewport dinámico (Útil para móviles) */
+body {
+    font-family: 'Roboto', system-ui, -apple-system, sans-serif;
+    line-height: 1.5;
+    color: var(--color-text-body);
+    background-color: var(--bg-body);
+    
+    /* Renderizado de texto optimizado */
+    -webkit-font-smoothing: antialiased;
+    height: 100%;
+    /*min-height: 100dvh;*/
+    position: relative;
 }
 
 

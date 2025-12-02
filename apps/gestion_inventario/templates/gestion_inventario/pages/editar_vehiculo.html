@@ -1,0 +1,190 @@
+{% extends 'gestion_inventario/layouts/base.html' %}
+{% load static %}
+
+{% block titulo_ventana %}Editar Vehículo: {{ ubicacion.nombre }}{% endblock %}
+
+{% block titulo_pagina %}
+    <span class="text-xl color_primario">
+        <i class="fas fa-edit me-2"></i> Editar Vehículo
+    </span>
+{% endblock %}
+
+{% block contenido %}
+<div class="container-fluid mt-4">
+    <div class="row justify-content-center">
+        <div class="col-12 col-lg-10 col-xl-8">
+
+            <form method="POST" enctype="multipart/form-data" novalidate>
+                {% csrf_token %}
+
+                {# TARJETA 1: INFORMACIÓN GENERAL #}
+                <div class="card shadow-sm mb-4 border-0">
+                    <div class="card-header bg-white border-bottom py-3">
+                        <h5 class="mb-0 text-lg font-bold color_primario">Información General</h5>
+                    </div>
+                    <div class="card-body p-4 p-md-5">
+                        <div class="row g-4">
+                            {# Columna Izquierda: Imagen #}
+                            <div class="col-12 col-md-5">
+                                <h5 class="color_primario text-base font-bold mb-2">Imagen del Vehículo</h5>
+                                <div class="mb-3 text-center bg-light rounded-3 p-2 border">
+                                    <img src="{% if ubicacion.imagen_thumb_medium %}{{ ubicacion.imagen_thumb_medium.url }}{% else %}{% static 'gestion_inventario/imagenes/default_vehiculo.png' %}{% endif %}"
+                                         class="img-fluid rounded shadow-sm" alt="Imagen {{ ubicacion.nombre }}" 
+                                         style="max-height: 250px; width: 100%; object-fit: contain;">
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="{{ form_ubicacion.imagen.id_for_label }}" class="form-label text-sm color_primario_variante font-bold">Subir nueva imagen</label>
+                                    {{ form_ubicacion.imagen }}
+                                    {% if form_ubicacion.imagen.errors %}
+                                        <div class="invalid-feedback d-block text-xs mt-1">{{ form_ubicacion.imagen.errors.0 }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+
+                            {# Columna Derecha: Campos #}
+                            <div class="col-12 col-md-7">
+                                <div class="mb-3">
+                                    <label for="{{ form_ubicacion.nombre.id_for_label }}" class="form-label text-sm color_primario_variante font-bold">
+                                        Nombre <span class="text-danger fw-bold" title="Campo Obligatorio">*</span>
+                                    </label>
+                                    {{ form_ubicacion.nombre }}
+                                    {% if form_ubicacion.nombre.errors %}
+                                        <div class="invalid-feedback d-block text-xs mt-1">{{ form_ubicacion.nombre.errors.0 }}</div>
+                                    {% endif %}
+                                    <div class="form-text text-xs text-muted">Ej: "B-1", "Carro 1".</div>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="{{ form_ubicacion.descripcion.id_for_label }}" class="form-label text-sm color_primario_variante font-bold">Descripción (Opcional)</label>
+                                    {{ form_ubicacion.descripcion }}
+                                    {% if form_ubicacion.descripcion.errors %}
+                                        <div class="invalid-feedback d-block text-xs mt-1">{{ form_ubicacion.descripcion.errors.0 }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {# TARJETA 2: DETALLES TÉCNICOS #}
+                <div class="card shadow-sm mb-4 border-0">
+                    <div class="card-header bg-white border-bottom py-3">
+                        <h5 class="mb-0 text-lg font-bold color_primario">Detalles Técnicos</h5>
+                    </div>
+                    <div class="card-body p-4 p-md-5">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label for="{{ form_detalles.tipo_vehiculo.id_for_label }}" class="form-label text-sm color_primario_variante font-bold">Tipo de Vehículo <span class="text-danger">*</span></label>
+                                <div class="tom-select-wrapper">
+                                    {{ form_detalles.tipo_vehiculo }}
+                                </div>
+                                {% if form_detalles.tipo_vehiculo.errors %}
+                                    <div class="invalid-feedback d-block text-xs mt-1">{{ form_detalles.tipo_vehiculo.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6">
+                                <label for="{{ form_detalles.patente.id_for_label }}" class="form-label text-sm color_primario_variante font-bold">Patente (Opcional)</label>
+                                {{ form_detalles.patente }}
+                                {% if form_detalles.patente.errors %}
+                                    <div class="invalid-feedback d-block text-xs mt-1">{{ form_detalles.patente.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6">
+                                <label for="{{ form_detalles.marca.id_for_label }}" class="form-label text-sm color_primario_variante font-bold">Marca (Opcional)</label>
+                                <div class="tom-select-wrapper">
+                                    {{ form_detalles.marca }}
+                                </div>
+                                {% if form_detalles.marca.errors %}
+                                    <div class="invalid-feedback d-block text-xs mt-1">{{ form_detalles.marca.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6">
+                                <label for="{{ form_detalles.modelo.id_for_label }}" class="form-label text-sm color_primario_variante font-bold">Modelo (Opcional)</label>
+                                {{ form_detalles.modelo }}
+                                {% if form_detalles.modelo.errors %}
+                                    <div class="invalid-feedback d-block text-xs mt-1">{{ form_detalles.modelo.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6">
+                                <label for="{{ form_detalles.anho.id_for_label }}" class="form-label text-sm color_primario_variante font-bold">Año (Opcional)</label>
+                                {{ form_detalles.anho }}
+                                {% if form_detalles.anho.errors %}
+                                    <div class="invalid-feedback d-block text-xs mt-1">{{ form_detalles.anho.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6">
+                                <label for="{{ form_detalles.chasis.id_for_label }}" class="form-label text-sm color_primario_variante font-bold">N° Chasis (Opcional)</label>
+                                {{ form_detalles.chasis }}
+                                {% if form_detalles.chasis.errors %}
+                                    <div class="invalid-feedback d-block text-xs mt-1">{{ form_detalles.chasis.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row mt-4 mb-5">
+                    <div class="col-12 d-flex justify-content-end gap-2">
+                        <a href="{% url 'gestion_inventario:ruta_gestionar_ubicacion' ubicacion.id %}" class="btn btn-outline-secondary text-base">
+                            <i class="fas fa-times me-1"></i> Cancelar
+                        </a>
+                        
+                        {# PERMISO: Gestionar Ubicaciones (Editar) #}
+                        {% if perms.gestion_usuarios.accion_gestion_inventario_gestionar_ubicaciones %}
+                        <button type="submit" class="btn btn-primary text-base px-4">
+                            <i class="fas fa-save me-1"></i> Guardar Cambios
+                        </button>
+                        {% endif %}
+                    </div>
+                </div>
+
+            </form>
+
+        </div>
+    </div>
+</div>
+
+<style>
+    /* FIX para Tom Select */
+    .ts-wrapper .ts-control {
+        font-size: var(--font-base) !important;
+        line-height: 1.5 !important;
+        border-radius: 0.25rem;
+        padding: 0.375rem 0.75rem;
+    }
+    .ts-dropdown .option {
+        font-size: var(--font-base) !important;
+    }
+    .ts-control input {
+        font-size: inherit !important;
+    }
+</style>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Inicializar los TomSelect
+document.addEventListener('DOMContentLoaded', function() {
+    const tomSelectConfig = {
+        placeholder: 'Seleccionar...',
+    };
+
+    document.querySelectorAll('.tom-select-basic').forEach(el => {
+        if (!el.tomselect) new TomSelect(el, { ...tomSelectConfig, create: false });
+    });
+    
+    document.querySelectorAll('.tom-select-creatable').forEach(el => {
+        if (!el.tomselect) new TomSelect(el, { 
+            ...tomSelectConfig, 
+            create: true, 
+            placeholder: 'Seleccionar o crear...',
+            render: {
+                option_create: function(data, escape) {
+                    return '<div class="create px-3 py-2 text-primary"><i class="fas fa-plus-circle me-1"></i> Crear: <strong>' + escape(data.input) + '</strong>&hellip;</div>';
+                }
+            }
+        });
+    });
+});
+</script>
+{% endblock %}

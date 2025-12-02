@@ -1,80 +1,140 @@
-{# Plantilla base #}{% extends 'gestion_usuarios/layouts/base.html' %}
-{# Cargar assets #}{% load static %}
-{# Título de la ventana #} {% block titulo_ventana %}Crear Usuario{% endblock %}
-{# Título de la página #} {% block titulo_pagina %}Crear Usuario{% endblock %}
+{% extends 'gestion_usuarios/layouts/base.html' %}
+{% load static %}
+{% load i18n %} 
+
+{% block titulo_ventana %}Crear Usuario{% endblock %}
+
+{% block titulo_pagina %}
+    <span class="text-xl color_primario">
+        <i class="fas fa-user-plus me-2"></i> Crear Nuevo Usuario
+    </span>
+{% endblock %}
 
 {% block contenido %}
-<div class="caja_para_pagina_contenido_centrado">
 
-    <div class="contenedor_formulario_simple fondo_secundario">
-        <form 
-        method="post" 
-        enctype="multipart/form-data" 
-        action="{% url 'gestion_usuarios:ruta_crear_usuario' %}"
-        class=" formulario_simple color_primario fs_normal"
-        >
-        {% csrf_token %}
-
-            {# Rut #}
-            <div class="input_box">
-                <div class="input_box__label color_primario">
-                    <i class="fa-solid fa-asterisk color_rojo"></i>
-                    <label for="">Rut</label>
+<div class="container-fluid mt-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-7 col-md-9">
+            
+            <div class="card shadow-sm {% if request.session.dark_mode %}dark-mode{% endif %}">
+                <div class="card-header text-lg font-bold">
+                    <i class="fas fa-edit me-1"></i>
+                    Datos del Nuevo Usuario
                 </div>
-                {{formulario.rut}}
-            </div>
+                
+                <form method="post" enctype="multipart/form-data" action="{% url 'gestion_usuarios:ruta_crear_usuario' %}">
+                    {% csrf_token %}
+                    
+                    <div class="card-body">
+                        {# Mostramos errores generales del formulario si existen #}
+                        {% if formulario.non_field_errors %}
+                            <div class="alert alert-danger text-sm" role="alert">
+                                {% for error in formulario.non_field_errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                        {% endif %}
 
-            {# Correo #}
-            <div class="input_box">
-                <div class="input_box__label color_primario">
-                    <i class="fa-solid fa-asterisk color_rojo"></i>
-                    <label for="">Corre Electrónico</label>
-                </div>
-                {{formulario.correo}}
+                        <div class="row">
+
+
+                            {# Columna Izquierda #}
+                            <div class="col-md-6">
+
+                                <div class="mb-3">
+                                    <label for="{{ formulario.rut.id_for_label }}" class="form-label font-bold text-sm">RUT <span class="text-danger fw-bold" title="Campo Obligatorio">*</span></label>
+                                    {{ formulario.rut }}
+                                    {% if formulario.rut.errors %}
+                                        <div class="invalid-feedback d-block text-sm">
+                                            {% for error in formulario.rut.errors %}{{ error }}{% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                                {# Nombre #}
+                                <div class="mb-3">
+                                    <label for="{{ formulario.nombre.id_for_label }}" class="form-label font-bold text-sm">Nombre <span class="text-danger fw-bold" title="Campo Obligatorio">*</span></label>
+                                    {{ formulario.nombre }}
+                                    {% if formulario.nombre.errors %}
+                                        <div class="invalid-feedback d-block text-sm">
+                                            {% for error in formulario.nombre.errors %}{{ error }}{% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                                {# Fecha nacimiento #}
+                                <div class="mb-3">
+                                    <label for="{{ formulario.fecha_nacimiento.id_for_label }}" class="form-label font-bold text-sm">Fecha de Nacimiento</label>
+                                    {{ formulario.fecha_nacimiento }}
+                                    {% if formulario.fecha_nacimiento.errors %}
+                                        <div class="invalid-feedback d-block text-sm">
+                                            {% for error in formulario.fecha_nacimiento.errors %}{{ error }}{% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            
+
+                            {# Columna Derecha #}
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="{{ formulario.correo.id_for_label }}" class="form-label font-bold text-sm">Correo Electrónico <span class="text-danger fw-bold" title="Campo Obligatorio">*</span></label>
+                                    {{ formulario.correo }}
+                                    {% if formulario.correo.errors %}
+                                        <div class="invalid-feedback d-block text-sm">
+                                            {% for error in formulario.correo.errors %}{{ error }}{% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                                <div class="mb-3">
+                                    <label for="{{ formulario.apellido.id_for_label }}" class="form-label font-bold text-sm">Apellido <span class="text-danger fw-bold" title="Campo Obligatorio">*</span></label>
+                                    {{ formulario.apellido }}
+                                    {% if formulario.apellido.errors %}
+                                        <div class="invalid-feedback d-block text-sm">
+                                            {% for error in formulario.apellido.errors %}{{ error }}{% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                                <div class="mb-3">
+                                    <label for="{{ formulario.telefono.id_for_label }}" class="form-label font-bold text-sm">Teléfono</label>
+                                    {{ formulario.telefono }}
+                                    {% if formulario.telefono.errors %}
+                                        <div class="invalid-feedback d-block text-sm">
+                                            {% for error in formulario.telefono.errors %}{{ error }}{% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-text text-sm mt-2 text-muted fst-italic">
+                            <span class="text-danger fw-bold">*</span> Indica que el campo es obligatorio para el registro.
+                        </div>
+
+                    </div>
+                    
+                    <div class="card-footer text-end">
+                        {# El botón de cancelar ahora te lleva a la lista de usuarios #}
+                        <a href="{% url 'gestion_usuarios:ruta_lista_usuarios' %}" class="btn btn-outline-secondary btn-sm text-base me-2">
+                            Cancelar
+                        </a>
+                        
+                        {# PERMISO: Crear Usuario #}
+                        {% if perms.gestion_usuarios.accion_gestion_usuarios_crear_usuario %}
+                        <button type="submit" class="btn btn-success btn-sm text-base">
+                            <i class="fas fa-save me-1"></i>
+                            Crear Usuario
+                        </button>
+                        {% endif %}
+                    </div>
+                </form>
             </div>
             
-            {# Nombre #}
-            <div class="input_box">
-                <div class="input_box__label color_primario">
-                    <i class="fa-solid fa-asterisk color_rojo"></i>
-                    <label for="">Nombre</label>
-                </div>
-                {{formulario.nombre}}
-            </div>
-            
-            {# Apellido #}
-            <div class="input_box">
-                <div class="input_box__label color_primario">
-                    <i class="fa-solid fa-asterisk color_rojo"></i>
-                    <label for="">Apellido</label>
-                </div>
-                {{formulario.apellido}}
-            </div>
-            
-            {# Fecha nacimiento #}
-            <div class="input_box">
-                <div class="input_box__label color_primario">
-                    <label for="">Fecha de nacimiento</label>
-                </div>
-                {{formulario.fecha_nacimiento}}
-            </div>
-            
-            {# Teléfono #}
-            <div class="input_box">
-                <div class="input_box__label color_primario">
-                    <label for="">Teléfono</label>
-                </div>
-                {{formulario.telefono}}
-            </div>
-
-            <div class="formulario_simple__caja_botones">
-                <button type="submit" class="boton fs_normal color_blanco fondo_verde hover_color">Crear</button>
-                <button class="color_primario fondo_transparente">Cancelar</button>
-            </div>
-
-        </form>
-    </div>  
-
+        </div>
+    </div>
 </div>
 
 {% endblock  %}
+
+
+{% block scripts %}
+{{ block.super }}
+{% endblock %}

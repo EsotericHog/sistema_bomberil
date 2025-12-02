@@ -1,0 +1,395 @@
+{% extends 'gestion_inventario/layouts/base.html' %}
+{% load static %}
+
+{% block titulo_ventana %}Crear Préstamo Externo{% endblock %}
+
+{% block titulo_pagina %}
+    <div class="d-flex align-items-center">
+        <a href="{% url 'gestion_inventario:ruta_historial_prestamos' %}" class="btn btn-outline-light text-dark border-0 me-3" title="Volver al Historial">
+            <i class="fas fa-arrow-left fa-lg"></i>
+        </a>
+        <div>
+            <span class="text-xl font-bold color_primario">
+                <i class="fas fa-hand-holding-medical me-2"></i> Registrar Préstamo
+            </span>
+            <small class="text-xs text-muted d-block">Salida de equipos hacia entidades externas</small>
+        </div>
+    </div>
+{% endblock %}
+
+{% block contenido %}
+<div class="container-fluid mt-4">
+
+<form method="post" id="prestamo-form" novalidate>
+    {% csrf_token %}
+    <input type="hidden" name="items_json" id="items-json-input" value="{{ items_json_error|default:'[]' }}">
+
+    <div class="row g-4">
+        
+        {# --- COLUMNA IZQUIERDA: DATOS DEL DESTINATARIO --- #}
+        <div class="col-lg-5">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-white py-3 border-bottom-0">
+                    <h5 class="font-bold color_primario text-lg mb-0">
+                        <i class="fas fa-file-signature me-2"></i> Datos del Préstamo
+                    </h5>
+                </div>
+                <div class="card-body pt-0">
+                    
+                    <label class="form-label font-bold text-xs text-uppercase text-muted mb-2">¿A quién se le presta?</label>
+                    <div class="bg-light p-1 rounded-3 d-flex mb-4 border">
+                        <input type="radio" class="btn-check" name="mode_destinatario" id="mode_existente" value="existente" checked onchange="toggleDestinatarioMode()">
+                        <label class="btn btn-sm btn-light border-0 flex-fill rounded-3 font-bold text-muted shadow-none text-sm" for="mode_existente" id="lbl_existente">
+                            <i class="fas fa-search me-1"></i> Entidad Registrada
+                        </label>
+
+                        <input type="radio" class="btn-check" name="mode_destinatario" id="mode_nuevo" value="nuevo" onchange="toggleDestinatarioMode()">
+                        <label class="btn btn-sm btn-light border-0 flex-fill rounded-3 font-bold text-muted shadow-none text-sm" for="mode_nuevo" id="lbl_nuevo">
+                            <i class="fas fa-plus-circle me-1"></i> Nueva Entidad
+                        </label>
+                    </div>
+
+                    {# Modo: Existente #}
+                    <div id="bloque-existente" class="mb-4">
+                        <label class="form-label font-bold text-sm text-primary">Seleccionar Destinatario</label>
+                        <div class="tom-select-wrapper">
+                            {{ cabecera_form.destinatario }}
+                        </div>
+                        {% if cabecera_form.destinatario.errors %}
+                            <div class="text-danger text-xs mt-1 ms-1">{{ cabecera_form.destinatario.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+
+                    {# Modo: Nuevo #}
+                    <div id="bloque-nuevo" class="d-none mb-4 p-3 bg-blue-light border border-primary border-opacity-10 rounded-3">
+                        <div class="mb-3">
+                            <label class="form-label font-bold text-sm text-primary">Nombre de la Entidad (*)</label>
+                            {{ cabecera_form.nuevo_destinatario_nombre }}
+                            {% if cabecera_form.nuevo_destinatario_nombre.errors %}
+                                <div class="text-danger text-xs mt-1">{{ cabecera_form.nuevo_destinatario_nombre.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="mb-0">
+                            <label class="form-label font-bold text-sm text-primary">Contacto / Teléfono (Opcional)</label>
+                            {{ cabecera_form.nuevo_destinatario_contacto }}
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label font-bold text-xs text-uppercase text-muted">Devolución Estimada</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-white border-end-0 text-muted"><i class="fas fa-calendar-alt"></i></span>
+                            {{ cabecera_form.fecha_devolucion_esperada }}
+                        </div>
+                    </div>
+
+                    <div class="mb-0">
+                        <label class="form-label font-bold text-xs text-uppercase text-muted">Motivo / Observaciones</label>
+                        {{ cabecera_form.notas_prestamo }}
+                    </div>
+
+                    {% if cabecera_form.non_field_errors %}
+                        <div class="alert alert-danger mt-3 text-sm">
+                            {% for error in cabecera_form.non_field_errors %}{{ error }}<br>{% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        {# --- COLUMNA DERECHA: SELECCIÓN DE ÍTEMS --- #}
+        <div class="col-lg-7">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-white py-3 border-bottom-0 d-flex justify-content-between align-items-center">
+                    <h5 class="font-bold color_primario text-lg mb-0">
+                        <i class="fas fa-box-open me-2"></i> Ítems a Prestar
+                    </h5>
+                    <span class="badge bg-light text-primary border text-sm" id="badge-count">0 ítems</span>
+                </div>
+                
+                <div class="card-body pt-0 d-flex flex-column">
+                    
+                    {# Buscador de Ítems #}
+                    <div class="bg-light p-3 rounded-3 mb-3 border">
+                        <label class="form-label font-bold text-xs text-muted mb-1 text-uppercase">AGREGAR EQUIPOS O INSUMOS</label>
+                        {# Select vacío que Tom Select convertirá en buscador AJAX #}
+                        <select id="scan-select" class="form-control text-base" placeholder="Escriba código o nombre..."></select>
+                        
+                        <div class="d-flex justify-content-between mt-2">
+                            <span id="scan-feedback-text" class="text-xs font-bold"></span>
+                            <small class="text-muted fst-italic text-xs"><i class="fas fa-barcode me-1"></i> Buscador inteligente</small>
+                        </div>
+                    </div>
+
+                    {# Tabla de Ítems Seleccionados #}
+                    <div class="table-responsive flex-grow-1 border rounded-3 mb-3" style="min-height: 200px;">
+                        <table class="table align-middle table-hover mb-0" id="items-prestados-table">
+                            <thead class="bg-light text-xs text-uppercase text-muted sticky-top">
+                                <tr>
+                                    <th class="ps-3">Producto</th>
+                                    <th>Código</th>
+                                    <th class="text-center">Cant.</th>
+                                    <th class="text-end pe-3"></th>
+                                </tr>
+                            </thead>
+                            <tbody class="text-base">
+                                <tr id="no-items-row">
+                                    <td colspan="4" class="text-center py-5 text-muted">
+                                        <i class="fas fa-inbox display-4 opacity-25 mb-2"></i>
+                                        <p class="mb-0 text-base">La lista está vacía.</p>
+                                        <small class="text-sm">Use el buscador para agregar equipos o insumos.</small>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="d-flex justify-content-end gap-2 pt-2 border-top">
+                        <a href="{% url 'gestion_inventario:ruta_stock_actual' %}" class="btn btn-light text-muted text-base px-4">Cancelar</a>
+                        
+                        {# PERMISO: Gestionar Préstamos (Crear) #}
+                        {% if perms.gestion_usuarios.accion_gestion_inventario_gestionar_prestamos %}
+                        <button type="submit" class="btn btn-primary text-base px-4 shadow-sm">
+                            <i class="fas fa-save me-2"></i> Confirmar Préstamo
+                        </button>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</form>
+
+</div>
+
+<style>
+    /* Estilos para Tom Select dentro del buscador de ítems */
+    .ts-wrapper .ts-control {
+        font-size: var(--font-base) !important;
+        border: 1px solid #ced4da; /* Borde estándar para el buscador */
+        padding: 8px 12px;
+    }
+    .ts-dropdown .option {
+        font-size: var(--font-base) !important;
+        padding: 8px 12px;
+    }
+    /* Estilo para los badges en la tabla */
+    .font-monospace { font-family: var(--font-data) !important; }
+</style>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // --- LÓGICA DE INTERFAZ UI ---
+    function toggleDestinatarioMode() {
+        const modeNuevo = document.getElementById('mode_nuevo').checked;
+        const bloqueExistente = document.getElementById('bloque-existente');
+        const bloqueNuevo = document.getElementById('bloque-nuevo');
+        
+        // Elementos de TomSelect del destinatario existente
+        const selectExistente = document.getElementById('id_destinatario');
+        
+        if (modeNuevo) {
+            // MOSTRAR NUEVO
+            bloqueExistente.classList.add('d-none');
+            bloqueNuevo.classList.remove('d-none');
+            
+            // Limpiar selección del existente para evitar conflictos de validación
+            if (selectExistente && selectExistente.tomselect) {
+                selectExistente.tomselect.clear();
+            }
+        } else {
+            // MOSTRAR EXISTENTE
+            bloqueNuevo.classList.add('d-none');
+            bloqueExistente.classList.remove('d-none');
+            
+            // Limpiar inputs del nuevo
+            document.getElementById('id_nuevo_destinatario_nombre').value = '';
+            document.getElementById('id_nuevo_destinatario_contacto').value = '';
+        }
+    }
+
+    // --- LÓGICA DE NEGOCIO ---
+    document.addEventListener('DOMContentLoaded', function() {
+        
+        // 1. Inicializar Estado UI
+        toggleDestinatarioMode(); 
+
+        // 2. Variables y Selectores
+        const feedbackText = document.getElementById('scan-feedback-text');
+        const itemsTableBody = document.querySelector('#items-prestados-table tbody');
+        const noItemsRow = document.getElementById('no-items-row');
+        const badgeCount = document.getElementById('badge-count');
+        const hiddenJsonInput = document.getElementById('items-json-input');
+        const prestamoForm = document.getElementById('prestamo-form');
+        const scanSelectEl = document.getElementById('scan-select');
+        const apiUrl = "{% url 'api:api_buscar_prestables' %}";
+
+        // 3. TomSelect Destinatario (Solo si existe en el DOM)
+        const destSelect = document.getElementById('id_destinatario');
+        if (destSelect && !destSelect.tomselect) {
+            new TomSelect(destSelect, { 
+                create: false, 
+                placeholder: "Buscar entidad...",
+                maxOptions: 50
+            });
+        }
+
+        // 4. TomSelect Buscador de Ítems (Lógica Remota)
+        const tsScan = new TomSelect(scanSelectEl, {
+            valueField: 'id',
+            labelField: 'texto_mostrar',
+            searchField: ['nombre', 'codigo'],
+            placeholder: "Escriba código o nombre...",
+            maxItems: 1,
+            load: function(query, callback) {
+                if (!query.length) return callback();
+                // --- Recolectar IDs para excluir ---
+                const excludedIds = itemsPrestados.map(item => item.id).join(',');
+            
+                const urlWithParams = `${apiUrl}?q=${encodeURIComponent(query)}&exclude=${encodeURIComponent(excludedIds)}`;
+
+                fetch(urlWithParams)
+                    .then(response => response.json())
+                    .then(json => {
+                        if (json.error) {
+                            callback(); 
+                        } else {
+                            callback(json.items);
+                        }
+                    }).catch(() => {
+                        callback();
+                    });
+            },
+            onChange: function(value) {
+                if (!value) return;
+                const itemData = this.options[value];
+                
+                // Normalizar objeto
+                addItem({
+                    id: itemData.real_id,
+                    tipo: itemData.tipo,
+                    codigo: itemData.codigo,
+                    nombre: itemData.nombre,
+                    max_qty: itemData.max_qty
+                });
+
+                this.clear();
+                this.clearOptions();
+            },
+            render: {
+                option: function(item, escape) {
+                    const icon = item.tipo === 'activo' ? 'bi bi-upc-scan text-primary' : 'bi bi-boxes text-warning';
+                    return `<div class="py-2 d-flex align-items-center">
+                                <i class="${icon} me-3 fs-5"></i>
+                                <div>
+                                    <div class="font-bold text-dark text-sm">${escape(item.nombre)}</div>
+                                    <div class="text-muted font-monospace text-xs">${escape(item.codigo)}</div>
+                                </div>
+                            </div>`;
+                }
+            }
+        });
+
+        // 5. Estado de Ítems
+        let itemsPrestados = [];
+        try { itemsPrestados = JSON.parse(hiddenJsonInput.value || '[]'); } catch (e) { itemsPrestados = []; }
+
+        // --- Funciones Auxiliares ---
+
+        function showFeedback(msg, isError=false) {
+            feedbackText.textContent = msg;
+            feedbackText.className = isError ? 'text-danger text-xs font-bold' : 'text-success text-xs font-bold';
+            setTimeout(() => feedbackText.textContent = '', 3000);
+        }
+
+        function renderTabla() {
+            itemsTableBody.innerHTML = '';
+            
+            if (itemsPrestados.length === 0) {
+                itemsTableBody.appendChild(noItemsRow);
+                badgeCount.textContent = "0 ítems";
+            } else {
+                itemsPrestados.forEach((item, index) => {
+                    const tr = document.createElement('tr');
+                    const qty = item.tipo === 'activo' ? 1 : item.cantidad_prestada;
+                    // Usamos iconos de Bootstrap Icons para consistencia
+                    const typeBadgeClass = item.tipo === 'activo' ? 'bg-info text-dark' : 'bg-warning text-dark';
+                    
+                    tr.innerHTML = `
+                        <td class="ps-3">
+                            <div class="font-bold text-dark mb-0 lh-1 text-base">${item.nombre}</div>
+                            <small class="text-muted font-monospace text-xs text-data-code">${item.codigo}</small>
+                        </td>
+                        <td>
+                            <span class="badge ${typeBadgeClass} border text-xs">${item.tipo.toUpperCase()}</span>
+                        </td>
+                        <td class="text-center">
+                            <span class="font-bold text-base">${qty}</span>
+                        </td>
+                        <td class="text-end pe-3">
+                            <button type="button" class="btn btn-link text-danger p-0 btn-quitar" data-index="${index}" title="Quitar">
+                                <i class="fas fa-trash-alt"></i>
+                            </button>
+                        </td>
+                    `;
+                    itemsTableBody.appendChild(tr);
+                });
+                badgeCount.textContent = `${itemsPrestados.length} ítem${itemsPrestados.length !== 1 ? 's' : ''}`;
+            }
+        }
+
+        function updateState() {
+            hiddenJsonInput.value = JSON.stringify(itemsPrestados);
+            renderTabla();
+        }
+
+        function addItem(item) {
+            // Validar Duplicados
+            if (itemsPrestados.some(i => i.id === item.id && i.tipo === item.tipo)) {
+                showFeedback("Este ítem ya está en la lista.", true);
+                return;
+            }
+
+            // Lógica de Lotes
+            if (item.tipo === 'lote') {
+                const input = prompt(`Stock disponible: ${item.max_qty}\nIngrese cantidad a prestar:`, 1);
+                const qty = parseInt(input);
+                
+                if (!input || isNaN(qty) || qty <= 0) return;
+                if (qty > item.max_qty) {
+                    showFeedback(`Error: Solo hay ${item.max_qty} unidades.`, true);
+                    return;
+                }
+                item.cantidad_prestada = qty;
+            }
+
+            itemsPrestados.push(item);
+            updateState();
+            showFeedback("Ítem agregado correctamente.");
+        }
+
+        // --- Listeners ---
+        itemsTableBody.addEventListener('click', (e) => {
+            const btn = e.target.closest('.btn-quitar');
+            if (btn) {
+                const index = parseInt(btn.dataset.index);
+                itemsPrestados.splice(index, 1);
+                updateState();
+            }
+        });
+
+        prestamoForm.addEventListener('submit', (e) => {
+            if (itemsPrestados.length === 0) {
+                e.preventDefault();
+                showFeedback("⚠️ Debe agregar al menos un ítem.", true);
+                scanSelectEl.focus(); 
+            }
+        });
+
+        // Render inicial
+        if (itemsPrestados.length > 0) renderTabla();
+    });
+</script>
+{% endblock %}

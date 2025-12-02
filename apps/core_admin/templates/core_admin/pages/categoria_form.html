@@ -1,0 +1,56 @@
+{% extends 'core_admin/layouts/base.html' %}
+{% load static %}
+
+{% block titulo_ventana %}{{ titulo_pagina }}{% endblock %}
+{% block titulo_pagina %}{{ titulo_pagina }}{% endblock %}
+
+{% block contenido %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-white py-3">
+                    <h5 class="mb-0 font-bold text-primary text-lg"><i class="fas fa-folder-open me-2"></i>Datos de la Categoría</h5>
+                </div>
+                <div class="card-body p-4">
+                    <form method="post" novalidate>
+                        {% csrf_token %}
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-8">
+                                <label class="form-label font-bold text-sm">Nombre *</label>
+                                {{ form.nombre }}
+                                {% if form.nombre.errors %}
+                                    <div class="text-danger text-xs mt-1">{{ form.nombre.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label font-bold text-sm">Código *</label>
+                                {{ form.codigo }}
+                                {% if form.codigo.errors %}
+                                    <div class="text-danger text-xs mt-1">{{ form.codigo.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="form-label font-bold text-sm">Descripción</label>
+                            {{ form.descripcion }}
+                            <div class="form-text text-muted text-xs">Detalle el propósito de esta agrupación.</div>
+                        </div>
+
+                        <hr>
+
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                            <a href="{% url 'core_admin:ruta_lista_categorias' %}" class="btn btn-outline-secondary px-4 font-bold text-sm">Cancelar</a>
+                            <button type="submit" class="btn btn-primary px-4 font-bold text-sm">
+                                <i class="fas fa-save me-2"></i>{{ accion }}
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

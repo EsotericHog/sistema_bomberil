@@ -1,0 +1,146 @@
+ :root {
+        --color-fondo-claro: #f4f6f9;
+        --color-texto-oscuro: #343a40;
+        --color-borde: #dee2e6;
+        --color-principal: #D72600; /* Rojo Corporativo */
+        --color-principal-hover: #b01f00;
+        --color-secundario: #6c757d;
+        --shadow-suave: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+    }
+
+    /* Layout y Paneles */
+    .panel {
+        background-color: #ffffff;
+        border: 1px solid var(--color-borde);
+        border-radius: 8px; /* Bordes más redondeados */
+        box-shadow: var(--shadow-suave);
+        padding: 0; /* Padding manejado internamente */
+        margin: 30px auto;
+        max-width: 900px;
+        overflow: hidden;
+    }
+
+    .panel-header {
+        background-color: #fff;
+        padding: 20px 30px;
+        border-bottom: 1px solid var(--color-borde);
+    }
+
+    .titulo-pagina {
+        font-size: 1.5rem;
+        font-weight: 600;
+        color: var(--color-texto-oscuro);
+        margin: 0;
+        padding: 0;
+        border: none;
+    }
+
+    .panel-body {
+        padding: 30px;
+        background-color: #fcfcfc;
+    }
+
+    /* Tarjetas de Reporte */
+    .card-reporte {
+        background-color: #fff;
+        border: 1px solid var(--color-borde);
+        border-radius: 8px;
+        padding: 25px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+    }
+
+    .card-title-report {
+        font-size: 1.25rem;
+        font-weight: 600;
+        color: var(--color-texto-oscuro);
+        margin-top: 0;
+        margin-bottom: 10px;
+        border-bottom: 2px solid var(--color-principal);
+        display: inline-block;
+        padding-bottom: 5px;
+    }
+
+    .text-muted-report {
+        color: var(--color-secundario);
+        font-size: 0.95rem;
+        margin-bottom: 25px;
+        line-height: 1.5;
+    }
+
+    /* Formulario y Filtros */
+    .form-row-report {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); /* Columnas responsivas */
+        gap: 25px;
+        margin-bottom: 30px;
+    }
+
+    .form-group {
+        margin-bottom: 0; /* El grid maneja el espaciado */
+    }
+
+    .label-custom {
+        display: block;
+        font-weight: 600;
+        color: var(--color-texto-oscuro);
+        margin-bottom: 8px;
+        font-size: 0.9rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .form-control {
+        width: 100%;
+        padding: 10px 12px;
+        border: 1px solid #ced4da;
+        border-radius: 6px;
+        font-size: 0.95rem;
+        box-sizing: border-box;
+        transition: border-color 0.2s, box-shadow 0.2s;
+        background-color: #fff;
+        color: #495057;
+    }
+
+    .form-control:focus {
+        border-color: var(--color-principal);
+        outline: 0;
+        box-shadow: 0 0 0 0.2rem rgba(215, 38, 0, 0.15);
+    }
+
+    /* Botones */
+    .form-actions-report {
+        display: flex;
+        justify-content: flex-end;
+        border-top: 1px solid var(--color-borde);
+        padding-top: 20px;
+    }
+
+    .btn {
+        padding: 10px 25px;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        font-weight: 600;
+        font-size: 1rem;
+        transition: all 0.2s ease-in-out;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        text-decoration: none;
+    }
+
+    .btn-principal {
+        background-color: var(--color-principal);
+        color: #fff;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    .btn-principal:hover {
+        background-color: var(--color-principal-hover);
+        transform: translateY(-1px);
+        box-shadow: 0 4px 6px rgba(0,0,0,0.15);
+    }
+
+    .btn-principal:active {
+        transform: translateY(0);
+    }

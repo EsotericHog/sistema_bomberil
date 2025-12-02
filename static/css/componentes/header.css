@@ -1,3 +1,10 @@
+.impersonacion_banner {
+    position: relative;
+    width: 100%;
+}
+
+
+
 .header {
     grid-area: header;
 
@@ -5,15 +12,23 @@
     top: 0;
     z-index: var(--header-z-index);
     display: flex;
-    flex-direction: row;
+    flex-direction: column;
     align-items: center;
     justify-content: space-between;
     height: 100%;
     width: 100%;
-    padding: 0 15px;
     border-bottom: 1.5px solid var(--color-header-border);
 }
 
+.header__secciones {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    height: var(--header-height);
+    width: 100%;
+    padding: 0 15px;
+}
 
 
 /* Header: Sección izquierda */
@@ -29,9 +44,10 @@
 }
 
 .header__logo {
-    width: 40px;
+    width: 50px;
     min-width: 40px;
-    max-width: 40px;
+    max-width: 50px;
+    border-radius: 50%;
 }
 
 .header__titulo {
@@ -45,7 +61,7 @@
     height: 100%;
     align-items: end;
 
-    font-family: 'Raleway';
+    font-family: var(--font-brand);
     font-weight: 300;
 }
 
@@ -135,6 +151,7 @@
 
 .menu_usuario__avatar_usuario img {
     width: var(--user-avatar-width);
+    height: var(--user-avatar-width);
     border-radius: 100%;
     object-fit: cover;
 }

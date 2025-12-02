@@ -1,12 +1,242 @@
-{# Plantilla base #}{% extends 'gestion_medica/layouts/base.html' %}
-{# Cargar assets #}{% load static %}
-{# Título de la ventana #} {% block titulo_ventana %}Lista Voluntarios{% endblock %}
-{# Título de la página #} {% block titulo_pagina %}Creación ficha medica de voluntario{% endblock %}
+{% extends 'gestion_medica/layouts/base.html' %}
+{% load static %}
+
+{% block titulo_ventana %}Ficha: {{ voluntario.usuario.get_full_name }}{% endblock %}
+{% block titulo_pagina %}{% endblock %}
 
 {% block contenido %}
+<link rel="stylesheet" href="{% static 'gestion_medica/css/ficha_medica.css' %}">
 
-    <div class="contenedor_medico">
-        <div class="color_primario">FICHAS MEDICAS HOME</div>
+<style>
+    .bg-soft-purple { background-color: rgba(111, 66, 193, 0.15); color: #6f42c1; }
+    .text-purple { color: #6f42c1; }
+    .header-gradient-cirugia { background: linear-gradient(135deg, #6f42c1 0%, #590dc6 100%); color: white; }
+</style>
+
+<div class="container-fluid ficha-container">
+    <div class="row">
+
+        <div class="col-lg-3 mb-4">
+            
+            <div class="profile-card mb-3">
+                <div class="profile-header-bg"></div>
+                
+                <div class="avatar-container">
+                    {% static 'imagenes/default_avatar.png' as default_img %}
+                    {% with foto=voluntario.imagen_thumb_medium|default:voluntario.usuario.avatar_thumb_medium %}
+                        {% if foto %}
+                            <img src="{{ foto.url }}" alt="Avatar" class="profile-avatar" onerror="this.onerror=null; this.src='{{ default_img }}';">
+                        {% else %}
+                            <div class="profile-avatar d-flex align-items-center justify-content-center text-secondary" style="font-size: 3rem; background: #f8f9fc;">
+                                <i class="fas fa-user"></i>
+                            </div>
+                        {% endif %}
+                    {% endwith %}
+                </div>
+
+                <div class="patient-info">
+                    <h2 class="patient-name text-lg font-black">{{ voluntario.usuario.get_full_name }}</h2>
+                    <span class="patient-rut text-sm font-bold text-data-code">{{ voluntario.usuario.rut }}</span>
+                    
+                    <div class="blood-badge mt-2">
+                        <i class="fas fa-tint"></i> <span class="text-base font-black">{{ ficha.grupo_sanguineo.nombre|default:"?" }}</span>
+                        <small class="text-xs">Grupo Sanguíneo</small>
+                    </div>
+
+                    <div class="profile-stats mt-3">
+                        <div class="stat-box">
+                            <span class="stat-value text-xl font-black">{{ edad|default:"--" }}</span>
+                            <span class="stat-label text-xs font-bold uppercase">Años</span>
+                        </div>
+                        <div class="stat-box">
+                            <span class="stat-value text-base font-bold">{{ ficha.sistema_salud.nombre|default:"--" }}</span>
+                            <span class="stat-label text-xs font-bold uppercase">Salud</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="profile-actions p-3">
+                    <a href="{% url 'gestion_medica:ruta_modificar_paciente' ficha.voluntario.usuario.id %}" 
+                       class="btn btn-primary rounded-pill fw-bold py-2 w-100 mb-2 text-xs">
+                        <i class="fas fa-pen me-2"></i> Editar Ficha
+                    </a>
+                    <div class="d-flex gap-2">
+                        <a href="{% url 'gestion_medica:ruta_imprimir_ficha' ficha.voluntario.usuario.id %}" 
+                           class="btn btn-outline-secondary rounded-pill fw-bold py-2 flex-grow-1 text-xs" target="_blank">
+                            <i class="fas fa-file-pdf me-2"></i> PDF
+                        </a>
+                        <a href="{% url 'gestion_medica:ruta_imprimir_qr' ficha.voluntario.usuario.id %}" 
+                           class="btn btn-hero btn-secondary-hero" target="_blank">
+                            <i class="fas fa-qrcode"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <div class="col-lg-9">
+
+            <div class="vitals-row mb-4">
+                <div class="vital-card-color vc-blue">
+                    <i class="fas fa-weight-hanging vc-icon"></i>
+                    <div class="vc-value text-xl font-black">{{ ficha.peso_kg|default:"--" }}</div>
+                    <div class="vc-label text-xs font-bold uppercase">Peso (kg)</div>
+                </div>
+                <div class="vital-card-color vc-indigo">
+                    <i class="fas fa-ruler-vertical vc-icon"></i>
+                    <div class="vc-value text-xl font-black">{{ ficha.altura_mts|default:"--" }}</div>
+                    <div class="vc-label text-xs font-bold uppercase">Altura (m)</div>
+                </div>
+                <div class="vital-card-color vc-rose">
+                    <i class="fas fa-heartbeat vc-icon"></i>
+                    <div class="vc-value text-xl font-black">
+                        {% if ficha.presion_arterial_sistolica %}
+                            {{ ficha.presion_arterial_sistolica }}/{{ ficha.presion_arterial_diastolica }}
+                        {% else %}
+                            --/--
+                        {% endif %}
+                    </div>
+                    <div class="vc-label text-xs font-bold uppercase">P. Arterial</div>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-6 mb-4">
+                    <div class="section-card h-100">
+                        <div class="section-header header-gradient-alergia">
+                            <h3 class="section-title text-base font-bold">
+                                <i class="fas fa-exclamation-circle"></i> Alergias
+                            </h3>
+                            <a href="{% url 'gestion_medica:ruta_alergias_paciente' ficha.voluntario.usuario.id %}" class="btn-soft-add"><i class="fas fa-plus"></i></a>
+                        </div>
+                        <ul class="modern-list">
+                            {% for item in alergias %}
+                            <li class="modern-item">
+                                <div class="item-icon-box bg-soft-red"><i class="fas fa-allergies"></i></div>
+                                <div class="item-text">
+                                    <h6 class="text-sm font-bold">{{ item.alergia.nombre }}</h6>
+                                    {% if item.observaciones %} <p class="text-xs text-muted">{{ item.observaciones }}</p> {% endif %}
+                                </div>
+                            </li>
+                            {% empty %}
+                            <div class="empty-state-modern text-xs"><i class="far fa-check-circle"></i>Sin alergias</div>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="col-md-6 mb-4">
+                    <div class="section-card h-100">
+                        <div class="section-header header-gradient-enfermedad">
+                            <h3 class="section-title text-base font-bold">
+                                <i class="fas fa-notes-medical"></i> Enfermedades
+                            </h3>
+                            <a href="{% url 'gestion_medica:ruta_enfermedad_paciente' ficha.voluntario.usuario.id %}" class="btn-soft-add"><i class="fas fa-plus"></i></a>
+                        </div>
+                        <ul class="modern-list">
+                            {% for item in enfermedades %}
+                            <li class="modern-item">
+                                <div class="item-icon-box bg-soft-yellow"><i class="fas fa-procedures"></i></div>
+                                <div class="item-text">
+                                    <h6 class="text-sm font-bold">{{ item.enfermedad.nombre }}</h6>
+                                    {% if item.observaciones %} <p class="text-xs text-muted">{{ item.observaciones }}</p> {% endif %}
+                                </div>
+                            </li>
+                            {% empty %}
+                            <div class="empty-state-modern text-xs"><i class="far fa-smile"></i>Sin enfermedades</div>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                </div>
+            </div> 
+
+            <div class="row">
+                <div class="col-md-6 mb-4">
+                    <div class="section-card h-100">
+                        <div class="section-header header-gradient-medicina">
+                            <h3 class="section-title text-base font-bold">
+                                <i class="fas fa-pills"></i> Medicamentos
+                            </h3>
+                            <a href="{% url 'gestion_medica:ruta_medicamentos_paciente' ficha.voluntario.usuario.id %}" class="btn-soft-add"><i class="fas fa-plus"></i></a>
+                        </div>
+                        <ul class="modern-list">
+                            {% for item in medicamentos %}
+                            <li class="modern-item">
+                                <div class="item-icon-box bg-soft-blue"><i class="fas fa-prescription-bottle"></i></div>
+                                <div class="item-text">
+                                    <h6 class="text-sm font-bold">{{ item.medicamento.nombre }}</h6>
+                                    {% if item.dosis_frecuencia %} <p class="text-xs text-muted">{{ item.dosis_frecuencia }}</p> {% endif %}
+                                </div>
+                            </li>
+                            {% empty %}
+                            <div class="empty-state-modern text-xs"><i class="far fa-file-alt"></i>Sin medicamentos</div>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="col-md-6 mb-4">
+                    <div class="section-card h-100">
+                        <div class="section-header header-gradient-cirugia">
+                            <h3 class="section-title text-base font-bold">
+                                <i class="fas fa-heartbeat"></i> Cirugías
+                            </h3>
+                            <a href="{% url 'gestion_medica:ruta_cirugias_paciente' ficha.voluntario.usuario.id %}" class="btn-soft-add text-purple"><i class="fas fa-plus"></i></a>
+                        </div>
+                        <ul class="modern-list">
+                            {% for item in cirugias %}
+                            <li class="modern-item">
+                                <div class="item-icon-box bg-soft-purple"><i class="fas fa-user-md"></i></div>
+                                <div class="item-text">
+                                    <h6 class="text-sm font-bold">{{ item.cirugia.nombre }}</h6>
+                                    <p class="text-xs text-muted text-data-code">{{ item.fecha_cirugia|date:"d/m/Y"|default:"Fecha S/I" }}</p>
+                                </div>
+                            </li>
+                            {% empty %}
+                            <div class="empty-state-modern text-xs"><i class="fas fa-user-injured"></i>Sin cirugías</div>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-12 mb-4">
+                    <div class="section-card h-100">
+                        <div class="section-header header-gradient-contacto">
+                            <h3 class="section-title text-base font-bold">
+                                <i class="fas fa-phone-alt"></i> Emergencia
+                            </h3>
+                            <a href="{% url 'gestion_medica:ruta_contacto_emergencia' ficha.voluntario.usuario.id %}" class="btn-soft-add"><i class="fas fa-plus"></i></a>
+                        </div>
+                        <ul class="modern-list">
+                            {% for contacto in contactos %}
+                            <li class="modern-item">
+                                <div class="item-icon-box bg-soft-green"><i class="fas fa-user-shield"></i></div>
+                                <div class="item-text" style="flex-grow:1;">
+                                    <h6 class="text-sm font-bold">{{ contacto.nombre_completo }}</h6>
+                                    <p class="text-xs text-muted">{{ contacto.parentesco }}</p>
+                                </div>
+                                <a href="tel:{{ contacto.telefono }}" class="btn btn-success btn-sm rounded-circle text-white" style="width:30px; height:30px; display:flex; align-items:center; justify-content:center;">
+                                    <i class="fas fa-phone text-xs"></i>
+                                </a>
+                            </li>
+                            {% empty %}
+                            <div class="empty-state-modern text-xs"><i class="far fa-address-book"></i>Sin contactos</div>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                </div>
+            </div> 
+        </div>
     </div>
-    
-{% endblock  %}
+</div>
+
+<script>
+    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+    var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+      return new bootstrap.Tooltip(tooltipTriggerEl)
+    })
+</script>
+{% endblock contenido %}

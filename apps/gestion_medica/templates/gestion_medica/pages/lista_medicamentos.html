@@ -1,39 +1,45 @@
-{# Plantilla base #}{% extends 'gestion_medica/layouts/base.html' %}
-{# Cargar assets #}{% load static %}
-{# Título de la ventana #} {% block titulo_ventana %}Lista Voluntarios{% endblock %}
-{# Título de la página #} {% block titulo_pagina %}Lista de Voluntarios{% endblock %}
+{% extends 'gestion_medica/layouts/base.html' %}
+{% load static %}
+
+{% block titulo_ventana %}Catálogo de Medicamentos{% endblock %}
+{% block titulo_pagina %}Medicamentos Registrados{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'gestion_medica/css/catalogos.css' %}">
+{% endblock %}
 
 {% block contenido %}
+<div class="container mt-4">
 
-    <div class="contenedor_medico">
-        <div class="contenedor_tabla">
-            <table>
-                <tr>
-                    <th>Nombre</th>
-                    <th>Descripción</th>
-                </tr>
-                <tr>
-                    <td>Paracetamol</td>
-                    <td>Analgesico y antinflamatorio</td>
-                </tr>
-                <tr>
-                    <td>Ibuprofeno</td>
-                    <td>Analgesico y antinflamatorio</td>
-                </tr>
-                <tr>
-                    <td>Aspirina</td>
-                    <td>Analgesico y antinflamatorio</td>
-                </tr>
-                <tr>
-                    <td>Morfina</td>
-                    <td>Analgesico y anestesico</td>
-                </tr>
-                <tr>
-                    <td>Fentermina</td>
-                    <td>Analgesico y anestesico</td>
-                </tr>
+    <div class="card catalogo-card">
+        <div class="card-header header-medicamento d-flex justify-content-between align-items-center">
+            <h5 class="mb-0 text-xl font-bold"><i class="fa-solid fa-capsules me-2"></i>Medicamentos</h5>
+
+            <a href="{% url 'gestion_medica:ruta_crear_medicamento' %}"
+               class="btn btn-medicamento btn-sm text-sm font-bold">
+                <i class="fa-solid fa-plus me-1"></i> Nuevo
+            </a>
+        </div>
+
+        <div class="card-body p-0">
+            <table class="table table-striped table-catalogo mb-0">
+                <thead>
+                    <tr>
+                        <th class="ps-4 text-sm font-bold">Nombre</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in object_list %}
+                    <tr>
+                        <td class="ps-4 text-base font-medium">{{ item.nombre }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr><td class="text-center py-3 text-muted text-base font-regular">Sin registros</td></tr>
+                    {% endfor %}
+                </tbody>
             </table>
         </div>
     </div>
-    
-{% endblock  %}
+
+</div>
+{% endblock %}

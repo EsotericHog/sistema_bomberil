@@ -1,0 +1,112 @@
+/* ==========================================================================
+   ESTILOS DEL CARRUSEL DE TARJETAS (SLIDER)
+   ========================================================================== */
+
+/* --- 1. Contenedores Principales --- */
+
+/* Contenedor que envuelve todo el componente y posiciona las flechas */
+.slider-container {
+    width: 90%;
+    max-width: 1200px;
+    margin: 10px auto;
+    position: relative;
+}
+
+/* "Ventana" que oculta las tarjetas que se desbordan */
+.slider-viewport {
+    overflow-x: hidden;
+    width: 100%;
+}
+
+/* Fila flexible que contiene todas las tarjetas y se desplaza */
+.slider {
+    display: flex;
+    gap: 20px; /* Espacio entre las tarjetas */
+    transition: transform 0.5s ease-in-out;
+    padding: 10px 2px; /* Espacio vertical para que la sombra no se corte */
+    
+    /* Variable CSS clave para la responsividad. Valor por defecto para pantallas grandes. */
+    --cards-per-view: 4;
+}
+
+
+/* --- 2. Estilos Completos de la Tarjeta (Card) --- */
+.slider-item {
+    /* Cálculo del ancho basado en la variable --cards-per-view */
+    flex: 0 0 calc((100% / var(--cards-per-view)) - (20px * (var(--cards-per-view) - 1) / var(--cards-per-view)));
+    
+    /* Añadimos esto para que todos los items se comporten como bloques flexibles */
+    display: flex;
+    flex-direction: column;
+}
+
+
+/* --- 3. Estilos de los Botones de Navegación --- */
+
+.slider-btn {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 10;
+    background-color: white;
+    border-radius: 50%;
+    border: 1px solid #eee;
+    width: 45px;
+    height: 45px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease-in-out;
+}
+
+.slider-btn:hover {
+    background-color: #f8f8f8;
+    transform: translateY(-50%) scale(1.05);
+}
+
+.slider-btn svg {
+    width: 28px;
+    height: 28px;
+    fill: #333;
+}
+
+.prev-btn {
+    left: 15px; 
+}
+
+.next-btn {
+    right: 15px;
+}
+
+
+/* --- 4. Responsividad del Carrusel --- */
+/* Cambiamos el valor de la variable --cards-per-view en diferentes tamaños de pantalla */
+
+/* Para tablets y escritorios pequeños (se verán 3 tarjetas) */
+@media (max-width: 1024px) {
+    .slider {
+        --cards-per-view: 3;
+    }
+}
+
+/* Para tablets en vertical y móviles grandes (se verán 2 tarjetas) */
+@media (max-width: 768px) {
+    .slider {
+        --cards-per-view: 2;
+    }
+    .slider-container {
+        width: 95%; /* Ocupa un poco más de ancho en pantallas pequeñas */
+    }
+    .prev-btn { left: 10px; }
+    .next-btn { right: 10px; }
+}
+
+/* Para móviles (se verá 1 tarjeta) */
+@media (max-width: 520px) {
+    .slider {
+        --cards-per-view: 1;
+        gap: 15px;
+    }
+}

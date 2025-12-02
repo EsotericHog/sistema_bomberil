@@ -1,0 +1,154 @@
+{% extends 'core_admin/layouts/base.html' %}
+{% load static %}
+
+{% block titulo_ventana %}{{ titulo_pagina }}{% endblock %}
+{% block titulo_pagina %}{{ titulo_pagina }}{% endblock %}
+
+{% block contenido %}
+<div class="container-fluid mt-4"> <form method="post" novalidate>
+        {% csrf_token %}
+        
+        <div class="row">
+            <div class="col-lg-3 mb-4">
+                <div class="card shadow-sm border-0 position-sticky" style="top: 20px; z-index: 100;">
+                    <div class="card-header bg-white py-3">
+                        <h5 class="mb-0 font-bold text-primary text-lg"><i class="fas fa-tag me-2"></i>Datos del Rol</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label class="form-label font-bold text-sm">Nombre del Rol *</label>
+                            {{ form.nombre }}
+                            {% if form.nombre.errors %}
+                                <div class="text-danger text-xs mt-1">{{ form.nombre.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label font-bold text-sm">Descripción</label>
+                            {{ form.descripcion }}
+                        </div>
+
+                        <div class="alert alert-info text-xs color_blanco">
+                            <i class="fas fa-info-circle me-1"></i>
+                            Este rol estará disponible globalmente.
+                        </div>
+
+                        <hr>
+                        
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary font-bold text-sm">
+                                <i class="fas fa-save me-2"></i>{{ accion }}
+                            </button>
+                            <a href="{% url 'core_admin:ruta_lista_roles' %}" class="btn btn-outline-secondary font-bold text-sm">Cancelar</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-9">
+                <h5 class="mb-3 font-bold text-secondary text-lg"><i class="fas fa-shield-alt me-2"></i>Matriz de Permisos</h5>
+                
+                {% for group in permissions_matrix %}
+                <div class="card mb-3 shadow-sm border-0">
+                    <div class="card-header bg-light d-flex align-items-center">
+                        <div class="form-check m-0">
+                            <input class="form-check-input check-all-module permiso-check fs-5" 
+                                   type="checkbox" 
+                                   name="permisos"
+                                   value="{{ group.main_perm.id }}"
+                                   id="module-{{ group.app_label }}"
+                                   data-module="{{ group.app_label }}"
+                                   {% if group.main_perm.id in rol_permissions_ids %}checked{% endif %}>
+                            <label class="form-check-label font-bold text-dark text-sm ms-2" for="module-{{ group.app_label }}" style="cursor: pointer;">
+                                {{ group.verbose_name }}
+                            </label>
+                        </div>
+                    </div>
+                    <div class="card-body pt-2 pb-2">
+                        <div class="row">
+                            {% for perm in group.children %}
+                            <div class="col-md-6 col-xl-4">
+                                <div class="form-check py-1">
+                                    <input class="form-check-input permiso-check text-sm" 
+                                           type="checkbox" 
+                                           name="permisos" 
+                                           value="{{ perm.id }}" 
+                                           id="perm-{{ perm.id }}"
+                                           data-module="{{ group.app_label }}"
+                                           {% if perm.id in rol_permissions_ids %}checked{% endif %}>
+                                    <label class="form-check-label text-muted text-sm" for="perm-{{ perm.id }}" style="cursor: pointer;">
+                                        {{ perm.name }}
+                                    </label>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </form>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    
+    const moduleChecks = document.querySelectorAll('.check-all-module');
+    const childChecks = document.querySelectorAll('.permiso-check:not(.check-all-module)');
+
+    // Función para actualizar estado visual (Indeterminado)
+    function updateParentState(moduleName) {
+        const parentCheck = document.querySelector(`.check-all-module[data-module="${moduleName}"]`);
+        if (!parentCheck) return;
+
+        const children = document.querySelectorAll(`.permiso-check[data-module="${moduleName}"]:not(.check-all-module)`);
+        const totalChildren = children.length;
+        const checkedChildren = document.querySelectorAll(`.permiso-check[data-module="${moduleName}"]:not(.check-all-module):checked`).length;
+        
+        if (totalChildren === 0) return;
+
+        if (checkedChildren === 0) {
+            parentCheck.indeterminate = false;
+            // OJO: No desmarcamos el padre automáticamente si era un permiso explícito
+        } else if (checkedChildren === totalChildren) {
+            parentCheck.checked = true;
+            parentCheck.indeterminate = false;
+        } else {
+            parentCheck.checked = true; // Si tiene hijos, debe tener acceso al módulo
+            parentCheck.indeterminate = true;
+        }
+    }
+
+    // Evento PADRES
+    moduleChecks.forEach(function (check) {
+        check.addEventListener('change', function () {
+            const moduleName = this.dataset.module;
+            const children = document.querySelectorAll(`.permiso-check[data-module="${moduleName}"]:not(.check-all-module)`);
+            children.forEach(child => child.checked = this.checked);
+        });
+    });
+
+    // Evento HIJOS
+    childChecks.forEach(function (check) {
+        check.addEventListener('change', function () {
+            const moduleName = this.dataset.module;
+            const parentCheck = document.querySelector(`.check-all-module[data-module="${moduleName}"]`);
+            
+            // Si marcas un hijo, fuerzas acceso al padre
+            if (this.checked && parentCheck) {
+                parentCheck.checked = true;
+            }
+            updateParentState(moduleName);
+        });
+    });
+
+    // Inicialización
+    moduleChecks.forEach(function (check) {
+        updateParentState(check.dataset.module);
+    });
+});
+</script>
+{% endblock %}

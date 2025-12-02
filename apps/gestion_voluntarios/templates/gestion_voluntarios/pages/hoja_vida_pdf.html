@@ -1,0 +1,248 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Hoja de Vida - {{ voluntario.usuario.get_full_name }}</title>
+    <style>
+        @page {
+            size: letter;
+            margin: 2cm;
+        }
+        
+        body {
+            font-family: Helvetica, Arial, sans-serif;
+            font-size: 11px;
+            color: #333;
+            line-height: 1.4;
+        }
+
+        /* --- CLASES DE UTILIDAD (Compatibles con xhtml2pdf) --- */
+        .text-xs   { font-size: 9px; }
+        .text-sm   { font-size: 10px; }
+        .text-base { font-size: 11px; }
+        .text-lg   { font-size: 14px; }
+        .text-xl   { font-size: 16px; }
+        .text-2xl  { font-size: 20px; }
+        
+        .font-bold { font-weight: bold; }
+        .font-regular { font-weight: normal; }
+        .font-italic { font-style: italic; }
+        
+        .text-muted { color: #666; }
+        .text-danger { color: #cc0000; }
+        .text-center { text-align: center; }
+        .text-right { text-align: right; }
+        .text-data-code { font-family: "Courier New", Courier, monospace; }
+
+        /* --- ESTRUCTURA --- */
+        .header-table { width: 100%; border-bottom: 2px solid #333; padding-bottom: 10px; margin-bottom: 20px; }
+        
+        .section-title { 
+            background-color: #f1f3f5; 
+            padding: 8px 15px; 
+            font-weight: bold; 
+            font-size: 13px;
+            border-left: 5px solid #dc3545; /* Rojo corporativo */
+            margin-top: 25px; 
+            margin-bottom: 10px;
+            text-transform: uppercase;
+        }
+
+        /* --- TABLAS DE DATOS --- */
+        .main-columns { width: 100%; }
+        .main-columns td { vertical-align: top; }
+        
+        .data-row { margin-bottom: 6px; }
+        .label { font-weight: bold; color: #555; display: inline-block; width: 130px; }
+        
+        .ficha-avatar {
+            width: 90px; 
+            height: 90px; 
+            object-fit: cover; 
+            border: 1px solid #ddd; 
+            border-radius: 4px;
+        }
+
+        /* Tablas de Listados (Cargos, Premios, Sanciones) */
+        .table-std { width: 100%; border-collapse: collapse; margin-top: 5px; margin-bottom: 10px; }
+        .table-std th { background-color: #eee; border: 1px solid #ccc; padding: 6px; font-size: 10px; text-align: left; font-weight: bold; }
+        .table-std td { border: 1px solid #ccc; padding: 6px; font-size: 10px; vertical-align: top; }
+        
+        .badge-active { color: green; font-weight: bold; }
+        .badge-closed { color: #666; }
+
+        /* Estilos para impresión */
+        @media print {
+            .no-print { display: none !important; }
+        }
+    </style>
+</head>
+<body>
+
+    <table class="header-table">
+        <tr>
+            <td width="60%" style="vertical-align: middle; padding-left: 15px;">
+                <div class="text-2xl font-bold">{{ voluntario.usuario.get_full_name|upper }}</div>
+                <div class="text-lg font-bold text-data-code" style="margin-top: 4px;">RUT: {{ voluntario.usuario.rut }}</div>
+                <div class="text-sm text-muted" style="margin-top: 4px;">
+                    N° Registro: <strong>{{ voluntario.numero_registro_bomberil|default:"Pendiente" }}</strong>
+                </div>
+            </td>
+            <td width="25%" class="text-right" style="vertical-align: bottom;">
+                <div class="text-xs text-muted">
+                    Fecha Emisión:<br>
+                    <strong class="font-bold text-data-code">{% now "d/m/Y" %}</strong>
+                </div>
+            </td>
+        </tr>
+    </table>
+
+    <div class="section-title">I. Antecedentes Personales</div>
+    
+    <table class="main-columns">
+        <tr>
+            <td width="50%" style="padding-right: 20px;">
+                <div class="data-row">
+                    <span class="label">Fecha Nacimiento:</span> 
+                    <span class="text-data-code">{{ voluntario.fecha_nacimiento|date:"d/m/Y"|default:"-" }}</span>
+                </div>
+                <div class="data-row">
+                    <span class="label">Nacionalidad:</span> 
+                    {{ voluntario.nacionalidad.gentilicio|default:"-" }}
+                </div>
+                <div class="data-row">
+                    <span class="label">Estado Civil:</span> 
+                    {{ voluntario.get_estado_civil_display|default:"-" }}
+                </div>
+                <div class="data-row">
+                    <span class="label">Profesión Civil:</span> 
+                    {{ voluntario.profesion.nombre|default:"-" }}
+                </div>
+            </td>
+
+            <td width="50%">
+                <div class="data-row">
+                    <span class="label">Teléfono:</span> 
+                    <span class="text-data-code">{{ voluntario.usuario.phone|default:"-" }}</span>
+                </div>
+                <div class="data-row">
+                    <span class="label">Correo:</span> 
+                    {{ voluntario.usuario.email|default:"-" }}
+                </div>
+                <div class="data-row">
+                    <span class="label">Dirección:</span> 
+                    {{ voluntario.domicilio_calle|default:"" }} {{ voluntario.domicilio_numero|default:"" }}
+                    {% if voluntario.domicilio_comuna %}, {{ voluntario.domicilio_comuna.nombre }}{% endif %}
+                </div>
+                <div class="data-row">
+                    <span class="label">Estación Actual:</span> 
+                    {% if membresia %}{{ membresia.estacion.nombre }}{% else %}Sin Asignación{% endif %}
+                </div>
+            </td>
+        </tr>
+    </table>
+
+    <div class="section-title">II. Historial de Servicio (Cargos)</div>
+    
+    {% if voluntario.historial_cargos.all %}
+        <table class="table-std">
+            <thead>
+                <tr>
+                    <th width="20%">Fecha Inicio</th>
+                    <th width="20%">Fecha Término</th>
+                    <th width="30%">Cargo / Rango</th>
+                    <th width="30%">Ámbito / Unidad</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for cargo in voluntario.historial_cargos.all %}
+                <tr>
+                    <td class="text-data-code">{{ cargo.fecha_inicio|date:"d/m/Y" }}</td>
+                    <td class="text-data-code">
+                        {% if cargo.fecha_fin %}
+                            {{ cargo.fecha_fin|date:"d/m/Y" }}
+                        {% else %}
+                            <span class="badge-active">VIGENTE</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <strong class="font-bold">{{ cargo.cargo.nombre }}</strong>
+                    </td>
+                    <td>
+                        {{ cargo.ambito }}<br>
+                        <span class="text-xs text-muted">Reg: {{ cargo.estacion_registra.nombre }}</span>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p class="text-muted font-italic text-sm" style="padding: 10px;">No se registran cargos en el historial.</p>
+    {% endif %}
+
+    <div class="section-title">III. Reconocimientos y Logros</div>
+    
+    {% if voluntario.historial_reconocimientos.all %}
+        <table class="table-std">
+            <thead>
+                <tr>
+                    <th width="15%">Fecha</th>
+                    <th width="40%">Distinción</th>
+                    <th width="45%">Detalle / Otorgado por</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for reco in voluntario.historial_reconocimientos.all %}
+                <tr>
+                    <td class="text-data-code">{{ reco.fecha_evento|date:"d/m/Y" }}</td>
+                    <td><strong class="font-bold">{{ reco.tipo_reconocimiento.nombre }}</strong></td>
+                    <td>
+                        {{ reco.ambito }}
+                        {% if reco.descripcion_personalizada %}
+                            <br><span class="text-xs font-italic">"{{ reco.descripcion_personalizada }}"</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p class="text-muted font-italic text-sm" style="padding: 10px;">No se registran reconocimientos.</p>
+    {% endif %}
+
+    <div class="section-title" style="border-left-color: #333;">IV. Registro Disciplinario</div>
+    
+    {% if voluntario.historial_sanciones.all %}
+        <table class="table-std">
+            <thead>
+                <tr>
+                    <th width="15%">Fecha</th>
+                    <th width="30%">Tipo Sanción</th>
+                    <th width="55%">Motivo / Descripción</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for sancion in voluntario.historial_sanciones.all %}
+                <tr>
+                    <td class="text-data-code">{{ sancion.fecha_evento|date:"d/m/Y" }}</td>
+                    <td class="text-danger font-bold">{{ sancion.get_tipo_sancion_display }}</td>
+                    <td>
+                        {{ sancion.descripcion }}
+                        <br><span class="text-xs text-muted">Emitida por: {{ sancion.estacion_evento.nombre }}</span>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p class="text-muted font-italic text-sm" style="padding: 10px;">No existen sanciones registradas en la hoja de vida.</p>
+    {% endif %}
+
+    <div style="margin-top: 40px; border-top: 1px solid #ddd; padding-top: 10px; font-size: 10px; color: #777;">
+        <strong>Documento Oficial:</strong> Generado automáticamente por el Sistema de Gestión Bomberil. 
+        La información aquí contenida es válida a la fecha de emisión.
+    </div>
+
+</body>
+</html>

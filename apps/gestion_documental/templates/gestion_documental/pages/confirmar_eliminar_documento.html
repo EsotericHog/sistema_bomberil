@@ -1,0 +1,92 @@
+{# Plantilla base #}{% extends 'gestion_documental/layouts/base.html' %}
+{# Cargar assets #}{% load static %}
+
+{# Título de la ventana #} {% block titulo_ventana %}Eliminar Documento{% endblock %}
+{# Título de la página #} {% block titulo_pagina %}Eliminar Documento{% endblock %}
+
+{% block contenido %}
+<div class="container-fluid mt-5">
+    <div class="row justify-content-center">
+        <div class="col-12 col-md-8 col-lg-6">
+            
+            {# TARJETA DE CONFIRMACIÓN #}
+            <div class="card shadow-lg border-0">
+                {# Encabezado Rojo de Advertencia #}
+                <div class="card-header bg-danger text-white text-center py-3">
+                    <i class="fas fa-exclamation-triangle fa-3x mb-2"></i>
+                    <h1 class="m-0 text-2xl font-bold">¿Estás seguro?</h1>
+                </div>
+
+                <div class="card-body p-4 text-center">
+                    
+                    {# Texto explicativo: Base y Regular #}
+                    <p class="text-base font-regular text-muted mb-4">
+                        Estás a punto de eliminar permanentemente el siguiente registro del Archivo Histórico. 
+                        <br>
+                        <span class="text-danger font-bold">Esta acción no se puede deshacer.</span>
+                    </p>
+
+                    {# DETALLES DEL DOCUMENTO A ELIMINAR #}
+                    <div class="bg-light p-4 rounded border mb-4 position-relative">
+                        {# Icono de fondo decorativo #}
+                        <i class="fas fa-file-pdf position-absolute text-muted opacity-25" style="top: 10px; right: 20px; font-size: 4rem;"></i>
+
+                        <div class="text-start">
+                            {# Etiqueta pequeña #}
+                            <span class="text-xs font-bold text-uppercase text-muted">Título del Documento:</span>
+                            {# Título del documento: XL y Negrita #}
+                            <h2 class="text-xl font-bold text-dark mb-2">{{ object.titulo }}</h2>
+
+                            <div class="row mt-3">
+                                <div class="col-6">
+                                    <span class="text-xs font-bold text-uppercase text-muted">Tipo:</span>
+                                    {# Badge: SM y Medio #}
+                                    <div class="mt-1">
+                                        <span class="badge bg-secondary text-sm font-medium">{{ object.tipo_documento.nombre }}</span>
+                                    </div>
+                                </div>
+                                <div class="col-6">
+                                    <span class="text-xs font-bold text-uppercase text-muted">Fecha Origen:</span>
+                                    {# Fecha: SM y Data Code #}
+                                    <div class="text-sm text-data-code mt-1 text-dark">
+                                        <i class="far fa-calendar-alt me-1"></i>{{ object.fecha_documento|date:"d/m/Y" }}
+                                    </div>
+                                </div>
+                            </div>
+
+                            {# Mostrar preview si existe #}
+                            {% if object.preview_imagen %}
+                            <div class="mt-3 border-top pt-3 w-100">
+                                <span class="text-xs font-bold text-uppercase text-muted mb-2 d-block">Vista Previa:</span>
+                                <div class="d-flex flex-column align-items-center justify-content-center py-5 my-4 text-center">
+                                    <img src="{{ object.preview_imagen.url }}" class="img-fluid rounded border shadow-sm" style="max-height: 150px;">
+                                </div>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    {# FORMULARIO DE ACCIÓN #}
+                    <form method="POST">
+                        {% csrf_token %}
+                        
+                        <div class="d-flex justify-content-center gap-3">
+                            {# Botón Cancelar: Base y Medio #}
+                            <a href="{% url 'gestion_documental:ruta_lista_documentos' %}" class="btn btn-light border text-base font-medium px-4">
+                                <i class="fas fa-arrow-left me-2"></i>Cancelar
+                            </a>
+
+                            {# Botón Eliminar: Base y Negrita #}
+                            <button type="submit" class="btn btn-danger text-base font-bold px-4">
+                                <i class="fas fa-trash-alt me-2"></i>Confirmar Eliminación
+                            </button>
+                        </div>
+                    </form>
+
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+{% endblock %}

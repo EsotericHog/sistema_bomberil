@@ -1,0 +1,83 @@
+<nav id="barra_lateral" class="barra_lateral fondo_barra_lateral {% if request.session.is_impersonating %}barra_lateral_impersonacion{% endif %}">
+    {# Botón para cerrar el menú en diseño móvil (una X) #}
+    {% include 'layouts/boton_cerrar_sidebar.html' %}
+
+    {# --- BLOQUE 1: DASHBOARD --- #}
+    <section class="barra_lateral__seccion">
+        <div class="barra_lateral__modulo" data-toggle="modulo">
+            <a href="{% url 'core_admin:ruta_inicio' %}" class="barra_lateral__modulo_nombre fs_nav_seccion color_primario scale">
+                <i class="fa-solid fa-house"></i>
+                <span>Inicio</span>
+            </a>
+        </div>
+    </section>
+
+
+    {# --- BLOQUE 2: ADMINISTRACIÓN DEL SISTEMA --- #}
+    <section class="barra_lateral__seccion">
+        <div class="barra_lateral__modulo" data-toggle="modulo">
+            <a href="{% url 'core_admin:ruta_lista_estaciones' %}" class="barra_lateral__modulo_nombre fs_nav_seccion color_primario scale">
+                <i class="fa-solid fa-building-shield"></i>
+                <span>Estaciones</span>
+            </a>
+        </div>
+    </section>
+
+    <section class="barra_lateral__seccion">
+        <div class="barra_lateral__modulo" data-toggle="modulo">
+            <a href="{% url 'core_admin:ruta_lista_usuarios' %}" class="barra_lateral__modulo_nombre fs_nav_seccion color_primario scale">
+                <i class="fa-solid fa-users"></i>
+                <span>Usuarios</span>
+            </a>
+        </div>
+    </section>
+
+    <section class="barra_lateral__seccion">
+        <div class="barra_lateral__modulo" data-toggle="modulo">
+            <a href="{% url 'core_admin:ruta_lista_roles' %}" class="barra_lateral__modulo_nombre fs_nav_seccion color_primario scale">
+                <i class="fa-solid fa-user-shield"></i>
+                <span>Roles Globales</span>
+            </a>
+        </div>
+    </section>
+
+
+    {# --- BLOQUE 3: MAESTROS DE INVENTARIO --- #}
+    <section class="barra_lateral__seccion">
+        <div class="barra_lateral__modulo" data-toggle="modulo">
+            <a href="{% url 'core_admin:ruta_catalogo_global' %}" class="barra_lateral__modulo_nombre fs_nav_seccion color_primario scale">
+                <i class="fa-solid fa-globe"></i>
+                <span>Catálogo Global</span>
+            </a>
+        </div>
+    </section>
+
+
+    {# --- BLOQUE 4: TAXONOMÍAS (Auxiliares) --- #}
+    <section class="barra_lateral__seccion">
+        <div class="barra_lateral__modulo" data-toggle="modulo">
+            <a class="barra_lateral__modulo_nombre fs_nav_seccion color_primario scale">
+                <i class="fa-solid fa-tags"></i>
+                <span>Taxonomías</span>
+            </a>
+            <i class="fa-solid fa-chevron-down color_primario barra_lateral__flecha_modulo"></i>
+        </div>
+        
+        {# Submenú desplegable para agrupar los auxiliares #}
+        <ul class="barra_lateral__lista_opciones oculto">
+            <li class="fondo_opcion_nav hover_color">
+                <a class="color_primario fs_nav_opcion" href="{% url 'core_admin:ruta_lista_marcas' %}">
+                    <i class="fa-solid fa-tag color_naranjo_claro"></i>
+                    Marcas
+                </a>
+            </li>
+            <li class="fondo_opcion_nav hover_color">
+                <a class="color_primario fs_nav_opcion" href="{% url 'core_admin:ruta_lista_categorias' %}">
+                    <i class="fa-solid fa-layer-group color_naranjo_claro"></i>
+                    Categorías
+                </a>
+            </li>
+        </ul>
+    </section>
+
+</nav>
