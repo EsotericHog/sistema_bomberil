@@ -56,12 +56,65 @@ class GrupoSanguineo(models.Model):
 
 class Medicamento(models.Model):
     """(Global) Catálogo de medicamentos comunes"""
-    nombre = models.CharField(verbose_name="Nombre", unique=True, max_length=100)
+
+    # --- Opciones (Choices) ---
+    class Unidades(models.TextChoices):
+        MG = 'mg', 'mg (Miligramos)'
+        ML = 'ml', 'ml (Mililitros)'
+        GR = 'gr', 'gr (Gramos)'
+        MCG = 'mcg', 'mcg (Microgramos)'
+        G_ML = 'g/ml', 'g/ml'
+        MG_ML = 'mg/ml', 'mg/ml'
+        UI = 'ui', 'UI (Unidades Int.)'
+        PORCENTAJE = '%', '% (Porcentaje)'
+        PUFF = 'puff', 'Puff/Inhalación'
+        COMPRIMIDO = 'comp', 'Comprimido(s)'
+        CAPSULA = 'cap', 'Cápsula(s)'
+        GOTAS = 'gotas', 'Gotas'
+        AMPOLLA = 'amp', 'Ampolla'
+        UNIDAD = 'unid', 'Unidad(es)'
+
+    class Riesgo(models.TextChoices):
+        NEUTRO = '', 'Neutro / Sin Alerta'
+        ANTICOAGULANTE = 'ANTICOAGULANTE', 'ANTICOAGULANTE'
+        COAGULANTE = 'COAGULANTE', 'COAGULANTE / HEMOSTÁTICO'
+        ANTIPLAQUETARIO = 'ANTIPLAQUETARIO', 'ANTIPLAQUETARIO'
+
+    # --- Campos Estructurados (Nuevos en BD) ---
+    nombre = models.CharField(
+        verbose_name="Nombre del Fármaco", 
+        max_length=100,
+        help_text="Ej: Paracetamol"
+    )
+    
+    concentracion = models.IntegerField(
+        null=True, 
+        blank=True, 
+        verbose_name="Dosis/Cantidad",
+        help_text="Ej: 500"
+    )
+    
+    # Aquí se guardará el código corto ('mg', 'ml', etc.)
+    unidad = models.CharField(
+        max_length=10, 
+        choices=Unidades.choices, 
+        default=Unidades.MG,
+        verbose_name="Unidad"
+    )
+
+    clasificacion_riesgo = models.CharField(
+        verbose_name="Clasificación de Riesgo",
+        max_length=20,
+        choices=Riesgo.choices,
+        blank=True, default=''
+    )
 
     class Meta:
         verbose_name = "Medicamento"
         verbose_name_plural = "Medicamentos"
-        ordering = ['nombre']
+        ordering = ['nombre', 'concentracion']
+        # Evitamos duplicados lógicos (Ej: Paracetamol 500 mg vs Paracetamol 500 mg)
+        unique_together = ['nombre', 'concentracion', 'unidad', 'clasificacion_riesgo']
 
         default_permissions = []
         permissions = [
@@ -73,6 +126,44 @@ class Medicamento(models.Model):
 
     def __str__(self):
         return self.nombre
+
+    def save(self, *args, **kwargs):
+        """
+        Sobrescribimos save para construir automáticamente el string 'nombre'.
+        Esto elimina la necesidad de hacerlo en el formulario.
+        """
+        # 1. Construcción base: "Paracetamol 500 mg"
+        if self.concentracion:
+            final_str = f"{self.nombre.strip()} {self.concentracion} {self.unidad}"
+        else:
+            final_str = self.nombre.strip()
+
+        # 2. Agregar etiqueta de riesgo: "... [ANTICOAGULANTE]"
+        if self.clasificacion_riesgo:
+            final_str = f"{final_str} [{self.clasificacion_riesgo}]"
+
+        self.nombre = final_str
+        super().save(*args, **kwargs)
+
+    @property
+    def nombre_completo(self):
+        """Construye el nombre al vuelo cada vez que se pide."""
+        # 1. Base
+        partes = [self.nombre.title()]
+        
+        # 2. Dosis (Si existe)
+        if self.concentracion:
+            partes.append(f"{self.concentracion} {self.unidad}")
+        
+        # 3. Riesgo (Si existe)
+        if self.clasificacion_riesgo:
+            partes.append(f"[{self.clasificacion_riesgo}]")
+            
+        return " ".join(partes)
+
+    def __str__(self):
+        # Usamos la property para la representación
+        return self.nombre_completo
 
 
 

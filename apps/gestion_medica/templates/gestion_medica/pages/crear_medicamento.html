@@ -22,8 +22,11 @@
                         <div class="d-flex">
                             <i class="fas fa-info-circle fa-lg me-3 mt-1"></i>
                             <div>
-                                <h6 class="fs_normal font-bold mb-0">Nombre Automático</h6>
-                                <p class="mb-0 fs_pequena text-muted">El sistema generará el nombre final combinando los datos. <br>Ejemplo: <strong>"Warfarina 5 mg [ANTICOAGULANTE]"</strong>.</p>
+                                <h6 class="fs_normal font-bold mb-0">Catálogo Inteligente</h6>
+                                <p class="mb-0 fs_pequena text-muted">
+                                    Ingresa los datos por separado. El sistema validará que no exista la combinación exacta.
+                                    <br>Ejemplo visual: <strong>"Paracetamol 500 mg"</strong>.
+                                </p>
                             </div>
                         </div>
                     </div>
@@ -31,19 +34,24 @@
                     <form method="post" class="needs-validation" novalidate>
                         {% csrf_token %}
                         
+                        {# 1. NOMBRE DEL FÁRMACO (Antes nombre_base, ahora nombre) #}
                         <div class="mb-4">
-                            <label class="form-label text-muted font-bold fs_normal text-uppercase mb-2">Principio Activo</label>
+                            <label class="form-label text-muted font-bold fs_normal text-uppercase mb-2">Nombre del Fármaco</label>
                             <div class="input-group input-group-lg shadow-sm rounded-pill border input-group-focus-info">
                                 <span class="input-group-text bg-white border-0 text-info-custom ps-4">
                                     <i class="fas fa-capsules"></i>
                                 </span>
-                                {{ form.nombre_base }}
+                                {{ form.nombre }}
                             </div>
-                            {% if form.nombre_base.errors %}
-                                <div class="text-danger fs_pequena mt-1 ms-3 font-bold">{{ form.nombre_base.errors.0 }}</div>
+                            {# Manejo de errores específico para el campo nombre #}
+                            {% if form.nombre.errors %}
+                                <div class="text-danger fs_pequena mt-1 ms-3 font-bold">
+                                    <i class="fas fa-exclamation-circle me-1"></i> {{ form.nombre.errors.0 }}
+                                </div>
                             {% endif %}
                         </div>
 
+                        {# 2. DOSIS Y UNIDAD #}
                         <div class="form-group mb-4">
                             <label class="form-label text-muted font-bold fs_normal text-uppercase mb-2">Dosis / Presentación</label>
                             <div class="input-group shadow-sm rounded-pill overflow-hidden border input-group-focus-info">
@@ -53,8 +61,12 @@
                                 {{ form.concentracion }}
                                 {{ form.unidad }}
                             </div>
+                            {% if form.concentracion.errors %}
+                                <div class="text-danger fs_pequena mt-1 ms-3 font-bold">{{ form.concentracion.errors.0 }}</div>
+                            {% endif %}
                         </div>
 
+                        {# 3. RIESGO #}
                         <div class="form-group mb-4">
                             <label class="form-label text-warning font-bold fs_normal text-uppercase mb-2">
                                 <i class="fas fa-exclamation-triangle me-1"></i> Clasificación Triage
@@ -68,7 +80,7 @@
                             </div>
                         </div>
                     
-
+                        {# ERRORES GENERALES (Aquí saldrá el error de duplicado "Ya existe...") #}
                         {% if form.non_field_errors %}
                             <div class="alert alert-danger rounded-3 shadow-sm mt-4">
                                 <i class="fas fa-exclamation-triangle me-2"></i> 
@@ -112,7 +124,7 @@
 <style>
     /* Efecto Hover para el botón personalizado */
     button[type="submit"]:hover {
-        filter: brightness(90%); /* Oscurece un poco al pasar el mouse */
+        filter: brightness(90%);
         color: white !important;
     }
 
@@ -121,7 +133,7 @@
         border-color: #5dd2e1;
     }
     .form-control:focus, .form-select:focus {
-        border-color: var(--catalog-color);
+        border-color: var(--catalog-color, #36b9cc);
         box-shadow: 0 0 0 0.25rem rgba(54, 185, 204, 0.25);
     }
 </style>
