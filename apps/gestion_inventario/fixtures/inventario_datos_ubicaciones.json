@@ -1,0 +1,172 @@
+[
+{
+  "model": "gestion_inventario.ubicacion",
+  "pk": "192c3ba8-3943-40cd-bd44-3781cef1edcd",
+  "fields": {
+    "nombre": "Bodega Principal",
+    "descripcion": "",
+    "direccion": null,
+    "tipo_ubicacion": 1,
+    "estacion": 2,
+    "imagen": "",
+    "imagen_thumb_medium": "",
+    "imagen_thumb_small": "",
+    "codigo": "E002-U08",
+    "created_at": "2025-12-04T05:33:10.661Z",
+    "updated_at": "2025-12-04T05:33:10.661Z"
+  }
+},
+{
+  "model": "gestion_inventario.ubicacion",
+  "pk": "33deb9d9-15b4-4b62-b9bb-3323824390b3",
+  "fields": {
+    "nombre": "Unidad R2",
+    "descripcion": "Unidad de rescate",
+    "direccion": null,
+    "tipo_ubicacion": 2,
+    "estacion": 2,
+    "imagen": "",
+    "imagen_thumb_medium": "",
+    "imagen_thumb_small": "",
+    "codigo": "E002-U10",
+    "created_at": "2025-12-04T06:02:15.069Z",
+    "updated_at": "2025-12-04T06:02:15.069Z"
+  }
+},
+{
+  "model": "gestion_inventario.ubicacion",
+  "pk": "9b50387e-aa75-45e4-b075-21c119c8dc90",
+  "fields": {
+    "nombre": "Sala de Estar",
+    "descripcion": "",
+    "direccion": null,
+    "tipo_ubicacion": 1,
+    "estacion": 2,
+    "imagen": "",
+    "imagen_thumb_medium": "",
+    "imagen_thumb_small": "",
+    "codigo": "E002-U04",
+    "created_at": "2025-12-04T05:23:40.922Z",
+    "updated_at": "2025-12-04T05:23:40.922Z"
+  }
+},
+{
+  "model": "gestion_inventario.ubicacion",
+  "pk": "9bfc04a3-2279-4936-be83-d354df00b276",
+  "fields": {
+    "nombre": "Central de Comunicaciones",
+    "descripcion": "",
+    "direccion": null,
+    "tipo_ubicacion": 1,
+    "estacion": 2,
+    "imagen": "",
+    "imagen_thumb_medium": "",
+    "imagen_thumb_small": "",
+    "codigo": "E002-U05",
+    "created_at": "2025-12-04T05:26:58.603Z",
+    "updated_at": "2025-12-04T05:26:58.603Z"
+  }
+},
+{
+  "model": "gestion_inventario.ubicacion",
+  "pk": "a9b91b0c-ea2a-4110-8bb6-66ab299ba8e6",
+  "fields": {
+    "nombre": "Sala de Reuniones",
+    "descripcion": "",
+    "direccion": null,
+    "tipo_ubicacion": 1,
+    "estacion": 2,
+    "imagen": "",
+    "imagen_thumb_medium": "",
+    "imagen_thumb_small": "",
+    "codigo": "E002-U06",
+    "created_at": "2025-12-04T05:28:12.285Z",
+    "updated_at": "2025-12-04T05:28:12.285Z"
+  }
+},
+{
+  "model": "gestion_inventario.ubicacion",
+  "pk": "b6dbdcef-492c-49e2-9eb9-adf06683628c",
+  "fields": {
+    "nombre": "Oficina del Capitán",
+    "descripcion": "",
+    "direccion": null,
+    "tipo_ubicacion": 1,
+    "estacion": 2,
+    "imagen": "",
+    "imagen_thumb_medium": "",
+    "imagen_thumb_small": "",
+    "codigo": "E002-U03",
+    "created_at": "2025-12-04T05:20:51.268Z",
+    "updated_at": "2025-12-04T05:20:51.268Z"
+  }
+},
+{
+  "model": "gestion_inventario.ubicacion",
+  "pk": "b8ae2c4a-38d8-428c-bd40-e74d211808e4",
+  "fields": {
+    "nombre": "Sala de Máquinas",
+    "descripcion": "",
+    "direccion": null,
+    "tipo_ubicacion": 1,
+    "estacion": 2,
+    "imagen": "",
+    "imagen_thumb_medium": "",
+    "imagen_thumb_small": "",
+    "codigo": "E002-U01",
+    "created_at": "2025-12-04T05:16:20.220Z",
+    "updated_at": "2025-12-04T05:16:20.220Z"
+  }
+},
+{
+  "model": "gestion_inventario.ubicacion",
+  "pk": "d8f5e37a-87b3-4fdd-bdab-7819144aac49",
+  "fields": {
+    "nombre": "Entrada Principal",
+    "descripcion": "",
+    "direccion": null,
+    "tipo_ubicacion": 1,
+    "estacion": 2,
+    "imagen": "",
+    "imagen_thumb_medium": "",
+    "imagen_thumb_small": "",
+    "codigo": "E002-U02",
+    "created_at": "2025-12-04T05:20:35.881Z",
+    "updated_at": "2025-12-04T05:20:35.881Z"
+  }
+},
+{
+  "model": "gestion_inventario.ubicacion",
+  "pk": "f934379f-d0b9-44ec-8b5f-e571d0a19777",
+  "fields": {
+    "nombre": "Unidad B2",
+    "descripcion": "Unidad de agua",
+    "direccion": null,
+    "tipo_ubicacion": 2,
+    "estacion": 2,
+    "imagen": "",
+    "imagen_thumb_medium": "",
+    "imagen_thumb_small": "",
+    "codigo": "E002-U09",
+    "created_at": "2025-12-04T05:58:50.243Z",
+    "updated_at": "2025-12-04T06:01:30.241Z"
+  }
+},
+{
+  "model": "gestion_inventario.ubicacion",
+  "pk": "ffe36172-7c78-4d43-bc5f-d02542dad781",
+  "fields": {
+    "nombre": "Patio",
+    "descripcion": "",
+    "direccion": null,
+    "tipo_ubicacion": 1,
+    "estacion": 2,
+    "imagen": "",
+    "imagen_thumb_medium": "",
+    "imagen_thumb_small": "",
+    "codigo": "E002-U07",
+    "created_at": "2025-12-04T05:30:54.090Z",
+    "updated_at": "2025-12-04T05:30:54.090Z"
+  }
+}
+]

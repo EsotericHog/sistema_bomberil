@@ -1,0 +1,146 @@
+[
+{
+  "model": "gestion_inventario.marca",
+  "pk": 1,
+  "fields": {
+    "nombre": "Scott",
+    "descripcion": null
+  }
+},
+{
+  "model": "gestion_inventario.marca",
+  "pk": 2,
+  "fields": {
+    "nombre": "Motorola",
+    "descripcion": null
+  }
+},
+{
+  "model": "gestion_inventario.marca",
+  "pk": 3,
+  "fields": {
+    "nombre": "QuadraFog",
+    "descripcion": null
+  }
+},
+{
+  "model": "gestion_inventario.marca",
+  "pk": 4,
+  "fields": {
+    "nombre": "Holmatro",
+    "descripcion": null
+  }
+},
+{
+  "model": "gestion_inventario.marca",
+  "pk": 5,
+  "fields": {
+    "nombre": "Renault",
+    "descripcion": null
+  }
+},
+{
+  "model": "gestion_inventario.marca",
+  "pk": 6,
+  "fields": {
+    "nombre": "Husqvarna",
+    "descripcion": null
+  }
+},
+{
+  "model": "gestion_inventario.marca",
+  "pk": 7,
+  "fields": {
+    "nombre": "Cardiac Science",
+    "descripcion": null
+  }
+},
+{
+  "model": "gestion_inventario.marca",
+  "pk": 8,
+  "fields": {
+    "nombre": "Flir",
+    "descripcion": null
+  }
+},
+{
+  "model": "gestion_inventario.marca",
+  "pk": 9,
+  "fields": {
+    "nombre": "Protek",
+    "descripcion": null
+  }
+},
+{
+  "model": "gestion_inventario.marca",
+  "pk": 10,
+  "fields": {
+    "nombre": "Stihl",
+    "descripcion": null
+  }
+},
+{
+  "model": "gestion_inventario.marca",
+  "pk": 11,
+  "fields": {
+    "nombre": "Halux",
+    "descripcion": null
+  }
+},
+{
+  "model": "gestion_inventario.marca",
+  "pk": 12,
+  "fields": {
+    "nombre": "DragonFire",
+    "descripcion": null
+  }
+},
+{
+  "model": "gestion_inventario.marca",
+  "pk": 13,
+  "fields": {
+    "nombre": "Firecraft",
+    "descripcion": null
+  }
+},
+{
+  "model": "gestion_inventario.marca",
+  "pk": 14,
+  "fields": {
+    "nombre": "Cestus",
+    "descripcion": null
+  }
+},
+{
+  "model": "gestion_inventario.marca",
+  "pk": 15,
+  "fields": {
+    "nombre": "Boche",
+    "descripcion": null
+  }
+},
+{
+  "model": "gestion_inventario.marca",
+  "pk": 16,
+  "fields": {
+    "nombre": "Husky",
+    "descripcion": ""
+  }
+},
+{
+  "model": "gestion_inventario.marca",
+  "pk": 17,
+  "fields": {
+    "nombre": "Harden",
+    "descripcion": ""
+  }
+},
+{
+  "model": "gestion_inventario.marca",
+  "pk": 18,
+  "fields": {
+    "nombre": "Rosenbauer",
+    "descripcion": ""
+  }
+}
+]

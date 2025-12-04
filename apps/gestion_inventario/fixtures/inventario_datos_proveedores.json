@@ -1,0 +1,102 @@
+[
+    {
+  "model": "gestion_inventario.proveedor",
+  "pk": 1,
+  "fields": {
+    "nombre": "Carlos Alberto Ramirez Garrido",
+    "rut": "14567178-1",
+    "giro_comercial": null,
+    "contacto_principal": 1,
+    "estacion_creadora": null
+  }
+},
+{
+  "model": "gestion_inventario.proveedor",
+  "pk": 2,
+  "fields": {
+    "nombre": "Ronald Cristian Morris Cofré",
+    "rut": "14987297-K",
+    "giro_comercial": null,
+    "contacto_principal": 2,
+    "estacion_creadora": null
+  }
+},
+{
+  "model": "gestion_inventario.proveedor",
+  "pk": 3,
+  "fields": {
+    "nombre": "Enzio Esteban Cerda Vizcarra",
+    "rut": "20668925-2",
+    "giro_comercial": null,
+    "contacto_principal": 3,
+    "estacion_creadora": null
+  }
+},
+{
+  "model": "gestion_inventario.proveedor",
+  "pk": 4,
+  "fields": {
+    "nombre": "Cuerpo de Bomberos de Iquique",
+    "rut": "81816400-9",
+    "giro_comercial": null,
+    "contacto_principal": 4,
+    "estacion_creadora": null
+  }
+},
+{
+  "model": "gestion_inventario.contactoproveedor",
+  "pk": 1,
+  "fields": {
+    "proveedor": 1,
+    "nombre_contacto": "Contacto Principal",
+    "direccion": "AV ASI DE ESTA MANERA 1234",
+    "comuna": 5,
+    "telefono": "945886737",
+    "email": null,
+    "notas": null,
+    "estacion_especifica": null
+  }
+},
+{
+  "model": "gestion_inventario.contactoproveedor",
+  "pk": 2,
+  "fields": {
+    "proveedor": 2,
+    "nombre_contacto": "Contacto Principal",
+    "direccion": "PASAJE LIMONARES 830",
+    "comuna": 6,
+    "telefono": "976559501",
+    "email": null,
+    "notas": null,
+    "estacion_especifica": null
+  }
+},
+{
+  "model": "gestion_inventario.contactoproveedor",
+  "pk": 3,
+  "fields": {
+    "proveedor": 3,
+    "nombre_contacto": "Contacto Principal",
+    "direccion": "AV MANZANA 345",
+    "comuna": 7,
+    "telefono": "957233758",
+    "email": null,
+    "notas": null,
+    "estacion_especifica": null
+  }
+},
+{
+  "model": "gestion_inventario.contactoproveedor",
+  "pk": 4,
+  "fields": {
+    "proveedor": 4,
+    "nombre_contacto": "Oficina Central",
+    "direccion": "BOLÍVAR 414",
+    "comuna": 8,
+    "telefono": "57413166",
+    "email": null,
+    "notas": null,
+    "estacion_especifica": null
+  }
+}
+]

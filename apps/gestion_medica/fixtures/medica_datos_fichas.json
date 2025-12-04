@@ -1,0 +1,47 @@
+[
+{
+  "model": "gestion_medica.fichamedica",
+  "pk": "49e42ff2-3093-4d05-8320-d40750c60f3a",
+  "fields": {
+    "peso_kg": "60.20",
+    "altura_mts": "1.68",
+    "presion_arterial_sistolica": 120,
+    "presion_arterial_diastolica": 80,
+    "grupo_sanguineo": 2,
+    "sistema_salud": 2,
+    "observaciones_generales": "",
+    "fecha_creacion": "2025-12-04T09:58:02.795Z",
+    "fecha_modificacion": "2025-12-04T10:12:34.200Z"
+  }
+},
+{
+  "model": "gestion_medica.fichamedica",
+  "pk": "6df3a8e2-d20c-439f-9be7-09e2deff2afe",
+  "fields": {
+    "peso_kg": "71.00",
+    "altura_mts": "1.74",
+    "presion_arterial_sistolica": 100,
+    "presion_arterial_diastolica": 70,
+    "grupo_sanguineo": 8,
+    "sistema_salud": 1,
+    "observaciones_generales": "",
+    "fecha_creacion": "2025-12-04T09:58:57.187Z",
+    "fecha_modificacion": "2025-12-04T10:14:06.926Z"
+  }
+},
+{
+  "model": "gestion_medica.fichamedica",
+  "pk": "f8afd9ef-4995-4f15-8e69-a090c15782f3",
+  "fields": {
+    "peso_kg": "78.40",
+    "altura_mts": "1.80",
+    "presion_arterial_sistolica": 110,
+    "presion_arterial_diastolica": 80,
+    "grupo_sanguineo": 6,
+    "sistema_salud": 1,
+    "observaciones_generales": "",
+    "fecha_creacion": "2025-12-04T09:55:43.758Z",
+    "fecha_modificacion": "2025-12-04T10:13:28.940Z"
+  }
+}
+]

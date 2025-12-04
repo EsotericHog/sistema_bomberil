@@ -1,0 +1,1299 @@
+[
+{
+  "model": "gestion_medica.sistemasalud",
+  "pk": 1,
+  "fields": {
+    "nombre": "FONASA - Tramo A"
+  }
+},
+{
+  "model": "gestion_medica.sistemasalud",
+  "pk": 2,
+  "fields": {
+    "nombre": "FONASA - Tramo B"
+  }
+},
+{
+  "model": "gestion_medica.sistemasalud",
+  "pk": 3,
+  "fields": {
+    "nombre": "FONASA - Tramo C"
+  }
+},
+{
+  "model": "gestion_medica.sistemasalud",
+  "pk": 4,
+  "fields": {
+    "nombre": "FONASA - Tramo D"
+  }
+},
+{
+  "model": "gestion_medica.sistemasalud",
+  "pk": 5,
+  "fields": {
+    "nombre": "Isapre Banmédica"
+  }
+},
+{
+  "model": "gestion_medica.sistemasalud",
+  "pk": 6,
+  "fields": {
+    "nombre": "Isapre Colmena"
+  }
+},
+{
+  "model": "gestion_medica.sistemasalud",
+  "pk": 7,
+  "fields": {
+    "nombre": "Isapre Consalud"
+  }
+},
+{
+  "model": "gestion_medica.sistemasalud",
+  "pk": 8,
+  "fields": {
+    "nombre": "Isapre Cruz Blanca"
+  }
+},
+{
+  "model": "gestion_medica.sistemasalud",
+  "pk": 9,
+  "fields": {
+    "nombre": "Isapre Esencial"
+  }
+},
+{
+  "model": "gestion_medica.sistemasalud",
+  "pk": 10,
+  "fields": {
+    "nombre": "Isapre Nueva Masvida"
+  }
+},
+{
+  "model": "gestion_medica.sistemasalud",
+  "pk": 11,
+  "fields": {
+    "nombre": "Isapre Vida Tres"
+  }
+},
+{
+  "model": "gestion_medica.sistemasalud",
+  "pk": 12,
+  "fields": {
+    "nombre": "DIPRECA (Carabineros/PDI)"
+  }
+},
+{
+  "model": "gestion_medica.sistemasalud",
+  "pk": 13,
+  "fields": {
+    "nombre": "CAPREDENA (FF.AA.)"
+  }
+},
+{
+  "model": "gestion_medica.sistemasalud",
+  "pk": 14,
+  "fields": {
+    "nombre": "Particular / Sin Previsión"
+  }
+},
+{
+  "model": "gestion_medica.gruposanguineo",
+  "pk": 1,
+  "fields": {
+    "nombre": "A+"
+  }
+},
+{
+  "model": "gestion_medica.gruposanguineo",
+  "pk": 2,
+  "fields": {
+    "nombre": "A-"
+  }
+},
+{
+  "model": "gestion_medica.gruposanguineo",
+  "pk": 3,
+  "fields": {
+    "nombre": "B+"
+  }
+},
+{
+  "model": "gestion_medica.gruposanguineo",
+  "pk": 4,
+  "fields": {
+    "nombre": "B-"
+  }
+},
+{
+  "model": "gestion_medica.gruposanguineo",
+  "pk": 5,
+  "fields": {
+    "nombre": "AB+"
+  }
+},
+{
+  "model": "gestion_medica.gruposanguineo",
+  "pk": 6,
+  "fields": {
+    "nombre": "AB-"
+  }
+},
+{
+  "model": "gestion_medica.gruposanguineo",
+  "pk": 7,
+  "fields": {
+    "nombre": "O+"
+  }
+},
+{
+  "model": "gestion_medica.gruposanguineo",
+  "pk": 8,
+  "fields": {
+    "nombre": "O-"
+  }
+},
+{
+  "model": "gestion_medica.medicamento",
+  "pk": 1,
+  "fields": {
+    "nombre": "Paracetamol",
+    "concentracion": null,
+    "unidad": "mg",
+    "clasificacion_riesgo": ""
+  }
+},
+{
+  "model": "gestion_medica.medicamento",
+  "pk": 2,
+  "fields": {
+    "nombre": "Ibuprofeno",
+    "concentracion": null,
+    "unidad": "mg",
+    "clasificacion_riesgo": ""
+  }
+},
+{
+  "model": "gestion_medica.medicamento",
+  "pk": 3,
+  "fields": {
+    "nombre": "Ketorolaco",
+    "concentracion": null,
+    "unidad": "mg",
+    "clasificacion_riesgo": ""
+  }
+},
+{
+  "model": "gestion_medica.medicamento",
+  "pk": 4,
+  "fields": {
+    "nombre": "Naproxeno",
+    "concentracion": null,
+    "unidad": "mg",
+    "clasificacion_riesgo": ""
+  }
+},
+{
+  "model": "gestion_medica.medicamento",
+  "pk": 5,
+  "fields": {
+    "nombre": "Diclofenaco",
+    "concentracion": null,
+    "unidad": "mg",
+    "clasificacion_riesgo": ""
+  }
+},
+{
+  "model": "gestion_medica.medicamento",
+  "pk": 6,
+  "fields": {
+    "nombre": "Ácido Acetilsalicílico",
+    "concentracion": null,
+    "unidad": "mg",
+    "clasificacion_riesgo": ""
+  }
+},
+{
+  "model": "gestion_medica.medicamento",
+  "pk": 7,
+  "fields": {
+    "nombre": "Tramadol",
+    "concentracion": null,
+    "unidad": "mg",
+    "clasificacion_riesgo": ""
+  }
+},
+{
+  "model": "gestion_medica.medicamento",
+  "pk": 8,
+  "fields": {
+    "nombre": "Celecoxib",
+    "concentracion": null,
+    "unidad": "mg",
+    "clasificacion_riesgo": ""
+  }
+},
+{
+  "model": "gestion_medica.medicamento",
+  "pk": 9,
+  "fields": {
+    "nombre": "Metamizol Sódico",
+    "concentracion": null,
+    "unidad": "mg",
+    "clasificacion_riesgo": ""
+  }
+},
+{
+  "model": "gestion_medica.medicamento",
+  "pk": 10,
+  "fields": {
+    "nombre": "Amoxicilina",
+    "concentracion": null,
+    "unidad": "mg",
+    "clasificacion_riesgo": ""
+  }
+},
+{
+  "model": "gestion_medica.medicamento",
+  "pk": 11,
+  "fields": {
+    "nombre": "Azitromicina",
+    "concentracion": null,
+    "unidad": "mg",
+    "clasificacion_riesgo": ""
+  }
+},
+{
+  "model": "gestion_medica.medicamento",
+  "pk": 12,
+  "fields": {
+    "nombre": "Ciprofloxacino",
+    "concentracion": null,
+    "unidad": "mg",
+    "clasificacion_riesgo": ""
+  }
+},
+{
+  "model": "gestion_medica.medicamento",
+  "pk": 13,
+  "fields": {
+    "nombre": "Cefalexina",
+    "concentracion": null,
+    "unidad": "mg",
+    "clasificacion_riesgo": ""
+  }
+},
+{
+  "model": "gestion_medica.medicamento",
+  "pk": 14,
+  "fields": {
+    "nombre": "Aciclovir",
+    "concentracion": null,
+    "unidad": "mg",
+    "clasificacion_riesgo": ""
+  }
+},
+{
+  "model": "gestion_medica.medicamento",
+  "pk": 15,
+  "fields": {
+    "nombre": "Clotrimazol",
+    "concentracion": null,
+    "unidad": "mg",
+    "clasificacion_riesgo": ""
+  }
+},
+{
+  "model": "gestion_medica.medicamento",
+  "pk": 16,
+  "fields": {
+    "nombre": "Fluconazol",
+    "concentracion": null,
+    "unidad": "mg",
+    "clasificacion_riesgo": ""
+  }
+},
+{
+  "model": "gestion_medica.medicamento",
+  "pk": 17,
+  "fields": {
+    "nombre": "Losartán",
+    "concentracion": null,
+    "unidad": "mg",
+    "clasificacion_riesgo": ""
+  }
+},
+{
+  "model": "gestion_medica.medicamento",
+  "pk": 18,
+  "fields": {
+    "nombre": "Enalapril",
+    "concentracion": null,
+    "unidad": "mg",
+    "clasificacion_riesgo": ""
+  }
+},
+{
+  "model": "gestion_medica.medicamento",
+  "pk": 19,
+  "fields": {
+    "nombre": "Metformina",
+    "concentracion": null,
+    "unidad": "mg",
+    "clasificacion_riesgo": ""
+  }
+},
+{
+  "model": "gestion_medica.medicamento",
+  "pk": 20,
+  "fields": {
+    "nombre": "Insulina",
+    "concentracion": null,
+    "unidad": "unid",
+    "clasificacion_riesgo": ""
+  }
+},
+{
+  "model": "gestion_medica.medicamento",
+  "pk": 21,
+  "fields": {
+    "nombre": "Atorvastatina",
+    "concentracion": null,
+    "unidad": "mg",
+    "clasificacion_riesgo": ""
+  }
+},
+{
+  "model": "gestion_medica.medicamento",
+  "pk": 22,
+  "fields": {
+    "nombre": "Levotiroxina",
+    "concentracion": null,
+    "unidad": "mcg",
+    "clasificacion_riesgo": ""
+  }
+},
+{
+  "model": "gestion_medica.medicamento",
+  "pk": 23,
+  "fields": {
+    "nombre": "Furosemida",
+    "concentracion": null,
+    "unidad": "mg",
+    "clasificacion_riesgo": ""
+  }
+},
+{
+  "model": "gestion_medica.medicamento",
+  "pk": 24,
+  "fields": {
+    "nombre": "Hidroclorotiazida",
+    "concentracion": null,
+    "unidad": "mg",
+    "clasificacion_riesgo": ""
+  }
+},
+{
+  "model": "gestion_medica.medicamento",
+  "pk": 25,
+  "fields": {
+    "nombre": "Espironolactona",
+    "concentracion": null,
+    "unidad": "mg",
+    "clasificacion_riesgo": ""
+  }
+},
+{
+  "model": "gestion_medica.medicamento",
+  "pk": 26,
+  "fields": {
+    "nombre": "Omeprazol",
+    "concentracion": null,
+    "unidad": "mg",
+    "clasificacion_riesgo": ""
+  }
+},
+{
+  "model": "gestion_medica.medicamento",
+  "pk": 27,
+  "fields": {
+    "nombre": "Esomeprazol",
+    "concentracion": null,
+    "unidad": "mg",
+    "clasificacion_riesgo": ""
+  }
+},
+{
+  "model": "gestion_medica.medicamento",
+  "pk": 28,
+  "fields": {
+    "nombre": "Lansoprazol",
+    "concentracion": null,
+    "unidad": "mg",
+    "clasificacion_riesgo": ""
+  }
+},
+{
+  "model": "gestion_medica.medicamento",
+  "pk": 29,
+  "fields": {
+    "nombre": "Famotidina",
+    "concentracion": null,
+    "unidad": "mg",
+    "clasificacion_riesgo": ""
+  }
+},
+{
+  "model": "gestion_medica.medicamento",
+  "pk": 30,
+  "fields": {
+    "nombre": "Domperidona",
+    "concentracion": null,
+    "unidad": "mg",
+    "clasificacion_riesgo": ""
+  }
+},
+{
+  "model": "gestion_medica.medicamento",
+  "pk": 31,
+  "fields": {
+    "nombre": "Pargeverina",
+    "concentracion": null,
+    "unidad": "mg",
+    "clasificacion_riesgo": ""
+  }
+},
+{
+  "model": "gestion_medica.medicamento",
+  "pk": 32,
+  "fields": {
+    "nombre": "Clorfenamina",
+    "concentracion": null,
+    "unidad": "mg",
+    "clasificacion_riesgo": ""
+  }
+},
+{
+  "model": "gestion_medica.medicamento",
+  "pk": 33,
+  "fields": {
+    "nombre": "Loratadina",
+    "concentracion": null,
+    "unidad": "mg",
+    "clasificacion_riesgo": ""
+  }
+},
+{
+  "model": "gestion_medica.medicamento",
+  "pk": 34,
+  "fields": {
+    "nombre": "Desloratadina",
+    "concentracion": null,
+    "unidad": "mg",
+    "clasificacion_riesgo": ""
+  }
+},
+{
+  "model": "gestion_medica.medicamento",
+  "pk": 35,
+  "fields": {
+    "nombre": "Salbutamol",
+    "concentracion": null,
+    "unidad": "puff",
+    "clasificacion_riesgo": ""
+  }
+},
+{
+  "model": "gestion_medica.medicamento",
+  "pk": 36,
+  "fields": {
+    "nombre": "Prednisona",
+    "concentracion": null,
+    "unidad": "mg",
+    "clasificacion_riesgo": ""
+  }
+},
+{
+  "model": "gestion_medica.medicamento",
+  "pk": 37,
+  "fields": {
+    "nombre": "Betametasona",
+    "concentracion": null,
+    "unidad": "mg",
+    "clasificacion_riesgo": ""
+  }
+},
+{
+  "model": "gestion_medica.medicamento",
+  "pk": 38,
+  "fields": {
+    "nombre": "Budesonida",
+    "concentracion": null,
+    "unidad": "mg",
+    "clasificacion_riesgo": ""
+  }
+},
+{
+  "model": "gestion_medica.medicamento",
+  "pk": 39,
+  "fields": {
+    "nombre": "Warfarina",
+    "concentracion": null,
+    "unidad": "mg",
+    "clasificacion_riesgo": "ANTICOAGULANTE"
+  }
+},
+{
+  "model": "gestion_medica.medicamento",
+  "pk": 40,
+  "fields": {
+    "nombre": "Acenocumarol",
+    "concentracion": null,
+    "unidad": "mg",
+    "clasificacion_riesgo": "ANTICOAGULANTE"
+  }
+},
+{
+  "model": "gestion_medica.medicamento",
+  "pk": 41,
+  "fields": {
+    "nombre": "Heparina",
+    "concentracion": null,
+    "unidad": "ui",
+    "clasificacion_riesgo": "ANTICOAGULANTE"
+  }
+},
+{
+  "model": "gestion_medica.medicamento",
+  "pk": 42,
+  "fields": {
+    "nombre": "Clopidogrel",
+    "concentracion": null,
+    "unidad": "mg",
+    "clasificacion_riesgo": "ANTIPLAQUETARIO"
+  }
+},
+{
+  "model": "gestion_medica.medicamento",
+  "pk": 43,
+  "fields": {
+    "nombre": "Rivaroxaban",
+    "concentracion": null,
+    "unidad": "mg",
+    "clasificacion_riesgo": "ANTICOAGULANTE"
+  }
+},
+{
+  "model": "gestion_medica.medicamento",
+  "pk": 44,
+  "fields": {
+    "nombre": "Zopiclona",
+    "concentracion": null,
+    "unidad": "mg",
+    "clasificacion_riesgo": ""
+  }
+},
+{
+  "model": "gestion_medica.medicamento",
+  "pk": 45,
+  "fields": {
+    "nombre": "Clonazepam",
+    "concentracion": null,
+    "unidad": "mg",
+    "clasificacion_riesgo": ""
+  }
+},
+{
+  "model": "gestion_medica.medicamento",
+  "pk": 46,
+  "fields": {
+    "nombre": "Diazepam",
+    "concentracion": null,
+    "unidad": "mg",
+    "clasificacion_riesgo": ""
+  }
+},
+{
+  "model": "gestion_medica.medicamento",
+  "pk": 47,
+  "fields": {
+    "nombre": "Alprazolam",
+    "concentracion": null,
+    "unidad": "mg",
+    "clasificacion_riesgo": ""
+  }
+},
+{
+  "model": "gestion_medica.medicamento",
+  "pk": 48,
+  "fields": {
+    "nombre": "Lorazepam",
+    "concentracion": null,
+    "unidad": "mg",
+    "clasificacion_riesgo": ""
+  }
+},
+{
+  "model": "gestion_medica.medicamento",
+  "pk": 49,
+  "fields": {
+    "nombre": "Sertralina",
+    "concentracion": null,
+    "unidad": "mg",
+    "clasificacion_riesgo": ""
+  }
+},
+{
+  "model": "gestion_medica.medicamento",
+  "pk": 50,
+  "fields": {
+    "nombre": "Fluoxetina",
+    "concentracion": null,
+    "unidad": "mg",
+    "clasificacion_riesgo": ""
+  }
+},
+{
+  "model": "gestion_medica.medicamento",
+  "pk": 51,
+  "fields": {
+    "nombre": "Escitalopram",
+    "concentracion": null,
+    "unidad": "mg",
+    "clasificacion_riesgo": ""
+  }
+},
+{
+  "model": "gestion_medica.medicamento",
+  "pk": 52,
+  "fields": {
+    "nombre": "Amitriptilina",
+    "concentracion": null,
+    "unidad": "mg",
+    "clasificacion_riesgo": ""
+  }
+},
+{
+  "model": "gestion_medica.medicamento",
+  "pk": 53,
+  "fields": {
+    "nombre": "Quetiapina",
+    "concentracion": null,
+    "unidad": "mg",
+    "clasificacion_riesgo": ""
+  }
+},
+{
+  "model": "gestion_medica.medicamento",
+  "pk": 54,
+  "fields": {
+    "nombre": "Risperidona",
+    "concentracion": null,
+    "unidad": "mg",
+    "clasificacion_riesgo": ""
+  }
+},
+{
+  "model": "gestion_medica.medicamento",
+  "pk": 55,
+  "fields": {
+    "nombre": "Pregabalina",
+    "concentracion": null,
+    "unidad": "mg",
+    "clasificacion_riesgo": ""
+  }
+},
+{
+  "model": "gestion_medica.medicamento",
+  "pk": 56,
+  "fields": {
+    "nombre": "Gabapentina",
+    "concentracion": null,
+    "unidad": "mg",
+    "clasificacion_riesgo": ""
+  }
+},
+{
+  "model": "gestion_medica.medicamento",
+  "pk": 57,
+  "fields": {
+    "nombre": "Carbamazepina",
+    "concentracion": null,
+    "unidad": "mg",
+    "clasificacion_riesgo": ""
+  }
+},
+{
+  "model": "gestion_medica.medicamento",
+  "pk": 58,
+  "fields": {
+    "nombre": "Ácido Valproico",
+    "concentracion": null,
+    "unidad": "mg",
+    "clasificacion_riesgo": ""
+  }
+},
+{
+  "model": "gestion_medica.medicamento",
+  "pk": 59,
+  "fields": {
+    "nombre": "Lamotrigina",
+    "concentracion": null,
+    "unidad": "mg",
+    "clasificacion_riesgo": ""
+  }
+},
+{
+  "model": "gestion_medica.enfermedad",
+  "pk": 1,
+  "fields": {
+    "nombre": "Hipertensión Arterial (HTA)"
+  }
+},
+{
+  "model": "gestion_medica.enfermedad",
+  "pk": 2,
+  "fields": {
+    "nombre": "Diabetes Mellitus Tipo 1"
+  }
+},
+{
+  "model": "gestion_medica.enfermedad",
+  "pk": 3,
+  "fields": {
+    "nombre": "Diabetes Mellitus Tipo 2"
+  }
+},
+{
+  "model": "gestion_medica.enfermedad",
+  "pk": 4,
+  "fields": {
+    "nombre": "Resistencia a la Insulina"
+  }
+},
+{
+  "model": "gestion_medica.enfermedad",
+  "pk": 5,
+  "fields": {
+    "nombre": "Dislipidemia (Colesterol Alto)"
+  }
+},
+{
+  "model": "gestion_medica.enfermedad",
+  "pk": 6,
+  "fields": {
+    "nombre": "Obesidad Mórbida"
+  }
+},
+{
+  "model": "gestion_medica.enfermedad",
+  "pk": 7,
+  "fields": {
+    "nombre": "Hipotiroidismo"
+  }
+},
+{
+  "model": "gestion_medica.enfermedad",
+  "pk": 8,
+  "fields": {
+    "nombre": "Hipertiroidismo"
+  }
+},
+{
+  "model": "gestion_medica.enfermedad",
+  "pk": 9,
+  "fields": {
+    "nombre": "Asma Bronquial"
+  }
+},
+{
+  "model": "gestion_medica.enfermedad",
+  "pk": 10,
+  "fields": {
+    "nombre": "EPOC (Enfermedad Pulmonar Obstructiva Crónica)"
+  }
+},
+{
+  "model": "gestion_medica.enfermedad",
+  "pk": 11,
+  "fields": {
+    "nombre": "Fibrosis Pulmonar"
+  }
+},
+{
+  "model": "gestion_medica.enfermedad",
+  "pk": 12,
+  "fields": {
+    "nombre": "Rinitis Alérgica Crónica"
+  }
+},
+{
+  "model": "gestion_medica.enfermedad",
+  "pk": 13,
+  "fields": {
+    "nombre": "Apnea del Sueño"
+  }
+},
+{
+  "model": "gestion_medica.enfermedad",
+  "pk": 14,
+  "fields": {
+    "nombre": "Arritmia Cardíaca"
+  }
+},
+{
+  "model": "gestion_medica.enfermedad",
+  "pk": 15,
+  "fields": {
+    "nombre": "Insuficiencia Cardíaca"
+  }
+},
+{
+  "model": "gestion_medica.enfermedad",
+  "pk": 16,
+  "fields": {
+    "nombre": "Enfermedad Coronaria"
+  }
+},
+{
+  "model": "gestion_medica.enfermedad",
+  "pk": 17,
+  "fields": {
+    "nombre": "Trombosis Venosa Profunda"
+  }
+},
+{
+  "model": "gestion_medica.enfermedad",
+  "pk": 18,
+  "fields": {
+    "nombre": "Epilepsia"
+  }
+},
+{
+  "model": "gestion_medica.enfermedad",
+  "pk": 19,
+  "fields": {
+    "nombre": "Migraña Crónica"
+  }
+},
+{
+  "model": "gestion_medica.enfermedad",
+  "pk": 20,
+  "fields": {
+    "nombre": "Trastorno Depresivo Mayor"
+  }
+},
+{
+  "model": "gestion_medica.enfermedad",
+  "pk": 21,
+  "fields": {
+    "nombre": "Trastorno de Ansiedad Generalizada"
+  }
+},
+{
+  "model": "gestion_medica.enfermedad",
+  "pk": 22,
+  "fields": {
+    "nombre": "Trastorno Bipolar"
+  }
+},
+{
+  "model": "gestion_medica.enfermedad",
+  "pk": 23,
+  "fields": {
+    "nombre": "Reflujo Gastroesofágico (RGE)"
+  }
+},
+{
+  "model": "gestion_medica.enfermedad",
+  "pk": 24,
+  "fields": {
+    "nombre": "Gastritis Crónica"
+  }
+},
+{
+  "model": "gestion_medica.enfermedad",
+  "pk": 25,
+  "fields": {
+    "nombre": "Colon Irritable (SII)"
+  }
+},
+{
+  "model": "gestion_medica.enfermedad",
+  "pk": 26,
+  "fields": {
+    "nombre": "Celiaquía"
+  }
+},
+{
+  "model": "gestion_medica.enfermedad",
+  "pk": 27,
+  "fields": {
+    "nombre": "Artrosis"
+  }
+},
+{
+  "model": "gestion_medica.enfermedad",
+  "pk": 28,
+  "fields": {
+    "nombre": "Artritis Reumatoide"
+  }
+},
+{
+  "model": "gestion_medica.enfermedad",
+  "pk": 29,
+  "fields": {
+    "nombre": "Lupus Eritematoso Sistémico"
+  }
+},
+{
+  "model": "gestion_medica.enfermedad",
+  "pk": 30,
+  "fields": {
+    "nombre": "Fibromialgia"
+  }
+},
+{
+  "model": "gestion_medica.enfermedad",
+  "pk": 31,
+  "fields": {
+    "nombre": "Hernia Discal / Lumbar"
+  }
+},
+{
+  "model": "gestion_medica.enfermedad",
+  "pk": 32,
+  "fields": {
+    "nombre": "Insuficiencia Renal Crónica"
+  }
+},
+{
+  "model": "gestion_medica.enfermedad",
+  "pk": 33,
+  "fields": {
+    "nombre": "Cálculos Renales (Litiasis)"
+  }
+},
+{
+  "model": "gestion_medica.alergia",
+  "pk": 1,
+  "fields": {
+    "nombre": "Penicilina y derivados"
+  }
+},
+{
+  "model": "gestion_medica.alergia",
+  "pk": 2,
+  "fields": {
+    "nombre": "Sulfa (Sulfonamidas)"
+  }
+},
+{
+  "model": "gestion_medica.alergia",
+  "pk": 3,
+  "fields": {
+    "nombre": "Aspirina (AINEs)"
+  }
+},
+{
+  "model": "gestion_medica.alergia",
+  "pk": 4,
+  "fields": {
+    "nombre": "Cefalosporinas"
+  }
+},
+{
+  "model": "gestion_medica.alergia",
+  "pk": 5,
+  "fields": {
+    "nombre": "Medio de Contraste Yodado"
+  }
+},
+{
+  "model": "gestion_medica.alergia",
+  "pk": 6,
+  "fields": {
+    "nombre": "Anestesia Local (Lidocaína)"
+  }
+},
+{
+  "model": "gestion_medica.alergia",
+  "pk": 7,
+  "fields": {
+    "nombre": "Mariscos (Crustáceos/Moluscos)"
+  }
+},
+{
+  "model": "gestion_medica.alergia",
+  "pk": 8,
+  "fields": {
+    "nombre": "Pescado"
+  }
+},
+{
+  "model": "gestion_medica.alergia",
+  "pk": 9,
+  "fields": {
+    "nombre": "Maní (Cacahuete)"
+  }
+},
+{
+  "model": "gestion_medica.alergia",
+  "pk": 10,
+  "fields": {
+    "nombre": "Nueces y Frutos Secos"
+  }
+},
+{
+  "model": "gestion_medica.alergia",
+  "pk": 11,
+  "fields": {
+    "nombre": "Proteína de Leche de Vaca"
+  }
+},
+{
+  "model": "gestion_medica.alergia",
+  "pk": 12,
+  "fields": {
+    "nombre": "Huevo"
+  }
+},
+{
+  "model": "gestion_medica.alergia",
+  "pk": 13,
+  "fields": {
+    "nombre": "Gluten (Trigo)"
+  }
+},
+{
+  "model": "gestion_medica.alergia",
+  "pk": 14,
+  "fields": {
+    "nombre": "Soya"
+  }
+},
+{
+  "model": "gestion_medica.alergia",
+  "pk": 15,
+  "fields": {
+    "nombre": "Frutillas / Berries"
+  }
+},
+{
+  "model": "gestion_medica.alergia",
+  "pk": 16,
+  "fields": {
+    "nombre": "Plátano Oriental (Polen)"
+  }
+},
+{
+  "model": "gestion_medica.alergia",
+  "pk": 17,
+  "fields": {
+    "nombre": "Pasto / Gramíneas"
+  }
+},
+{
+  "model": "gestion_medica.alergia",
+  "pk": 18,
+  "fields": {
+    "nombre": "Ácaros del Polvo"
+  }
+},
+{
+  "model": "gestion_medica.alergia",
+  "pk": 19,
+  "fields": {
+    "nombre": "Caspa de Animales (Gato/Perro)"
+  }
+},
+{
+  "model": "gestion_medica.alergia",
+  "pk": 20,
+  "fields": {
+    "nombre": "Picadura de Abeja/Avispa"
+  }
+},
+{
+  "model": "gestion_medica.alergia",
+  "pk": 21,
+  "fields": {
+    "nombre": "Látex"
+  }
+},
+{
+  "model": "gestion_medica.alergia",
+  "pk": 22,
+  "fields": {
+    "nombre": "Níquel (Metales)"
+  }
+},
+{
+  "model": "gestion_medica.cirugia",
+  "pk": 1,
+  "fields": {
+    "nombre": "Apendicectomía (Apéndice)"
+  }
+},
+{
+  "model": "gestion_medica.cirugia",
+  "pk": 2,
+  "fields": {
+    "nombre": "Colecistectomía (Vesícula)"
+  }
+},
+{
+  "model": "gestion_medica.cirugia",
+  "pk": 3,
+  "fields": {
+    "nombre": "Hernioplastía Inguinal"
+  }
+},
+{
+  "model": "gestion_medica.cirugia",
+  "pk": 4,
+  "fields": {
+    "nombre": "Hernioplastía Umbilical"
+  }
+},
+{
+  "model": "gestion_medica.cirugia",
+  "pk": 5,
+  "fields": {
+    "nombre": "Manga Gástrica / Bariátrica"
+  }
+},
+{
+  "model": "gestion_medica.cirugia",
+  "pk": 6,
+  "fields": {
+    "nombre": "Bypass Gástrico"
+  }
+},
+{
+  "model": "gestion_medica.cirugia",
+  "pk": 7,
+  "fields": {
+    "nombre": "Cesárea"
+  }
+},
+{
+  "model": "gestion_medica.cirugia",
+  "pk": 8,
+  "fields": {
+    "nombre": "Histerectomía"
+  }
+},
+{
+  "model": "gestion_medica.cirugia",
+  "pk": 9,
+  "fields": {
+    "nombre": "Mastectomía"
+  }
+},
+{
+  "model": "gestion_medica.cirugia",
+  "pk": 10,
+  "fields": {
+    "nombre": "Amigdalectomía"
+  }
+},
+{
+  "model": "gestion_medica.cirugia",
+  "pk": 11,
+  "fields": {
+    "nombre": "Septoplastía (Tabique Nasal)"
+  }
+},
+{
+  "model": "gestion_medica.cirugia",
+  "pk": 12,
+  "fields": {
+    "nombre": "Cirugía Lasik (Ojos)"
+  }
+},
+{
+  "model": "gestion_medica.cirugia",
+  "pk": 13,
+  "fields": {
+    "nombre": "Menisectomía (Meniscos Rodilla)"
+  }
+},
+{
+  "model": "gestion_medica.cirugia",
+  "pk": 14,
+  "fields": {
+    "nombre": "Reconstrucción Ligamento Cruzado (LCA)"
+  }
+},
+{
+  "model": "gestion_medica.cirugia",
+  "pk": 15,
+  "fields": {
+    "nombre": "Reparación Manguito Rotador (Hombro)"
+  }
+},
+{
+  "model": "gestion_medica.cirugia",
+  "pk": 16,
+  "fields": {
+    "nombre": "Laminectomía (Columna)"
+  }
+},
+{
+  "model": "gestion_medica.cirugia",
+  "pk": 17,
+  "fields": {
+    "nombre": "Discectomía (Hernia Discal)"
+  }
+},
+{
+  "model": "gestion_medica.cirugia",
+  "pk": 18,
+  "fields": {
+    "nombre": "Osteosíntesis (Fracturas)"
+  }
+},
+{
+  "model": "gestion_medica.cirugia",
+  "pk": 19,
+  "fields": {
+    "nombre": "Angioplastía (Stent Coronario)"
+  }
+},
+{
+  "model": "gestion_medica.cirugia",
+  "pk": 20,
+  "fields": {
+    "nombre": "Bypass Coronario"
+  }
+},
+{
+  "model": "gestion_medica.cirugia",
+  "pk": 21,
+  "fields": {
+    "nombre": "Marcapasos (Implante)"
+  }
+},
+{
+  "model": "gestion_medica.cirugia",
+  "pk": 22,
+  "fields": {
+    "nombre": "Prostatectomía"
+  }
+},
+{
+  "model": "gestion_medica.cirugia",
+  "pk": 23,
+  "fields": {
+    "nombre": "Vasectomía"
+  }
+},
+{
+  "model": "gestion_medica.cirugia",
+  "pk": 24,
+  "fields": {
+    "nombre": "Circuncisión"
+  }
+}
+]
