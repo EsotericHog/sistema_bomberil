@@ -180,18 +180,28 @@ class FichaMedicaMedicamentoForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         
-        # 1. Si estamos editando, bloqueamos el medicamento
+        # --- 1. CONFIGURACIÓN DEL SELECT (CRÍTICO PARA TOMSELECT) ---
+        
+        # A) Filtramos para mostrar SOLO medicamentos con dosis (oculta plantillas vacías)
+        self.fields['medicamento'].queryset = Medicamento.objects.filter(
+            concentracion__isnull=False
+        ).order_by('nombre')
+
+        # B) Eliminamos la opción "---------" por defecto de Django.
+        # Esto es OBLIGATORIO para que el placeholder "Seleccione un medicamento..." de JS se vea.
+        self.fields['medicamento'].empty_label = None  
+        
+        # --- 2. LÓGICA DE EDICIÓN (RECUPERAR DATOS) ---
         if self.instance and self.instance.pk:
+            # Si editamos, bloqueamos el medicamento para no cambiarlo
             self.fields['medicamento'].disabled = True
             self.fields['medicamento'].widget.attrs['class'] += ' bg-light'
             
-            # 2. RECUPERAR DATOS AL EDITAR
-            # Intentamos separar el string "500 mg cada 8 horas" en sus partes
-            # Formato esperado: "500 mg cada 8 horas (por 7 días)"
+            # Intentamos separar el string "500 mg cada 8 horas" en sus campos
             texto = self.instance.dosis_frecuencia or ""
             
             try:
-                # 1. Separar Dosis de Frecuencia usando la palabra clave " cada "
+                # Separar Dosis de Frecuencia usando la palabra clave " cada "
                 if " cada " in texto:
                     parte_dosis, parte_freq = texto.split(" cada ", 1)
                     
@@ -209,10 +219,10 @@ class FichaMedicaMedicamentoForm(forms.ModelForm):
                         
                         # Si sobran cosas (notas/duración)
                         if len(f_datos) > 2:
-                            # Limpiar paréntesis si los usamos al guardar
+                            # Limpiar paréntesis extra
                             self.fields['duracion'].initial = f_datos[2].replace('(', '').replace(')', '')
                 else:
-                    # Si no cumple el formato nuevo, poner todo en notas para no perderlo
+                    # Si no cumple el formato, poner todo en notas
                     self.fields['duracion'].initial = texto
             except:
                 self.fields['duracion'].initial = texto

@@ -184,54 +184,92 @@
 </div>
 
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        // 1. Limpieza visual de inputs
-        const inputs = document.querySelectorAll('input, select');
-        inputs.forEach(input => {
-            if (!input.classList.contains('select-busqueda')) {
-                input.classList.add('form-control-clean');
+    document.addEventListener("DOMContentLoaded", function() {
+        // Depuración: Verificar que el script arranca
+        console.log("Iniciando TomSelect Local...");
+
+        // 1. OBTENCIÓN DE DATOS (Metadata para colores)
+        // Usamos 'escapejs' para evitar errores de sintaxis con comillas
+        const rawData = '{{ medicamentos_metadata|escapejs }}';
+        let metaData = {};
+        
+        try {
+            if (rawData) {
+                metaData = JSON.parse(rawData);
             }
-        });
+        } catch (e) {
+            console.error("Error al leer metadatos de colores:", e);
+        }
 
-        // 2. CONFIGURACIÓN DEL SELECTOR DE UNIDAD
-        const mapUnits = {{ units_map|safe }}; // Recibe el JSON desde la vista
-        const selectUnidad = document.getElementById('id_unidad');
-        
-        // FORZAMOS EL BLOQUEO VISUAL SIEMPRE (Esté seleccionado algo o no)
-        // Esto oculta la flecha y lo pone gris desde el inicio.
-        selectUnidad.classList.add('select-bloqueado');
-        selectUnidad.classList.remove('form-select');
-        selectUnidad.classList.add('form-control'); // Look de input normal
+        const inputMedicamento = document.getElementById('id_medicamento');
 
-        // Preparamos el input oculto para enviar el dato aunque esté disabled
-        const hiddenId = 'unidad_hidden_input';
-        let hiddenInput = document.createElement('input');
-        hiddenInput.type = 'hidden';
-        hiddenInput.name = 'unidad'; 
-        hiddenInput.id = hiddenId;
-        hiddenInput.value = selectUnidad.value; 
-        selectUnidad.parentNode.appendChild(hiddenInput);
+        if (inputMedicamento) {
+            // Verificar si Django renderizó opciones
+            if (inputMedicamento.options.length === 0) {
+                console.warn("ALERTA: El select está vacío. Verifique que existan medicamentos con dosis en la BD.");
+            }
 
-        // Bloqueo funcional (no se puede cambiar)
-        selectUnidad.disabled = true;
+            new TomSelect(inputMedicamento, {
+                // --- CONFIGURACIÓN PARA SELECT LOCAL ---
+                // Importante: Al leer de un <select> HTML, las propiedades son 'value' y 'text'.
+                valueField: 'value', 
+                labelField: 'text',  
+                searchField: ['text'], 
 
-        // 3. INICIALIZAR TOM SELECT
-        const selectBuscable = document.querySelector('.select-busqueda');
-        
-        if (selectBuscable) {
-            new TomSelect(selectBuscable, {
-                create: false,
-                sortField: { field: "text", direction: "asc" },
-                placeholder: 'Buscar...',
+                placeholder: "Seleccione un medicamento...",
                 allowEmptyOption: true,
-                maxOptions: 50,
-                dropdownParent: 'body',
-                
-                onChange: function(value) {
-                    // Si encontramos una unidad en el mapa, la aplicamos
-                    if (value && mapUnits[value]) {
-                        selectUnidad.value = mapUnits[value];
-                        hiddenInput.value = mapUnits[value];
+                maxOptions: null, // Mostrar todo
+
+                // --- DISEÑO VISUAL ---
+                render: {
+                    option: function(data, escape) {
+                        // data.value es el ID del medicamento (ej: "1")
+                        const info = metaData[data.value];
+                        
+                        // Si no hay info (o es un placeholder vacío), mostramos texto simple
+                        if (!info) return `<div>${escape(data.text)}</div>`;
+
+                        // Lógica de Colores
+                        let badgeRiesgo = '';
+                        if (info.riesgo) {
+                            let colorClass = 'bg-info text-dark'; 
+                            const r = info.riesgo.toUpperCase();
+                            if (r.includes('ANTICOAGULANTE') || r.includes('ANTIPLAQUETARIO')) {
+                                colorClass = 'bg-danger text-white';
+                            } else if (r.includes('COAGULANTE')) {
+                                colorClass = 'bg-warning text-dark';
+                            }
+                            badgeRiesgo = `<span class="badge ${colorClass} ms-2 small" style="font-size: 0.75em;">${escape(info.riesgo)}</span>`;
+                        }
+
+                        return `
+                            <div class="d-flex justify-content-between align-items-center py-2 px-3 border-bottom">
+                                <div>
+                                    <span class="fw-bold text-dark">${escape(data.text)}</span>
+                                    <br>
+                                    <small class="text-muted" style="font-size: 0.85em;">
+                                        <i class="fas fa-prescription-bottle-alt me-1"></i>${escape(info.dosis)}
+                                    </small>
+                                </div>
+                                <div>${badgeRiesgo}</div>
+                            </div>
+                        `;
+                    },
+                    
+                    item: function(data, escape) {
+                        const info = metaData[data.value];
+                        // Renderizado del ítem seleccionado en el input
+                        if (!info) return `<div>${escape(data.text)}</div>`;
+
+                        let alerta = '';
+                        if (info.riesgo) {
+                             alerta = `<span class="text-danger fw-bold ms-2" style="font-size: 0.8em;" title="${escape(info.riesgo)}">⚠️ ${escape(info.riesgo)}</span>`;
+                        }
+                        return `<div>
+                                    <strong>${escape(data.text)}</strong> 
+                                    <span class="text-muted ms-1 small">(${escape(info.dosis)})</span> 
+                                    ${alerta}
+                                </div>`;
                     }
                 }
             });

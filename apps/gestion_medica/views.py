@@ -687,38 +687,29 @@ class EliminarAlergiaPacienteView(SubElementoMedicoBaseView):
 
 # --- MEDICAMENTOS ---
 class MedicoMedicamentosView(SubElementoMedicoBaseView):
-    def get_units_map(self):
-        """
-        Helper mejorado: Detecta la unidad incluso si hay etiquetas de riesgo [TAG] al final.
-        """
-        # Debe coincidir con las claves de forms.py
-        unidades_validas = ['mg', 'ml', 'gr', 'mcg', 'g/ml', 'mg/ml', 'ui', '%', 'puff', 'comp', 'cap', 'gotas', 'amp', 'unid']
+    
+    def get_medicamentos_metadata(self):
+        """Genera mapa de datos visuales (dosis, colores) para el select."""
+        # Filtramos igual que en el formulario
+        medicamentos = Medicamento.objects.filter(concentracion__isnull=False)
         
-        mapa = {}
-        medicamentos = Medicamento.objects.all()
-        
+        metadata = {}
         for med in medicamentos:
-            nombre = med.nombre.lower().strip()
-            
-            # 1. LIMPIEZA: Si tiene etiqueta [ALGO], se la quitamos para analizar
-            # Ej: "warfarina 5 mg [anticoagulante]" -> "warfarina 5 mg"
-            if ' [' in nombre and nombre.endswith(']'):
-                nombre = nombre.split(' [')[0].strip()
-                
-            # 2. DETECCIÓN: Ahora sí buscamos la unidad al final
-            for u in unidades_validas:
-                # El espacio antes de {u} es vital
-                if nombre.endswith(f" {u}"):
-                    mapa[med.id] = u
-                    break
-        return json.dumps(mapa)
+            dosis_txt = f"{med.concentracion} {med.unidad}"
+            metadata[med.id] = {
+                'dosis': dosis_txt,
+                'riesgo': med.clasificacion_riesgo
+            }
+        # Retorna un String JSON válido
+        return json.dumps(metadata)
+
     def get(self, request, pk):
         ficha = self.get_ficha(pk)
         return render(request, "gestion_medica/pages/medicamentos_paciente.html", {
             'ficha': ficha, 
             'medicamentos_paciente': ficha.medicamentos.select_related('medicamento'), 
             'form': FichaMedicaMedicamentoForm(),
-            'units_map': self.get_units_map()# <--- PASAMOS EL MAPA AL TEMPLATE
+            'medicamentos_metadata': self.get_medicamentos_metadata() # <--- IMPORTANTE
         })
 
     def post(self, request, pk):
@@ -741,7 +732,7 @@ class MedicoMedicamentosView(SubElementoMedicoBaseView):
             'ficha': ficha, 
             'medicamentos_paciente': ficha.medicamentos.all(), 
             'form': form, 
-            'units_map': self.get_units_map()
+            'medicamentos_metadata': self.get_medicamentos_metadata()
         })
 
 
