@@ -1,3 +1,4 @@
+from datetime import timedelta
 from pathlib import Path
 import os
 import environ
@@ -46,6 +47,7 @@ THIRD_PARTY_APPS = [
     #'jazzmin',
     'storages',
     'rest_framework',
+    'rest_framework_simplejwt',
     'django_cleanup.apps.CleanupConfig',
 ]
 INSTALLED_APPS = THIRD_PARTY_APPS + DJANGO_APPS + PROJECT_APPS
@@ -281,10 +283,22 @@ STORAGES = {
 
 
 REST_FRAMEWORK = {
-    'DEFAULT_PERMISSION_CLASSES': [
-        'rest_framework.permissions.DjangoModelPermissionsOrAnonReadOnly'
-    ]
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
+    ),
+    'DEFAULT_PERMISSION_CLASSES': (
+        'rest_framework.permissions.IsAuthenticated',
+    ),
 }
+
+SIMPLE_JWT = {
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=60), # Token de acceso (corto)
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=7),    # Token de refresco (largo)
+    'ROTATE_REFRESH_TOKENS': True,
+    'BLACKLIST_AFTER_ROTATION': True,
+    'AUTH_HEADER_TYPES': ('Bearer',),
+}
+
 
 # Configurar el motor de sesión
 SESSION_ENGINE = 'user_sessions.backends.db'
