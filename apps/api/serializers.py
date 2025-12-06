@@ -61,10 +61,12 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
             data['membresia_id'] = membresia_activa.id
 
         else:
-            # Caso borde: Usuario logueado pero sin estación activa (ej: Superusuario global o usuario nuevo)
-            data['estacion'] = None
-            data['permisos'] = []
-            # Opcional: Levantar un error aquí si la app móvil EXIGE estación.
+            ## Caso borde: Usuario logueado pero sin estación activa (ej: Superusuario global o usuario nuevo)
+            #data['estacion'] = None
+            #data['permisos'] = []
+            raise serializers.ValidationError(
+                {"detail": "No tienes una estación activa asignada. Contacta a tu oficial."}
+            )
 
         return data
 
