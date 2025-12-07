@@ -20,6 +20,7 @@ from .views import (
     MantenimientoQuitarActivoOrdenAPIView,
     BomberilLoginView,
     BomberilRefreshView,
+    BomberilLogoutView,
     MeView,
     TestConnectionView
 )
@@ -37,6 +38,9 @@ urlpatterns = [
     path('auth/login/', BomberilLoginView.as_view(), name='token_obtain_pair'),
     # Refresh: Permite obtener un nuevo Access Token cuando el anterior expira
     path('auth/refresh/', BomberilRefreshView.as_view(), name='token_refresh'),
+    # Cerrar sesión
+    path('auth/logout/', BomberilLogoutView.as_view(), name='token_blacklist'),
+    # Obtener información del usuario
     path('auth/me/', MeView.as_view(), name='users_me'),
 
 

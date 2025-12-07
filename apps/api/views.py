@@ -10,6 +10,7 @@ from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
+from rest_framework_simplejwt.tokens import RefreshToken
 
 from apps.gestion_usuarios.models import Usuario, Membresia
 from apps.gestion_mantenimiento.models import PlanMantenimiento, PlanActivoConfig, OrdenMantenimiento, RegistroMantenimiento
@@ -69,6 +70,29 @@ class BomberilLoginView(TokenObtainPairView):
 
 class BomberilRefreshView(TokenRefreshView):
     serializer_class = CustomTokenRefreshSerializer
+
+
+
+
+class BomberilLogoutView(APIView):
+    """
+    Invalida el Refresh Token del usuario, impidiendo que genere nuevos tokens de acceso.
+    """
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        try:
+            # El cliente debe enviar el "refresh" token en el body
+            refresh_token = request.data["refresh"]
+            token = RefreshToken(refresh_token)
+            
+            # Bloqueamos el token
+            token.blacklist()
+            
+            return Response({"detail": "Sesión cerrada correctamente."}, status=status.HTTP_205_RESET_CONTENT)
+        except Exception as e:
+            # Si el token no es válido o falta, devolvemos error
+            return Response({"detail": "Token inválido o no proporcionado."}, status=status.HTTP_400_BAD_REQUEST)
 
 
 
