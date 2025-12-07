@@ -18,6 +18,7 @@ from apps.common.utils import procesar_imagen_en_memoria, generar_thumbnail_en_m
 from apps.common.mixins import AuditoriaMixin
 from apps.gestion_inventario.models import Comuna, Activo, LoteInsumo, ProductoGlobal, Producto, Estado
 from apps.gestion_inventario.utils import generar_sku_sugerido
+from .utils import obtener_contexto_bomberil
 from .serializers import ComunaSerializer, ProductoLocalInputSerializer, CustomTokenObtainPairSerializer, CustomTokenRefreshSerializer
 from .permissions import (
     IsEstacionActiva, 
@@ -28,6 +29,21 @@ from .permissions import (
     CanGestionarOrdenes,
     IsSelfOrStationAdmin
 )
+
+
+class MeView(APIView):
+    """
+    Devuelve los datos actuales del usuario (perfil, estación, permisos)
+    sin necesidad de refrescar el token. Útil para el inicio de la App.
+    """
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        # Reutilizamos la lógica central. Si el usuario perdió su membresía
+        # o hay algún problema, la función lanzará ValidationError y DRF
+        # responderá con un error 400 automáticamente.
+        data = obtener_contexto_bomberil(request.user)
+        return Response(data)
 
 
 class BomberilLoginView(TokenObtainPairView):

@@ -16,6 +16,7 @@ def obtener_contexto_bomberil(user):
         'email': user.email,
         'nombre_completo': user.get_full_name,
         'avatar': user.avatar.url if user.avatar else None,
+        'avatar_thumb_small': user.avatar_thumb_small.url if user.avatar_thumb_small else None,
     }
 
     # 2. Membresía Activa
