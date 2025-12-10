@@ -762,7 +762,7 @@ class InventarioDetalleExistenciaAPIView(APIView):
                 "id": m.id,
                 "fecha": m.fecha_hora.isoformat(),
                 "tipo": m.get_tipo_movimiento_display(),
-                "usuario": m.usuario.get_full_name() if m.usuario else "Sistema",
+                "usuario": m.usuario.get_full_name if m.usuario else "Sistema",
                 "origen": str(m.compartimento_origen) if m.compartimento_origen else "N/A",
                 "destino": str(m.compartimento_destino) if m.compartimento_destino else "Externo/Baja",
             } for m in movimientos
@@ -926,6 +926,91 @@ class InventarioCatalogoStockAPIView(APIView):
                 "imagen": img_url,
                 "critico": p.stock_critico > 0 and stock_real <= p.stock_critico # Flag para pintar en rojo en la app
             })
+
+        return Response(data, status=status.HTTP_200_OK)
+
+
+
+
+class InventarioExistenciasPorProductoAPIView(APIView):
+    """
+    Lista las existencias físicas (Activos o Lotes) asociadas a un Producto del catálogo local.
+    
+    URL: /api/v1/gestion_inventario/existencias/?producto={id}
+    """
+    permission_classes = [IsAuthenticated, IsEstacionActiva, CanVerStock]
+
+    def get(self, request):
+        producto_id = request.query_params.get('producto')
+        
+        if not producto_id:
+            return Response(
+                {"detail": "Debe proporcionar el parámetro 'producto' (ID)."}, 
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        estacion = request.estacion_activa
+
+        # 1. Obtener el producto padre asegurando que pertenezca a la estación activa
+        producto = get_object_or_404(Producto, id=producto_id, estacion=estacion)
+
+        data = []
+
+        # ---------------------------------------------------------
+        # CASO A: PRODUCTO SERIALIZADO (Lista de Activos Únicos)
+        # ---------------------------------------------------------
+        if producto.es_serializado:
+            # Traemos los activos asociados a este producto en esta estación
+            activos = Activo.objects.filter(
+                producto=producto,
+                estacion=estacion # Redundancia de seguridad
+            ).select_related(
+                'estado',
+                'compartimento__ubicacion',
+                'asignado_a'
+            ).order_by('estado__nombre', 'compartimento__ubicacion__nombre')
+
+            for activo in activos:
+                data.append({
+                    "id": activo.id, # UUID
+                    "tipo": "ACTIVO",
+                    "codigo": activo.codigo_activo,
+                    "identificador": activo.numero_serie_fabricante or "S/N", # Serie para la UI
+                    "ubicacion": f"{activo.compartimento.ubicacion.nombre} > {activo.compartimento.nombre}" if activo.compartimento else "Sin Ubicación",
+                    "estado": activo.estado.nombre if activo.estado else "Desconocido",
+                    "estado_color": "green" if activo.estado and activo.estado.nombre == "DISPONIBLE" else "orange",
+                    "asignado_a": activo.asignado_a.get_full_name if activo.asignado_a else None,
+                    "condicion": "Operativo" # Podrías mapear esto del estado si tuvieras un campo booleano
+                })
+
+        # ---------------------------------------------------------
+        # CASO B: PRODUCTO NO SERIALIZADO (Lista de Lotes/Insumos)
+        # ---------------------------------------------------------
+        else:
+            # Traemos los lotes asociados. Filtramos por la estación a través de la ubicación.
+            lotes = LoteInsumo.objects.filter(
+                producto=producto,
+                compartimento__ubicacion__estacion=estacion
+            ).select_related(
+                'estado',
+                'compartimento__ubicacion'
+            ).exclude(cantidad=0).order_by('fecha_expiracion', 'estado__nombre') # Prioridad a lo que vence pronto
+
+            for lote in lotes:
+                vencimiento = lote.fecha_expiracion.isoformat() if lote.fecha_expiracion else None
+                
+                data.append({
+                    "id": lote.id, # UUID
+                    "tipo": "LOTE",
+                    "codigo": lote.codigo_lote,
+                    "identificador": f"Lote: {lote.numero_lote_fabricante}" if lote.numero_lote_fabricante else "Lote General",
+                    "cantidad": lote.cantidad, # Dato clave para insumos
+                    "ubicacion": f"{lote.compartimento.ubicacion.nombre} > {lote.compartimento.nombre}" if lote.compartimento else "Sin Ubicación",
+                    "estado": lote.estado.nombre if lote.estado else "Desconocido",
+                    "estado_color": "green" if lote.estado and lote.estado.nombre == "DISPONIBLE" else "orange",
+                    "vencimiento": vencimiento,
+                    "es_vencido": lote.fecha_expiracion and lote.fecha_expiracion < timezone.now().date() if hasattr(lote, 'fecha_expiracion') else False
+                })
 
         return Response(data, status=status.HTTP_200_OK)
 
