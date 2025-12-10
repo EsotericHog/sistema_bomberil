@@ -29,6 +29,7 @@ def obtener_contexto_bomberil(user):
         data['estacion'] = {
             'id': membresia_activa.estacion.id,
             'nombre': membresia_activa.estacion.nombre,
+            'codigo': membresia_activa.estacion.codigo
         }
         
         permisos_set = set()
