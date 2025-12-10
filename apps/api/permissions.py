@@ -100,6 +100,10 @@ class CanVerCatalogos(permissions.BasePermission):
 class CanCrearProductoGlobal(permissions.BasePermission):
     def has_permission(self, request, view):
         return request.user.has_perm('gestion_usuarios.accion_gestion_inventario_crear_producto_global')
+    
+class CanVerStock(permissions.BasePermission):
+    def has_permission(self, request, view):
+        return request.user.has_perm('gestion_usuarios.accion_gestion_inventario_ver_stock')
 
 
 

@@ -2,7 +2,7 @@ import uuid
 from django.utils import timezone
 from django.shortcuts import redirect, get_object_or_404
 from django.db import IntegrityError, transaction
-from django.db.models import Count, F, Sum, Q
+from django.db.models import Count, F, Sum, Q, Max
 from django.contrib.auth.forms import PasswordResetForm
 from django.conf import settings
 from PIL import Image
@@ -19,7 +19,7 @@ from apps.gestion_mantenimiento.models import PlanMantenimiento, PlanActivoConfi
 from apps.gestion_mantenimiento.services import auditar_modificacion_incremental
 from apps.common.utils import procesar_imagen_en_memoria, generar_thumbnail_en_memoria
 from apps.common.mixins import AuditoriaMixin
-from apps.gestion_inventario.models import Comuna, Activo, LoteInsumo, ProductoGlobal, Producto, Estado
+from apps.gestion_inventario.models import Comuna, Activo, LoteInsumo, ProductoGlobal, Producto, Estado, MovimientoInventario, RegistroUsoActivo
 from apps.gestion_inventario.utils import generar_sku_sugerido
 from .utils import obtener_contexto_bomberil
 from .serializers import ComunaSerializer, ProductoLocalInputSerializer, CustomTokenObtainPairSerializer, CustomTokenRefreshSerializer
@@ -27,6 +27,7 @@ from .permissions import (
     IsEstacionActiva, 
     CanCrearUsuario,
     CanVerCatalogos, 
+    CanVerStock,
     CanCrearProductoGlobal,
     CanGestionarPlanes,
     CanGestionarOrdenes,
@@ -674,6 +675,182 @@ class InventarioBuscarExistenciasPrestablesAPI(APIView):
                 {"error": "Error interno del servidor."}, 
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
+
+
+
+
+class InventarioDetalleExistenciaAPIView(APIView):
+    """
+    Endpoint para consultar el detalle de una existencia escaneando su código.
+    URL: /api/v1/inventario/existencias/detalle/?codigo=ABC-123
+    """
+    permission_classes = [IsAuthenticated, IsEstacionActiva, CanVerStock]
+
+    def get(self, request):
+        codigo = request.query_params.get('codigo')
+        
+        if not codigo:
+            return Response(
+                {"detail": "Debe proporcionar un parámetro 'codigo'."}, 
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        estacion = request.estacion_activa
+        data_response = {}
+        item_obj = None
+        tipo_item = None
+
+        # ---------------------------------------------------------
+        # 1. INTENTO DE BÚSQUEDA: ACTIVO SERIALIZADO
+        # ---------------------------------------------------------
+        # Filtramos Activo por codigo_activo y estación
+        activo = Activo.objects.filter(
+            codigo_activo=codigo, 
+            estacion=estacion
+        ).select_related(
+            'producto__producto_global__marca',  # Traemos la marca para no hacer otra query
+            'compartimento__ubicacion', 
+            'estado', 
+            'proveedor'
+        ).first()
+
+        if activo:
+            data_response = self._construir_data_activo(activo)
+            item_obj = activo
+            tipo_item = 'activo'
+
+        # ---------------------------------------------------------
+        # 2. INTENTO DE BÚSQUEDA: LOTE DE INSUMOS
+        # ---------------------------------------------------------
+        else:
+            # Filtramos LoteInsumo por codigo_lote
+            lote = LoteInsumo.objects.filter(
+                codigo_lote=codigo,
+                # La relación de lote a estación pasa por Ubicación -> Compartimento
+                compartimento__ubicacion__estacion=estacion
+            ).select_related(
+                'producto__producto_global__marca', 
+                'compartimento__ubicacion', 
+                'estado'
+            ).first()
+
+            if lote:
+                data_response = self._construir_data_lote(lote)
+                item_obj = lote
+                tipo_item = 'lote'
+            else:
+                return Response(
+                    {"detail": f"No se encontró ninguna existencia con el código '{codigo}' en esta estación."}, 
+                    status=status.HTTP_404_NOT_FOUND
+                )
+
+        # ---------------------------------------------------------
+        # 3. CONTEXTO COMÚN: HISTORIAL DE MOVIMIENTOS
+        # ---------------------------------------------------------
+        # Filtro dinámico en MovimientoInventario
+        filtro_mov = Q(activo=item_obj) if tipo_item == 'activo' else Q(lote_insumo=item_obj)
+        
+        movimientos = MovimientoInventario.objects.filter(
+            estacion=estacion
+        ).filter(filtro_mov).select_related(
+            'usuario', 'compartimento_origen__ubicacion', 'compartimento_destino__ubicacion'
+        ).order_by('-fecha_hora')[:20]
+
+        data_response['historial_movimientos'] = [
+            {
+                "id": m.id,
+                "fecha": m.fecha_hora.isoformat(),
+                "tipo": m.get_tipo_movimiento_display(),
+                "usuario": m.usuario.get_full_name() if m.usuario else "Sistema",
+                "origen": str(m.compartimento_origen) if m.compartimento_origen else "N/A",
+                "destino": str(m.compartimento_destino) if m.compartimento_destino else "Externo/Baja",
+            } for m in movimientos
+        ]
+
+        return Response(data_response, status=status.HTTP_200_OK)
+
+    def _construir_data_activo(self, activo):
+        """Helper para serializar manualmente la data compleja del Activo"""
+        # Navegamos a ProductoGlobal para sacar datos maestros
+        prod_global = activo.producto.producto_global
+        marca_nombre = prod_global.marca.nombre if prod_global.marca else "Genérico"
+        
+        # Imagen: Prioridad Activo > Producto Global > None
+        imagen_url = None
+        if activo.imagen:
+            imagen_url = activo.imagen.url
+        elif prod_global.imagen:
+            imagen_url = prod_global.imagen.url
+
+        data = {
+            "tipo_existencia": "ACTIVO",
+            "id": activo.id,
+            "sku": activo.producto.sku or "N/A",
+            "codigo": activo.codigo_activo,
+            "nombre": prod_global.nombre_oficial, 
+            "marca": marca_nombre,
+            "modelo": prod_global.modelo or "",
+            "serie": activo.numero_serie_fabricante or "S/N", #
+            "ubicacion": f"{activo.compartimento.ubicacion.nombre} > {activo.compartimento.nombre}" if activo.compartimento else "Sin Ubicación",
+            "estado": activo.estado.nombre if activo.estado else "Desconocido",
+            "estado_color": "green" if activo.estado and activo.estado.nombre == "DISPONIBLE" else "red",
+            "imagen": imagen_url,
+        }
+
+        # B. Estadísticas de Uso (RegistroUsoActivo)
+        uso_stats = RegistroUsoActivo.objects.filter(activo=activo).aggregate(
+            total_horas=Sum('horas_registradas'),
+            ultimo_uso=Max('fecha_uso'),
+            total_registros=Count('id')
+        )
+        
+        data['uso_stats'] = {
+            "total_horas": uso_stats['total_horas'] or 0,
+            "ultimo_uso": uso_stats['ultimo_uso'].isoformat() if uso_stats['ultimo_uso'] else None,
+            "total_registros": uso_stats['total_registros']
+        }
+
+        # C. Mantenimiento (OrdenMantenimiento)
+        ordenes_activas = OrdenMantenimiento.objects.filter(
+            activos_afectados=activo,
+            estado__in=['PENDIENTE', 'EN_CURSO']
+        ).count()
+        
+        data['mantenimiento'] = {
+            "ordenes_activas_count": ordenes_activas,
+            "en_taller": activo.estado.nombre == "EN MANTENIMIENTO" if activo.estado else False
+        }
+
+        return data
+
+    def _construir_data_lote(self, lote):
+        """Helper para serializar la data simple del Lote"""
+        # Navegamos a ProductoGlobal
+        prod_global = lote.producto.producto_global
+        marca_nombre = prod_global.marca.nombre if prod_global.marca else "Genérico"
+
+        # Imagen: Producto Global > None (Lote no tiene imagen propia en models.py)
+        imagen_url = prod_global.imagen.url if prod_global.imagen else None
+
+        return {
+            "tipo_existencia": "LOTE",
+            "id": lote.id,
+            "sku": lote.producto.sku or "N/A",
+            "codigo": lote.codigo_lote, #
+            "nombre": prod_global.nombre_oficial,
+            "marca": marca_nombre,
+            "cantidad_actual": lote.cantidad, #
+            "unidad_medida": "Unidades", # No existe campo en modelo, valor por defecto seguro
+            "vencimiento": lote.fecha_expiracion.isoformat() if lote.fecha_expiracion else None, #
+            "ubicacion": f"{lote.compartimento.ubicacion.nombre} > {lote.compartimento.nombre}" if lote.compartimento else "Sin Ubicación",
+            "estado": lote.estado.nombre if lote.estado else "Desconocido",
+            "estado_color": "green" if lote.estado and lote.estado.nombre == "DISPONIBLE" else "orange",
+            "imagen": imagen_url,
+            
+            # Campos vacíos para consistencia UI
+            "uso_stats": None,
+            "mantenimiento": None
+        }
 
 
 
