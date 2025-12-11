@@ -1,5 +1,6 @@
 import uuid
 from django.utils import timezone
+from django.utils.dateparse import parse_date
 from django.shortcuts import redirect, get_object_or_404
 from django.db import IntegrityError, transaction
 from django.db.models import Count, F, Sum, Q, Max
@@ -20,7 +21,7 @@ from apps.gestion_mantenimiento.models import PlanMantenimiento, PlanActivoConfi
 from apps.gestion_mantenimiento.services import auditar_modificacion_incremental
 from apps.common.utils import procesar_imagen_en_memoria, generar_thumbnail_en_memoria
 from apps.common.mixins import AuditoriaMixin
-from apps.gestion_inventario.models import Comuna, Activo, LoteInsumo, ProductoGlobal, Producto, Estado, MovimientoInventario, RegistroUsoActivo
+from apps.gestion_inventario.models import Comuna, Activo, LoteInsumo, ProductoGlobal, Producto, Estado, MovimientoInventario, RegistroUsoActivo, Compartimento, Proveedor, TipoMovimiento
 from apps.gestion_inventario.utils import generar_sku_sugerido
 from .utils import obtener_contexto_bomberil
 from .serializers import ComunaSerializer, ProductoLocalInputSerializer, CustomTokenObtainPairSerializer, CustomTokenRefreshSerializer
@@ -32,6 +33,7 @@ from .permissions import (
     CanCrearProductoGlobal,
     CanGestionarPlanes,
     CanGestionarOrdenes,
+    CanRecepcionarStock,
     IsSelfOrStationAdmin
 )
 
@@ -1013,6 +1015,203 @@ class InventarioExistenciasPorProductoAPIView(APIView):
                 })
 
         return Response(data, status=status.HTTP_200_OK)
+
+
+
+
+class InventarioRecepcionStockAPIView(APIView):
+    """
+    Endpoint transaccional para procesar la recepción de stock (Activos y Lotes).
+    Replica la lógica de RecepcionStockView web.
+    
+    URL: /api/v1/inventario/movimientos/recepcion/
+    Method: POST
+    Payload esperado:
+    {
+        "proveedor_id": 1,
+        "fecha_recepcion": "2023-10-27",
+        "notas": "Recepción móvil",
+        "detalles": [
+            {
+                "producto_id": 10,
+                "compartimento_destino_id": "uuid...",
+                "cantidad": 1, 
+                "costo_unitario": 50000,
+                "numero_serie": "SN-123", // Solo si es activo
+                "fecha_fabricacion": "2023-01-01" // Opcional activo
+            },
+            {
+                "producto_id": 15,
+                "compartimento_destino_id": "uuid...",
+                "cantidad": 50,
+                "costo_unitario": 200,
+                "numero_lote": "L-99", // Opcional lote
+                "fecha_vencimiento": "2025-01-01" // Opcional lote
+            }
+        ]
+    }
+    """
+    permission_classes = [IsAuthenticated, IsEstacionActiva, CanRecepcionarStock]
+
+    def post(self, request):
+        estacion = request.estacion_activa
+        data = request.data
+
+        # 1. Validaciones de Cabecera
+        proveedor_id = data.get('proveedor_id')
+        fecha_recepcion_str = data.get('fecha_recepcion')
+        notas = data.get('notas', '')
+        detalles = data.get('detalles', [])
+
+        if not proveedor_id or not fecha_recepcion_str or not detalles:
+             return Response(
+                 {"detail": "Faltan datos obligatorios (proveedor_id, fecha_recepcion o detalles)."}, 
+                 status=status.HTTP_400_BAD_REQUEST
+             )
+
+        proveedor = get_object_or_404(Proveedor, id=proveedor_id)
+        fecha_recepcion = parse_date(fecha_recepcion_str)
+        
+        if not fecha_recepcion:
+             return Response({"detail": "Formato de fecha de recepción inválido (Use YYYY-MM-DD)."}, status=status.HTTP_400_BAD_REQUEST)
+
+        # 2. Obtener estado 'DISPONIBLE' (Singleton para la transacción)
+        try:
+            estado_disponible = Estado.objects.get(nombre='DISPONIBLE', tipo_estado__nombre='OPERATIVO')
+        except Estado.DoesNotExist:
+            return Response(
+                {"detail": "Error crítico de configuración: No existe el estado 'DISPONIBLE' en el sistema."}, 
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
+        nuevos_ids = {'activos': [], 'lotes': []}
+        
+        try:
+            # 3. Transacción Atómica: O se guarda todo o nada.
+            with transaction.atomic():
+                for index, item in enumerate(detalles):
+                    # Validar campos básicos de línea
+                    prod_id = item.get('producto_id')
+                    comp_id = item.get('compartimento_destino_id')
+                    cantidad = int(item.get('cantidad', 0))
+                    costo = item.get('costo_unitario')
+                    
+                    if not prod_id or not comp_id:
+                        raise ValueError(f"Fila {index+1}: Falta producto o compartimento destino.")
+
+                    # Obtener objetos relacionales (Asegurando que sean de la estación)
+                    producto = get_object_or_404(Producto, id=prod_id, estacion=estacion)
+                    compartimento = get_object_or_404(Compartimento, id=comp_id, ubicacion__estacion=estacion)
+
+                    # A. Actualización de costos (Side-effect de negocio)
+                    if costo is not None:
+                        producto.costo_compra = costo
+                        producto.save(update_fields=['costo_compra'])
+
+                    # B. Dispatch Polimórfico
+                    if producto.es_serializado:
+                        # Validación extra para Activos
+                        if cantidad != 1:
+                             raise ValueError(f"Fila {index+1}: Los activos serializados ({producto.sku}) deben ingresarse de a 1 unidad.")
+
+                        activo_id = self._crear_activo(
+                            producto=producto, 
+                            compartimento=compartimento, 
+                            proveedor=proveedor, 
+                            fecha=fecha_recepcion, 
+                            notas=notas, 
+                            estado=estado_disponible, 
+                            serie=item.get('numero_serie'), 
+                            fecha_fab=item.get('fecha_fabricacion'),
+                            usuario=request.user, 
+                            estacion=estacion
+                        )
+                        nuevos_ids['activos'].append(activo_id)
+
+                    else:
+                        # Validación extra para Lotes
+                        if cantidad <= 0:
+                             raise ValueError(f"Fila {index+1}: La cantidad para el insumo {producto.sku} debe ser mayor a 0.")
+                        
+                        lote_id = self._crear_lote(
+                            producto=producto, 
+                            compartimento=compartimento, 
+                            proveedor=proveedor, 
+                            fecha=fecha_recepcion, 
+                            notas=notas, 
+                            estado=estado_disponible,
+                            cantidad=cantidad, 
+                            n_lote=item.get('numero_lote'), 
+                            vencimiento=item.get('fecha_vencimiento'), 
+                            usuario=request.user, 
+                            estacion=estacion
+                        )
+                        nuevos_ids['lotes'].append(lote_id)
+
+        except Exception as e:
+            # Si algo falla, el transaction.atomic deshace todo y devolvemos el error
+            return Response({"detail": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+        # 4. Retorno exitoso
+        return Response({
+            "message": "Recepción guardada correctamente.",
+            "resumen": {
+                "activos_creados": len(nuevos_ids['activos']),
+                "lotes_creados": len(nuevos_ids['lotes'])
+            },
+            "ids": nuevos_ids # Útil si la app quiere mostrar un resumen inmediato
+        }, status=status.HTTP_201_CREATED)
+
+    # --- Helpers Privados (Réplica de tu lógica web) ---
+
+    def _crear_activo(self, producto, compartimento, proveedor, fecha, notas, estado, serie, fecha_fab, usuario, estacion):
+        activo = Activo.objects.create(
+            producto=producto,
+            estacion=estacion,
+            compartimento=compartimento,
+            proveedor=proveedor,
+            estado=estado,
+            numero_serie_fabricante=serie or "",
+            fecha_fabricacion=parse_date(fecha_fab) if fecha_fab else None,
+            fecha_recepcion=fecha
+        )
+        
+        # Registro en MovimientoInventario
+        MovimientoInventario.objects.create(
+            tipo_movimiento=TipoMovimiento.ENTRADA,
+            usuario=usuario,
+            estacion=estacion,
+            proveedor_origen=proveedor,
+            compartimento_destino=compartimento,
+            activo=activo,
+            cantidad_movida=1,
+            notas=notas
+        )
+        return str(activo.id)
+
+    def _crear_lote(self, producto, compartimento, proveedor, fecha, notas, estado, cantidad, n_lote, vencimiento, usuario, estacion):
+        lote = LoteInsumo.objects.create(
+            producto=producto,
+            compartimento=compartimento,
+            cantidad=cantidad,
+            numero_lote_fabricante=n_lote,
+            fecha_expiracion=parse_date(vencimiento) if vencimiento else None,
+            fecha_recepcion=fecha,
+            estado=estado
+        )
+
+        # Registro en MovimientoInventario
+        MovimientoInventario.objects.create(
+            tipo_movimiento=TipoMovimiento.ENTRADA,
+            usuario=usuario,
+            estacion=estacion,
+            proveedor_origen=proveedor,
+            compartimento_destino=compartimento,
+            lote_insumo=lote,
+            cantidad_movida=cantidad,
+            notas=notas
+        )
+        return str(lote.id)
 
 
 

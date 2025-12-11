@@ -104,6 +104,11 @@ class CanCrearProductoGlobal(permissions.BasePermission):
 class CanVerStock(permissions.BasePermission):
     def has_permission(self, request, view):
         return request.user.has_perm('gestion_usuarios.accion_gestion_inventario_ver_stock')
+    
+class CanRecepcionarStock(permissions.BasePermission):
+    def has_permission(self, request, view):
+        # El mismo permiso que usa tu vista web
+        return request.user.has_perm('gestion_usuarios.accion_gestion_inventario_recepcionar_stock')
 
 
 

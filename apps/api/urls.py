@@ -12,6 +12,7 @@ from .views import (
     InventarioDetalleExistenciaAPIView,
     InventarioCatalogoStockAPIView,
     InventarioExistenciasPorProductoAPIView,
+    InventarioRecepcionStockAPIView,
     MantenimientoBuscarActivoParaPlanAPIView,
     MantenimientoAnadirActivoEnPlanAPIView,
     MantenimientoQuitarActivoDePlanAPIView,
@@ -76,6 +77,8 @@ urlpatterns = [
     path('gestion_inventario/catalogo/stock/', InventarioCatalogoStockAPIView.as_view(), name='api_catalogo_stock'),
     # Lista de Existencias por Producto
     path('gestion_inventario/existencias/', InventarioExistenciasPorProductoAPIView.as_view(), name='api_existencias_por_producto'),
+    # Recepcionar stock
+    path('gestion_inventario/movimientos/recepcion/', InventarioRecepcionStockAPIView.as_view(), name='api_recepcion_stock'),
 
 
     # --- MANTENIMIENTO ---
