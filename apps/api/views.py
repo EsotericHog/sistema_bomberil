@@ -21,7 +21,20 @@ from apps.gestion_mantenimiento.models import PlanMantenimiento, PlanActivoConfi
 from apps.gestion_mantenimiento.services import auditar_modificacion_incremental
 from apps.common.utils import procesar_imagen_en_memoria, generar_thumbnail_en_memoria
 from apps.common.mixins import AuditoriaMixin
-from apps.gestion_inventario.models import Comuna, Activo, LoteInsumo, ProductoGlobal, Producto, Estado, MovimientoInventario, RegistroUsoActivo, Compartimento, Proveedor, TipoMovimiento
+from apps.gestion_inventario.models import (
+    Comuna, 
+    Activo, 
+    LoteInsumo, 
+    ProductoGlobal, 
+    Producto, 
+    Estado, 
+    MovimientoInventario, 
+    RegistroUsoActivo, 
+    Ubicacion,
+    Compartimento, 
+    Proveedor, 
+    TipoMovimiento
+) 
 from apps.gestion_inventario.utils import generar_sku_sugerido
 from .utils import obtener_contexto_bomberil
 from .serializers import ComunaSerializer, ProductoLocalInputSerializer, CustomTokenObtainPairSerializer, CustomTokenRefreshSerializer
@@ -1212,6 +1225,107 @@ class InventarioRecepcionStockAPIView(APIView):
             notas=notas
         )
         return str(lote.id)
+
+
+
+
+class InventarioUbicacionListAPIView(APIView):
+    """
+    Lista las ubicaciones de la estación activa.
+    Soporta filtro para excluir administrativas (útil para Recepción de Stock).
+    URL: /api/v1/gestion_inventario/core/ubicaciones/?solo_fisicas=true
+    """
+    permission_classes = [IsAuthenticated, IsEstacionActiva]
+
+    def get(self, request):
+        estacion = request.estacion_activa
+        solo_fisicas = request.query_params.get('solo_fisicas') == 'true'
+
+        qs = Ubicacion.objects.filter(estacion=estacion).select_related('tipo_ubicacion')
+        
+        if solo_fisicas:
+            qs = qs.exclude(tipo_ubicacion__nombre='ADMINISTRATIVA')
+
+        data = [
+            {
+                "id": str(u.id), # UUID a string
+                "nombre": u.nombre,
+                "tipo": u.tipo_ubicacion.nombre,
+                "codigo": u.codigo
+            }
+            for u in qs.order_by('nombre')
+        ]
+        return Response(data, status=status.HTTP_200_OK)
+
+
+
+
+class InventarioCompartimentoListAPIView(APIView):
+    """
+    Lista los compartimentos pertenecientes a una ubicación específica.
+    Valida que la ubicación pertenezca a la estación activa por seguridad.
+    URL: /api/v1/gestion_inventario/core/compartimentos/?ubicacion={uuid}
+    """
+    permission_classes = [IsAuthenticated, IsEstacionActiva]
+
+    def get(self, request):
+        ubicacion_id = request.query_params.get('ubicacion')
+        
+        if not ubicacion_id:
+            return Response({"detail": "Falta el parámetro 'ubicacion'."}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Filtro doble: por ID de ubicación Y por estación activa (Seguridad)
+        compartimentos = Compartimento.objects.filter(
+            ubicacion_id=ubicacion_id,
+            ubicacion__estacion=request.estacion_activa
+        ).order_by('nombre')
+
+        data = [
+            {
+                "id": str(c.id),
+                "nombre": c.nombre,
+                "codigo": c.codigo
+            }
+            for c in compartimentos
+        ]
+        return Response(data, status=status.HTTP_200_OK)
+
+
+
+
+class InventarioProveedorListAPIView(APIView):
+    """
+    Lista proveedores disponibles para la estación.
+    Incluye:
+    1. Proveedores Globales (estacion_creadora IS NULL)
+    2. Proveedores Locales creados por esta estación.
+    
+    URL: /api/v1/gestion_inventario/core/proveedores/?search=bomberos
+    """
+    permission_classes = [IsAuthenticated, IsEstacionActiva]
+
+    def get(self, request):
+        estacion = request.estacion_activa
+        query = request.query_params.get('search', '').strip()
+
+        # Lógica: Globales O Creados por mí
+        filtros = Q(estacion_creadora__isnull=True) | Q(estacion_creadora=estacion)
+        
+        qs = Proveedor.objects.filter(filtros)
+
+        if query:
+            qs = qs.filter(nombre__icontains=query)
+
+        data = [
+            {
+                "id": p.id,
+                "nombre": p.nombre,
+                "rut": p.rut,
+                "es_local": p.estacion_creadora_id == estacion.id # Flag útil para UI
+            }
+            for p in qs.order_by('nombre')
+        ]
+        return Response(data, status=status.HTTP_200_OK)
 
 
 

@@ -13,6 +13,9 @@ from .views import (
     InventarioCatalogoStockAPIView,
     InventarioExistenciasPorProductoAPIView,
     InventarioRecepcionStockAPIView,
+    InventarioUbicacionListAPIView,
+    InventarioCompartimentoListAPIView,
+    InventarioProveedorListAPIView,
     MantenimientoBuscarActivoParaPlanAPIView,
     MantenimientoAnadirActivoEnPlanAPIView,
     MantenimientoQuitarActivoDePlanAPIView,
@@ -79,6 +82,12 @@ urlpatterns = [
     path('gestion_inventario/existencias/', InventarioExistenciasPorProductoAPIView.as_view(), name='api_existencias_por_producto'),
     # Recepcionar stock
     path('gestion_inventario/movimientos/recepcion/', InventarioRecepcionStockAPIView.as_view(), name='api_recepcion_stock'),
+    # Rutas Core / Auxiliares (Selectores)
+    path('gestion_inventario/core/ubicaciones/', InventarioUbicacionListAPIView.as_view(), name='api_ubicaciones_list'),
+    path('gestion_inventario/core/compartimentos/', InventarioCompartimentoListAPIView.as_view(), name='api_compartimentos_list'),
+    path('gestion_inventario/core/proveedores/', InventarioProveedorListAPIView.as_view(), name='api_proveedores_list'),
+
+
 
 
     # --- MANTENIMIENTO ---
