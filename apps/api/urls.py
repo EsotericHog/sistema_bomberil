@@ -23,6 +23,7 @@ from .views import (
     InventarioConsumirStockAPIView,
     InventarioBajaExistenciaAPIView,
     InventarioExtraviarActivoAPIView,
+    InventarioHistorialPrestamosAPIView,
     MantenimientoBuscarActivoParaPlanAPIView,
     MantenimientoAnadirActivoEnPlanAPIView,
     MantenimientoQuitarActivoDePlanAPIView,
@@ -83,8 +84,12 @@ urlpatterns = [
     # --- PRÉSTAMOS ---
     # Buscar existencias disponibles para préstamo
     path('gestion_inventario/prestamo/buscar-prestables/', InventarioBuscarExistenciasPrestablesAPI.as_view(), name='api_buscar_prestables'),
+    # Crear préstamo
     path('gestion_inventario/prestamos/crear/', InventarioCrearPrestamoAPIView.as_view(), name='api_crear_prestamo'),
+    # Obtener destinatarios
     path('gestion_inventario/destinatarios/', InventarioDestinatarioListAPIView.as_view(), name='api_destinatarios_list'),
+    # Lista de préstamos
+    path('gestion_inventario/prestamos/', InventarioHistorialPrestamosAPIView.as_view(), name='api_historial_prestamos'),
 
     # Obtener detalle de una existencia
     path('gestion_inventario/existencias/buscar/', InventarioDetalleExistenciaAPIView.as_view(), name='api_existencia_detalle'),

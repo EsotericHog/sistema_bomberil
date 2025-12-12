@@ -53,6 +53,7 @@ from .permissions import (
     CanGestionarBajasStock,
     CanGestionarStockInterno,
     CanGestionarPrestamos,
+    CanVerPrestamos,
     IsSelfOrStationAdmin
 )
 
@@ -867,6 +868,69 @@ class InventarioDestinatarioListAPIView(APIView):
     def get(self, request):
         qs = Destinatario.objects.filter(estacion=request.estacion_activa).order_by('nombre_entidad')
         data = [{"id": d.id, "nombre": d.nombre_entidad} for d in qs]
+        return Response(data, status=status.HTTP_200_OK)
+
+
+
+
+class InventarioHistorialPrestamosAPIView(APIView):
+    """
+    Lista el historial de préstamos de la estación.
+    Por defecto muestra solo los activos (Pendientes/Parciales).
+    
+    URL: /api/v1/inventario/prestamos/
+    Params: 
+      - ?todos=true (Muestra también completados/vencidos)
+      - ?search=NombreDestinatario
+    """
+    permission_classes = [IsAuthenticated, IsEstacionActiva, CanVerPrestamos]
+
+    def get(self, request):
+        estacion = request.estacion_activa
+        mostrar_todos = request.query_params.get('todos') == 'true'
+        query = request.query_params.get('search', '').strip()
+
+        # 1. Base Query
+        qs = Prestamo.objects.filter(estacion=estacion).select_related(
+            'destinatario', 
+            'usuario_responsable'
+        ).prefetch_related('items_prestados') # Para contar items
+
+        # 2. Filtros
+        if not mostrar_todos:
+            # Solo "Vivos": Pendiente o Devuelto Parcial
+            qs = qs.filter(estado__in=[
+                Prestamo.EstadoPrestamo.PENDIENTE, 
+                Prestamo.EstadoPrestamo.DEVUELTO_PARCIAL
+            ])
+        
+        if query:
+            qs = qs.filter(destinatario__nombre_entidad__icontains=query)
+
+        # Ordenar: Más recientes primero
+        qs = qs.order_by('-fecha_prestamo')
+
+        # 3. Serialización Manual
+        data = []
+        for p in qs:
+            # Conteo rápido de items para mostrar en la tarjeta de la lista
+            # (Ej: "3 ítems prestados")
+            total_items = p.items_prestados.count()
+            
+            # Formato de fecha amigable o ISO según prefieras en el front
+            fecha_fmt = p.fecha_prestamo.isoformat()
+
+            data.append({
+                "id": p.id,
+                "destinatario": p.destinatario.nombre_entidad,
+                "fecha": fecha_fmt,
+                "estado_display": p.get_estado_display(), # "Pendiente"
+                "estado_codigo": p.estado, # "PEN" (Útil para colores en UI: PEN=Yellow, PAR=Orange, COM=Green)
+                "responsable": p.usuario_responsable.get_full_name() if p.usuario_responsable else "Sistema",
+                "total_items": total_items,
+                "notas": p.notas_prestamo
+            })
+
         return Response(data, status=status.HTTP_200_OK)
 
 
