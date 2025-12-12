@@ -926,7 +926,7 @@ class InventarioHistorialPrestamosAPIView(APIView):
                 "fecha": fecha_fmt,
                 "estado_display": p.get_estado_display(), # "Pendiente"
                 "estado_codigo": p.estado, # "PEN" (Útil para colores en UI: PEN=Yellow, PAR=Orange, COM=Green)
-                "responsable": p.usuario_responsable.get_full_name() if p.usuario_responsable else "Sistema",
+                "responsable": p.usuario_responsable.get_full_name if p.usuario_responsable else "Sistema",
                 "total_items": total_items,
                 "notas": p.notas_prestamo
             })

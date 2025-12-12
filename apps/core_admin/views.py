@@ -509,7 +509,7 @@ class UsuarioCreateView(SuperuserRequiredMixin, CreateView):
         return context
     
     def form_valid(self, form):
-        messages.success(self.request, f"Usuario '{form.instance.get_full_name() or form.instance.username}' guardado exitosamente.")
+        messages.success(self.request, f"Usuario '{form.instance.get_full_name or form.instance.username}' guardado exitosamente.")
         return super().form_valid(form)
     
     def form_invalid(self, form):
@@ -536,7 +536,7 @@ class UsuarioUpdateView(SuperuserRequiredMixin, UpdateView):
         return context
     
     def form_valid(self, form):
-        messages.success(self.request, f"Usuario '{form.instance.get_full_name() or form.instance.username}' guardado exitosamente.")
+        messages.success(self.request, f"Usuario '{form.instance.get_full_name or form.instance.username}' guardado exitosamente.")
         return super().form_valid(form)
     
     def form_invalid(self, form):
