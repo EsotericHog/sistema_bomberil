@@ -19,6 +19,7 @@ from .views import (
     InventarioAnularExistenciaAPIView,
     InventarioAjustarStockAPIView,
     InventarioConsumirStockAPIView,
+    InventarioBajaExistenciaAPIView,
     MantenimientoBuscarActivoParaPlanAPIView,
     MantenimientoAnadirActivoEnPlanAPIView,
     MantenimientoQuitarActivoDePlanAPIView,
@@ -93,8 +94,11 @@ urlpatterns = [
     path('gestion_inventario/movimientos/ajustar/', InventarioAjustarStockAPIView.as_view(), name='api_ajustar_stock'),
     # Ruta para consumo de stock (salida interna)
     path('gestion_inventario/movimientos/consumir/', InventarioConsumirStockAPIView.as_view(), name='api_consumir_stock'),
+    # Mover/Trasferir existencias (interno) (PENDIENTE)
     # Ruta para anular (dar de baja lógica por error)
     path('gestion_inventario/movimientos/anular/', InventarioAnularExistenciaAPIView.as_view(), name='api_anular_existencia'),
+    # Ruta para dar de baja (fin de vida útil / daño)
+    path('gestion_inventario/movimientos/baja/', InventarioBajaExistenciaAPIView.as_view(), name='api_baja_existencia'),
 
 
 

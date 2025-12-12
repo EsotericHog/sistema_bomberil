@@ -1452,6 +1452,112 @@ class InventarioAnularExistenciaAPIView(AuditoriaMixin, APIView):
 
 
 
+class InventarioBajaExistenciaAPIView(AuditoriaMixin, APIView):
+    """
+    Endpoint para Dar de Baja una existencia (Fin de vida útil, daño irreparable, etc.).
+    
+    URL: /api/v1/inventario/movimientos/baja/
+    Method: POST
+    Payload:
+    {
+        "tipo": "ACTIVO" | "LOTE",
+        "id": "uuid-del-item",
+        "notas": "Motivo de la baja (Ej: Daño estructural en incendio)"
+    }
+    """
+    permission_classes = [IsAuthenticated, IsEstacionActiva, CanGestionarBajasStock]
+
+    def post(self, request):
+        estacion = request.estacion_activa
+        
+        # --- PUENTE AUDITORÍA ---
+        if not request.session.get('active_estacion_id'):
+            request.session['active_estacion_id'] = estacion.id
+
+        tipo = request.data.get('tipo')
+        item_id = request.data.get('id')
+        notas = request.data.get('notas', '')
+
+        if not tipo or not item_id:
+            return Response({"detail": "Faltan datos (tipo, id)."}, status=status.HTTP_400_BAD_REQUEST)
+
+        # 1. Obtener el ítem
+        item = None
+        codigo_repr = ""
+        nombre_repr = ""
+
+        if tipo == 'ACTIVO':
+            item = get_object_or_404(Activo, id=item_id, estacion=estacion)
+            codigo_repr = item.codigo_activo
+            nombre_repr = item.producto.producto_global.nombre_oficial
+        elif tipo == 'LOTE':
+            item = get_object_or_404(LoteInsumo, id=item_id, compartimento__ubicacion__estacion=estacion)
+            codigo_repr = item.codigo_lote
+            nombre_repr = item.producto.producto_global.nombre_oficial
+        else:
+            return Response({"detail": "Tipo inválido."}, status=status.HTTP_400_BAD_REQUEST)
+
+        # 2. Validar Estado (Regla de Negocio)
+        # Solo se permite dar de baja si está en control de la estación (no prestado fuera).
+        estados_permitidos = ['DISPONIBLE', 'PENDIENTE REVISIÓN', 'EN REPARACIÓN']
+        
+        if not item.estado or item.estado.nombre not in estados_permitidos:
+            return Response(
+                {"detail": f"No se puede dar de baja. Estado actual: '{item.estado.nombre}'. Estados permitidos: {', '.join(estados_permitidos)}."}, 
+                status=status.HTTP_409_CONFLICT
+            )
+
+        try:
+            estado_baja = Estado.objects.get(nombre='DE BAJA')
+
+            with transaction.atomic():
+                # A. Actualizar Estado y Cantidad
+                cantidad_movimiento = 0
+                
+                if tipo == 'LOTE':
+                    cantidad_movimiento = item.cantidad * -1 # Salida total
+                    item.cantidad = 0
+                else:
+                    cantidad_movimiento = -1
+                
+                item.estado = estado_baja
+                item.save()
+
+                # B. Auditoría Técnica (Movimiento SALIDA)
+                MovimientoInventario.objects.create(
+                    tipo_movimiento=TipoMovimiento.SALIDA,
+                    usuario=request.user,
+                    estacion=estacion,
+                    compartimento_origen=item.compartimento,
+                    # No hay destino físico en una baja
+                    activo=item if tipo == 'ACTIVO' else None,
+                    lote_insumo=item if tipo == 'LOTE' else None,
+                    cantidad_movida=cantidad_movimiento,
+                    notas=f"Baja Administrativa: {notas}"
+                )
+
+                # C. Auditoría de Sistema (Humana)
+                self.auditar(
+                    verbo="dio de baja del inventario operativo a",
+                    objetivo=item,
+                    objetivo_repr=f"{nombre_repr} ({codigo_repr})",
+                    detalles={
+                        'motivo_declarado': notas,
+                        'tipo_existencia': tipo,
+                        'origen_accion': 'APP MÓVIL'
+                    }
+                )
+
+            return Response({"message": "Existencia dada de baja correctamente."}, status=status.HTTP_200_OK)
+
+        except Estado.DoesNotExist:
+            return Response({"detail": "Error crítico: Estado 'DE BAJA' no configurado."}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        except Exception as e:
+            return Response({"detail": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+
+
 class InventarioAjustarStockAPIView(AuditoriaMixin, APIView):
     """
     Endpoint para ajustar manualmente la cantidad de un Lote (Inventario Cíclico).
