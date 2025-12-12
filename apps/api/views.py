@@ -936,6 +936,254 @@ class InventarioHistorialPrestamosAPIView(APIView):
 
 
 
+class InventarioGestionarDevolucionAPIView(AuditoriaMixin, APIView):
+    """
+    Endpoint para gestionar la devolución de un préstamo.
+    GET: Retorna el detalle del préstamo y el saldo pendiente de cada ítem.
+    POST: Procesa devoluciones y reportes de pérdida en lote.
+    
+    URL: /api/v1/inventario/prestamos/<int:prestamo_id>/devolucion/
+    """
+    permission_classes = [IsAuthenticated, IsEstacionActiva, CanGestionarPrestamos]
+
+    def get(self, request, prestamo_id):
+        # 1. Obtener Préstamo Seguro
+        estacion = request.estacion_activa
+        prestamo = get_object_or_404(Prestamo, id=prestamo_id, estacion=estacion)
+
+        # 2. Serializar Cabecera
+        data = {
+            "id": prestamo.id,
+            "destinatario": prestamo.destinatario.nombre_entidad,
+            "fecha_prestamo": prestamo.fecha_prestamo.isoformat(),
+            "estado": prestamo.estado,
+            "estado_display": prestamo.get_estado_display(),
+            "notas": prestamo.notas_prestamo,
+            "items": []
+        }
+
+        # 3. Serializar Detalles con Cálculo de Pendientes
+        detalles = prestamo.items_prestados.select_related(
+            'activo__producto__producto_global', 
+            'lote__producto__producto_global'
+        ).order_by('id')
+
+        for d in detalles:
+            # Polimorfismo visual
+            if d.activo:
+                nombre = d.activo.producto.producto_global.nombre_oficial
+                codigo = d.activo.codigo_activo
+                tipo = 'activo'
+            else:
+                nombre = d.lote.producto.producto_global.nombre_oficial
+                codigo = d.lote.codigo_lote
+                tipo = 'lote'
+
+            pendiente = d.cantidad_prestada - d.cantidad_devuelta - d.cantidad_extraviada
+
+            data["items"].append({
+                "detalle_id": d.id,
+                "tipo": tipo,
+                "nombre": nombre,
+                "codigo": codigo,
+                "cantidad_prestada": d.cantidad_prestada,
+                "cantidad_devuelta": d.cantidad_devuelta,
+                "cantidad_extraviada": d.cantidad_extraviada,
+                "pendiente": pendiente, # Dato vital para la UI (max input)
+                "saldado": pendiente <= 0
+            })
+
+        return Response(data, status=status.HTTP_200_OK)
+
+    def post(self, request, prestamo_id):
+        estacion = request.estacion_activa
+        
+        # --- PUENTE AUDITORÍA ---
+        if not request.session.get('active_estacion_id'):
+            request.session['active_estacion_id'] = estacion.id
+
+        prestamo = get_object_or_404(Prestamo, id=prestamo_id, estacion=estacion)
+
+        if prestamo.estado == Prestamo.EstadoPrestamo.COMPLETADO:
+            return Response({"detail": "El préstamo ya está completado."}, status=status.HTTP_409_CONFLICT)
+
+        # Payload esperado: { "items": [ { "detalle_id": 1, "devolver": 1, "perder": 0 }, ... ] }
+        items_payload = request.data.get('items', [])
+        
+        if not items_payload:
+            return Response({"detail": "No se enviaron ítems para procesar."}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Estados Singleton
+        try:
+            estado_disponible = Estado.objects.get(nombre='DISPONIBLE')
+        except Estado.DoesNotExist:
+            return Response({"detail": "Error crítico: Estado DISPONIBLE no existe."}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+        try:
+            with transaction.atomic():
+                resumen = self._procesar_devoluciones(prestamo, items_payload, estado_disponible, request.user, estacion)
+                
+                if resumen['procesados'] == 0 and resumen['perdidos'] == 0:
+                    return Response({"message": "No se registraron cambios (cantidades en 0)."}, status=status.HTTP_200_OK)
+
+                return Response({
+                    "message": "Devolución procesada correctamente.",
+                    "resumen": resumen
+                }, status=status.HTTP_200_OK)
+
+        except Exception as e:
+            return Response({"detail": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+    # --- Helpers de Lógica de Negocio (Adaptados de tu vista Web) ---
+
+    def _procesar_devoluciones(self, prestamo, items_payload, estado_disponible, usuario, estacion):
+        movimientos_bulk = []
+        items_actualizados_count = 0
+        total_unidades_devueltas = 0
+        total_unidades_perdidas = 0
+        
+        # Convertir payload a dict para acceso rápido: { detalle_id: {devolver: x, perder: y} }
+        payload_map = { int(i['detalle_id']): i for i in items_payload }
+        
+        # Iterar sobre los objetos reales de la BD
+        db_detalles = prestamo.items_prestados.filter(id__in=payload_map.keys()).select_related('activo', 'lote')
+
+        for detalle in db_detalles:
+            accion = payload_map.get(detalle.id)
+            if not accion: continue
+
+            cant_devolver = int(accion.get('devolver', 0))
+            cant_perder = int(accion.get('perder', 0))
+            
+            suma_accion = cant_devolver + cant_perder
+            if suma_accion <= 0: continue
+
+            # Validación de integridad
+            pendiente = detalle.cantidad_prestada - detalle.cantidad_devuelta - detalle.cantidad_extraviada
+            if suma_accion > pendiente:
+                raise ValueError(f"Ítem {detalle.id}: La suma de devolución y pérdida ({suma_accion}) excede lo pendiente ({pendiente}).")
+
+            hubo_cambios = False
+
+            # A. Procesar Devolución
+            if cant_devolver > 0:
+                detalle.cantidad_devuelta += cant_devolver
+                mov = self._restaurar_stock(detalle, cant_devolver, estado_disponible, prestamo.id, usuario, estacion)
+                movimientos_bulk.append(mov)
+                total_unidades_devueltas += cant_devolver
+                hubo_cambios = True
+
+            # B. Procesar Pérdida
+            if cant_perder > 0:
+                detalle.cantidad_extraviada += cant_perder
+                self._procesar_perdida(detalle, cant_perder, usuario, estacion)
+                total_unidades_perdidas += cant_perder
+                hubo_cambios = True
+
+            if hubo_cambios:
+                detalle.fecha_ultima_devolucion = timezone.now()
+                detalle.save()
+                items_actualizados_count += 1
+
+        # Guardar movimientos masivos
+        if movimientos_bulk:
+            MovimientoInventario.objects.bulk_create(movimientos_bulk)
+
+        # Actualizar estado cabecera
+        self._verificar_estado_prestamo(prestamo)
+
+        # Auditoría
+        if total_unidades_devueltas > 0 or total_unidades_perdidas > 0:
+            self.auditar(
+                verbo=f"gestionó devolución del Préstamo #{prestamo.id}",
+                objetivo=prestamo.destinatario,
+                objetivo_repr=f"Préstamo #{prestamo.id}",
+                detalles={
+                    'devueltos': total_unidades_devueltas,
+                    'reportados_perdidos': total_unidades_perdidas,
+                    'origen': 'APP MÓVIL'
+                }
+            )
+
+        return {'procesados': total_unidades_devueltas, 'perdidos': total_unidades_perdidas}
+
+    def _restaurar_stock(self, detalle, cantidad, estado_disp, prestamo_id, usuario, estacion):
+        """Devuelve el ítem al stock operativo."""
+        movimiento = MovimientoInventario(
+            tipo_movimiento=TipoMovimiento.DEVOLUCION,
+            usuario=usuario,
+            estacion=estacion,
+            cantidad_movida=cantidad, # Positivo
+            notas=f"Devolución Móvil Préstamo #{prestamo_id}",
+            fecha_hora=timezone.now()
+        )
+
+        if detalle.activo:
+            activo = detalle.activo
+            activo.estado = estado_disp
+            activo.save(update_fields=['estado', 'updated_at'])
+            movimiento.activo = activo
+            movimiento.compartimento_destino = activo.compartimento
+        elif detalle.lote:
+            lote = detalle.lote
+            lote.cantidad += cantidad
+            lote.save(update_fields=['cantidad', 'updated_at'])
+            movimiento.lote_insumo = lote
+            movimiento.compartimento_destino = lote.compartimento
+
+        return movimiento
+
+    def _procesar_perdida(self, detalle, cantidad, usuario, estacion):
+        """Mueve el ítem al limbo de extraviados."""
+        estado_extraviado = Estado.objects.get(nombre='EXTRAVIADO')
+        compartimento_limbo = get_or_create_extraviado_compartment(estacion)
+
+        if detalle.activo:
+            activo = detalle.activo
+            activo.estado = estado_extraviado
+            activo.compartimento = compartimento_limbo
+            activo.save()
+            
+            MovimientoInventario.objects.create(
+                tipo_movimiento=TipoMovimiento.AJUSTE,
+                usuario=usuario,
+                estacion=estacion,
+                compartimento_destino=compartimento_limbo,
+                activo=activo,
+                cantidad_movida=0, # Ya estaba fuera (prestado)
+                notas=f"Extraviado durante préstamo #{detalle.prestamo.id}"
+            )
+        elif detalle.lote:
+            # Lotes: No movemos el original, solo registramos la "no vuelta"
+            MovimientoInventario.objects.create(
+                tipo_movimiento=TipoMovimiento.AJUSTE,
+                usuario=usuario,
+                estacion=estacion,
+                compartimento_destino=compartimento_limbo,
+                lote_insumo=detalle.lote,
+                cantidad_movida=0,
+                notas=f"Insumo extraviado ({cantidad}u) en préstamo #{detalle.prestamo.id}"
+            )
+
+    def _verificar_estado_prestamo(self, prestamo):
+        """Recalcula si el préstamo está completado."""
+        # Refrescamos desde BD para tener los datos actualizados por el loop
+        todos_saldados = all(d.esta_saldado for d in prestamo.items_prestados.all())
+        
+        nuevo_estado = None
+        if todos_saldados:
+            nuevo_estado = Prestamo.EstadoPrestamo.COMPLETADO
+        elif any(i.cantidad_devuelta > 0 for i in prestamo.items_prestados.all()):
+            if prestamo.estado != Prestamo.EstadoPrestamo.DEVUELTO_PARCIAL:
+                nuevo_estado = Prestamo.EstadoPrestamo.DEVUELTO_PARCIAL
+        
+        if nuevo_estado:
+            prestamo.estado = nuevo_estado
+            prestamo.save(update_fields=['estado', 'updated_at'])
+
+
+
+
 class InventarioDetalleExistenciaAPIView(APIView):
     """
     Endpoint para consultar el detalle de una existencia escaneando su código.

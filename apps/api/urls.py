@@ -24,6 +24,7 @@ from .views import (
     InventarioBajaExistenciaAPIView,
     InventarioExtraviarActivoAPIView,
     InventarioHistorialPrestamosAPIView,
+    InventarioGestionarDevolucionAPIView,
     MantenimientoBuscarActivoParaPlanAPIView,
     MantenimientoAnadirActivoEnPlanAPIView,
     MantenimientoQuitarActivoDePlanAPIView,
@@ -81,7 +82,7 @@ urlpatterns = [
     # Agregar producto al catálogo local
     path('gestion_inventario/anadir-producto-local/', InventarioAnadirProductoLocalAPIView.as_view(), name="api_anadir_producto_local"),
 
-    # --- PRÉSTAMOS ---
+    # --- INVENTARIO: PRÉSTAMOS ---
     # Buscar existencias disponibles para préstamo
     path('gestion_inventario/prestamo/buscar-prestables/', InventarioBuscarExistenciasPrestablesAPI.as_view(), name='api_buscar_prestables'),
     # Crear préstamo
@@ -90,6 +91,8 @@ urlpatterns = [
     path('gestion_inventario/destinatarios/', InventarioDestinatarioListAPIView.as_view(), name='api_destinatarios_list'),
     # Lista de préstamos
     path('gestion_inventario/prestamos/', InventarioHistorialPrestamosAPIView.as_view(), name='api_historial_prestamos'),
+    # Gestionar préstamo
+    path('gestion_inventario/prestamos/<int:prestamo_id>/devolucion/', InventarioGestionarDevolucionAPIView.as_view(), name='api_gestionar_devolucion'),
 
     # Obtener detalle de una existencia
     path('gestion_inventario/existencias/buscar/', InventarioDetalleExistenciaAPIView.as_view(), name='api_existencia_detalle'),
