@@ -1,3 +1,4 @@
+from .models import Estacion, Ubicacion, TipoUbicacion, Compartimento
 
 
 def generar_sku_sugerido(producto_global):
@@ -50,3 +51,61 @@ def generar_sku_sugerido(producto_global):
     sku_final = sku_final.replace('--', '-').strip('-')
     
     return sku_final
+
+
+
+
+def get_or_create_anulado_compartment(estacion: Estacion) -> Compartimento:
+    """
+    Busca o crea la ubicación y compartimento 'limbo' (ADMINISTRATIVA)
+    para los registros anulados de una estación.
+    """
+    
+    # 1. Buscar el TipoUbicacion "ADMINISTRATIVA"
+    # (Usamos get_or_create por robustez, en caso de que se borre)
+    tipo_admin, _ = TipoUbicacion.objects.get_or_create(nombre='ADMINISTRATIVA')
+
+    # 2. Buscar o crear la Ubicación "Registros Administrativos"
+    ubicacion_admin, _ = Ubicacion.objects.get_or_create(
+        nombre="Registros Administrativos",
+        estacion=estacion,
+        tipo_ubicacion=tipo_admin,
+        defaults={
+            'descripcion': 'Ubicación simbólica para registros anulados por error.'
+        }
+    )
+
+    # 3. Buscar o crear el Compartimento "Stock Anulado"
+    compartimento_anulado, _ = Compartimento.objects.get_or_create(
+        nombre="Stock Anulado",
+        ubicacion=ubicacion_admin,
+        defaults={
+            'descripcion': 'Existencias (activos/lotes) que fueron anuladas por error de ingreso.'
+        }
+    )
+    return compartimento_anulado
+
+
+
+
+def get_or_create_extraviado_compartment(estacion: Estacion) -> Compartimento:
+    """
+    Busca o crea la ubicación (ADMINISTRATIVA) y el compartimento 'limbo' 
+    para los registros extraviados de una estación.
+    """
+    tipo_admin, _ = TipoUbicacion.objects.get_or_create(nombre='ADMINISTRATIVA')
+    
+    ubicacion_admin, _ = Ubicacion.objects.get_or_create(
+        nombre="Registros Administrativos",
+        estacion=estacion,
+        tipo_ubicacion=tipo_admin,
+        defaults={'descripcion': 'Ubicación simbólica para registros anulados o dados de baja.'}
+    )
+
+    # Creamos un compartimento separado para extraviados
+    compartimento_extraviado, _ = Compartimento.objects.get_or_create(
+        nombre="Stock Extraviado",
+        ubicacion=ubicacion_admin,
+        defaults={'descripcion': 'Existencias que fueron reportadas como extraviadas.'}
+    )
+    return compartimento_extraviado

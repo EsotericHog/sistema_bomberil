@@ -10,7 +10,7 @@ from django.shortcuts import render, redirect
 from django.views import View
 from django.views.generic import TemplateView, DeleteView, UpdateView, ListView, DetailView, CreateView, FormView
 from django.views.generic.detail import SingleObjectMixin
-from django.http import JsonResponse, HttpResponse, HttpResponseRedirect, Http404, HttpResponseBadRequest, FileResponse
+from django.http import HttpResponseRedirect, Http404, HttpResponseBadRequest, FileResponse
 from django.db import models
 from django.db.models import Count, Sum, Q, Subquery, OuterRef, ProtectedError, Value, Case, When, CharField, F, Max
 from django.db.models.functions import Coalesce
@@ -28,9 +28,9 @@ from core.settings import (
     INVENTARIO_UBICACION_VEHICULO_NOMBRE as VEHICULO_NOMBRE, 
 )
 
-from apps.common.mixins import ModuleAccessMixin, BaseEstacionMixin, AuditoriaMixin, CustomPermissionRequiredMixin
+from apps.common.mixins import BaseEstacionMixin, AuditoriaMixin, CustomPermissionRequiredMixin
 from .mixins import UbicacionMixin, InventoryStateValidatorMixin, StationInventoryObjectMixin
-
+from .utils import get_or_create_anulado_compartment, get_or_create_extraviado_compartment
 from .models import (
     Estacion, 
     Ubicacion, 
@@ -55,7 +55,6 @@ from .models import (
     TipoMovimiento,
     RegistroUsoActivo
     )
-
 from .forms import (
     AreaForm, 
     AreaEditForm,
@@ -86,7 +85,6 @@ from .forms import (
     DestinatarioForm,
     EtiquetaFilterForm
     )
-
 from apps.gestion_mantenimiento.models import PlanActivoConfig, OrdenMantenimiento, RegistroMantenimiento
 
 
@@ -2868,38 +2866,6 @@ class AgregarStockACompartimentoView(BaseEstacionMixin, CustomPermissionRequired
 
 
 
-def get_or_create_anulado_compartment(estacion: Estacion) -> Compartimento:
-    """
-    Busca o crea la ubicación y compartimento 'limbo' (ADMINISTRATIVA)
-    para los registros anulados de una estación.
-    """
-    
-    # 1. Buscar el TipoUbicacion "ADMINISTRATIVA"
-    # (Usamos get_or_create por robustez, en caso de que se borre)
-    tipo_admin, _ = TipoUbicacion.objects.get_or_create(nombre='ADMINISTRATIVA')
-
-    # 2. Buscar o crear la Ubicación "Registros Administrativos"
-    ubicacion_admin, _ = Ubicacion.objects.get_or_create(
-        nombre="Registros Administrativos",
-        estacion=estacion,
-        tipo_ubicacion=tipo_admin,
-        defaults={
-            'descripcion': 'Ubicación simbólica para registros anulados por error.'
-        }
-    )
-
-    # 3. Buscar o crear el Compartimento "Stock Anulado"
-    compartimento_anulado, _ = Compartimento.objects.get_or_create(
-        nombre="Stock Anulado",
-        ubicacion=ubicacion_admin,
-        defaults={
-            'descripcion': 'Existencias (activos/lotes) que fueron anuladas por error de ingreso.'
-        }
-    )
-    return compartimento_anulado
-
-
-
 
 class DetalleExistenciaView(BaseEstacionMixin, CustomPermissionRequiredMixin, View):
     """
@@ -3323,31 +3289,6 @@ class BajaExistenciaView(BaseEstacionMixin, CustomPermissionRequiredMixin, Stati
     def form_invalid(self, form):
         messages.error(self.request, "No se pudo procesar la baja. Revisa los campos del formulario.")
         return super().form_invalid(form)
-
-
-
-
-def get_or_create_extraviado_compartment(estacion: Estacion) -> Compartimento:
-    """
-    Busca o crea la ubicación (ADMINISTRATIVA) y el compartimento 'limbo' 
-    para los registros extraviados de una estación.
-    """
-    tipo_admin, _ = TipoUbicacion.objects.get_or_create(nombre='ADMINISTRATIVA')
-    
-    ubicacion_admin, _ = Ubicacion.objects.get_or_create(
-        nombre="Registros Administrativos",
-        estacion=estacion,
-        tipo_ubicacion=tipo_admin,
-        defaults={'descripcion': 'Ubicación simbólica para registros anulados o dados de baja.'}
-    )
-
-    # Creamos un compartimento separado para extraviados
-    compartimento_extraviado, _ = Compartimento.objects.get_or_create(
-        nombre="Stock Extraviado",
-        ubicacion=ubicacion_admin,
-        defaults={'descripcion': 'Existencias que fueron reportadas como extraviadas.'}
-    )
-    return compartimento_extraviado
 
 
 

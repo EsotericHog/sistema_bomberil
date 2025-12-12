@@ -35,7 +35,7 @@ from apps.gestion_inventario.models import (
     Proveedor, 
     TipoMovimiento
 ) 
-from apps.gestion_inventario.utils import generar_sku_sugerido
+from apps.gestion_inventario.utils import generar_sku_sugerido, get_or_create_anulado_compartment
 from .utils import obtener_contexto_bomberil
 from .serializers import ComunaSerializer, ProductoLocalInputSerializer, CustomTokenObtainPairSerializer, CustomTokenRefreshSerializer
 from .permissions import (
@@ -47,6 +47,7 @@ from .permissions import (
     CanGestionarPlanes,
     CanGestionarOrdenes,
     CanRecepcionarStock,
+    CanGestionarBajasStock,
     IsSelfOrStationAdmin
 )
 
@@ -1337,6 +1338,115 @@ class InventarioProveedorListAPIView(APIView):
             for p in qs.order_by('nombre')
         ]
         return Response(data, status=status.HTTP_200_OK)
+
+
+
+
+class InventarioAnularExistenciaAPIView(AuditoriaMixin, APIView):
+    """
+    Endpoint para anular una existencia (Corrección de error de ingreso).
+    Mueve el ítem a una ubicación administrativa 'ANULADO' y ajusta el stock a 0.
+    
+    URL: /api/v1/inventario/movimientos/anular/
+    Method: POST
+    Payload:
+    {
+        "tipo": "ACTIVO" | "LOTE",
+        "id": "uuid-del-item",
+        "motivo": "Error de digitación..."
+    }
+    """
+    permission_classes = [IsAuthenticated, IsEstacionActiva, CanGestionarBajasStock]
+
+    def post(self, request):
+        estacion = request.estacion_activa
+        
+        # 1. PUENTE DE AUDITORÍA (Vital para tu Mixin)
+        if not request.session.get('active_estacion_id'):
+            request.session['active_estacion_id'] = estacion.id
+
+        # 2. Obtener datos del request
+        tipo = request.data.get('tipo') # 'ACTIVO' o 'LOTE'
+        item_id = request.data.get('id')
+        motivo = request.data.get('motivo', 'Anulación desde App Móvil')
+
+        if not tipo or not item_id:
+            return Response({"detail": "Faltan datos (tipo, id)."}, status=status.HTTP_400_BAD_REQUEST)
+
+        # 3. Buscar el objeto
+        item = None
+        codigo_repr = ""
+        nombre_repr = ""
+
+        if tipo == 'ACTIVO':
+            item = get_object_or_404(Activo, id=item_id, estacion=estacion)
+            codigo_repr = item.codigo_activo
+            nombre_repr = item.producto.producto_global.nombre_oficial
+        elif tipo == 'LOTE':
+            item = get_object_or_404(LoteInsumo, id=item_id, compartimento__ubicacion__estacion=estacion)
+            codigo_repr = item.codigo_lote
+            nombre_repr = item.producto.producto_global.nombre_oficial
+        else:
+            return Response({"detail": "Tipo inválido."}, status=status.HTTP_400_BAD_REQUEST)
+
+        # 4. Validar Estado (Solo DISPONIBLE)
+        if not item.estado or item.estado.nombre != 'DISPONIBLE':
+            return Response(
+                {"detail": f"El ítem no está DISPONIBLE (Estado actual: {item.estado.nombre if item.estado else 'Nulo'})."}, 
+                status=status.HTTP_409_CONFLICT
+            )
+
+        try:
+            with transaction.atomic():
+                # A. Obtener destino usando TU función reutilizada
+                # Esto asegura consistencia con la Web (mismo ID de compartimento)
+                compartimento_destino = get_or_create_anulado_compartment(estacion)
+                
+                estado_anulado = Estado.objects.get(nombre='ANULADO POR ERROR')
+                compartimento_origen = item.compartimento
+
+                # B. Lógica de anulación (Vaciar cantidad si es lote)
+                cantidad_ajuste = 0
+                if tipo == 'LOTE':
+                    cantidad_ajuste = item.cantidad * -1 # Restar todo
+                    item.cantidad = 0
+                else:
+                    cantidad_ajuste = -1 # Activo es unitario
+                
+                # Mover al limbo
+                item.estado = estado_anulado
+                item.compartimento = compartimento_destino
+                item.save()
+
+                # C. Registrar Movimiento Técnico (AJUSTE)
+                MovimientoInventario.objects.create(
+                    tipo_movimiento=TipoMovimiento.AJUSTE,
+                    usuario=request.user,
+                    estacion=estacion,
+                    compartimento_origen=compartimento_origen,
+                    compartimento_destino=compartimento_destino,
+                    activo=item if tipo == 'ACTIVO' else None,
+                    lote_insumo=item if tipo == 'LOTE' else None,
+                    cantidad_movida=cantidad_ajuste,
+                    notas=f"Anulación Móvil: {motivo}"
+                )
+
+                # D. Auditoría de Sistema (Humana)
+                self.auditar(
+                    verbo="Anuló el registro de existencia (Error de Ingreso)",
+                    objetivo=item,
+                    objetivo_repr=f"{nombre_repr} ({codigo_repr})",
+                    detalles={
+                        'ubicacion_previa': compartimento_origen.nombre if compartimento_origen else "N/A",
+                        'motivo': motivo,
+                        'origen_accion': 'APP MÓVIL'
+                    }
+                )
+
+            return Response({"message": "Ítem anulado correctamente."}, status=status.HTTP_200_OK)
+
+        except Exception as e:
+            return Response({"detail": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 

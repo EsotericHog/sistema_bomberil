@@ -16,6 +16,7 @@ from .views import (
     InventarioUbicacionListAPIView,
     InventarioCompartimentoListAPIView,
     InventarioProveedorListAPIView,
+    InventarioAnularExistenciaAPIView,
     MantenimientoBuscarActivoParaPlanAPIView,
     MantenimientoAnadirActivoEnPlanAPIView,
     MantenimientoQuitarActivoDePlanAPIView,
@@ -86,6 +87,8 @@ urlpatterns = [
     path('gestion_inventario/core/ubicaciones/', InventarioUbicacionListAPIView.as_view(), name='api_ubicaciones_list'),
     path('gestion_inventario/core/compartimentos/', InventarioCompartimentoListAPIView.as_view(), name='api_compartimentos_list'),
     path('gestion_inventario/core/proveedores/', InventarioProveedorListAPIView.as_view(), name='api_proveedores_list'),
+    # Ruta para anular (dar de baja lógica por error)
+    path('gestion_inventario/movimientos/anular/', InventarioAnularExistenciaAPIView.as_view(), name='api_anular_existencia'),
 
 
 

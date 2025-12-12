@@ -120,6 +120,10 @@ class CanVerProveedores(permissions.BasePermission):
         # El mismo permiso que usa tu vista web
         return request.user.has_perm('gestion_usuarios.accion_gestion_inventario_ver_proveedores')
 
+class CanGestionarBajasStock(permissions.BasePermission):
+    def has_permission(self, request, view):
+        return request.user.has_perm('gestion_usuarios.accion_gestion_inventario_gestionar_bajas_stock')
+
 
 
 
