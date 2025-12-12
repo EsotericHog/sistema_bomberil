@@ -285,7 +285,8 @@ STORAGES = {
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
-        'rest_framework_simplejwt.authentication.JWTAuthentication',
+        'rest_framework.authentication.SessionAuthentication',  # Para la Web/Admin
+        'rest_framework_simplejwt.authentication.JWTAuthentication',  # Para el Móvil
     ),
     'DEFAULT_PERMISSION_CLASSES': (
         'rest_framework.permissions.IsAuthenticated',
