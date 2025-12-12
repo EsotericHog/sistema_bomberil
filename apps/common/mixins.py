@@ -178,8 +178,8 @@ class ObjectInStationRequiredMixin(AccessMixin):
             # Al final, 'related_obj' será la instancia de la Estacion
             object_station = related_obj
             
-            # Comparamos si el ID de la estación del objeto es el correcto
-            if object_station.id != active_station_id:
+            # Comparamos convirtiendo ambos a string para evitar errores de tipo (int vs str)
+            if str(object_station.id) != str(active_station_id):
                 raise Http404
                 
         except AttributeError:
