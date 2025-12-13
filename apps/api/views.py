@@ -3134,6 +3134,65 @@ class UsuarioListAPIView(APIView):
 
 
 
+class UsuarioDetalleAPIView(APIView):
+    """
+    Obtiene el detalle de un usuario específico dentro de la estación.
+    Equivale a la vista 'ver_usuario.html'.
+    Busca la última membresía válida (Activa o Inactiva).
+    
+    URL: /api/v1/usuarios/<uuid:pk>/detalle/
+    """
+    permission_classes = [IsAuthenticated, IsEstacionActiva, CanVerUsuarios]
+
+    def get(self, request, pk):
+        estacion = request.estacion_activa
+        
+        try:
+            # Buscamos la última membresía válida (no finalizada)
+            membresia = Membresia.objects.filter(
+                usuario_id=pk,
+                estacion=estacion,
+                estado__in=[Membresia.Estado.ACTIVO, Membresia.Estado.INACTIVO]
+            ).select_related('usuario').prefetch_related('roles').latest('created_at')
+            
+        except Membresia.DoesNotExist:
+            return Response(
+                {"detail": "El usuario no tiene una membresía activa o inactiva en esta estación."}, 
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        usuario = membresia.usuario
+        
+        # Recopilación de roles
+        roles = [r.nombre for r in membresia.roles.all()]
+
+        # Serialización de datos (Mezcla de Usuario y Membresía)
+        data = {
+            "id": usuario.id,
+            "membresia_id": membresia.id,
+            "nombre_completo": usuario.get_full_name(),
+            "rut": getattr(usuario, 'rut', 'N/A'),
+            "email": usuario.email,
+            "avatar_url": usuario.avatar.url if hasattr(usuario, 'avatar') and usuario.avatar else None,
+            
+            # Datos de Membresía
+            "estado": membresia.get_estado_display(),
+            "estado_codigo": membresia.estado,
+            "roles": roles,
+            "roles_display": ", ".join(roles) if roles else "Sin rol asignado",
+            "fecha_ingreso": membresia.created_at.strftime('%d/%m/%Y'),
+            
+            # Datos de Contacto (Defensivo por si los campos varían en tu modelo Usuario)
+            "telefono": getattr(usuario, 'telefono', 'No registrado'),
+            "direccion": getattr(usuario, 'direccion', 'No registrada'),
+            "grupo_sanguineo": getattr(usuario, 'grupo_sanguineo', None), # Útil para ficha médica
+        }
+
+        return Response(data, status=status.HTTP_200_OK)
+
+
+
+
 class DocumentoHistoricoListAPIView(APIView):
     """
     Lista los documentos históricos de la estación para la biblioteca digital móvil.

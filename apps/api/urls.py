@@ -39,6 +39,7 @@ from .views import (
     MantenimientoOrdenDetalleAPIView,
     DocumentoHistoricoListAPIView,
     UsuarioListAPIView,
+    UsuarioDetalleAPIView,
     BomberilLoginView,
     BomberilRefreshView,
     BomberilLogoutView,
@@ -168,4 +169,6 @@ urlpatterns = [
 
     # --- USUARIOS ---
     path('gestion_usuarios/lista/', UsuarioListAPIView.as_view(), name='api_usuarios_list'),
+    # Detalle de usuario (Por ID de Usuario, no de Membresía, para ser consistente con la URL web)
+    path('usuarios/<uuid:pk>/detalle/', UsuarioDetalleAPIView.as_view(), name='api_usuario_detalle'),
 ]
