@@ -47,6 +47,8 @@ from .views import (
     BomberilLogoutView,
     MeView,
     PasswordResetRequestView,
+    DescargarHojaVidaPropiaAPIView,
+    DescargarFichaMedicaPropiaAPIView,
     TestConnectionView
 )
 
@@ -71,6 +73,9 @@ urlpatterns = [
     path('auth/me/', MeView.as_view(), name='users_me'),
     # Recuperar contraseña
     path('auth/password_reset/', PasswordResetRequestView.as_view(), name='password_reset_request'),
+
+    path('perfil/descargar-hoja-vida/', DescargarHojaVidaPropiaAPIView.as_view(), name='api_descargar_hoja_vida'),
+    path('perfil/descargar-ficha-medica/', DescargarFichaMedicaPropiaAPIView.as_view(), name='api_descargar_ficha_medica'),
 
 
 

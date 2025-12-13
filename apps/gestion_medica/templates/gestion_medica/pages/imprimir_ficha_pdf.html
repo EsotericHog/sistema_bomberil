@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Ficha Médica</title>
+    <style>
+        @page {
+            size: letter portrait;
+            margin: 2cm;
+        }
+        body {
+            font-family: Helvetica, Arial, sans-serif;
+            font-size: 12px;
+            line-height: 1.5;
+            color: #333;
+        }
+        h1 {
+            color: #B91C1C; /* Rojo Bombero */
+            font-size: 20px;
+            text-align: center;
+            text-transform: uppercase;
+            border-bottom: 2px solid #B91C1C;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+        h2 {
+            font-size: 14px;
+            color: #444;
+            background-color: #f3f3f3;
+            padding: 5px;
+            border-left: 5px solid #B91C1C;
+            margin-top: 20px;
+            margin-bottom: 10px;
+        }
+        .header-info {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .info-row {
+            margin-bottom: 5px;
+        }
+        .label {
+            font-weight: bold;
+            color: #555;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 15px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 6px;
+            text-align: left;
+            font-size: 11px;
+        }
+        th {
+            background-color: #eee;
+            font-weight: bold;
+        }
+        .empty {
+            color: #999;
+            font-style: italic;
+        }
+        .alert {
+            color: #d9534f;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="header-info">
+        <h1>Ficha Clínica - Bomberil System</h1>
+        <div class="info-row">
+            <span class="label">Paciente:</span> {{ voluntario.usuario.get_full_name }}
+        </div>
+        <div class="info-row">
+            <span class="label">RUT:</span> {{ voluntario.usuario.rut }} | 
+            <span class="label">Edad:</span> {{ edad }} años
+        </div>
+        <div class="info-row">
+            <span class="label">Fecha Reporte:</span> {{ fecha_reporte|date:"d/m/Y" }}
+        </div>
+    </div>
+
+    <h2>1. Biometría y Antecedentes Generales</h2>
+    <table>
+        <tr>
+            <th>Sistema de Salud</th>
+            <td>{{ ficha.sistema_salud.nombre|default:"No informado" }}</td>
+            <th>Grupo Sanguíneo</th>
+            <td>{{ ficha.grupo_sanguineo.nombre|default:"No informado" }}</td>
+        </tr>
+        <tr>
+            <th>Peso</th>
+            <td>{{ ficha.peso_kg|default:"--" }} kg</td>
+            <th>Altura</th>
+            <td>{{ ficha.altura_mts|default:"--" }} mts</td>
+        </tr>
+        <tr>
+            <th>Presión Arterial</th>
+            <td colspan="3">
+                {% if ficha.presion_arterial_sistolica %}
+                    {{ ficha.presion_arterial_sistolica }} / {{ ficha.presion_arterial_diastolica }} mmHg
+                {% else %}
+                    No registrada
+                {% endif %}
+            </td>
+        </tr>
+    </table>
+
+    <h2>2. Alertas Médicas (Crítico)</h2>
+    
+    <h3>Alergias</h3>
+    {% if alergias %}
+    <table>
+        <thead>
+            <tr>
+                <th width="40%">Alergia</th>
+                <th width="60%">Observación</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in alergias %}
+            <tr>
+                <td class="alert">{{ item.alergia.nombre }}</td>
+                <td>{{ item.observaciones|default:"-" }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+        <p class="empty">No registra alergias.</p>
+    {% endif %}
+
+    <h3>Enfermedades Crónicas</h3>
+    {% if enfermedades %}
+    <table>
+        <thead>
+            <tr>
+                <th width="40%">Enfermedad</th>
+                <th width="60%">Estado/Observación</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in enfermedades %}
+            <tr>
+                <td>{{ item.enfermedad.nombre }}</td>
+                <td>{{ item.observaciones|default:"-" }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+        <p class="empty">No registra enfermedades crónicas.</p>
+    {% endif %}
+
+    <h2>3. Tratamientos y Antecedentes</h2>
+    
+    <h3>Medicamentos Permanentes</h3>
+    {% if medicamentos %}
+    <table>
+        <thead>
+            <tr>
+                <th>Medicamento</th>
+                <th>Dosis / Frecuencia</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in medicamentos %}
+            <tr>
+                <td>{{ item.medicamento.nombre_completo }}</td>
+                <td>{{ item.dosis_frecuencia|default:"Según indicación" }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+        <p class="empty">No consume medicamentos permanentes.</p>
+    {% endif %}
+
+    <h3>Cirugías</h3>
+    {% if cirugias %}
+    <table>
+        <thead>
+            <tr>
+                <th>Cirugía</th>
+                <th>Fecha</th>
+                <th>Observación</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in cirugias %}
+            <tr>
+                <td>{{ item.cirugia.nombre }}</td>
+                <td>{{ item.fecha_cirugia|date:"d/m/Y"|default:"-" }}</td>
+                <td>{{ item.observaciones|default:"-" }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+        <p class="empty">No registra cirugías.</p>
+    {% endif %}
+
+    <h2>4. Contactos de Emergencia</h2>
+    {% if contactos %}
+    <table>
+        <thead>
+            <tr>
+                <th>Nombre</th>
+                <th>Relación</th>
+                <th>Teléfono</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for c in contactos %}
+            <tr>
+                <td>{{ c.nombre_completo }}</td>
+                <td>{{ c.parentesco|default:"-" }}</td>
+                <td>{{ c.telefono }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+        <p class="empty">No registra contactos de emergencia.</p>
+    {% endif %}
+
+</body>
+</html>

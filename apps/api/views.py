@@ -1,4 +1,7 @@
 import uuid
+import io
+from django.http import HttpResponse
+from django.template.loader import render_to_string
 from datetime import date
 from django.utils import timezone
 from django.utils.dateparse import parse_date
@@ -14,8 +17,12 @@ from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.parsers import MultiPartParser, FormParser
+from rest_framework.exceptions import AuthenticationFailed
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework_simplejwt.exceptions import InvalidToken, TokenError
+from rest_framework_simplejwt.authentication import JWTAuthentication
+from xhtml2pdf import pisa
 
 from apps.gestion_usuarios.models import Usuario, Membresia
 from apps.gestion_mantenimiento.models import PlanMantenimiento, PlanActivoConfig, OrdenMantenimiento, RegistroMantenimiento
@@ -39,7 +46,7 @@ from apps.gestion_inventario.models import (
     PrestamoDetalle,
     Destinatario
 ) 
-from apps.gestion_voluntarios.models import Voluntario, HistorialCargo, HistorialReconocimiento, HistorialSancion
+from apps.gestion_voluntarios.models import Voluntario, HistorialCargo, HistorialReconocimiento, HistorialSancion, HistorialCurso
 from apps.gestion_medica.models import FichaMedica
 from apps.gestion_documental.models import DocumentoHistorico
 from apps.gestion_inventario.utils import generar_sku_sugerido, get_or_create_anulado_compartment, get_or_create_extraviado_compartment
@@ -3540,3 +3547,163 @@ class DocumentoHistoricoListAPIView(APIView):
 
         except Exception as e:
             return Response({"detail": f"Error al cargar documentos: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+
+
+class DescargarHojaVidaPropiaAPIView(AuditoriaMixin, APIView):
+    """
+    [Opción Token-URL] Permite descargar PDF enviando el token como parámetro GET.
+    URL: /api/v1/.../?token=eyJhbGci...
+    """
+    # 1. Quitamos IsAuthenticated automático porque el navegador no envía Header
+    permission_classes = [] 
+
+    def get(self, request):
+        # 2. Autenticación Manual por Query Param
+        token = request.query_params.get('token')
+        if not token:
+            return Response({'error': 'Token no proporcionado.'}, status=status.HTTP_401_UNAUTHORIZED)
+        
+        try:
+            # Validamos el JWT manualmente
+            auth = JWTAuthentication()
+            validated_token = auth.get_validated_token(token)
+            user = auth.get_user(validated_token)
+            request.user = user # Asignamos el usuario a la request
+            
+            # Verificar Estación Activa (Manual o vía lógica interna)
+            # Como no hay sesión, asumimos la estación activa basada en membresía o parámetro
+            # Para simplificar, obtenemos la estación del usuario si es necesario, 
+            # o permitimos la descarga si el usuario es válido.
+            
+        except (InvalidToken, AuthenticationFailed):
+             return Response({'error': 'Token inválido o expirado.'}, status=status.HTTP_401_UNAUTHORIZED)
+
+        # 3. Lógica de Negocio (Igual que antes)
+        try:
+            voluntario = Voluntario.objects.get(usuario=request.user)
+            membresia = Membresia.objects.filter(usuario=request.user, estado='ACTIVO').first()
+            cargo_actual_obj = HistorialCargo.objects.filter(voluntario=voluntario, fecha_fin__isnull=True).first()
+
+            context = {
+                'voluntario': voluntario,
+                'membresia': membresia,
+                'cargo_actual': cargo_actual_obj,
+                'request': request,
+                'cargos': HistorialCargo.objects.filter(voluntario=voluntario).order_by('-fecha_inicio'),
+                'reconocimientos': HistorialReconocimiento.objects.filter(voluntario=voluntario).order_by('-fecha_evento'),
+                'sanciones': HistorialSancion.objects.filter(voluntario=voluntario).order_by('-fecha_evento'),
+                'cursos': HistorialCurso.objects.filter(voluntario=voluntario).order_by('-fecha_curso'),
+            }
+
+            html_string = render_to_string("gestion_voluntarios/pages/hoja_vida_pdf.html", context)
+            result = io.BytesIO()
+            pdf = pisa.pisaDocument(io.BytesIO(html_string.encode("UTF-8")), result)
+
+            if not pdf.err:
+                self.auditar(
+                    verbo="descargó su propia hoja de vida (PDF)",
+                    objetivo=request.user,
+                    detalles={'origen': 'APP MÓVIL (Browser)'}
+                )
+                response = HttpResponse(result.getvalue(), content_type='application/pdf')
+                response['Content-Disposition'] = f'attachment; filename="Hoja_Vida_{request.user.rut}.pdf"'
+                return response
+            
+            return Response({'error': 'Error interno PDF.'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+        except Voluntario.DoesNotExist:
+            return Response({'error': 'Sin perfil de voluntario.'}, status=status.HTTP_404_NOT_FOUND)
+
+
+class DescargarFichaMedicaPropiaAPIView(AuditoriaMixin, APIView):
+    """
+    [Opción Token-URL] Genera y descarga el PDF de la Ficha Médica.
+    Reutiliza la plantilla HTML de la web pero la convierte a PDF en el servidor.
+    URL: /api/v1/perfil/ficha-medica/descargar/?token=xxxxx
+    """
+    permission_classes = [] # Seguridad manual para descarga por navegador
+
+    def get(self, request):
+        # ------------------------------------------------------------------
+        # 1. AUTENTICACIÓN MANUAL (Token en URL)
+        # ------------------------------------------------------------------
+        token = request.query_params.get('token')
+        if not token:
+            return Response({'error': 'Token no proporcionado.'}, status=status.HTTP_401_UNAUTHORIZED)
+        
+        try:
+            auth = JWTAuthentication()
+            validated_token = auth.get_validated_token(token)
+            request.user = auth.get_user(validated_token)
+        except (InvalidToken, TokenError, AuthenticationFailed):
+             return Response({'error': 'Token inválido o expirado.'}, status=status.HTTP_401_UNAUTHORIZED)
+
+        # ------------------------------------------------------------------
+        # 2. OBTENCIÓN DE DATOS (Misma lógica que tu vista Web)
+        # ------------------------------------------------------------------
+        try:
+            ficha = FichaMedica.objects.select_related(
+                'voluntario', 'voluntario__usuario', 'voluntario__domicilio_comuna', 
+                'grupo_sanguineo', 'sistema_salud'
+            ).prefetch_related(
+                'alergias__alergia', 'enfermedades__enfermedad', 'medicamentos__medicamento', 
+                'cirugias__cirugia', 'voluntario__contactos_emergencia'
+            ).get(voluntario__usuario=request.user)
+
+            voluntario = ficha.voluntario
+            
+            # Cálculo de edad
+            fecha_nac = voluntario.fecha_nacimiento or voluntario.usuario.birthdate # Fallback defensivo
+            edad = "S/I"
+            if fecha_nac: 
+                today = date.today()
+                # Corrección para evitar error si fecha_nac es datetime en lugar de date
+                if hasattr(fecha_nac, 'date'):
+                    fecha_nac = fecha_nac.date()
+                edad = today.year - fecha_nac.year - ((today.month, today.day) < (fecha_nac.month, fecha_nac.day))
+
+            context = {
+                'ficha': ficha,
+                'voluntario': voluntario,
+                'edad': edad,
+                'alergias': ficha.alergias.all(),
+                'enfermedades': ficha.enfermedades.all(),
+                'medicamentos': ficha.medicamentos.all(),
+                'cirugias': ficha.cirugias.all(),
+                'contactos': voluntario.contactos_emergencia.all(),
+                'fecha_reporte': date.today(),
+                'request': request # Importante para rutas de imágenes estáticas
+            }
+
+            # ------------------------------------------------------------------
+            # 3. GENERACIÓN PDF (El paso extra necesario)
+            # ------------------------------------------------------------------
+            # Renderizamos el HTML a un string en memoria
+            html_string = render_to_string("gestion_medica/pages/imprimir_ficha_pdf.html", context)
+            
+            # Convertimos ese string a PDF bytes
+            result = io.BytesIO()
+            pdf = pisa.pisaDocument(io.BytesIO(html_string.encode("UTF-8")), result)
+
+            if not pdf.err:
+                # Auditoría
+                self.auditar(
+                    verbo="descargó su propia ficha clínica (PDF)",
+                    objetivo=request.user,
+                    detalles={'origen': 'APP MÓVIL (Browser)'}
+                )
+                
+                # Devolvemos el PDF binario
+                response = HttpResponse(result.getvalue(), content_type='application/pdf')
+                filename = f"Ficha_Medica_{request.user.rut}.pdf"
+                response['Content-Disposition'] = f'attachment; filename="{filename}"'
+                return response
+
+            return Response({'error': 'Error interno al generar el PDF.'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+        except FichaMedica.DoesNotExist:
+            return Response({'error': 'No tienes ficha médica creada.'}, status=status.HTTP_404_NOT_FOUND)
+        except Exception as e:
+            return Response({'error': f'Error inesperado: {str(e)}'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
