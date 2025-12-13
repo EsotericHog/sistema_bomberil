@@ -3,7 +3,7 @@ from django.utils import timezone
 from django.utils.dateparse import parse_date
 from django.shortcuts import redirect, get_object_or_404
 from django.db import IntegrityError, transaction
-from django.db.models import Count, F, Sum, Q, Max
+from django.db.models import Count, F, Sum, Q, Max, Prefetch
 from django.db.models.functions import Coalesce
 from django.contrib.auth.forms import PasswordResetForm
 from django.conf import settings
@@ -38,6 +38,7 @@ from apps.gestion_inventario.models import (
     PrestamoDetalle,
     Destinatario
 ) 
+from apps.gestion_voluntarios.models import Voluntario, HistorialCargo, HistorialReconocimiento, HistorialSancion
 from apps.gestion_documental.models import DocumentoHistorico
 from apps.gestion_inventario.utils import generar_sku_sugerido, get_or_create_anulado_compartment, get_or_create_extraviado_compartment
 from .utils import obtener_contexto_bomberil
@@ -58,6 +59,7 @@ from .permissions import (
     CanVerPrestamos,
     CanVerDocumentos,
     CanVerUsuarios,
+    CanVerHojaVida,
     IsSelfOrStationAdmin
 )
 
@@ -3118,7 +3120,7 @@ class UsuarioListAPIView(APIView):
             data.append({
                 "usuario_id": m.usuario.id,
                 "membresia_id": m.id,
-                "nombre_completo": m.usuario.get_full_name(),
+                "nombre_completo": m.usuario.get_full_name,
                 "rut": getattr(m.usuario, 'rut', 'N/A'), # Fallback si no existe el campo
                 "email": m.usuario.email,
                 "estado": m.get_estado_display(),
@@ -3170,7 +3172,7 @@ class UsuarioDetalleAPIView(APIView):
         data = {
             "id": usuario.id,
             "membresia_id": membresia.id,
-            "nombre_completo": usuario.get_full_name(),
+            "nombre_completo": usuario.get_full_name,
             "rut": getattr(usuario, 'rut', 'N/A'),
             "email": usuario.email,
             "avatar_url": usuario.avatar.url if hasattr(usuario, 'avatar') and usuario.avatar else None,
@@ -3186,6 +3188,161 @@ class UsuarioDetalleAPIView(APIView):
             "telefono": getattr(usuario, 'telefono', 'No registrado'),
             "direccion": getattr(usuario, 'direccion', 'No registrada'),
             "grupo_sanguineo": getattr(usuario, 'grupo_sanguineo', None), # Útil para ficha médica
+        }
+
+        return Response(data, status=status.HTTP_200_OK)
+
+
+
+
+class VoluntarioHojaVidaAPIView(APIView):
+    """
+    Endpoint que retorna la Hoja de Vida completa de un voluntario.
+    
+    URL: /api/v1/voluntarios/<uuid:user_uuid>/hoja-vida/
+    
+    PAYLOAD DE RESPUESTA (Actualizado a models.py):
+    {
+        "perfil": {
+            "nombre_completo": "Juan Pérez",
+            "rut": "12.345.678-9",
+            "fecha_nacimiento": "1990-01-01",
+            "nacionalidad": "Chilena",  # Viene de Nacionalidad.gentilicio
+            "estado_civil": "Soltero(a)",
+            "profesion": "Ingeniero",
+            "genero": "Masculino",
+            "grupo_sanguineo": "Ver Ficha Médica" # No existe en modelo Voluntario
+        },
+        "contacto": {
+            "telefono": "912345678", # Prioridad Voluntario > Usuario
+            "email": "juan@example.com",
+            "direccion": "Av. Principal 123", # Concatenación Calle + Número
+            "comuna": "Iquique"
+        },
+        "institucional": {
+            "fecha_ingreso": "2020-05-15", # fecha_primer_ingreso
+            "estado_membresia": "ACTIVO",
+            "numero_registro": "BV-105",   # numero_registro_bomberil
+            "cargo_actual": "Teniente 1°"
+        },
+        "historial": {
+            "cargos": [
+                {
+                    "cargo": "Ayudante", 
+                    "inicio": "2021-01-01", 
+                    "fin": "2022-01-01", 
+                    "es_actual": false,
+                    "ambito": "Compañía"
+                }
+            ],
+            "premios": [
+                {
+                    "nombre": "5 Años de Servicio", # Tipo o Descripción Personalizada
+                    "fecha": "2023-05-15", 
+                    "motivo": "Cuerpo de Bomberos" # Usamos 'ambito'
+                }
+            ],
+            "sanciones": [
+                {
+                    "tipo": "Suspensión", 
+                    "fecha": "2021-08-20", 
+                    "motivo": "Falta al reglamento..."
+                }
+            ]
+        }
+    }
+    """
+    permission_classes = [IsAuthenticated, IsEstacionActiva, CanVerHojaVida]
+
+    def get(self, request, user_uuid):
+        estacion = request.estacion_activa
+
+        # 1. Validación de Seguridad (Igual a la Web)
+        # Solo permite ver voluntarios que tengan membresía en la estación activa
+        voluntario_check = get_object_or_404(
+            Voluntario, 
+            usuario__id=user_uuid, 
+            usuario__membresias__estacion=estacion
+        )
+
+        # 2. Query Optimizada (Trae todo en 1-2 consultas)
+        # Usamos prefetch_related para traer los historiales ordenados
+        voluntario = Voluntario.objects.select_related(
+            'usuario', 'nacionalidad', 'profesion', 'domicilio_comuna'
+        ).prefetch_related(
+            Prefetch('historial_cargos', queryset=HistorialCargo.objects.all().select_related('cargo').order_by('-fecha_inicio')),
+            Prefetch('historial_reconocimientos', queryset=HistorialReconocimiento.objects.all().order_by('-fecha_evento')),
+            Prefetch('historial_sanciones', queryset=HistorialSancion.objects.all().order_by('-fecha_evento')),
+            # Filtramos la membresía solo de ESTA estación para saber su estado local
+            Prefetch('usuario__membresias', queryset=Membresia.objects.filter(estacion=estacion), to_attr='membresia_local_list')
+        ).get(pk=voluntario_check.pk) # pk del voluntario (que puede ser igual al uuid user)
+
+        # 3. Procesamiento de Datos
+        usuario = voluntario.usuario
+        membresia = voluntario.usuario.membresia_local_list[0] if voluntario.usuario.membresia_local_list else None
+        
+        # Cargo actual (El que no tiene fecha fin)
+        # Buscamos en la lista prefetecheada para no ir a la BD de nuevo
+        cargo_actual_obj = next((c for c in voluntario.historial_cargos.all() if c.fecha_fin is None), None)
+        cargo_actual_str = cargo_actual_obj.cargo.nombre if cargo_actual_obj else "Voluntario"
+
+        # 4. Construcción del JSON (ADAPTADO A MODELS.PY)
+        data = {
+            "perfil": {
+                "nombre_completo": usuario.get_full_name,
+                "rut": getattr(usuario, 'rut', 'N/A'),
+                "fecha_nacimiento": voluntario.fecha_nacimiento.strftime('%Y-%m-%d') if voluntario.fecha_nacimiento else None,
+                # Usamos gentilicio o pais
+                "nacionalidad": voluntario.nacionalidad.gentilicio if voluntario.nacionalidad else "No informada",
+                "estado_civil": voluntario.get_estado_civil_display(),
+                "profesion": voluntario.profesion.nombre if voluntario.profesion else "No informada",
+                "genero": voluntario.get_genero_display(), # Agregado
+                # Grupo sanguíneo no está en Voluntario, lo dejamos nulo o lo sacas de FichaMedica
+                "grupo_sanguineo": "Ver Ficha Médica" 
+            },
+            "contacto": {
+                "telefono": voluntario.telefono or getattr(usuario, 'telefono', ''), # Prioridad al del voluntario
+                "email": usuario.email,
+                "direccion": f"{voluntario.domicilio_calle or ''} {voluntario.domicilio_numero or ''}".strip(), #
+                "comuna": voluntario.domicilio_comuna.nombre if voluntario.domicilio_comuna else ""
+            },
+            "institucional": {
+                # fecha_primer_ingreso
+                "fecha_ingreso": voluntario.fecha_primer_ingreso.strftime('%Y-%m-%d') if voluntario.fecha_primer_ingreso else None,
+                "estado_membresia": membresia.get_estado_display() if membresia else "Desconocido",
+                # numero_registro_bomberil
+                "numero_registro": voluntario.numero_registro_bomberil,
+                "cargo_actual": cargo_actual_str
+            },
+            "historial": {
+                "cargos": [
+                    {
+                        "cargo": hc.cargo.nombre,
+                        "inicio": hc.fecha_inicio.strftime('%Y-%m-%d'),
+                        "fin": hc.fecha_fin.strftime('%Y-%m-%d') if hc.fecha_fin else None,
+                        "es_actual": hc.fecha_fin is None,
+                        "ambito": hc.ambito # Agregado útil
+                    }
+                    for hc in voluntario.historial_cargos.all()
+                ],
+                "premios": [
+                    {
+                        # Lógica dual: Tipo o Descripción personalizada
+                        "nombre": hr.tipo_reconocimiento.nombre if hr.tipo_reconocimiento else hr.descripcion_personalizada,
+                        "fecha": hr.fecha_evento.strftime('%Y-%m-%d'),
+                        "motivo": hr.ambito # Usamos ámbito como contexto
+                    }
+                    for hr in voluntario.historial_reconocimientos.all()
+                ],
+                "sanciones": [
+                    {
+                        "tipo": hr.get_tipo_sancion_display(),
+                        "fecha": hr.fecha_evento.strftime('%Y-%m-%d'),
+                        "motivo": hr.descripcion
+                    }
+                    for hr in voluntario.historial_sanciones.all()
+                ]
+            }
         }
 
         return Response(data, status=status.HTTP_200_OK)

@@ -40,6 +40,7 @@ from .views import (
     DocumentoHistoricoListAPIView,
     UsuarioListAPIView,
     UsuarioDetalleAPIView,
+    VoluntarioHojaVidaAPIView,
     BomberilLoginView,
     BomberilRefreshView,
     BomberilLogoutView,
@@ -171,4 +172,6 @@ urlpatterns = [
     path('gestion_usuarios/lista/', UsuarioListAPIView.as_view(), name='api_usuarios_list'),
     # Detalle de usuario (Por ID de Usuario, no de Membresía, para ser consistente con la URL web)
     path('usuarios/<uuid:pk>/detalle/', UsuarioDetalleAPIView.as_view(), name='api_usuario_detalle'),
+    # Hoja vida
+    path('voluntarios/<uuid:user_uuid>/hoja-vida/', VoluntarioHojaVidaAPIView.as_view(), name='api_hoja_vida'),
 ]

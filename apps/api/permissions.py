@@ -160,6 +160,10 @@ class CanVerUsuarios(permissions.BasePermission):
     def has_permission(self, request, view):
         return request.user.has_perm('gestion_usuarios.accion_gestion_usuarios_ver_usuarios')
     
+class CanVerHojaVida(permissions.BasePermission):
+    def has_permission(self, request, view):
+        return request.user.has_perm('gestion_usuarios.accion_gestion_voluntarios_generar_hoja_vida')
+    
 
 
 
