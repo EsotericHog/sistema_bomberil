@@ -64,48 +64,66 @@
             word-break: break-all; 
         }
 
+        /* Estilo para mensaje de error en PDF */
+        .error-container {
+            text-align: center;
+            padding: 50px;
+            border: 1px solid #ccc;
+        }
     </style>
 </head>
 <body>
 
-    <h1>Listado de Voluntarios</h1>
+    {# === PROTECCIÓN DE PERMISOS: GENERAR REPORTES === #}
+    {% if perms.gestion_usuarios.accion_gestion_voluntarios_generar_reportes %}
 
-    <table>
-        <thead>
-            <tr>
-                <th>RUT</th>
-                <th>Nombre Completo</th>
-                <th>Email</th>
-                <th>Teléfono</th>
-                <th>Estación</th>
-                <th>Estado</th>
-                <th>Cargo</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for voluntario in voluntarios %}
-                {% with membresia=voluntario.usuario.membresia_activa_list|first cargo_actual=voluntario.cargo_actual_list|first %}
+        <h1>Listado de Voluntarios</h1>
+
+        <table>
+            <thead>
                 <tr>
-                    {# Usamos |default:"-" para evitar celdas vacías que rompan el diseño #}
-                    <td>{{ voluntario.usuario.rut|default:"-" }}</td>
-                    <td>{{ voluntario.usuario.get_full_name }}</td>
-                    <td>{{ voluntario.usuario.email|default:"-" }}</td>
-                    
-                    {# AQUÍ ESTÁ LA CORRECCIÓN PRINCIPAL #}
-                    <td>{{ voluntario.usuario.phone|default:"-" }}</td>
-                    
-                    <td>{% if membresia %}{{ membresia.estacion.nombre }}{% else %}Sin Estación{% endif %}</td>
-                    <td>{% if membresia %}{{ membresia.get_estado_display }}{% else %}Inactivo{% endif %}</td>
-                    <td>{% if cargo_actual %}{{ cargo_actual.cargo.nombre }}{% else %}Sin Cargo{% endif %}</td>
+                    <th>RUT</th>
+                    <th>Nombre Completo</th>
+                    <th>Email</th>
+                    <th>Teléfono</th>
+                    <th>Estación</th>
+                    <th>Estado</th>
+                    <th>Cargo</th>
                 </tr>
-                {% endwith %}
-            {% empty %}
-                <tr>
-                    <td colspan="7" style="text-align: center; padding: 10px;">No hay voluntarios registrados.</td>
-                </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+            </thead>
+            <tbody>
+                {% for voluntario in voluntarios %}
+                    {% with membresia=voluntario.usuario.membresia_activa_list|first cargo_actual=voluntario.cargo_actual_list|first %}
+                    <tr>
+                        {# Usamos |default:"-" para evitar celdas vacías que rompan el diseño #}
+                        <td>{{ voluntario.usuario.rut|default:"-" }}</td>
+                        <td>{{ voluntario.usuario.get_full_name }}</td>
+                        <td>{{ voluntario.usuario.email|default:"-" }}</td>
+                        
+                        {# AQUÍ ESTÁ LA CORRECCIÓN PRINCIPAL #}
+                        <td>{{ voluntario.usuario.phone|default:"-" }}</td>
+                        
+                        <td>{% if membresia %}{{ membresia.estacion.nombre }}{% else %}Sin Estación{% endif %}</td>
+                        <td>{% if membresia %}{{ membresia.get_estado_display }}{% else %}Inactivo{% endif %}</td>
+                        <td>{% if cargo_actual %}{{ cargo_actual.cargo.nombre }}{% else %}Sin Cargo{% endif %}</td>
+                    </tr>
+                    {% endwith %}
+                {% empty %}
+                    <tr>
+                        <td colspan="7" style="text-align: center; padding: 10px;">No hay voluntarios registrados.</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+    {% else %}
+        {# Mensaje alternativo para el PDF si no hay permisos #}
+        <div class="error-container">
+            <h1>Acceso Restringido</h1>
+            <p>No tiene los permisos necesarios para generar o visualizar este reporte de voluntarios.</p>
+        </div>
+    {% endif %}
+    {# === FIN PROTECCIÓN === #}
 
 </body>
 </html>

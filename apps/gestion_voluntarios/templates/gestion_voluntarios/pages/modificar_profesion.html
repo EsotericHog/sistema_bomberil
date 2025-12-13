@@ -9,32 +9,48 @@
         {# Título Principal: Tamaño 3XL y Negrita #}
         <h1 class="text-3xl font-bold">Modificar Profesión: {{ profesion.nombre }}</h1>
         
-        <form method="POST">
-            {% csrf_token %}
-            
-            <div class="form-section">
-                {# Título Sección: Tamaño XL y Negrita #}
-                <h2 class="text-xl font-bold">Datos de la Profesión</h2>
+        {# === PROTECCIÓN DE PERMISOS: MODIFICAR DATOS DE NORMALIZACIÓN (PROFESIONES) === #}
+        {% if perms.gestion_usuarios.accion_gestion_voluntarios_gestionar_datos_normalizacion %}
+
+            <form method="POST">
+                {% csrf_token %}
                 
-                {% for field in form %}
-                    <div class="form-group">
-                        {{ field.label_tag }}
-                        {{ field }}
-                        {% if field.errors %}
-                            {# Errores: Texto pequeño y negrita. Se elimina font-size inline #}
-                            <div class="error-message text-sm font-bold" style="color: red; margin-top: 5px;">{{ field.errors|first }}</div>
-                        {% endif %}
-                    </div>
-                {% endfor %}
+                <div class="form-section">
+                    {# Título Sección: Tamaño XL y Negrita #}
+                    <h2 class="text-xl font-bold">Datos de la Profesión</h2>
+                    
+                    {% for field in form %}
+                        <div class="form-group">
+                            {{ field.label_tag }}
+                            {{ field }}
+                            {% if field.errors %}
+                                {# Errores: Texto pequeño y negrita. Se elimina font-size inline #}
+                                <div class="error-message text-sm font-bold" style="color: red; margin-top: 5px;">{{ field.errors|first }}</div>
+                            {% endif %}
+                        </div>
+                    {% endfor %}
+                </div>
+                
+                <div class="button-group">
+                    {# Botón Guardar: Tamaño Base y Negrita #}
+                    <button type="submit" class="btn-primary text-base font-bold">Guardar Cambios</button>
+                    {# Botón Cancelar: Tamaño Base y Medio #}
+                    <a href="{% url 'gestion_voluntarios:ruta_cargos_lista' %}" class="btn-secondary text-base font-medium">Cancelar</a>
+                </div>
+            </form>
+
+        {% else %}
+            {# Mensaje alternativo si no tiene permisos #}
+            <div class="alert alert-danger mt-4 text-center">
+                <h4 class="font-bold">Acceso Restringido</h4>
+                <p>No tienes permisos para modificar profesiones (Datos de Normalización).</p>
+                {# Agregamos un botón de volver explícito #}
+                <br>
+                <a href="{% url 'gestion_voluntarios:ruta_cargos_lista' %}" class="btn btn-secondary text-base font-medium">Volver al listado</a>
             </div>
-            
-            <div class="button-group">
-                {# Botón Guardar: Tamaño Base y Negrita #}
-                <button type="submit" class="btn-primary text-base font-bold">Guardar Cambios</button>
-                {# Botón Cancelar: Tamaño Base y Medio #}
-                <a href="{% url 'gestion_voluntarios:ruta_cargos_lista' %}" class="btn-secondary text-base font-medium">Cancelar</a>
-            </div>
-        </form>
+        {% endif %}
+        {# === FIN PROTECCIÓN === #}
+        
     </div>
 </div>
 {% endblock %}

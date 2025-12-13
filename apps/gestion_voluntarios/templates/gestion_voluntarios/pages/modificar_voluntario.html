@@ -14,90 +14,108 @@
             Editando perfil de: <strong class="font-bold">{{ voluntario.usuario.get_full_name }}</strong>
         </p>
         
-        <div class="current-photo-container">
-            {# --- LÓGICA DE IMAGEN ROBUSTA --- #}
-            {% if voluntario.imagen %}
-                <img src="{{ voluntario.imagen.url }}" alt="Foto actual" class="current-photo">
-                <p class="text-sm font-regular" style="color: #666; margin-top: 10px;">Foto de perfil actual</p>
-            {% else %}
-                <div class="avatar-placeholder-large text-3xl font-bold">
-                    {{ voluntario.usuario.first_name|slice:":1" }}{{ voluntario.usuario.last_name|slice:":1" }}
-                </div>
-                <p class="text-sm font-regular" style="color: #666; margin-top: 10px;">Sin foto de perfil asignada</p>
-            {% endif %}
-        </div>
+        {# === PROTECCIÓN DE PERMISOS: GESTIONAR VOLUNTARIOS === #}
+        {% if perms.gestion_usuarios.accion_gestion_voluntarios_gestionar_voluntarios %}
 
-        <form id="modificar-form" method="POST" enctype="multipart/form-data">
-            {% csrf_token %}
+            <div class="current-photo-container">
+                {# --- LÓGICA DE IMAGEN ROBUSTA --- #}
+                {% if voluntario.imagen %}
+                    <img src="{{ voluntario.imagen.url }}" alt="Foto actual" class="current-photo">
+                    <p class="text-sm font-regular" style="color: #666; margin-top: 10px;">Foto de perfil actual</p>
+                {% else %}
+                    <div class="avatar-placeholder-large text-3xl font-bold">
+                        {{ voluntario.usuario.first_name|slice:":1" }}{{ voluntario.usuario.last_name|slice:":1" }}
+                    </div>
+                    <p class="text-sm font-regular" style="color: #666; margin-top: 10px;">Sin foto de perfil asignada</p>
+                {% endif %}
+            </div>
 
-            {% if usuario_form.non_field_errors or voluntario_form.non_field_errors %}
-                <div class="alert alert-danger">
-                    <p class="text-base font-regular"><strong class="font-bold">Error al guardar:</strong> Por favor revise los siguientes errores:</p>
-                    <div class="text-sm font-medium">
-                        {{ usuario_form.non_field_errors }}
-                        {{ voluntario_form.non_field_errors }}
+            <form id="modificar-form" method="POST" enctype="multipart/form-data">
+                {% csrf_token %}
+
+                {% if usuario_form.non_field_errors or voluntario_form.non_field_errors %}
+                    <div class="alert alert-danger">
+                        <p class="text-base font-regular"><strong class="font-bold">Error al guardar:</strong> Por favor revise los siguientes errores:</p>
+                        <div class="text-sm font-medium">
+                            {{ usuario_form.non_field_errors }}
+                            {{ voluntario_form.non_field_errors }}
+                        </div>
+                    </div>
+                {% endif %}
+
+                <div class="form-section">
+                    <h2 class="text-xl font-bold">Datos de Acceso y Contacto</h2>
+                    
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                        {% for field in usuario_form %}
+                            <div class="form-group" {% if field.name == 'email' %}style="grid-column: 1 / -1;"{% endif %}>
+                                
+                                {# CAMBIO FINAL: text-base (Tamaño estándar) + font-bold (Negrita) #}
+                                <label for="{{ field.id_for_label }}" class="text-base font-bold" style="display:block; margin-bottom: 5px; color: #333;">
+                                    {{ field.label }}:
+                                </label>
+                                
+                                {{ field }}
+                                
+                                {% if field.errors %}
+                                    <div class="error-message text-sm font-bold">{{ field.errors|first }}</div>
+                                {% endif %}
+                            </div>
+                        {% endfor %}
                     </div>
                 </div>
-            {% endif %}
 
-            <div class="form-section">
-                <h2 class="text-xl font-bold">Datos de Acceso y Contacto</h2>
+                <div class="form-section">
+                    <h2 class="text-xl font-bold">Información Bomberil y Personal</h2>
+
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                        {% for field in voluntario_form %}
+                            <div class="form-group" 
+                                 {% if field.name == 'imagen' or field.name == 'domicilio_calle' %}style="grid-column: 1 / -1;"{% endif %}>
+                                
+                                {# CAMBIO FINAL: text-base + font-bold #}
+                                <label for="{{ field.id_for_label }}" class="text-base font-bold" style="display:block; margin-bottom: 5px; color: #333;">
+                                    {{ field.label }}:
+                                </label>
+                                
+                                {{ field }}
+                                
+                                {% if field.errors %}
+                                    <div class="error-message text-sm font-bold">{{ field.errors|first }}</div>
+                                {% endif %}
+                                {% if field.help_text %}
+                                    <small class="help-text text-xs font-regular">{{ field.help_text }}</small>
+                                {% endif %}
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <div class="button-group">
+                    <a href="{% url 'gestion_voluntarios:ruta_ver_voluntario' id=voluntario.usuario.id %}" class="btn btn-secondary text-base font-medium">
+                        <i class="fas fa-times" style="margin-right: 8px;"></i> Cancelar
+                    </a>
+                    <button type="submit" class="btn btn-primary text-base font-bold">
+                        <i class="fas fa-save" style="margin-right: 8px;"></i> Guardar Cambios
+                    </button>
+                </div>
                 
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
-                    {% for field in usuario_form %}
-                        <div class="form-group" {% if field.name == 'email' %}style="grid-column: 1 / -1;"{% endif %}>
-                            
-                            {# CAMBIO FINAL: text-base (Tamaño estándar) + font-bold (Negrita) #}
-                            <label for="{{ field.id_for_label }}" class="text-base font-bold" style="display:block; margin-bottom: 5px; color: #333;">
-                                {{ field.label }}:
-                            </label>
-                            
-                            {{ field }}
-                            
-                            {% if field.errors %}
-                                <div class="error-message text-sm font-bold">{{ field.errors|first }}</div>
-                            {% endif %}
-                        </div>
-                    {% endfor %}
-                </div>
-            </div>
+            </form>
 
-            <div class="form-section">
-                <h2 class="text-xl font-bold">Información Bomberil y Personal</h2>
-
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
-                    {% for field in voluntario_form %}
-                        <div class="form-group" 
-                             {% if field.name == 'imagen' or field.name == 'domicilio_calle' %}style="grid-column: 1 / -1;"{% endif %}>
-                            
-                            {# CAMBIO FINAL: text-base + font-bold #}
-                            <label for="{{ field.id_for_label }}" class="text-base font-bold" style="display:block; margin-bottom: 5px; color: #333;">
-                                {{ field.label }}:
-                            </label>
-                            
-                            {{ field }}
-                            
-                            {% if field.errors %}
-                                <div class="error-message text-sm font-bold">{{ field.errors|first }}</div>
-                            {% endif %}
-                            {% if field.help_text %}
-                                <small class="help-text text-xs font-regular">{{ field.help_text }}</small>
-                            {% endif %}
-                        </div>
-                    {% endfor %}
-                </div>
-            </div>
-
-            <div class="button-group">
+        {% else %}
+            {# Mensaje alternativo si no tiene permisos #}
+            <div class="alert alert-danger mt-4 text-center">
+                <h4 class="font-bold">Acceso Restringido</h4>
+                <p>No tienes permisos para modificar la información de los voluntarios.</p>
+                <br>
+                {# Redireccionamos a la vista de detalle (Ver Voluntario) #}
                 <a href="{% url 'gestion_voluntarios:ruta_ver_voluntario' id=voluntario.usuario.id %}" class="btn btn-secondary text-base font-medium">
-                    <i class="fas fa-times" style="margin-right: 8px;"></i> Cancelar
+                    Volver al perfil
                 </a>
-                <button type="submit" class="btn btn-primary text-base font-bold">
-                    <i class="fas fa-save" style="margin-right: 8px;"></i> Guardar Cambios
-                </button>
             </div>
-            
-        </form>
+        {% endif %}
+        {# === FIN PROTECCIÓN === #}
+
     </div>
 </div>
 {% endblock  %}
