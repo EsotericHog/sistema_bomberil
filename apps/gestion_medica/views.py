@@ -365,9 +365,14 @@ class MedicoImprimirQRView(BaseEstacionMixin, CustomPermissionRequiredMixin, Vie
     permission_required = 'gestion_usuarios.accion_gestion_medica_generar_reportes'
 
     def get(self, request, pk):
+        # Recuperamos la ficha usando el pk que viene en la url de ESTA vista (para saber qué imprimir)
         ficha = get_object_or_404(FichaMedica, pk=pk, voluntario__usuario__membresias__estacion=self.estacion_activa)
         
-        data_qr = request.build_absolute_uri(reverse('gestion_medica:ruta_informacion_paciente', args=[pk]))
+        # CAMBIO AQUÍ:
+        # En lugar de construir una URL completa, accedemos al Usuario a través de las relaciones
+        # FichaMedica -> (1:1) Voluntario -> (1:1) Usuario -> id (UUID)
+        # Convertimos a string para asegurar que el QR lo procese como texto plano
+        data_qr = str(ficha.voluntario.usuario.id)
         
         qr = qrcode.QRCode(version=1, error_correction=qrcode.constants.ERROR_CORRECT_H, box_size=10, border=4)
         qr.add_data(data_qr)
