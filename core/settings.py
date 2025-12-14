@@ -301,6 +301,9 @@ SIMPLE_JWT = {
     'AUTH_HEADER_TYPES': ('Bearer',),
 }
 
+# Limita el tamaño del cuerpo de la petición (ej. 10MB)
+DATA_UPLOAD_MAX_MEMORY_SIZE = 10 * 1024 * 1024
+
 
 # Configurar el motor de sesión
 SESSION_ENGINE = 'user_sessions.backends.db'
