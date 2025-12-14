@@ -728,6 +728,7 @@ class InventarioCrearPrestamoAPIView(AuditoriaMixin, APIView):
         "destinatario_id": 1, 
         "nuevo_destinatario_nombre": "Bomberos Iquique" (Opcional si no hay ID),
         "notas": "Apoyo incendio",
+        "fecha_devolucion_esperada": "2023-12-31", // (Opcional) YYYY-MM-DD
         "items": [
             {"tipo": "activo", "id": "uuid...", "cantidad_prestada": 1},
             {"tipo": "lote", "id": "uuid...", "cantidad_prestada": 5}
@@ -761,12 +762,18 @@ class InventarioCrearPrestamoAPIView(AuditoriaMixin, APIView):
                 # 2. Gestionar Destinatario
                 destinatario = self._get_or_create_destinatario(data, estacion, request.user)
                 
+                # Manejo seguro de la fecha (string vacío o nulo -> None)
+                fecha_devolucion = data.get('fecha_devolucion_esperada')
+                if not fecha_devolucion:
+                    fecha_devolucion = None
+
                 # 3. Crear Cabecera Préstamo
                 prestamo = Prestamo.objects.create(
                     estacion=estacion,
                     usuario_responsable=request.user,
                     destinatario=destinatario,
-                    notas_prestamo=data.get('notas', '')
+                    notas_prestamo=data.get('notas', ''),
+                    fecha_devolucion_esperada=fecha_devolucion # <--- Campo agregado
                 )
 
                 # 4. Procesar Ítems
