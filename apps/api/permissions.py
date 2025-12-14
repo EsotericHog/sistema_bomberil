@@ -80,14 +80,6 @@ class IsSelfOrStationAdmin(permissions.BasePermission):
             estacion_id=admin_station_id,
             estado__in=['ACTIVO', 'INACTIVO']
         ).exists()
-
-
-
-
-# --- PERMISOS DE GESTIÓN DE USUARIOS ---
-class CanCrearUsuario(permissions.BasePermission):
-    def has_permission(self, request, view):
-        return request.user.has_perm('gestion_usuarios.accion_gestion_usuarios_crear_usuario')
     
 
 
@@ -96,6 +88,13 @@ class CanCrearUsuario(permissions.BasePermission):
 class CanVerCatalogos(permissions.BasePermission):
     def has_permission(self, request, view):
         return request.user.has_perm('gestion_usuarios.accion_gestion_inventario_ver_catalogos')
+
+class CanGestionarCatalogoLocal(permissions.BasePermission):
+    """
+    Permite añadir productos existentes en el global al catálogo local de la estación.
+    """
+    def has_permission(self, request, view):
+        return request.user.has_perm('gestion_usuarios.accion_gestion_inventario_gestionar_catalogo_local')
 
 class CanCrearProductoGlobal(permissions.BasePermission):
     def has_permission(self, request, view):
@@ -156,6 +155,10 @@ class CanGestionarOrdenes(permissions.BasePermission):
 
 
 # --- PERMISOS DE GESTIÓN USUARIOS ---
+class CanCrearUsuario(permissions.BasePermission):
+    def has_permission(self, request, view):
+        return request.user.has_perm('gestion_usuarios.accion_gestion_usuarios_crear_usuario')
+    
 class CanVerUsuarios(permissions.BasePermission):
     def has_permission(self, request, view):
         return request.user.has_perm('gestion_usuarios.accion_gestion_usuarios_ver_usuarios')

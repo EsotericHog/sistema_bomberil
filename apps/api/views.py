@@ -56,6 +56,7 @@ from .permissions import (
     IsEstacionActiva, 
     CanCrearUsuario,
     CanVerCatalogos, 
+    CanGestionarCatalogoLocal,
     CanVerStock,
     CanCrearProductoGlobal,
     CanGestionarPlanes,
@@ -66,6 +67,8 @@ from .permissions import (
     CanGestionarStockInterno,
     CanGestionarPrestamos,
     CanVerPrestamos,
+    CanVerUbicaciones,
+    CanVerProveedores,
     CanVerDocumentos,
     CanVerUsuarios,
     CanVerHojaVida,
@@ -385,7 +388,7 @@ class InventarioGraficoExistenciasCategoriaAPIView(APIView):
     API Endpoint para obtener datos del gráfico de existencias por categoría.
     Suma Activos y Lotes de Insumo de la estación activa.
     """
-    permission_classes = [IsAuthenticated, IsEstacionActiva]
+    permission_classes = [IsAuthenticated, IsEstacionActiva, CanVerStock]
     
     def get(self, request, format=None):
         try:
@@ -454,7 +457,7 @@ class InventarioGraficoEstadosAPIView(APIView):
     API Endpoint para obtener datos del gráfico de estado general del inventario.
     Agrupa por TipoEstado (OPERATIVO, NO OPERATIVO, ADMINISTRATIVO, etc.)
     """
-    permission_classes = [IsAuthenticated, IsEstacionActiva]
+    permission_classes = [IsAuthenticated, IsEstacionActiva, CanVerStock]
 
     def get(self, request, format=None):
         try:
@@ -541,7 +544,7 @@ class InventarioAnadirProductoLocalAPIView(AuditoriaMixin, APIView):
     Utiliza Serializers para validación de entrada, 
     Manejo de Excepciones granular y Transacciones atómicas.
     """
-    permission_classes = [IsAuthenticated, IsEstacionActiva, CanCrearProductoGlobal]
+    permission_classes = [IsAuthenticated, IsEstacionActiva, CanGestionarCatalogoLocal]
     required_permission = "gestion_usuarios.accion_gestion_inventario_crear_producto_global"
 
     def post(self, request, format=None):
@@ -615,7 +618,7 @@ class InventarioBuscarExistenciasPrestablesAPI(APIView):
     Endpoint para búsqueda tipo 'Typeahead' de existencias.
     Requiere autenticación y una estación activa (vía Sesión, Header o Membresía).
     """
-    permission_classes = [IsAuthenticated, IsEstacionActiva]
+    permission_classes = [IsAuthenticated, IsEstacionActiva, CanGestionarPrestamos]
 
     def get(self, request, format=None):
         # 1. Validación de Parámetros
@@ -887,7 +890,7 @@ class InventarioCrearPrestamoAPIView(AuditoriaMixin, APIView):
 
 
 class InventarioDestinatarioListAPIView(APIView):
-    permission_classes = [IsAuthenticated, IsEstacionActiva]
+    permission_classes = [IsAuthenticated, IsEstacionActiva, CanGestionarPrestamos]
     def get(self, request):
         qs = Destinatario.objects.filter(estacion=request.estacion_activa).order_by('nombre_entidad')
         data = [{"id": d.id, "nombre": d.nombre_entidad} for d in qs]
