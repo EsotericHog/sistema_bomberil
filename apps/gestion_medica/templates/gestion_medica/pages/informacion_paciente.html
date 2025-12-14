@@ -118,7 +118,7 @@
                                 <div class="item-icon-box bg-soft-red"><i class="fas fa-allergies"></i></div>
                                 <div class="item-text">
                                     <h6 class="text-base font-bold text-dark mb-0">{{ item.alergia.nombre }}</h6>
-                                    {% if item.observaciones %} <p class="text-sm text-muted m-0">{{ item.observaciones }}</p> {% endif %}
+                                    {% if item.observaciones %} <p class="text-sm text-muted font-regular m-0">{{ item.observaciones }}</p> {% endif %}
                                 </div>
                             </li>
                             {% empty %}
@@ -142,7 +142,7 @@
                                 <div class="item-icon-box bg-soft-yellow"><i class="fas fa-procedures"></i></div>
                                 <div class="item-text">
                                     <h6 class="text-base font-bold text-dark mb-0">{{ item.enfermedad.nombre }}</h6>
-                                    {% if item.observaciones %} <p class="text-sm text-muted m-0">{{ item.observaciones }}</p> {% endif %}
+                                    {% if item.observaciones %} <p class="text-sm text-muted font-regular m-0">{{ item.observaciones }}</p> {% endif %}
                                 </div>
                             </li>
                             {% empty %}
@@ -168,7 +168,7 @@
                                 <div class="item-icon-box bg-soft-blue"><i class="fas fa-prescription-bottle"></i></div>
                                 <div class="item-text">
                                     <h6 class="text-base font-bold text-dark mb-0">{{ item.medicamento.nombre }}</h6>
-                                    {% if item.dosis_frecuencia %} <p class="text-sm text-muted m-0">{{ item.dosis_frecuencia }}</p> {% endif %}
+                                    {% if item.dosis_frecuencia %} <p class="text-sm text-muted font-regular m-0">{{ item.dosis_frecuencia }}</p> {% endif %}
                                 </div>
                             </li>
                             {% empty %}
@@ -192,7 +192,7 @@
                                 <div class="item-icon-box bg-soft-purple"><i class="fas fa-user-md"></i></div>
                                 <div class="item-text">
                                     <h6 class="text-base font-bold text-dark mb-0">{{ item.cirugia.nombre }}</h6>
-                                    <p class="text-sm text-muted text-data-code m-0">{{ item.fecha_cirugia|date:"d/m/Y"|default:"Fecha S/I" }}</p>
+                                    <p class="text-sm text-muted text-data-code font-regular m-0">{{ item.fecha_cirugia|date:"d/m/Y"|default:"Fecha S/I" }}</p>
                                 </div>
                             </li>
                             {% empty %}
@@ -218,7 +218,7 @@
                                 <div class="item-icon-box bg-soft-green"><i class="fas fa-user-shield"></i></div>
                                 <div class="item-text" style="flex-grow:1;">
                                     <h6 class="text-base font-bold text-dark mb-0">{{ contacto.nombre_completo }}</h6>
-                                    <p class="text-sm text-muted m-0">{{ contacto.parentesco }}</p>
+                                    <p class="text-sm text-muted font-regular m-0">{{ contacto.parentesco }}</p>
                                 </div>
                                 <a href="tel:{{ contacto.telefono }}" class="btn btn-success btn-sm rounded-circle text-white" style="width:30px; height:30px; display:flex; align-items:center; justify-content:center;">
                                     <i class="fas fa-phone text-xs"></i>

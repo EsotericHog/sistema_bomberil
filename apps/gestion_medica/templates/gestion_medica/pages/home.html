@@ -30,7 +30,7 @@
     <div class="row">
         
         <div class="col-lg-4 col-md-12 mb-4">
-            <div class="card-dashboard donation-card">
+            <div class="card-dashboard donation-card h-100">
                 <div class="card-header-custom">
                     <h6 class="card-header-title text-danger text-xl font-bold">
                         <i class="fa-solid fa-hand-holding-heart me-1"></i> Datos de Donación
@@ -46,13 +46,13 @@
                     <ul class="list-group list-stats mb-4">
                         <li class="list-group-item d-flex justify-content-between align-items-center">
                             <div class="text-base font-medium">
-                                <i class="fa-solid fa-check-circle text-success me-2"></i> Donantes Universales <small class="text-muted">(O-)</small>
+                                <i class="fa-solid fa-check-circle text-success me-2"></i> Donantes Universales <small class="text-muted font-regular">(O-)</small>
                             </div>
                             <span class="badge bg-success rounded-pill text-sm font-bold">{{ donor_universal_count|default:0 }}</span>
                         </li>
                         <li class="list-group-item d-flex justify-content-between align-items-center">
                             <div class="text-base font-medium">
-                                <i class="fa-solid fa-user-plus text-info me-2"></i> Receptores Universales <small class="text-muted">(AB+)</small>
+                                <i class="fa-solid fa-user-plus text-info me-2"></i> Receptores Universales <small class="text-muted font-regular">(AB+)</small>
                             </div>
                             <span class="badge bg-info text-dark rounded-pill text-sm font-bold">{{ receptor_universal_count|default:0 }}</span>
                         </li>
@@ -66,10 +66,10 @@
         </div>
 
         <div class="col-lg-8 col-md-12 mb-4">
-            <div class="card-dashboard">
+            <div class="card-dashboard h-100">
                 <div class="card-header-custom">
                     <h6 class="card-header-title text-xl font-bold">
-                        <i class="fa-solid fa-chart-pie me-1"></i> Distribución de Grupos Sanguíneos
+                        <i class="fa-solid fa-chart-pie me-1"></i> Distribución Sanguínea
                     </h6>
                 </div>
                 <div class="card-body-custom">
@@ -78,12 +78,15 @@
                         <div class="row">
                             {% for item in distribucion_sumario %}
                             <div class="col-md-6 col-lg-6">
-                                <div class="blood-type-row">
-                                    <div class="progress-label">
+                                <div class="blood-type-row mb-3">
+                                    <div class="progress-label d-flex justify-content-between mb-1">
                                         <span class="text-dark font-bold text-lg">Grupo {{ item.grupo_sanguineo }}</span>
-                                        <span class="text-secondary text-base font-medium">{{ item.percentage }}% <small class="text-sm">({{ item.count }})</small></span>
+                                        <span class="text-secondary text-base font-medium">
+                                            {{ item.percentage }}% 
+                                            <span class="text-sm text-muted font-regular">({{ item.count }})</span>
+                                        </span>
                                     </div>
-                                    <div class="progress progress-custom">
+                                    <div class="progress progress-custom" style="height: 10px;">
                                         <div class="progress-bar bg-danger" 
                                             role="progressbar" 
                                             style="width: {{ item.percentage }}%;"
@@ -99,8 +102,8 @@
                     {% else %}
                         <div class="text-center py-5 text-muted">
                             <i class="fa-solid fa-clipboard-list fa-3x mb-3 text-gray-300"></i>
-                            <p class="text-base font-regular">No hay suficientes datos médicos registrados para generar estadísticas.</p>
-                            <a href="{% url 'gestion_medica:ruta_lista_paciente' %}" class="btn btn-sm btn-primary text-sm font-bold">Ir a Fichas Médicas</a>
+                            <p class="text-base font-regular">No hay suficientes datos médicos registrados.</p>
+                            <a href="{% url 'gestion_medica:ruta_lista_paciente' %}" class="btn btn-primary text-sm font-bold">Ir a Fichas Médicas</a>
                         </div>
                     {% endif %}
                 </div>
@@ -114,53 +117,53 @@
         </div>
 
         <div class="col-xl-3 col-md-6 mb-4">
-            <div class="card-dashboard action-card border-success">
-                <div class="card-body-custom">
-                    <div class="action-icon-circle bg-soft-success">
-                        <i class="fa-solid fa-user-nurse"></i>
+            <div class="card-dashboard action-card border-success h-100">
+                <div class="card-body-custom text-center p-4">
+                    <div class="action-icon-circle bg-soft-success mb-3 mx-auto">
+                        <i class="fa-solid fa-user-nurse fa-2x text-success"></i>
                     </div>
-                    <h5 class="font-bold text-dark text-lg">Pacientes</h5>
-                    <p class="small text-muted mb-3 text-sm font-regular">Listado de voluntarios</p>
-                    <a href="{% url 'gestion_medica:ruta_lista_paciente' %}" class="btn btn-outline-success btn-action text-sm font-bold">Acceder</a>
+                    <h5 class="font-bold text-dark text-lg mb-1">Pacientes</h5>
+                    <p class="text-muted mb-3 text-sm font-regular">Listado de voluntarios</p>
+                    <a href="{% url 'gestion_medica:ruta_lista_paciente' %}" class="btn btn-outline-success btn-action text-sm font-bold w-100">Acceder</a>
                 </div>
             </div>
         </div>
 
         <div class="col-xl-3 col-md-6 mb-4">
-            <div class="card-dashboard action-card border-info">
-                <div class="card-body-custom">
-                    <div class="action-icon-circle bg-soft-info">
-                        <i class="fa-solid fa-pills"></i>
+            <div class="card-dashboard action-card border-info h-100">
+                <div class="card-body-custom text-center p-4">
+                    <div class="action-icon-circle bg-soft-info mb-3 mx-auto">
+                        <i class="fa-solid fa-pills fa-2x text-info"></i>
                     </div>
-                    <h5 class="font-bold text-dark text-lg">Medicamentos</h5>
-                    <p class="small text-muted mb-3 text-sm font-regular">Catálogo maestro</p>
-                    <a href="{% url 'gestion_medica:ruta_lista_medicamentos' %}" class="btn btn-outline-info btn-action text-sm font-bold">Gestionar</a>
+                    <h5 class="font-bold text-dark text-lg mb-1">Medicamentos</h5>
+                    <p class="text-muted mb-3 text-sm font-regular">Catálogo maestro</p>
+                    <a href="{% url 'gestion_medica:ruta_lista_medicamentos' %}" class="btn btn-outline-info btn-action text-sm font-bold w-100">Gestionar</a>
                 </div>
             </div>
         </div>
 
         <div class="col-xl-3 col-md-6 mb-4">
-            <div class="card-dashboard action-card border-warning">
-                <div class="card-body-custom">
-                    <div class="action-icon-circle bg-soft-warning">
-                        <i class="fa-solid fa-biohazard"></i>
+            <div class="card-dashboard action-card border-warning h-100">
+                <div class="card-body-custom text-center p-4">
+                    <div class="action-icon-circle bg-soft-warning mb-3 mx-auto">
+                        <i class="fa-solid fa-biohazard fa-2x text-warning"></i>
                     </div>
-                    <h5 class="font-bold text-dark text-lg">Enfermedades</h5>
-                    <p class="small text-muted mb-3 text-sm font-regular">Patologías comunes</p>
-                    <a href="{% url 'gestion_medica:ruta_lista_enfermedades' %}" class="btn btn-outline-warning btn-action text-sm font-bold">Gestionar</a>
+                    <h5 class="font-bold text-dark text-lg mb-1">Enfermedades</h5>
+                    <p class="text-muted mb-3 text-sm font-regular">Patologías comunes</p>
+                    <a href="{% url 'gestion_medica:ruta_lista_enfermedades' %}" class="btn btn-outline-warning btn-action text-sm font-bold w-100">Gestionar</a>
                 </div>
             </div>
         </div>
 
         <div class="col-xl-3 col-md-6 mb-4">
-            <div class="card-dashboard action-card border-watermelon">
-                <div class="card-body-custom">
-                    <div class="action-icon-circle bg-soft-watermelon">
-                        <i class="fa-solid fa-shield-alt"></i>
+            <div class="card-dashboard action-card border-watermelon h-100">
+                <div class="card-body-custom text-center p-4">
+                    <div class="action-icon-circle bg-soft-watermelon mb-3 mx-auto">
+                        <i class="fa-solid fa-shield-alt fa-2x text-danger"></i>
                     </div>
-                    <h5 class="font-bold text-dark text-lg">Alergias</h5>
-                    <p class="small text-muted mb-3 text-sm font-regular">Registro de alérgenos</p>
-                    <a href="{% url 'gestion_medica:ruta_lista_alergias' %}" class="btn btn-outline-watermelon btn-action text-sm font-bold">Gestionar</a>
+                    <h5 class="font-bold text-dark text-lg mb-1">Alergias</h5>
+                    <p class="text-muted mb-3 text-sm font-regular">Registro de alérgenos</p>
+                    <a href="{% url 'gestion_medica:ruta_lista_alergias' %}" class="btn btn-outline-watermelon btn-action text-sm font-bold w-100">Gestionar</a>
                 </div>
             </div>
         </div>

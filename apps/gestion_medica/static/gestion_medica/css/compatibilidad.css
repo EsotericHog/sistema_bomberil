@@ -1,12 +1,43 @@
 /* === VARIABLES FINALES DE DISEÑO (Base Limpia - Pulcritud) === */
+/* === PEGAR EN static/css/base/root.css === */
+
 :root {
-    --blood-primary: #d32f2f; /* Rojo Fuerte para contrastes */
-    --text-dark: #333;
-    --text-muted: #777;
-    --card-bg: #ffffff; /* Fondo blanco puro */
-    --shadow-soft: 0 5px 15px rgba(0, 0, 0, 0.05); /* Sombra muy sutil */
-    --shadow-hover: 0 10px 25px rgba(0, 0, 0, 0.1);
+    /* --- ESCALA TIPOGRÁFICA (Según tus instrucciones) --- */
+    --font-xs:   1.2rem;
+    --font-sm:   1.4rem;
+    --font-base: 1.6rem;
+    --font-md:   2.0rem;
+    --font-lg:   2.5rem;
+    --font-xl:   3.1rem;
+    --font-2xl:  3.9rem;
+    --font-3xl:  4.8rem;
+
+    /* --- PESOS DE FUENTE --- */
+    --weight-regular: 400;
+    --weight-medium:  500;
+    --weight-bold:    700;
+    --weight-black:   900;
+    
+    /* Fuente de datos (números/códigos) */
+    --font-data: 'Roboto Mono', monospace; /* O la que uses para datos */
 }
+
+/* CLASES UTILITARIAS DE TEXTO (Si no las tienes en otro archivo) */
+.text-xs   { font-size: var(--font-xs) !important; }
+.text-sm   { font-size: var(--font-sm) !important; }
+.text-base { font-size: var(--font-base) !important; }
+.text-md   { font-size: var(--font-md) !important; }
+.text-lg   { font-size: var(--font-lg) !important; line-height: 1.2 !important; }
+.text-xl   { font-size: var(--font-xl) !important; line-height: 1.1 !important; letter-spacing: -0.02em !important; }
+.text-2xl  { font-size: var(--font-2xl) !important; line-height: 1.1 !important; letter-spacing: -0.03em !important; }
+.text-3xl  { font-size: var(--font-3xl) !important; line-height: 1.0 !important; letter-spacing: -0.04em !important; }
+
+.font-regular { font-weight: var(--weight-regular) !important; }
+.font-medium  { font-weight: var(--weight-medium) !important; }
+.font-bold    { font-weight: var(--weight-bold) !important; }
+.font-black   { font-weight: var(--weight-black) !important; }
+
+.text-data-code { font-family: var(--font-data); }
 
 /* === 1. ENCABEZADO PRINCIPAL (Estilo Rojo Líquido) === */
 

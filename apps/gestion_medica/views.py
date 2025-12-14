@@ -444,6 +444,7 @@ class MedicoCompatibilidadView(BaseEstacionMixin, CustomPermissionRequiredMixin,
             
             compatibilidad_list.append({
                 'voluntario_id': ficha.pk,
+                'rut_donante': ficha.voluntario.usuario.rut,
                 'nombre_donante': ficha.voluntario.usuario.get_full_name,
                 'tipo_sangre': donor_type,
                 'puede_donar_a_tipos': recipients_types,

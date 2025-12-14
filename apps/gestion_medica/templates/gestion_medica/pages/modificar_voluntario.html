@@ -16,7 +16,7 @@
             <div class="card shadow mb-4 border-bottom-primary">
                 
                 <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between bg-white">
-                    <h6 class="m-0 font-bold text-primary text-lg">
+                    <h6 class="m-0 font-bold text-primary text-xl">
                         <i class="fas fa-heartbeat me-2"></i> Información Vital y Antecedentes
                     </h6>
                     
@@ -52,9 +52,9 @@
                                 </div>
 
                                 <div class="col-md-5 border-end-md ps-3">
-                                    <h5 class="text-lg font-bold text-dark mb-1">{{ ficha.voluntario.usuario.get_full_name }}</h5>
+                                    <h5 class="text-xl font-black text-dark mb-1">{{ ficha.voluntario.usuario.get_full_name }}</h5>
                                     <div class="d-flex align-items-center gap-3">
-                                        <span class="badge bg-white text-dark border font-regular text-sm text-data-code">RUT: {{ ficha.voluntario.usuario.rut }}</span>
+                                        <span class="badge bg-white text-dark border font-bold text-sm text-data-code">RUT: {{ ficha.voluntario.usuario.rut }}</span>
                                         <span class="text-sm text-muted font-medium">
                                             <i class="fas fa-phone-alt text-success me-1"></i> {{ ficha.voluntario.usuario.phone|default:"S/I" }}
                                         </span>
@@ -120,14 +120,14 @@
                                                     <p class='mb-0'><strong class='text-primary'>Diastólica (Baja):</strong> Presión mínima en las arterias cuando el corazón descansa entre latidos.</p>
                                                 </div>
                                             ">
-                                        <i class="fas fa-question text-xs"></i>
+                                            <i class="fas fa-question text-xs"></i>
                                     </button>
                                 </div>
                                 
                                 <div class="row align-items-center">
                                     <div class="col-lg-5 col-md-12 mb-3 mb-lg-0">
                                         <div class="form-group">
-                                            <label class="text-xs font-bold text-gray-600 mb-1">Sistólica / Diastólica</label>
+                                            <label class="text-sm font-bold text-gray-600 mb-1">Sistólica / Diastólica</label>
                                             <div class="input-group input-group-lg shadow-sm">
                                                 <span class="input-group-text bg-white text-danger border-end-0"><i class="fas fa-heartbeat"></i></span>
                                                 <div class="flex-grow-1 text-lg font-bold text-data-code">{{ form.presion_arterial_sistolica }}</div>
@@ -139,14 +139,14 @@
                                     <div class="col-lg-7 col-md-12">
                                         <div class="d-flex align-items-center text-muted">
                                             <i class="fas fa-info-circle me-2 text-info"></i>
-                                            <p class="text-xs m-0 font-medium">Ingrese los valores en formato numérico (Ej: 120 / 80).</p>
+                                            <p class="text-sm m-0 font-medium">Ingrese los valores en formato numérico (Ej: 120 / 80).</p>
                                         </div>
                                     </div>
                                 </div>
                             </div>
                         </div>
 
-                        <h6 class="text-muted font-bold text-xs uppercase mb-3 mt-4 border-bottom pb-2">Clasificación Médica</h6>
+                        <h6 class="text-muted font-bold text-sm uppercase mb-3 mt-4 border-bottom pb-2">Clasificación Médica</h6>
 
                         <div class="row">
                             <div class="col-md-6 mb-3">
@@ -177,10 +177,10 @@
                         <hr class="my-4">
 
                         <div class="d-flex justify-content-end gap-2">
-                            <a href="{% url 'gestion_medica:ruta_lista_paciente' %}" class="btn btn-light border text-secondary px-4 font-bold text-sm">
+                            <a href="{% url 'gestion_medica:ruta_lista_paciente' %}" class="btn btn-light border text-secondary px-4 font-bold text-base">
                                 <i class="fas fa-times me-1"></i> Cancelar
                             </a>
-                            <button type="submit" class="btn btn-primary btn-icon-split px-4 shadow-sm font-bold text-sm">
+                            <button type="submit" class="btn btn-primary btn-icon-split px-4 shadow-sm font-bold text-base">
                                 <span class="icon text-white-50 me-2"><i class="fas fa-save"></i></span>
                                 <span class="text">Guardar Ficha</span>
                             </button>
@@ -195,17 +195,17 @@
 
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        // 1. Inicializar Popovers de Bootstrap (El botón de ayuda)
+        // 1. Inicializar Popovers de Bootstrap
         var popoverTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="popover"]'))
         var popoverList = popoverTriggerList.map(function (popoverTriggerEl) {
             return new bootstrap.Popover(popoverTriggerEl)
         });
 
-        // 2. Aplicar estilos 'clean' a los inputs generados por Django
+        // 2. Aplicar estilos 'clean' y tipografía a los inputs de Django
         document.querySelectorAll('input, select, textarea').forEach(el => {
             el.classList.add('form-control-clean');
             
-            // Excepción: Los campos de presión usan una fuente especial
+            // Excepción: Los campos de presión ya tienen clases manuales en el HTML
             if (!el.name.includes('presion')) {
                 el.classList.add('text-base');
             }

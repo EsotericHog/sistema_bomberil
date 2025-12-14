@@ -8,16 +8,21 @@
 .form-select {
     border: 1px solid #e3e6f0;
     padding-left: 15px;
-    font-size: 1rem;
+    
+    /* CAMBIO: De 1rem (10px) a 1.6rem (16px) */
+    font-size: 1.6rem; 
+    
     background-color: transparent;
     border-radius: 0.5rem;
-    height: calc(2.5rem + 2px);
+    
+    /* CAMBIO: Altura ajustada para el nuevo texto (aprox 40px) */
+    height: 4.2rem; 
 }
 
 /* Inputs grandes */
 .form-control-lg {
-    height: calc(3rem + 2px);
-    font-size: 1.1rem;
+    height: 5rem; /* Más alto */
+    font-size: 2.0rem; /* Texto grande (20px) */
 }
 
 /* Quitar borde a inputs dentro de grupos */
@@ -40,6 +45,7 @@
     background: white; 
     border: 1px solid #e3e6f0; 
     color: #5a5c69;
+    font-size: 1.4rem; /* Ajuste para botones */
 }
 .btn-white:hover { 
     background: #f8f9fa; 
@@ -68,7 +74,6 @@
 /* --- Estilos Base para Todos los Formularios de Catálogo --- */
 
 /* 1. Contenedor General (Panel) */
-/* La variable --catalog-color y --catalog-text-color se definen en el HTML de cada archivo. */
 .catalog-form {
     border-radius: 12px;
     box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
@@ -79,8 +84,8 @@
 
 /* 2. Encabezado Temático */
 .catalog-form .panel-header {
-    background-color: var(--catalog-color); /* Color dinámico (Rojo, Azul, Verde, Amarillo) */
-    color: var(--catalog-text-color); /* Color de texto dinámico */
+    background-color: var(--catalog-color); 
+    color: var(--catalog-text-color); 
     padding: 20px 25px;
     border-top-left-radius: 12px;
     border-top-right-radius: 12px;
@@ -90,12 +95,13 @@
 
 .catalog-form .panel-header h3 {
     margin: 0;
-    font-size: 1.5rem;
+    /* CAMBIO: Título más grande y legible */
+    font-size: 2.2rem; 
     font-weight: 700;
 }
 
 .catalog-form .panel-header i {
-    font-size: 1.6rem;
+    font-size: 2.4rem; /* Icono más grande */
     margin-right: 15px;
 }
 
@@ -106,8 +112,8 @@
 
 /* Estilo para el campo de input (robusto) */
 .catalog-form .form-control {
-    height: 48px;
-    font-size: 1.1rem;
+    height: 50px; /* Un poco más alto */
+    font-size: 1.6rem; /* Texto base legible (16px) */
     padding: 10px 15px;
     border: 1px solid #ced4da;
     border-radius: 8px;
@@ -116,7 +122,6 @@
 
 .catalog-form .form-control:focus {
     border-color: var(--catalog-color);
-    /* Sombra de foco más suave (usando un color mezclado con transparencia) */
     box-shadow: 0 0 0 3px color-mix(in srgb, var(--catalog-color) 40%, transparent); 
 }
 
@@ -124,8 +129,9 @@
 .catalog-form .form-group .form-label {
     font-weight: 600;
     color: #343a40;
-    margin-bottom: 5px;
+    margin-bottom: 8px;
     display: block;
+    font-size: 1.6rem; /* Etiqueta del mismo tamaño que el input */
 }
 
 /* 4. Botones de Acción */
@@ -135,7 +141,7 @@
     padding-top: 20px;
 }
 
-/* Botón Guardar (con color temático) */
+/* Botón Guardar */
 .catalog-form .btn-primary {
     background-color: var(--catalog-color) !important;
     border-color: var(--catalog-color) !important;
@@ -144,6 +150,7 @@
     padding: 10px 25px;
     border-radius: 6px;
     min-width: 120px;
+    font-size: 1.6rem; /* Texto botón más grande */
 }
 
 .catalog-form .btn-primary:hover {
@@ -157,4 +164,5 @@
     font-weight: 600;
     padding: 10px 25px;
     border-radius: 6px;
+    font-size: 1.6rem; /* Texto botón más grande */
 }
