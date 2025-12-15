@@ -1,0 +1,69 @@
+services:
+  # --- 1. DJANGO WEB ---
+  web:
+    build: .
+    command: gunicorn core.wsgi:application --bind 0.0.0.0:8000
+    volumes:
+      - .:/app
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    depends_on:
+      - db
+      - redis
+    environment:
+      - SQL_HOST=db
+      - LOCAL_DB_URL=postgres://bomberil_user:123456@db:5432/bomberildb
+      - RUN_MIGRATIONS=true
+
+  # --- 2. WORKER (Tareas asíncronas) ---
+  worker:
+    build: .
+    command: celery -A core worker -l info
+    volumes:
+      - .:/app
+    env_file:
+      - .env
+    depends_on:
+      - db
+      - redis
+    environment:
+      - SQL_HOST=db
+      - LOCAL_DB_URL=postgres://bomberil_user:123456@db:5432/bomberildb
+
+  # --- 3. BEAT (Tareas periódicas) ---
+  beat:
+    build: .
+    command: celery -A core beat -l info
+    volumes:
+      - .:/app
+    env_file:
+      - .env
+    depends_on:
+      - db
+      - redis
+    environment:
+      - SQL_HOST=db
+      - LOCAL_DB_URL=postgres://bomberil_user:123456@db:5432/bomberildb
+
+  # --- 4. REDIS (Cola de mensajes) ---
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    environment:
+      - SQL_HOST=db
+
+  # --- 5. BASE DE DATOS (Solo Desarrollo Local) ---
+  db:
+    image: postgres:15-alpine
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_DB=bomberildb
+      - POSTGRES_USER=bomberil_user
+      - POSTGRES_PASSWORD=123456
+
+volumes:
+  postgres_data:  # Esto hace que los datos persistan aunque apagues Docker
