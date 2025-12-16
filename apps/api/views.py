@@ -2601,7 +2601,7 @@ class MantenimientoCambiarEstadoOrdenAPIView(OrdenValidacionMixin, AuditoriaMixi
                     verbo_auditoria = "asumió la responsabilidad de la orden"
 
                 # 2. ACCIÓN: INICIAR
-                if accion == 'iniciar':
+                elif accion == 'iniciar':
                     if orden.estado != OrdenMantenimiento.EstadoOrden.PENDIENTE:
                         return Response({'message': 'La orden no está pendiente.'}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -2668,7 +2668,7 @@ class MantenimientoCambiarEstadoOrdenAPIView(OrdenValidacionMixin, AuditoriaMixi
                         pass
 
                 else:
-                    return Response({'message': 'Acción no válida (use iniciar, finalizar, cancelar).'}, status=status.HTTP_400_BAD_REQUEST)
+                    return Response({'message': 'Acción no válida (use iniciar, finalizar, cancelar, asumir).'}, status=status.HTTP_400_BAD_REQUEST)
 
                 # --- AUDITORÍA ---
                 self.auditar(
