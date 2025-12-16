@@ -4,23 +4,25 @@
 {% block titulo_ventana %}Gestión de Medicamentos{% endblock %}
 
 {% block contenido %}
-<div class="container-fluid">
+<div class="container-fluid py-4">
     <div class="row justify-content-center">
         <div class="col-md-9 col-lg-7">
+            
             <div class="card shadow-lg border-0" style="border-radius: 15px;">
                 
                 <div class="card-header bg-gradient-info text-white py-3 border-0">
-                    <h4 class="mb-0 fs_x_grande font-bold">
+                    <h4 class="mb-0 text-2xl font-bold">
                         <i class="fas fa-prescription-bottle-alt me-2"></i>
                         {% if form.instance.pk %}Editar{% else %}Nuevo{% endif %} Medicamento
                     </h4>
                 </div>
 
                 <div class="card-body p-4 bg-white">
+                    
                     <div class="alert alert-info border-0 bg-info-soft text-info-custom mb-4 rounded-3">
                         <div class="d-flex">
                             <i class="fas fa-search fa-lg me-3 mt-1"></i>
-                            <div>
+                            <div class="text-base font-regular">
                                 <strong>Búsqueda Inteligente:</strong><br>
                                 Escriba el nombre (ej: "Paracetamol") para buscar en el catálogo. 
                                 Si selecciona uno existente, se sugerirán sus datos base.
@@ -33,18 +35,19 @@
                         
                         <div class="row">
                             <div class="col-md-12 mb-4">
-                                <label for="{{ form.nombre.id_for_label }}" class="form-label fw-bold text-dark">
+                                <label for="{{ form.nombre.id_for_label }}" class="form-label font-bold text-dark text-sm text-uppercase">
                                     <i class="fas fa-file-signature me-1"></i> {{ form.nombre.label }}
                                 </label>
-                                <!-- INPUT DEL NOMBRE CON TOMSELECT -->
-                                {{ form.nombre }}
+                                <div class="text-base">
+                                    {{ form.nombre }}
+                                </div>
                                 
                                 {% if form.nombre.errors %}
-                                    <div class="text-danger small mt-1">
+                                    <div class="text-danger text-sm font-bold mt-1">
                                         {{ form.nombre.errors|striptags }}
                                     </div>
                                 {% endif %}
-                                <div class="form-text text-muted">
+                                <div class="form-text text-muted text-xs font-regular mt-1">
                                     Evite incluir la dosis aquí (ej: use solo "Ibuprofeno").
                                 </div>
                             </div>
@@ -52,34 +55,35 @@
 
                         {# 2. DOSIS Y UNIDAD #}
                         <div class="form-group mb-4">
-                            <label class="form-label text-muted font-bold fs_normal text-uppercase mb-2">Dosis / Presentación</label>
+                            <label class="form-label text-muted font-bold text-sm text-uppercase mb-2">Dosis / Presentación</label>
                             <div class="input-group shadow-sm rounded-pill overflow-hidden border input-group-focus-info">
                                 <span class="input-group-text bg-white border-0 text-info-custom ps-4">
                                     <i class="fas fa-flask"></i>
                                 </span>
-                                {{ form.concentracion }}
-                                <!-- SELECT DE UNIDAD (Este se actualizará dinámicamente) -->
-                                {{ form.unidad }}
+                                <div class="flex-grow-1 text-base">{{ form.concentracion }}</div>
+                                <div class="flex-grow-1 text-base">{{ form.unidad }}</div>
                             </div>
                         </div>
 
                         <div class="row">
                             <div class="col-md-12 mb-4">
-                                <label for="{{ form.clasificacion_riesgo.id_for_label }}" class="form-label fw-bold text-muted small text-uppercase">
+                                <label for="{{ form.clasificacion_riesgo.id_for_label }}" class="form-label font-bold text-muted text-sm text-uppercase">
                                     {{ form.clasificacion_riesgo.label }}
                                 </label>
-                                {{ form.clasificacion_riesgo }}
+                                <div class="text-base">
+                                    {{ form.clasificacion_riesgo }}
+                                </div>
                                 {% if form.clasificacion_riesgo.errors %}
-                                    <div class="text-danger small">{{ form.clasificacion_riesgo.errors }}</div>
+                                    <div class="text-danger text-sm font-bold mt-1">{{ form.clasificacion_riesgo.errors }}</div>
                                 {% endif %}
                             </div>
                         </div>
 
                         <div class="d-flex justify-content-end gap-2 mt-5 border-top pt-4">
-                            <a href="{% url 'gestion_medica:ruta_lista_medicamentos' %}" class="btn btn-light border btn-lg px-4">
+                            <a href="{% url 'gestion_medica:ruta_lista_medicamentos' %}" class="btn btn-light border btn-lg px-4 text-base font-bold hover-elevate">
                                 Cancelar
                             </a>
-                            <button type="submit" class="btn btn-primary btn-lg px-5 shadow-sm">
+                            <button type="submit" class="btn btn-primary btn-lg px-5 shadow-sm text-base font-bold hover-elevate">
                                 <i class="fas fa-save me-2"></i> Guardar Medicamento
                             </button>
                         </div>
@@ -90,13 +94,21 @@
     </div>
 </div>
 
-<!-- Estilo para forzar visibilidad del menú por encima de todo -->
 <style>
-    .ts-dropdown, .ts-dropdown.single { z-index: 9999 !important; }
+    .ts-dropdown, .ts-dropdown.single { z-index: 9999 !important; font-size: 1.4rem !important; }
+    .ts-control { font-size: 1.6rem !important; }
 </style>
 
 <script>
     document.addEventListener("DOMContentLoaded", function() {
+        // Asegurar estilos en inputs normales
+        document.querySelectorAll('input, select').forEach(el => {
+            if (!el.classList.contains('tomselected')) {
+                el.classList.add('form-control');
+                el.classList.add('text-base');
+            }
+        });
+
         const inputNombre = document.getElementById('id_nombre');
         const selectUnidad = document.getElementById('id_unidad');
 
@@ -152,17 +164,17 @@
 
                 render: {
                     option: function(data, escape) {
-                        return `<div class="py-2 px-3">
+                        return `<div class="py-2 px-3 border-bottom">
                                     <i class="fas fa-search text-muted me-2"></i>
-                                    <strong>${escape(data.text)}</strong>
-                                    ${data.unidad_sugerida ? '<small class="text-muted ms-2">(' + escape(data.unidad_sugerida) + ')</small>' : ''}
+                                    <strong class="text-base text-dark">${escape(data.text)}</strong>
+                                    ${data.unidad_sugerida ? '<small class="text-muted ms-2 text-xs font-regular">(' + escape(data.unidad_sugerida) + ')</small>' : ''}
                                 </div>`;
                     },
                     no_results: function(data, escape) {
-                        return '<div class="no-results p-2 text-muted">No encontrado. Presiona Enter para crear <strong>"' + escape(data.input) + '"</strong></div>';
+                        return '<div class="no-results p-3 text-muted text-sm">No encontrado. Presiona Enter para crear <strong class="text-primary">"' + escape(data.input) + '"</strong></div>';
                     },
                     option_create: function(data, escape) {
-                        return '<div class="create p-2 text-primary"><i class="fas fa-plus-circle"></i> Crear nuevo: <strong>' + escape(data.input) + '</strong></div>';
+                        return '<div class="create p-3 text-primary text-base"><i class="fas fa-plus-circle me-2"></i> Crear nuevo: <strong>' + escape(data.input) + '</strong></div>';
                     }
                 }
             });
