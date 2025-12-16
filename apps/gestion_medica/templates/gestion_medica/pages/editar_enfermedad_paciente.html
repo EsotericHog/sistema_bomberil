@@ -48,7 +48,7 @@
                                 <span class="input-group-text bg-white border-0 text-warning-dark ps-4">
                                     <i class="fas fa-stethoscope"></i>
                                 </span>
-                                <div class="form-control-clean flex-grow-1 d-flex align-items-center">
+                                <div class="flex-grow-1">
                                     {{ form.enfermedad }}
                                 </div>
                             </div>
@@ -90,6 +90,7 @@
 
 <script>
     document.addEventListener('DOMContentLoaded', function() {
+        // Asegurar clases bootstrap y de tamaño base a los inputs de Django
         document.querySelectorAll('input, select, textarea').forEach(el => {
             el.classList.add('form-control-clean');
             el.classList.add('text-base');
