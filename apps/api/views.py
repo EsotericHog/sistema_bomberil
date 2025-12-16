@@ -2689,7 +2689,8 @@ class MantenimientoCambiarEstadoOrdenAPIView(OrdenValidacionMixin, AuditoriaMixi
 
 class MantenimientoRegistrarTareaAPIView(OrdenValidacionMixin, APIView):
     """
-    API DRF: Crea un RegistroMantenimiento para un activo.
+    API para registrar el resultado de una tarea de mantenimiento.
+    Maneja concurrencia: Si el activo tiene OTRAS órdenes pendientes, no lo libera a 'DISPONIBLE'.
     """
     permission_classes = [IsAuthenticated, IsEstacionActiva, CanGestionarOrdenes]
 
@@ -2698,52 +2699,79 @@ class MantenimientoRegistrarTareaAPIView(OrdenValidacionMixin, APIView):
             estacion = request.estacion_activa
             orden = get_object_or_404(OrdenMantenimiento, pk=pk, estacion=estacion)
 
-            # Validar Responsabilidad
+            # 1. Seguridad: Validar que sea el responsable
             self.validar_responsabilidad_orden(orden, request.user)
 
+            # 2. Validar estado de la orden
             if orden.estado != OrdenMantenimiento.EstadoOrden.EN_CURSO:
                 return Response({'message': 'Debe INICIAR la orden antes de registrar tareas.'}, status=status.HTTP_400_BAD_REQUEST)
 
             activo_id = request.data.get('activo_id')
             notas = request.data.get('notas')
+            exitoso_raw = request.data.get('exitoso', True)
             fue_exitoso = request.data.get('exitoso', True)
 
             activo = get_object_or_404(Activo, pk=activo_id, estacion=estacion)
 
+            # 3. Validar pertenencia
+            if not orden.activos_afectados.filter(pk=activo_id).exists():
+                return Response({'status': 'error', 'message': 'El activo no pertenece a esta orden.'}, status=400)
+
+            # 4. Guardar Registro (Upsert)
             registro, created = RegistroMantenimiento.objects.update_or_create(
                 orden_mantenimiento=orden,
                 activo=activo,
                 defaults={
                     'usuario_ejecutor': request.user,
-                    'fecha_ejecucion': timezone.now(),
                     'notas': notas,
-                    'fue_exitoso': fue_exitoso
+                    'fue_exitoso': fue_exitoso,
+                    'fecha_ejecucion': timezone.now()
                 }
             )
 
             # Actualizar estado del activo
             if fue_exitoso:
-                try:
-                    nuevo_estado = Estado.objects.get(nombre__iexact="DISPONIBLE")
-                    activo.estado = nuevo_estado
-                except Estado.DoesNotExist:
-                    pass
+                # Verificamos si este activo está en OTRAS órdenes activas (Pendientes o En Curso)
+                # Excluimos la orden actual (id=orden.id) porque esa tarea ya la acabamos de hacer ok.
+                otras_ordenes_activas = OrdenMantenimiento.objects.filter(
+                    estacion=estacion,
+                    activos_afectados=activo,
+                    estado__in=[
+                        OrdenMantenimiento.EstadoOrden.PENDIENTE, 
+                        OrdenMantenimiento.EstadoOrden.EN_CURSO
+                    ]
+                ).exclude(id=orden.id).exists()
+
+                if otras_ordenes_activas:
+                    # NO cambiamos el estado. Se asume que sigue 'EN REPARACIÓN' por las otras órdenes.
+                    pass 
+                else:
+                    # Si no hay nada más pendiente, lo liberamos.
+                    try:
+                        estado_disponible = Estado.objects.get(nombre__iexact="DISPONIBLE")
+                        activo.estado = estado_disponible
+                    except Estado.DoesNotExist:
+                        pass
             else:
+                # Si falló la mantención, queda 'EN REVISIÓN' o 'DAÑADO' sin importar otras órdenes.
                 try:
-                    nuevo_estado = Estado.objects.get(nombre__iexact="NO OPERATIVO")
-                    activo.estado = nuevo_estado
+                    # O 'DAÑADO', según tu flujo
+                    estado_malo = Estado.objects.get(nombre__iexact="EN REVISIÓN") 
+                    activo.estado = estado_malo
                 except Estado.DoesNotExist:
                     pass
-                
+            
             activo.save()
 
             # Actualizar Plan si aplica
             if fue_exitoso and orden.plan_origen:
-                plan_config = PlanActivoConfig.objects.filter(plan=orden.plan_origen, activo=activo).first()
-                if plan_config:
-                    plan_config.fecha_ultima_mantencion = timezone.now()
-                    plan_config.horas_uso_en_ultima_mantencion = activo.horas_uso_totales
-                    plan_config.save()
+                PlanActivoConfig.objects.filter(
+                    plan=orden.plan_origen, 
+                    activo=activo
+                ).update(
+                    fecha_ultima_mantencion=timezone.now(),
+                    horas_uso_en_ultima_mantencion=activo.horas_uso_totales
+                )
 
             # --- AUDITORÍA INCREMENTAL (Avance de Tareas) ---
             # Agrupamos el progreso: "Registró tareas en la Orden X"
