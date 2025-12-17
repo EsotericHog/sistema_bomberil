@@ -192,10 +192,10 @@
                         {# pero podrían corresponder a 'ver_voluntarios' o 'ver_fichas_medicas'. #}
                         {# Por seguridad, los mantengo visibles a quien puede ver el usuario, #}
                         {# ya que el acceso a la URL destino debería estar protegido por su propia view. #}
-                        <a href="#" class="btn btn-outline-secondary btn-sm text-base me-1">
+                        <a href="{% url 'gestion_voluntarios:ruta_hoja_vida' id=membresia.usuario.id %}" class="btn btn-outline-secondary btn-sm text-base me-1">
                             Hoja de Vida
                         </a>
-                        <a href="#" class="btn btn-outline-secondary btn-sm text-base">
+                        <a href="{% url 'gestion_medica:ruta_imprimir_ficha' pk=membresia.usuario.id %}" class="btn btn-outline-secondary btn-sm text-base">
                             Ficha Médica
                         </a>
                     </div>

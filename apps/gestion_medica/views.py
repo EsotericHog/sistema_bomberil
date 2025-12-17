@@ -8,12 +8,9 @@ from django.views import View
 from django.contrib import messages
 from django.urls import reverse  
 from django.db import IntegrityError
-from django.db.models import Count, ProtectedError
+from django.db.models import Count, ProtectedError, Q
 from datetime import date
-from django.http import HttpResponse
-from apps.common.mixins import BaseEstacionMixin, CustomPermissionRequiredMixin
-from .models import FichaMedica
-
+from django.http import HttpResponse, JsonResponse
 # --- Imports del Proyecto ---
 from .models import (
     Medicamento, FichaMedica, FichaMedicaMedicamento, FichaMedicaAlergia, 
@@ -333,8 +330,41 @@ class MedicoImprimirView(BaseEstacionMixin, CustomPermissionRequiredMixin, Audit
             pk=pk,
             voluntario__usuario__membresias__estacion=self.estacion_activa
         )
-        
-        # Auditoría de descarga
+        # 2. Lógica de Receptores (¿De quién puedo recibir sangre?)
+        grupo_paciente = ficha.grupo_sanguineo.nombre if ficha.grupo_sanguineo else None
+        tipos_compatibles = []
+
+        if grupo_paciente:
+            gp = str(grupo_paciente).strip().upper()
+            if gp == 'AB+':
+                tipos_compatibles = ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'] # Receptor Universal
+            elif gp == 'AB-':
+                tipos_compatibles = ['A-', 'B-', 'AB-', 'O-']
+            elif gp == 'A+':
+                tipos_compatibles = ['A+', 'A-', 'O+', 'O-']
+            elif gp == 'A-':
+                tipos_compatibles = ['A-', 'O-']
+            elif gp == 'B+':
+                tipos_compatibles = ['B+', 'B-', 'O+', 'O-']
+            elif gp == 'B-':
+                tipos_compatibles = ['B-', 'O-']
+            elif gp == 'O+':
+                tipos_compatibles = ['O+', 'O-']
+            elif gp == 'O-':
+                tipos_compatibles = ['O-'] # Solo recibe de O-
+
+        # 3. Buscar compañeros compatibles en la base de datos
+        posibles_donantes = []
+        if tipos_compatibles:
+            posibles_donantes = FichaMedica.objects.filter(
+                grupo_sanguineo__nombre__in=tipos_compatibles,
+                voluntario__usuario__membresias__estacion=self.estacion_activa,
+                voluntario__usuario__membresias__estado='ACTIVO'
+            ).exclude(
+                pk=ficha.pk # Excluirse a sí mismo
+            ).select_related('voluntario__usuario').order_by('voluntario__usuario__last_name')
+
+        # 4. Auditoría y Contexto
         self.auditar(
             verbo="generó reporte clínico impreso de",
             objetivo=ficha.voluntario.usuario,
@@ -358,7 +388,8 @@ class MedicoImprimirView(BaseEstacionMixin, CustomPermissionRequiredMixin, Audit
             'medicamentos': ficha.medicamentos.all(),
             'cirugias': ficha.cirugias.all(),
             'contactos': voluntario.contactos_emergencia.all(),
-            'fecha_reporte': date.today()
+            'fecha_reporte': date.today(),
+            'posibles_donantes': posibles_donantes,
         })
 
 
@@ -368,9 +399,14 @@ class MedicoImprimirQRView(BaseEstacionMixin, CustomPermissionRequiredMixin, Vie
     permission_required = 'gestion_usuarios.accion_gestion_medica_generar_reportes'
 
     def get(self, request, pk):
+        # Recuperamos la ficha usando el pk que viene en la url de ESTA vista (para saber qué imprimir)
         ficha = get_object_or_404(FichaMedica, pk=pk, voluntario__usuario__membresias__estacion=self.estacion_activa)
         
-        data_qr = request.build_absolute_uri(reverse('gestion_medica:ruta_informacion_paciente', args=[pk]))
+        # CAMBIO AQUÍ:
+        # En lugar de construir una URL completa, accedemos al Usuario a través de las relaciones
+        # FichaMedica -> (1:1) Voluntario -> (1:1) Usuario -> id (UUID)
+        # Convertimos a string para asegurar que el QR lo procese como texto plano
+        data_qr = str(ficha.voluntario.usuario.id)
         
         qr = qrcode.QRCode(version=1, error_correction=qrcode.constants.ERROR_CORRECT_H, box_size=10, border=4)
         qr.add_data(data_qr)
@@ -442,6 +478,7 @@ class MedicoCompatibilidadView(BaseEstacionMixin, CustomPermissionRequiredMixin,
             
             compatibilidad_list.append({
                 'voluntario_id': ficha.pk,
+                'rut_donante': ficha.voluntario.usuario.rut,
                 'nombre_donante': ficha.voluntario.usuario.get_full_name,
                 'tipo_sangre': donor_type,
                 'puede_donar_a_tipos': recipients_types,
@@ -689,62 +726,49 @@ class EliminarAlergiaPacienteView(SubElementoMedicoBaseView):
 
 
 # --- MEDICAMENTOS ---
-class MedicoMedicamentosView(SubElementoMedicoBaseView):
-    def get_units_map(self):
-        """
-        Helper mejorado: Detecta la unidad incluso si hay etiquetas de riesgo [TAG] al final.
-        """
-        # Debe coincidir con las claves de forms.py
-        unidades_validas = ['mg', 'ml', 'gr', 'mcg', 'g/ml', 'mg/ml', 'ui', '%', 'puff', 'comp', 'cap', 'gotas', 'amp', 'unid']
-        
-        mapa = {}
-        medicamentos = Medicamento.objects.all()
-        
-        for med in medicamentos:
-            nombre = med.nombre.lower().strip()
-            
-            # 1. LIMPIEZA: Si tiene etiqueta [ALGO], se la quitamos para analizar
-            # Ej: "warfarina 5 mg [anticoagulante]" -> "warfarina 5 mg"
-            if ' [' in nombre and nombre.endswith(']'):
-                nombre = nombre.split(' [')[0].strip()
-                
-            # 2. DETECCIÓN: Ahora sí buscamos la unidad al final
-            for u in unidades_validas:
-                # El espacio antes de {u} es vital
-                if nombre.endswith(f" {u}"):
-                    mapa[med.id] = u
-                    break
-        return json.dumps(mapa)
+class MedicoMedicamentosView(BaseEstacionMixin, AuditoriaMixin, CustomPermissionRequiredMixin, View):
+    permission_required = 'gestion_usuarios.accion_gestion_medica_gestionar_fichas_medicas'
+
+    def get_ficha(self, pk):
+        return get_object_or_404(
+            FichaMedica, 
+            pk=pk, 
+            voluntario__usuario__membresias__estacion=self.estacion_activa
+        )
+    
+    def get_medicamentos_metadata(self):
+        # Metadata para carga inicial si se necesitara (aunque ahora usamos AJAX)
+        return "{}" 
+
     def get(self, request, pk):
         ficha = self.get_ficha(pk)
         return render(request, "gestion_medica/pages/medicamentos_paciente.html", {
             'ficha': ficha, 
             'medicamentos_paciente': ficha.medicamentos.select_related('medicamento'), 
             'form': FichaMedicaMedicamentoForm(),
-            'units_map': self.get_units_map()# <--- PASAMOS EL MAPA AL TEMPLATE
         })
 
     def post(self, request, pk):
         ficha = self.get_ficha(pk)
         form = FichaMedicaMedicamentoForm(request.POST)
+        
         if form.is_valid():
             item = form.save(commit=False)
             item.ficha_medica = ficha
             try:
                 item.save()
                 self.auditar("asignó medicamento", ficha.voluntario.usuario, ficha.voluntario.usuario.get_full_name, {'medicamento': item.medicamento.nombre})
-                messages.success(request, "Medicamento asignado.")
+                messages.success(request, "Medicamento asignado correctamente.")
                 return redirect('gestion_medica:ruta_medicamentos_paciente', pk=pk)
             except IntegrityError:
-                form.add_error('medicamento', 'Ya está asignado.')
+                form.add_error('medicamento', 'Este medicamento ya está asignado al paciente.')
             except Exception as e:
-                messages.error(request, f"Error: {e}")
+                messages.error(request, f"Error del sistema: {e}")
 
         return render(request, "gestion_medica/pages/medicamentos_paciente.html", {
             'ficha': ficha, 
             'medicamentos_paciente': ficha.medicamentos.all(), 
-            'form': form, 
-            'units_map': self.get_units_map()
+            'form': form
         })
 
 
@@ -906,8 +930,16 @@ class CatalogoMedicoBaseView(BaseEstacionMixin, AuditoriaMixin, CustomPermission
 # --- MEDICAMENTOS (CATÁLOGO) ---
 class MedicamentoListView(CatalogoMedicoBaseView):
     def get(self, request):
-        return render(request, "gestion_medica/pages/lista_medicamentos.html", {'object_list': Medicamento.objects.all().order_by('nombre')})
-
+        # FILTRO CLAVE: concentracion__isnull=False
+        # Esto oculta las plantillas de autocompletado (que tienen dosis NULL)
+        # y solo muestra los medicamentos reales creados en el formulario.
+        medicamentos = Medicamento.objects.filter(
+            concentracion__isnull=False
+        ).order_by('nombre')
+        
+        return render(request, "gestion_medica/pages/lista_medicamentos.html", {
+            'object_list': medicamentos
+        })
 
 class MedicamentoCrearView(CatalogoMedicoBaseView):
     def get(self, request):
@@ -1072,3 +1104,58 @@ class CirugiaDeleteView(CatalogoMedicoBaseView):
         except Exception as e:
             messages.error(request, f"Error inesperado al eliminar: {str(e)}")
         return redirect('gestion_medica:ruta_lista_cirugias')
+    
+
+class MedicamentoSearchAPIView(BaseEstacionMixin, View):
+    def get(self, request):
+        query = request.GET.get('q', '').strip()
+        modo = request.GET.get('modo', 'asignacion')
+
+        if len(query) < 2:
+            return JsonResponse({'items': []})
+
+        # --- MODO 1: BÚSQUEDA PARA CREACIÓN (Autocompletar Nombre + Sugerir Unidad) ---
+        if modo == 'creacion':
+            # Buscamos coincidencias por nombre
+            # Usamos values() para traer nombre Y unidad
+            qs = Medicamento.objects.filter(nombre__icontains=query)\
+                                    .values('nombre', 'unidad')\
+                                    .order_by('nombre')[:15]
+            
+            # Procesamos para eliminar duplicados de nombre, 
+            # pero guardando la unidad del primer hallazgo como sugerencia.
+            seen_names = set()
+            results = []
+            
+            for item in qs:
+                nombre_limpio = item['nombre'].strip()
+                if nombre_limpio.lower() not in seen_names:
+                    seen_names.add(nombre_limpio.lower())
+                    results.append({
+                        'text': nombre_limpio,      # Lo que se muestra en el Select
+                        'value': nombre_limpio,     # Lo que se guarda en el Input
+                        'unidad_sugerida': item['unidad'] # DATO EXTRA: Unidad del padre/existente
+                    })
+            
+            return JsonResponse({'items': results})
+
+        # MODO ASIGNACIÓN (Medicamentos reales)
+        else:
+            qs = Medicamento.objects.filter(
+                nombre__icontains=query,
+                concentracion__isnull=False 
+            ).order_by('nombre')[:20]
+
+            results = []
+            for med in qs:
+                results.append({
+                    'id': med.id,                
+                    'text': med.nombre_completo, 
+                    'riesgo': med.clasificacion_riesgo,
+                    'dosis_info': f"{med.concentracion} {med.unidad}",
+                    
+                    # DATOS CLAVE PARA EL FRONTEND
+                    'unidad_codigo': med.unidad, 
+                    'unidad_desc': med.get_unidad_display()
+                })
+            return JsonResponse({'items': results})

@@ -1,0 +1,28 @@
+[
+{
+  "model": "gestion_inventario.vehiculo",
+  "pk": 1,
+  "fields": {
+    "patente": "CFPY25",
+    "marca": null,
+    "modelo": null,
+    "chasis": null,
+    "anho": "2009",
+    "tipo_vehiculo": 1,
+    "ubicacion": "f934379f-d0b9-44ec-8b5f-e571d0a19777"
+  }
+},
+{
+  "model": "gestion_inventario.vehiculo",
+  "pk": 2,
+  "fields": {
+    "patente": "HXLL56",
+    "marca": null,
+    "modelo": null,
+    "chasis": null,
+    "anho": "2014",
+    "tipo_vehiculo": 5,
+    "ubicacion": "33deb9d9-15b4-4b62-b9bb-3323824390b3"
+  }
+}
+]

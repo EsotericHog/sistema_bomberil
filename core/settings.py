@@ -1,6 +1,8 @@
+from datetime import timedelta
 from pathlib import Path
 import os
 import environ
+from celery.schedules import crontab
 
 
 # Crea rutas dentro del proyecto de esta forma: BASE_DIR / 'subdir'.
@@ -46,7 +48,10 @@ THIRD_PARTY_APPS = [
     #'jazzmin',
     'storages',
     'rest_framework',
+    'rest_framework_simplejwt',
+    'rest_framework_simplejwt.token_blacklist',
     'django_cleanup.apps.CleanupConfig',
+    'django_celery_results',
 ]
 INSTALLED_APPS = THIRD_PARTY_APPS + DJANGO_APPS + PROJECT_APPS
 
@@ -87,12 +92,12 @@ WSGI_APPLICATION = 'core.wsgi.application'
 # Base de datos
 DATABASES = {
     "default": {
-        "ENGINE": env.str('DB_ENGINE'),
-        "NAME": env.str('DB_NAME'),
-        "USER": env.str('DB_USER'),
-        "PASSWORD": env.str('DB_PASSWORD'),
-        "HOST": env.str('DB_HOST'),
-        "PORT": env.str('DB_PORT'),
+        "ENGINE": env.str('SQL_ENGINE'),
+        "NAME": env.str('LOCAL_DB_NAME'),
+        "USER": env.str('LOCAL_DB_USER'),
+        "PASSWORD": env.str('LOCAL_DB_PASSWORD'),
+        "HOST": env.str('SQL_HOST'),
+        "PORT": env.str('SQL_PORT'),
         "TEST": {
             "NAME": "mytestdatabase",
         },
@@ -280,15 +285,78 @@ STORAGES = {
 }
 
 
+# Configuración de Django Rest Framework
 REST_FRAMEWORK = {
-    'DEFAULT_PERMISSION_CLASSES': [
-        'rest_framework.permissions.DjangoModelPermissionsOrAnonReadOnly'
-    ]
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework.authentication.SessionAuthentication',  # Para la Web/Admin
+        'rest_framework_simplejwt.authentication.JWTAuthentication',  # Para el Móvil
+    ),
+    'DEFAULT_PERMISSION_CLASSES': (
+        'rest_framework.permissions.IsAuthenticated',
+    ),
 }
+
+
+# Configuración de Rest Framework Simple JWT
+SIMPLE_JWT = {
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=30), # Token de acceso (corto)
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=7),    # Token de refresco (largo)
+    'ROTATE_REFRESH_TOKENS': False,
+    'BLACKLIST_AFTER_ROTATION': False,
+    'AUTH_HEADER_TYPES': ('Bearer',),
+}
+
+## Configuración de django_redis
+#CACHES = {
+#    "default": {
+#        "BACKEND": "django_redis.cache.RedisCache",
+#        "LOCATION": env.str("REDIS_URL"),
+#        "OPTIONS": {
+#            "CLIENT_CLASS": "django_redis.client.DefaultClient",
+#        }
+#    }
+#}
+#
 
 # Configurar el motor de sesión
 SESSION_ENGINE = 'user_sessions.backends.db'
+#SESSION_CACHE_ALIAS = "default"
+
+
+# Configuración para que el Admin de Django reconozca el middleware de sesiones (django.contrib.sessions.middleware.SessionMiddleware)
 SILENCED_SYSTEM_CHECKS = ['admin.E410']
+
+
+# Configuración de Celery
+CELERY_BROKER_URL = env.str("CELERY_BROKER_URL") # Dónde buscar las tareas
+CELERY_RESULT_BACKEND = 'django-db' # Guarda el resultado de una tarea en la base de datos
+CELERY_ACCEPT_CONTENT = ['application/json'] # Sólo permitir mensajes en JSON
+CELERY_TASK_SERIALIZER = "json"
+CELERY_RESULT_SERIALIZER = "json"
+CELERY_TIMEZONE = "America/Santiago" # Configura la hora de las tareas
+CELERY_BROKER_TRANSPORT_OPTIONS = { # Opciones avanzadas de conexión con Redis
+    'visibility_timeout': 3600, # 1 hora de timeout para las tareas
+    'socket_timeout': 5,
+    'retry_on_timeout': True
+}
+CELERY_BEAT_SCHEDULE = {
+    # 1. Generador de Mantenimiento (00:05 AM)
+    'mantenimiento-diario-preventivo': {
+        'task': 'apps.gestion_mantenimiento.tasks.tarea_generar_mantenimiento_diario',
+        'schedule': crontab(hour=0, minute=5),  # A las 00:05 todos los días
+        #'schedule': crontab(minute='*/2'),  # Ejecutar cada 2 minutos (ej: 14:00, 14:02, 14:04)
+    },
+    
+    # 2. Reporte Diario de Actividad (23:30 PM)
+    'reporte-diario-ejecutivo': {
+        'task': 'apps.portal.tasks.tarea_enviar_reportes_diarios',
+        'schedule': crontab(hour=23, minute=30),  # A las 23:30 todos los días
+        #'schedule': crontab(minute='*/30'),  # Ejecutar cada 3 minutos (para que no se topen siempre)
+    },
+}
+
+# Limita el tamaño del cuerpo de la petición (ej. 10MB)
+DATA_UPLOAD_MAX_MEMORY_SIZE = 10 * 1024 * 1024
 
 # Configuración de Inventario
 INVENTARIO_UBICACION_AREA_NOMBRE = "ÁREA"

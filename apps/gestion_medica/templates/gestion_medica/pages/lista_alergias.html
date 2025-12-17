@@ -11,33 +11,54 @@
 {% block contenido %}
 <div class="container mt-4">
 
-    <div class="card catalogo-card">
-        <div class="card-header header-alergia d-flex justify-content-between align-items-center">
-            <h5 class="mb-0 text-xl font-bold"><i class="fa-solid fa-list me-2"></i>Alergias</h5>
+    <div class="card catalogo-card shadow-sm border-0">
+        
+        <div class="card-header header-alergia d-flex justify-content-between align-items-center py-3">
+            <h5 class="mb-0 text-2xl font-black text-white">
+                <i class="fa-solid fa-list-ul me-2"></i>Alergias
+            </h5>
 
             <a href="{% url 'gestion_medica:ruta_crear_alergia' %}"
-               class="btn btn-alergia btn-sm text-sm font-bold">
-                <i class="fa-solid fa-plus me-1"></i> Nueva
+               class="btn btn-light text-danger font-bold text-sm shadow-sm hover-elevate">
+                <i class="fa-solid fa-plus me-1"></i> Nueva Alergia
             </a>
         </div>
 
         <div class="card-body p-0">
-            <table class="table table-striped table-catalogo mb-0">
-                <thead>
-                    <tr>
-                        <th class="ps-4 text-sm font-bold">Nombre</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for item in object_list %}
-                    <tr>
-                        <td class="ps-4 text-base font-medium">{{ item.nombre }}</td>
-                    </tr>
-                    {% empty %}
-                    <tr><td class="text-center py-3 text-muted text-base font-regular">Sin registros</td></tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+            <div class="table-responsive">
+                <table class="table table-hover table-catalogo mb-0 align-middle">
+                    <thead class="bg-light">
+                        <tr>
+                            <th class="ps-4 py-3 text-xs font-black text-uppercase text-muted">Nombre de la Alergia</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in object_list %}
+                        <tr>
+                            <td class="ps-4 py-3">
+                                <div class="d-flex align-items-center">
+                                    <div class="rounded-circle bg-danger-soft text-danger d-flex align-items-center justify-content-center me-3" 
+                                         style="width: 40px; height: 40px;">
+                                        <i class="fas fa-shield-virus text-base"></i>
+                                    </div>
+                                    <span class="text-base font-bold text-dark">{{ item.nombre }}</span>
+                                </div>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td class="text-center py-5">
+                                <div class="text-muted">
+                                    <i class="fas fa-folder-open fa-3x mb-3 opacity-50"></i>
+                                    <h4 class="text-lg font-bold">Sin registros</h4>
+                                    <p class="text-base font-regular mb-0">No hay alergias registradas en el sistema.</p>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
 

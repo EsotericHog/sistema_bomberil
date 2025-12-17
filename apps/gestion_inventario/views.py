@@ -10,7 +10,7 @@ from django.shortcuts import render, redirect
 from django.views import View
 from django.views.generic import TemplateView, DeleteView, UpdateView, ListView, DetailView, CreateView, FormView
 from django.views.generic.detail import SingleObjectMixin
-from django.http import JsonResponse, HttpResponse, HttpResponseRedirect, Http404, HttpResponseBadRequest, FileResponse
+from django.http import HttpResponseRedirect, Http404, HttpResponseBadRequest, FileResponse
 from django.db import models
 from django.db.models import Count, Sum, Q, Subquery, OuterRef, ProtectedError, Value, Case, When, CharField, F, Max
 from django.db.models.functions import Coalesce
@@ -28,9 +28,9 @@ from core.settings import (
     INVENTARIO_UBICACION_VEHICULO_NOMBRE as VEHICULO_NOMBRE, 
 )
 
-from apps.common.mixins import ModuleAccessMixin, BaseEstacionMixin, AuditoriaMixin, CustomPermissionRequiredMixin
+from apps.common.mixins import BaseEstacionMixin, AuditoriaMixin, CustomPermissionRequiredMixin
 from .mixins import UbicacionMixin, InventoryStateValidatorMixin, StationInventoryObjectMixin
-
+from .utils import get_or_create_anulado_compartment, get_or_create_extraviado_compartment
 from .models import (
     Estacion, 
     Ubicacion, 
@@ -55,7 +55,6 @@ from .models import (
     TipoMovimiento,
     RegistroUsoActivo
     )
-
 from .forms import (
     AreaForm, 
     AreaEditForm,
@@ -78,6 +77,7 @@ from .forms import (
     ExtraviadoExistenciaForm,
     LoteConsumirForm,
     MovimientoFilterForm,
+    RegistroUsoForm,
     TransferenciaForm,
     PrestamoCabeceraForm,
     PrestamoDetalleFormSet,
@@ -86,7 +86,6 @@ from .forms import (
     DestinatarioForm,
     EtiquetaFilterForm
     )
-
 from apps.gestion_mantenimiento.models import PlanActivoConfig, OrdenMantenimiento, RegistroMantenimiento
 
 
@@ -2868,38 +2867,6 @@ class AgregarStockACompartimentoView(BaseEstacionMixin, CustomPermissionRequired
 
 
 
-def get_or_create_anulado_compartment(estacion: Estacion) -> Compartimento:
-    """
-    Busca o crea la ubicación y compartimento 'limbo' (ADMINISTRATIVA)
-    para los registros anulados de una estación.
-    """
-    
-    # 1. Buscar el TipoUbicacion "ADMINISTRATIVA"
-    # (Usamos get_or_create por robustez, en caso de que se borre)
-    tipo_admin, _ = TipoUbicacion.objects.get_or_create(nombre='ADMINISTRATIVA')
-
-    # 2. Buscar o crear la Ubicación "Registros Administrativos"
-    ubicacion_admin, _ = Ubicacion.objects.get_or_create(
-        nombre="Registros Administrativos",
-        estacion=estacion,
-        tipo_ubicacion=tipo_admin,
-        defaults={
-            'descripcion': 'Ubicación simbólica para registros anulados por error.'
-        }
-    )
-
-    # 3. Buscar o crear el Compartimento "Stock Anulado"
-    compartimento_anulado, _ = Compartimento.objects.get_or_create(
-        nombre="Stock Anulado",
-        ubicacion=ubicacion_admin,
-        defaults={
-            'descripcion': 'Existencias (activos/lotes) que fueron anuladas por error de ingreso.'
-        }
-    )
-    return compartimento_anulado
-
-
-
 
 class DetalleExistenciaView(BaseEstacionMixin, CustomPermissionRequiredMixin, View):
     """
@@ -3327,31 +3294,6 @@ class BajaExistenciaView(BaseEstacionMixin, CustomPermissionRequiredMixin, Stati
 
 
 
-def get_or_create_extraviado_compartment(estacion: Estacion) -> Compartimento:
-    """
-    Busca o crea la ubicación (ADMINISTRATIVA) y el compartimento 'limbo' 
-    para los registros extraviados de una estación.
-    """
-    tipo_admin, _ = TipoUbicacion.objects.get_or_create(nombre='ADMINISTRATIVA')
-    
-    ubicacion_admin, _ = Ubicacion.objects.get_or_create(
-        nombre="Registros Administrativos",
-        estacion=estacion,
-        tipo_ubicacion=tipo_admin,
-        defaults={'descripcion': 'Ubicación simbólica para registros anulados o dados de baja.'}
-    )
-
-    # Creamos un compartimento separado para extraviados
-    compartimento_extraviado, _ = Compartimento.objects.get_or_create(
-        nombre="Stock Extraviado",
-        ubicacion=ubicacion_admin,
-        defaults={'descripcion': 'Existencias que fueron reportadas como extraviadas.'}
-    )
-    return compartimento_extraviado
-
-
-
-
 class ExtraviadoExistenciaView(BaseEstacionMixin, CustomPermissionRequiredMixin, StationInventoryObjectMixin, InventoryStateValidatorMixin, AuditoriaMixin, FormView):
     """
     Vista para reportar una existencia como extraviada.
@@ -3594,6 +3536,100 @@ class ConsumirStockLoteView(BaseEstacionMixin, CustomPermissionRequiredMixin, In
         
     def form_invalid(self, form):
         messages.error(self.request, "Hubo un error en el formulario. Por favor, revisa los datos ingresados.")
+        return super().form_invalid(form)
+
+
+
+
+class RegistrarUsoActivoView(BaseEstacionMixin, CustomPermissionRequiredMixin, StationInventoryObjectMixin, InventoryStateValidatorMixin, AuditoriaMixin, FormView):
+    """
+    Vista para registrar horas de uso en un Activo Serializado.
+    Incrementa el contador total del activo y genera un registro en la bitácora.
+    """
+    template_name = 'gestion_inventario/pages/registrar_uso_activo.html'
+    form_class = RegistroUsoForm
+    permission_required = "gestion_usuarios.accion_gestion_inventario_gestionar_stock_interno"
+    
+    def get_success_url(self):
+        # Redirige a la hoja de vida del activo (Detalle Existencia)
+        return reverse('gestion_inventario:ruta_detalle_existencia', kwargs={'tipo_item': 'activo', 'item_id': self.item.id})
+
+    def dispatch(self, request, *args, **kwargs):
+        # 1. Carga Segura del Ítem (Mixin StationInventoryObjectMixin)
+        self.item = self.get_inventory_item()
+        
+        if not self.item:
+            return super().dispatch(request, *args, **kwargs) # Flujo de error estándar (404/Redirect)
+
+        # 2. Validación de Tipo: Solo Activos
+        if self.tipo_item != 'activo':
+            messages.warning(request, "El registro de horas de uso solo aplica a Activos Serializados, no a Lotes.")
+            return redirect('gestion_inventario:ruta_stock_actual')
+
+        # 3. Validación de Estado (Mixin InventoryStateValidatorMixin)
+        # Se permite registrar uso si está operativo, prestado o asignado.
+        estados_permitidos = ['DISPONIBLE', 'ASIGNADO', 'EN PRÉSTAMO EXTERNO', 'PENDIENTE REVISIÓN']
+        if not self.validate_state(self.item, estados_permitidos):
+            return redirect('gestion_inventario:ruta_stock_actual')
+
+        return super().dispatch(request, *args, **kwargs)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        # self.item es inyectado por el StationInventoryObjectMixin, 
+        # pero lo aseguramos explícitamente si el template lo requiere aparte.
+        context['activo'] = self.item 
+        return context
+
+    def form_valid(self, form):
+        horas = form.cleaned_data['horas']
+        fecha_uso = form.cleaned_data['fecha_uso']
+        notas = form.cleaned_data['notas']
+
+        try:
+            with transaction.atomic():
+                # 1. Crear el registro en la bitácora histórica
+                RegistroUsoActivo.objects.create(
+                    activo=self.item,
+                    usuario_registra=self.request.user,
+                    fecha_uso=fecha_uso,
+                    horas_registradas=horas,
+                    notas=notas
+                )
+
+                # 2. Actualizar el acumulador en el Activo
+                # Usamos F() expressions para evitar condiciones de carrera (race conditions)
+                self.item.horas_uso_totales = F('horas_uso_totales') + horas
+                self.item.save(update_fields=['horas_uso_totales', 'updated_at'])
+
+                # Recargamos el objeto para tener el valor numérico actualizado para el log
+                self.item.refresh_from_db()
+
+                # --- AUDITORÍA ---
+                self.auditar(
+                    verbo=f"registró {horas} horas de uso para",
+                    objetivo=self.item,
+                    objetivo_repr=f"{self.item.producto.producto_global.nombre_oficial} ({self.item.codigo_activo})",
+                    detalles={
+                        'horas_agregadas': float(horas),
+                        'total_acumulado': float(self.item.horas_uso_totales),
+                        'fecha_uso': fecha_uso.strftime('%Y-%m-%d %H:%M'),
+                        'notas': notas
+                    }
+                )
+
+            messages.success(
+                self.request, 
+                f"Se registraron {horas} horas correctamente. Total acumulado: {self.item.horas_uso_totales} hrs."
+            )
+            return super().form_valid(form)
+
+        except Exception as e:
+            messages.error(self.request, f"Error al guardar el registro de uso: {e}")
+            return self.form_invalid(form)
+
+    def form_invalid(self, form):
+        messages.error(self.request, "Datos inválidos. Por favor revise el formulario.")
         return super().form_invalid(form)
 
 

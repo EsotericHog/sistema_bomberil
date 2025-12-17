@@ -1,0 +1,82 @@
+[
+{
+  "model": "gestion_inventario.estacion",
+  "pk": 1,
+  "fields": {
+    "nombre": "Compañía de Bomberos Española N°1",
+    "descripcion": "La Primera Compañía de Bomberos Española de Iquique es la primera del Cuerpo de Bomberos de Iquique, fundada el 3 de diciembre de 1870, y su lema es \"Primera en el Cuerpo, primera en el deber\". Nació como respuesta a los incendios que asolaban la ciudad y su objetivo es salvar vidas y bienes, además de prestar auxilio a la comunidad. Su historia está marcada por su origen durante la época en que la región pertenecía a Perú y por la Guerra del Pacífico, que cambió su denominación.",
+    "direccion": "Las Rosas 2398",
+    "es_departamento": false,
+    "imagen": "estaciones/imagen/main/estacion_7c862279-86a2-420c-887b-d23029da531d.jpg",
+    "imagen_thumb_medium": "estaciones/imagen/medium/estacion_7c862279-86a2-420c-887b-d23029da531d_medium.jpg",
+    "imagen_thumb_small": "estaciones/imagen/small/estacion_7c862279-86a2-420c-887b-d23029da531d_small.jpg",
+    "logo": "estaciones/logo/estacion_logo_de40ae9c-5f27-472e-bc2a-72a66c136257.png",
+    "logo_thumb_medium": "estaciones/logo/medium/estacion_logo_de40ae9c-5f27-472e-bc2a-72a66c136257_medium.jpg",
+    "logo_thumb_small": "estaciones/logo/small/estacion_logo_de40ae9c-5f27-472e-bc2a-72a66c136257_small.jpg",
+    "comuna": 5,
+    "codigo": "E001",
+    "created_at": "2025-11-23T20:32:09.980Z",
+    "updated_at": "2025-12-04T04:59:31.011Z"
+  }
+},
+{
+  "model": "gestion_inventario.estacion",
+  "pk": 2,
+  "fields": {
+    "nombre": "Compañía de Bomberos Germania N°2",
+    "descripcion": "La Compañía de Bomberos Germania N°2 de Iquique es la Segunda Compañía Alemana, fundada el 18 de octubre de 1872 por inmigrantes alemanes. Su especialidad es el agua y el rescate vehicular y de desnivel.",
+    "direccion": "Av. Tadeo Haenke 1870",
+    "es_departamento": false,
+    "imagen": "estaciones/imagen/main/estacion_35074e1d-3a5a-49a5-8dd4-47bec7ee15c4.jpg",
+    "imagen_thumb_medium": "estaciones/imagen/medium/estacion_35074e1d-3a5a-49a5-8dd4-47bec7ee15c4_medium.jpg",
+    "imagen_thumb_small": "estaciones/imagen/small/estacion_35074e1d-3a5a-49a5-8dd4-47bec7ee15c4_small.jpg",
+    "logo": "estaciones/logo/estacion_logo_f5775533-fcd5-4d9f-ae95-4485dbf99297.png",
+    "logo_thumb_medium": "estaciones/logo/medium/estacion_logo_f5775533-fcd5-4d9f-ae95-4485dbf99297_medium.jpg",
+    "logo_thumb_small": "estaciones/logo/small/estacion_logo_f5775533-fcd5-4d9f-ae95-4485dbf99297_small.jpg",
+    "comuna": 5,
+    "codigo": "E002",
+    "created_at": "2025-11-23T20:35:16.240Z",
+    "updated_at": "2025-12-04T04:58:19.669Z"
+  }
+},
+{
+  "model": "gestion_inventario.estacion",
+  "pk": 3,
+  "fields": {
+    "nombre": "Compañía de Bomberos Ausonia N°4",
+    "descripcion": "La Compañía de Bomberos Ausonia N°4 de Iquique es la primera compañía de bomberos de origen italiano fundada en Chile en 1874, como agradecimiento a la acogida de la ciudad. Se especializa en la lucha contra materiales peligrosos (Hazmat), cuenta con un moderno cuartel en calle San Martín N° 520, y tiene una historia de servicio condecorada por los gobiernos de Perú e Italia.",
+    "direccion": "San Martín 525",
+    "es_departamento": false,
+    "imagen": "estaciones/imagen/main/estacion_ba45582c-03d7-412b-a18d-d830ad6416aa.jpg",
+    "imagen_thumb_medium": "estaciones/imagen/medium/estacion_ba45582c-03d7-412b-a18d-d830ad6416aa_medium.jpg",
+    "imagen_thumb_small": "estaciones/imagen/small/estacion_ba45582c-03d7-412b-a18d-d830ad6416aa_small.jpg",
+    "logo": "estaciones/logo/estacion_logo_39f439da-71d2-45fe-8d0c-759584d24574.jpg",
+    "logo_thumb_medium": "estaciones/logo/medium/estacion_logo_39f439da-71d2-45fe-8d0c-759584d24574_medium.jpg",
+    "logo_thumb_small": "estaciones/logo/small/estacion_logo_39f439da-71d2-45fe-8d0c-759584d24574_small.jpg",
+    "comuna": 5,
+    "codigo": "E003",
+    "created_at": "2025-11-23T20:39:24.654Z",
+    "updated_at": "2025-12-04T05:02:31.617Z"
+  }
+},
+{
+  "model": "gestion_inventario.estacion",
+  "pk": 4,
+  "fields": {
+    "nombre": "Compañía de Bomberos Dalmacia N°5",
+    "descripcion": "La Quinta Compañía de Bomberos de Iquique es una compañía de bomberos voluntarios con 150 años de historia, fundada en 1874 por inmigrantes croatas de las islas dálmatas. Es una institución comprometida con el servicio a la comunidad de Iquique, caracterizada por su disciplina, hermandad y vocación de servicio.",
+    "direccion": "Av. Tadeo Haenke 1850",
+    "es_departamento": false,
+    "imagen": "estaciones/imagen/main/estacion_102d8c7b-2cd4-4c8e-bf17-3c0c7a8c2718.jpg",
+    "imagen_thumb_medium": "estaciones/imagen/medium/estacion_102d8c7b-2cd4-4c8e-bf17-3c0c7a8c2718_medium.jpg",
+    "imagen_thumb_small": "estaciones/imagen/small/estacion_102d8c7b-2cd4-4c8e-bf17-3c0c7a8c2718_small.jpg",
+    "logo": "estaciones/logo/estacion_logo_feb94e78-2c48-44bc-9182-4f94a1712e13.jpg",
+    "logo_thumb_medium": "estaciones/logo/medium/estacion_logo_feb94e78-2c48-44bc-9182-4f94a1712e13_medium.jpg",
+    "logo_thumb_small": "estaciones/logo/small/estacion_logo_feb94e78-2c48-44bc-9182-4f94a1712e13_small.jpg",
+    "comuna": 5,
+    "codigo": "E004",
+    "created_at": "2025-11-23T20:43:54.164Z",
+    "updated_at": "2025-12-04T05:01:48.749Z"
+  }
+}
+]

@@ -80,14 +80,6 @@ class IsSelfOrStationAdmin(permissions.BasePermission):
             estacion_id=admin_station_id,
             estado__in=['ACTIVO', 'INACTIVO']
         ).exists()
-
-
-
-
-# --- PERMISOS DE GESTIÓN DE USUARIOS ---
-class CanCrearUsuario(permissions.BasePermission):
-    def has_permission(self, request, view):
-        return request.user.has_perm('gestion_usuarios.accion_gestion_usuarios_crear_usuario')
     
 
 
@@ -97,9 +89,51 @@ class CanVerCatalogos(permissions.BasePermission):
     def has_permission(self, request, view):
         return request.user.has_perm('gestion_usuarios.accion_gestion_inventario_ver_catalogos')
 
+class CanGestionarCatalogoLocal(permissions.BasePermission):
+    """
+    Permite añadir productos existentes en el global al catálogo local de la estación.
+    """
+    def has_permission(self, request, view):
+        return request.user.has_perm('gestion_usuarios.accion_gestion_inventario_gestionar_catalogo_local')
+
 class CanCrearProductoGlobal(permissions.BasePermission):
     def has_permission(self, request, view):
         return request.user.has_perm('gestion_usuarios.accion_gestion_inventario_crear_producto_global')
+    
+class CanVerStock(permissions.BasePermission):
+    def has_permission(self, request, view):
+        return request.user.has_perm('gestion_usuarios.accion_gestion_inventario_ver_stock')
+    
+class CanRecepcionarStock(permissions.BasePermission):
+    def has_permission(self, request, view):
+        # El mismo permiso que usa tu vista web
+        return request.user.has_perm('gestion_usuarios.accion_gestion_inventario_recepcionar_stock')
+
+class CanVerUbicaciones(permissions.BasePermission):
+    def has_permission(self, request, view):
+        # El mismo permiso que usa tu vista web
+        return request.user.has_perm('gestion_usuarios.accion_gestion_inventario_ver_ubicaciones')
+
+class CanVerProveedores(permissions.BasePermission):
+    def has_permission(self, request, view):
+        # El mismo permiso que usa tu vista web
+        return request.user.has_perm('gestion_usuarios.accion_gestion_inventario_ver_proveedores')
+
+class CanGestionarBajasStock(permissions.BasePermission):
+    def has_permission(self, request, view):
+        return request.user.has_perm('gestion_usuarios.accion_gestion_inventario_gestionar_bajas_stock')
+
+class CanGestionarStockInterno(permissions.BasePermission):
+    def has_permission(self, request, view):
+        return request.user.has_perm('gestion_usuarios.accion_gestion_inventario_gestionar_stock_interno')
+    
+class CanGestionarPrestamos(permissions.BasePermission):
+    def has_permission(self, request, view):
+        return request.user.has_perm('gestion_usuarios.accion_gestion_inventario_gestionar_prestamos')
+
+class CanVerPrestamos(permissions.BasePermission):
+    def has_permission(self, request, view):
+        return request.user.has_perm('gestion_usuarios.accion_gestion_inventario_ver_prestamos')
 
 
 
@@ -108,7 +142,39 @@ class CanCrearProductoGlobal(permissions.BasePermission):
 class CanGestionarPlanes(permissions.BasePermission):
     def has_permission(self, request, view):
         return request.user.has_perm('gestion_usuarios.accion_gestion_mantenimiento_gestionar_planes')
+    
+class CanVerOrdenes(permissions.BasePermission):
+    def has_permission(self, request, view):
+        return request.user.has_perm('gestion_usuarios.accion_gestion_mantenimiento_ver_ordenes')
 
 class CanGestionarOrdenes(permissions.BasePermission):
     def has_permission(self, request, view):
         return request.user.has_perm('gestion_usuarios.accion_gestion_mantenimiento_gestionar_ordenes')
+
+
+
+
+# --- PERMISOS DE GESTIÓN USUARIOS ---
+class CanCrearUsuario(permissions.BasePermission):
+    def has_permission(self, request, view):
+        return request.user.has_perm('gestion_usuarios.accion_gestion_usuarios_crear_usuario')
+    
+class CanVerUsuarios(permissions.BasePermission):
+    def has_permission(self, request, view):
+        return request.user.has_perm('gestion_usuarios.accion_gestion_usuarios_ver_usuarios')
+    
+class CanVerHojaVida(permissions.BasePermission):
+    def has_permission(self, request, view):
+        return request.user.has_perm('gestion_usuarios.accion_gestion_voluntarios_ver_voluntarios')
+    
+class CanVerFichaMedica(permissions.BasePermission):
+    def has_permission(self, request, view):
+        return request.user.has_perm('gestion_usuarios.accion_gestion_medica_ver_fichas_medicas')
+    
+
+
+
+# --- PERMISOS DE GESTIÓN DOCUMENTAL ---
+class CanVerDocumentos(permissions.BasePermission):
+    def has_permission(self, request, view):
+        return request.user.has_perm('gestion_usuarios.accion_gestion_documental_ver_documentos')

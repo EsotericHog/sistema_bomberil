@@ -1,7 +1,14 @@
 from itertools import cycle
 from django.core.files.base import ContentFile
+from django.core.exceptions import ValidationError
 from io import BytesIO
 from PIL import Image
+
+
+# 5000 x 5000 = 25 Millones de píxeles
+MAX_PIXELS = 25_000_000 
+MAX_DIMENSION = 5000
+MAX_UPLOAD_SIZE_MB = 25 # 25MB
 
 
 def _preparar_imagen_para_jpeg(image):
@@ -38,7 +45,23 @@ def procesar_imagen_en_memoria(
         return None
     
     with Image.open(image_field) as image:
-        # 1. GESTIÓN DE TRANSPARENCIA Y MODO
+        # Verificar dimensiones antes de procesar.
+        width, height = image.size
+        
+        # 1. Validación de Área (Pixel Flood)
+        if (width * height) > MAX_PIXELS:
+             raise ValidationError(
+                f"La imagen es demasiado densa ({width}x{height} píxeles). "
+                "El sistema permite un máximo de 25 Megapíxeles (aprox 5000x5000)."
+            )
+
+        # 2. Validación de Lado (Evita imágenes 'fideo' ej: 10px x 20000px)
+        if width > MAX_DIMENSION or height > MAX_DIMENSION:
+             raise ValidationError(
+                 f"Las dimensiones de la imagen no pueden superar los {MAX_DIMENSION}px por lado."
+             )
+        
+        # GESTIÓN DE TRANSPARENCIA Y MODO
         image = _preparar_imagen_para_jpeg(image)
         
         # 2. RECORTAR (CROP) 1:1

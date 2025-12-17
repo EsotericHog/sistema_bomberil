@@ -1,0 +1,2495 @@
+[
+{
+  "model": "gestion_voluntarios.nacionalidad",
+  "pk": 1,
+  "fields": {
+    "pais": "Afganistán",
+    "gentilicio": "AFGANA",
+    "iso_nac": "AFG"
+  }
+},
+{
+  "model": "gestion_voluntarios.nacionalidad",
+  "pk": 2,
+  "fields": {
+    "pais": "Albania",
+    "gentilicio": "ALBANESA",
+    "iso_nac": "ALB"
+  }
+},
+{
+  "model": "gestion_voluntarios.nacionalidad",
+  "pk": 3,
+  "fields": {
+    "pais": "Alemania",
+    "gentilicio": "ALEMANA",
+    "iso_nac": "DEU"
+  }
+},
+{
+  "model": "gestion_voluntarios.nacionalidad",
+  "pk": 4,
+  "fields": {
+    "pais": "Andorra",
+    "gentilicio": "ANDORRANA",
+    "iso_nac": "AND"
+  }
+},
+{
+  "model": "gestion_voluntarios.nacionalidad",
+  "pk": 5,
+  "fields": {
+    "pais": "Angola",
+    "gentilicio": "ANGOLEÑA",
+    "iso_nac": "AGO"
+  }
+},
+{
+  "model": "gestion_voluntarios.nacionalidad",
+  "pk": 6,
+  "fields": {
+    "pais": "AntiguayBarbuda",
+    "gentilicio": "ANTIGUANA",
+    "iso_nac": "ATG"
+  }
+},
+{
+  "model": "gestion_voluntarios.nacionalidad",
+  "pk": 7,
+  "fields": {
+    "pais": "ArabiaSaudita",
+    "gentilicio": "SAUDÍ",
+    "iso_nac": "SAU"
+  }
+},
+{
+  "model": "gestion_voluntarios.nacionalidad",
+  "pk": 8,
+  "fields": {
+    "pais": "Argelia",
+    "gentilicio": "ARGELINA",
+    "iso_nac": "DZA"
+  }
+},
+{
+  "model": "gestion_voluntarios.nacionalidad",
+  "pk": 9,
+  "fields": {
+    "pais": "Argentina",
+    "gentilicio": "ARGENTINA",
+    "iso_nac": "ARG"
+  }
+},
+{
+  "model": "gestion_voluntarios.nacionalidad",
+  "pk": 10,
+  "fields": {
+    "pais": "Armenia",
+    "gentilicio": "ARMENIA",
+    "iso_nac": "ARM"
+  }
+},
+{
+  "model": "gestion_voluntarios.nacionalidad",
+  "pk": 11,
+  "fields": {
+    "pais": "Aruba",
+    "gentilicio": "ARUBEÑA",
+    "iso_nac": "ABW"
+  }
+},
+{
+  "model": "gestion_voluntarios.nacionalidad",
+  "pk": 12,
+  "fields": {
+    "pais": "Australia",
+    "gentilicio": "AUSTRALIANA",
+    "iso_nac": "AUS"
+  }
+},
+{
+  "model": "gestion_voluntarios.nacionalidad",
+  "pk": 13,
+  "fields": {
+    "pais": "Austria",
+    "gentilicio": "AUSTRIACA",
+    "iso_nac": "AUT"
+  }
+},
+{
+  "model": "gestion_voluntarios.nacionalidad",
+  "pk": 14,
+  "fields": {
+    "pais": "Azerbaiyán",
+    "gentilicio": "AZERBAIYANA",
+    "iso_nac": "AZE"
+  }
+},
+{
+  "model": "gestion_voluntarios.nacionalidad",
+  "pk": 15,
+  "fields": {
+    "pais": "Bahamas",
+    "gentilicio": "BAHAMEÑA",
+    "iso_nac": "BHS"
+  }
+},
+{
+  "model": "gestion_voluntarios.nacionalidad",
+  "pk": 16,
+  "fields": {
+    "pais": "Bangladés",
+    "gentilicio": "BANGLADESÍ",
+    "iso_nac": "BGD"
+  }
+},
+{
+  "model": "gestion_voluntarios.nacionalidad",
+  "pk": 17,
+  "fields": {
+    "pais": "Barbados",
+    "gentilicio": "BARBADENSE",
+    "iso_nac": "BRB"
+  }
+},
+{
+  "model": "gestion_voluntarios.nacionalidad",
+  "pk": 18,
+  "fields": {
+    "pais": "Baréin",
+    "gentilicio": "BAREINÍ",
+    "iso_nac": "BHR"
+  }
+},
+{
+  "model": "gestion_voluntarios.nacionalidad",
+  "pk": 19,
+  "fields": {
+    "pais": "Bélgica",
+    "gentilicio": "BELGA",
+    "iso_nac": "BEL"
+  }
+},
+{
+  "model": "gestion_voluntarios.nacionalidad",
+  "pk": 20,
+  "fields": {
+    "pais": "Belice",
+    "gentilicio": "BELICEÑA",
+    "iso_nac": "BLZ"
+  }
+},
+{
+  "model": "gestion_voluntarios.nacionalidad",
+  "pk": 21,
+  "fields": {
+    "pais": "Benín",
+    "gentilicio": "BENINÉSA",
+    "iso_nac": "BEN"
+  }
+},
+{
+  "model": "gestion_voluntarios.nacionalidad",
+  "pk": 22,
+  "fields": {
+    "pais": "Bielorrusia",
+    "gentilicio": "BIELORRUSA",
+    "iso_nac": "BLR"
+  }
+},
+{
+  "model": "gestion_voluntarios.nacionalidad",
+  "pk": 23,
+  "fields": {
+    "pais": "Birmania",
+    "gentilicio": "BIRMANA",
+    "iso_nac": "MMR"
+  }
+},
+{
+  "model": "gestion_voluntarios.nacionalidad",
+  "pk": 24,
+  "fields": {
+    "pais": "Bolivia",
+    "gentilicio": "BOLIVIANA",
+    "iso_nac": "BOL"
+  }
+},
+{
+  "model": "gestion_voluntarios.nacionalidad",
+  "pk": 25,
+  "fields": {
+    "pais": "BosniayHerzegovina",
+    "gentilicio": "BOSNIA",
+    "iso_nac": "BIH"
+  }
+},
+{
+  "model": "gestion_voluntarios.nacionalidad",
+  "pk": 26,
+  "fields": {
+    "pais": "Botsuana",
+    "gentilicio": "BOTSUANA",
+    "iso_nac": "BWA"
+  }
+},
+{
+  "model": "gestion_voluntarios.nacionalidad",
+  "pk": 27,
+  "fields": {
+    "pais": "Brasil",
+    "gentilicio": "BRASILEÑA",
+    "iso_nac": "BRA"
+  }
+},
+{
+  "model": "gestion_voluntarios.nacionalidad",
+  "pk": 28,
+  "fields": {
+    "pais": "Brunéi",
+    "gentilicio": "BRUNEANA",
+    "iso_nac": "BRN"
+  }
+},
+{
+  "model": "gestion_voluntarios.nacionalidad",
+  "pk": 29,
+  "fields": {
+    "pais": "Bulgaria",
+    "gentilicio": "BÚLGARA",
+    "iso_nac": "BGR"
+  }
+},
+{
+  "model": "gestion_voluntarios.nacionalidad",
+  "pk": 30,
+  "fields": {
+    "pais": "BurkinaFaso",
+    "gentilicio": "BURKINÉS",
+    "iso_nac": "BFA"
+  }
+},
+{
+  "model": "gestion_voluntarios.nacionalidad",
+  "pk": 31,
+  "fields": {
+    "pais": "Burundi",
+    "gentilicio": "BURUNDÉSA",
+    "iso_nac": "BDI"
+  }
+},
+{
+  "model": "gestion_voluntarios.nacionalidad",
+  "pk": 32,
+  "fields": {
+    "pais": "Bután",
+    "gentilicio": "BUTANÉSA",
+    "iso_nac": "BTN"
+  }
+},
+{
+  "model": "gestion_voluntarios.nacionalidad",
+  "pk": 33,
+  "fields": {
+    "pais": "CaboVerde",
+    "gentilicio": "CABOVERDIANA",
+    "iso_nac": "CPV"
+  }
+},
+{
+  "model": "gestion_voluntarios.nacionalidad",
+  "pk": 34,
+  "fields": {
+    "pais": "Camboya",
+    "gentilicio": "CAMBOYANA",
+    "iso_nac": "KHM"
+  }
+},
+{
+  "model": "gestion_voluntarios.nacionalidad",
+  "pk": 35,
+  "fields": {
+    "pais": "Camerún",
+    "gentilicio": "CAMERUNESA",
+    "iso_nac": "CMR"
+  }
+},
+{
+  "model": "gestion_voluntarios.nacionalidad",
+  "pk": 36,
+  "fields": {
+    "pais": "Canadá",
+    "gentilicio": "CANADIENSE",
+    "iso_nac": "CAN"
+  }
+},
+{
+  "model": "gestion_voluntarios.nacionalidad",
+  "pk": 37,
+  "fields": {
+    "pais": "Catar",
+    "gentilicio": "CATARÍ",
+    "iso_nac": "QAT"
+  }
+},
+{
+  "model": "gestion_voluntarios.nacionalidad",
+  "pk": 38,
+  "fields": {
+    "pais": "Chad",
+    "gentilicio": "CHADIANA",
+    "iso_nac": "TCD"
+  }
+},
+{
+  "model": "gestion_voluntarios.nacionalidad",
+  "pk": 39,
+  "fields": {
+    "pais": "Chile",
+    "gentilicio": "CHILENA",
+    "iso_nac": "CHL"
+  }
+},
+{
+  "model": "gestion_voluntarios.nacionalidad",
+  "pk": 40,
+  "fields": {
+    "pais": "China",
+    "gentilicio": "CHINA",
+    "iso_nac": "CHN"
+  }
+},
+{
+  "model": "gestion_voluntarios.nacionalidad",
+  "pk": 41,
+  "fields": {
+    "pais": "Chipre",
+    "gentilicio": "CHIPRIOTA",
+    "iso_nac": "CYP"
+  }
+},
+{
+  "model": "gestion_voluntarios.nacionalidad",
+  "pk": 42,
+  "fields": {
+    "pais": "CiudaddelVaticano",
+    "gentilicio": "VATICANA",
+    "iso_nac": "VAT"
+  }
+},
+{
+  "model": "gestion_voluntarios.nacionalidad",
+  "pk": 43,
+  "fields": {
+    "pais": "Colombia",
+    "gentilicio": "COLOMBIANA",
+    "iso_nac": "COL"
+  }
+},
+{
+  "model": "gestion_voluntarios.nacionalidad",
+  "pk": 44,
+  "fields": {
+    "pais": "Comoras",
+    "gentilicio": "COMORENSE",
+    "iso_nac": "COM"
+  }
+},
+{
+  "model": "gestion_voluntarios.nacionalidad",
+  "pk": 45,
+  "fields": {
+    "pais": "CoreadelNorte",
+    "gentilicio": "NORCOREANA",
+    "iso_nac": "PRK"
+  }
+},
+{
+  "model": "gestion_voluntarios.nacionalidad",
+  "pk": 46,
+  "fields": {
+    "pais": "CoreadelSur",
+    "gentilicio": "SURCOREANA",
+    "iso_nac": "KOR"
+  }
+},
+{
+  "model": "gestion_voluntarios.nacionalidad",
+  "pk": 47,
+  "fields": {
+    "pais": "CostadeMarfil",
+    "gentilicio": "MARFILEÑA",
+    "iso_nac": "CIV"
+  }
+},
+{
+  "model": "gestion_voluntarios.nacionalidad",
+  "pk": 48,
+  "fields": {
+    "pais": "CostaRica",
+    "gentilicio": "COSTARRICENSE",
+    "iso_nac": "CRI"
+  }
+},
+{
+  "model": "gestion_voluntarios.nacionalidad",
+  "pk": 49,
+  "fields": {
+    "pais": "Croacia",
+    "gentilicio": "CROATA",
+    "iso_nac": "HRV"
+  }
+},
+{
+  "model": "gestion_voluntarios.nacionalidad",
+  "pk": 50,
+  "fields": {
+    "pais": "Cuba",
+    "gentilicio": "CUBANA",
+    "iso_nac": "CUB"
+  }
+},
+{
+  "model": "gestion_voluntarios.nacionalidad",
+  "pk": 51,
+  "fields": {
+    "pais": "Dinamarca",
+    "gentilicio": "DANÉSA",
+    "iso_nac": "DNK"
+  }
+},
+{
+  "model": "gestion_voluntarios.nacionalidad",
+  "pk": 52,
+  "fields": {
+    "pais": "Dominica",
+    "gentilicio": "DOMINIQUÉS",
+    "iso_nac": "DMA"
+  }
+},
+{
+  "model": "gestion_voluntarios.nacionalidad",
+  "pk": 53,
+  "fields": {
+    "pais": "Ecuador",
+    "gentilicio": "ECUATORIANA",
+    "iso_nac": "ECU"
+  }
+},
+{
+  "model": "gestion_voluntarios.nacionalidad",
+  "pk": 54,
+  "fields": {
+    "pais": "Egipto",
+    "gentilicio": "EGIPCIA",
+    "iso_nac": "EGY"
+  }
+},
+{
+  "model": "gestion_voluntarios.nacionalidad",
+  "pk": 55,
+  "fields": {
+    "pais": "ElSalvador",
+    "gentilicio": "SALVADOREÑA",
+    "iso_nac": "SLV"
+  }
+},
+{
+  "model": "gestion_voluntarios.nacionalidad",
+  "pk": 56,
+  "fields": {
+    "pais": "EmiratosÁrabesUnidos",
+    "gentilicio": "EMIRATÍ",
+    "iso_nac": "ARE"
+  }
+},
+{
+  "model": "gestion_voluntarios.nacionalidad",
+  "pk": 57,
+  "fields": {
+    "pais": "Eritrea",
+    "gentilicio": "ERITREA",
+    "iso_nac": "ERI"
+  }
+},
+{
+  "model": "gestion_voluntarios.nacionalidad",
+  "pk": 58,
+  "fields": {
+    "pais": "Eslovaquia",
+    "gentilicio": "ESLOVACA",
+    "iso_nac": "SVK"
+  }
+},
+{
+  "model": "gestion_voluntarios.nacionalidad",
+  "pk": 59,
+  "fields": {
+    "pais": "Eslovenia",
+    "gentilicio": "ESLOVENA",
+    "iso_nac": "SVN"
+  }
+},
+{
+  "model": "gestion_voluntarios.nacionalidad",
+  "pk": 60,
+  "fields": {
+    "pais": "España",
+    "gentilicio": "ESPAÑOLA",
+    "iso_nac": "ESP"
+  }
+},
+{
+  "model": "gestion_voluntarios.nacionalidad",
+  "pk": 61,
+  "fields": {
+    "pais": "EstadosUnidos",
+    "gentilicio": "ESTADOUNIDENSE",
+    "iso_nac": "USA"
+  }
+},
+{
+  "model": "gestion_voluntarios.nacionalidad",
+  "pk": 62,
+  "fields": {
+    "pais": "Estonia",
+    "gentilicio": "ESTONIA",
+    "iso_nac": "EST"
+  }
+},
+{
+  "model": "gestion_voluntarios.nacionalidad",
+  "pk": 63,
+  "fields": {
+    "pais": "Etiopía",
+    "gentilicio": "ETÍOPE",
+    "iso_nac": "ETH"
+  }
+},
+{
+  "model": "gestion_voluntarios.nacionalidad",
+  "pk": 64,
+  "fields": {
+    "pais": "Filipinas",
+    "gentilicio": "FILIPINA",
+    "iso_nac": "PHL"
+  }
+},
+{
+  "model": "gestion_voluntarios.nacionalidad",
+  "pk": 65,
+  "fields": {
+    "pais": "Finlandia",
+    "gentilicio": "FINLANDÉSA",
+    "iso_nac": "FIN"
+  }
+},
+{
+  "model": "gestion_voluntarios.nacionalidad",
+  "pk": 66,
+  "fields": {
+    "pais": "Fiyi",
+    "gentilicio": "FIYIANA",
+    "iso_nac": "FJI"
+  }
+},
+{
+  "model": "gestion_voluntarios.nacionalidad",
+  "pk": 67,
+  "fields": {
+    "pais": "Francia",
+    "gentilicio": "FRANCÉSA",
+    "iso_nac": "FRA"
+  }
+},
+{
+  "model": "gestion_voluntarios.nacionalidad",
+  "pk": 68,
+  "fields": {
+    "pais": "Gabón",
+    "gentilicio": "GABONÉSA",
+    "iso_nac": "GAB"
+  }
+},
+{
+  "model": "gestion_voluntarios.nacionalidad",
+  "pk": 69,
+  "fields": {
+    "pais": "Gambia",
+    "gentilicio": "GAMBIANA",
+    "iso_nac": "GMB"
+  }
+},
+{
+  "model": "gestion_voluntarios.nacionalidad",
+  "pk": 70,
+  "fields": {
+    "pais": "Georgia",
+    "gentilicio": "GEORGIANA",
+    "iso_nac": "GEO"
+  }
+},
+{
+  "model": "gestion_voluntarios.nacionalidad",
+  "pk": 71,
+  "fields": {
+    "pais": "Gibraltar",
+    "gentilicio": "GIBRALTAREÑA",
+    "iso_nac": "GIB"
+  }
+},
+{
+  "model": "gestion_voluntarios.nacionalidad",
+  "pk": 72,
+  "fields": {
+    "pais": "Ghana",
+    "gentilicio": "GHANÉSA",
+    "iso_nac": "GHA"
+  }
+},
+{
+  "model": "gestion_voluntarios.nacionalidad",
+  "pk": 73,
+  "fields": {
+    "pais": "Granada",
+    "gentilicio": "GRANADINA",
+    "iso_nac": "GRD"
+  }
+},
+{
+  "model": "gestion_voluntarios.nacionalidad",
+  "pk": 74,
+  "fields": {
+    "pais": "Grecia",
+    "gentilicio": "GRIEGA",
+    "iso_nac": "GRC"
+  }
+},
+{
+  "model": "gestion_voluntarios.nacionalidad",
+  "pk": 75,
+  "fields": {
+    "pais": "Groenlandia",
+    "gentilicio": "GROENLANDÉSA",
+    "iso_nac": "GRL"
+  }
+},
+{
+  "model": "gestion_voluntarios.nacionalidad",
+  "pk": 76,
+  "fields": {
+    "pais": "Guatemala",
+    "gentilicio": "GUATEMALTECA",
+    "iso_nac": "GTM"
+  }
+},
+{
+  "model": "gestion_voluntarios.nacionalidad",
+  "pk": 77,
+  "fields": {
+    "pais": "Guineaecuatorial",
+    "gentilicio": "ECUATOGUINEANA",
+    "iso_nac": "GNQ"
+  }
+},
+{
+  "model": "gestion_voluntarios.nacionalidad",
+  "pk": 78,
+  "fields": {
+    "pais": "Guinea",
+    "gentilicio": "GUINEANA",
+    "iso_nac": "GIN"
+  }
+},
+{
+  "model": "gestion_voluntarios.nacionalidad",
+  "pk": 79,
+  "fields": {
+    "pais": "Guinea-Bisáu",
+    "gentilicio": "GUINEANA",
+    "iso_nac": "GNB"
+  }
+},
+{
+  "model": "gestion_voluntarios.nacionalidad",
+  "pk": 80,
+  "fields": {
+    "pais": "Guyana",
+    "gentilicio": "GUYANESA",
+    "iso_nac": "GUY"
+  }
+},
+{
+  "model": "gestion_voluntarios.nacionalidad",
+  "pk": 81,
+  "fields": {
+    "pais": "Haití",
+    "gentilicio": "HAITIANA",
+    "iso_nac": "HTI"
+  }
+},
+{
+  "model": "gestion_voluntarios.nacionalidad",
+  "pk": 82,
+  "fields": {
+    "pais": "Honduras",
+    "gentilicio": "HONDUREÑA",
+    "iso_nac": "HND"
+  }
+},
+{
+  "model": "gestion_voluntarios.nacionalidad",
+  "pk": 83,
+  "fields": {
+    "pais": "Hungría",
+    "gentilicio": "HÚNGARA",
+    "iso_nac": "HUN"
+  }
+},
+{
+  "model": "gestion_voluntarios.nacionalidad",
+  "pk": 84,
+  "fields": {
+    "pais": "India",
+    "gentilicio": "HINDÚ",
+    "iso_nac": "IND"
+  }
+},
+{
+  "model": "gestion_voluntarios.nacionalidad",
+  "pk": 85,
+  "fields": {
+    "pais": "Indonesia",
+    "gentilicio": "INDONESIA",
+    "iso_nac": "IDN"
+  }
+},
+{
+  "model": "gestion_voluntarios.nacionalidad",
+  "pk": 86,
+  "fields": {
+    "pais": "Irak",
+    "gentilicio": "IRAQUÍ",
+    "iso_nac": "IRQ"
+  }
+},
+{
+  "model": "gestion_voluntarios.nacionalidad",
+  "pk": 87,
+  "fields": {
+    "pais": "Irán",
+    "gentilicio": "IRANÍ",
+    "iso_nac": "IRN"
+  }
+},
+{
+  "model": "gestion_voluntarios.nacionalidad",
+  "pk": 88,
+  "fields": {
+    "pais": "Irlanda",
+    "gentilicio": "IRLANDÉSA",
+    "iso_nac": "IRL"
+  }
+},
+{
+  "model": "gestion_voluntarios.nacionalidad",
+  "pk": 89,
+  "fields": {
+    "pais": "Islandia",
+    "gentilicio": "ISLANDÉSA",
+    "iso_nac": "ISL"
+  }
+},
+{
+  "model": "gestion_voluntarios.nacionalidad",
+  "pk": 90,
+  "fields": {
+    "pais": "IslasCook",
+    "gentilicio": "COOKIANA",
+    "iso_nac": "COK"
+  }
+},
+{
+  "model": "gestion_voluntarios.nacionalidad",
+  "pk": 91,
+  "fields": {
+    "pais": "IslasMarshall",
+    "gentilicio": "MARSHALÉSA",
+    "iso_nac": "MHL"
+  }
+},
+{
+  "model": "gestion_voluntarios.nacionalidad",
+  "pk": 92,
+  "fields": {
+    "pais": "IslasSalomón",
+    "gentilicio": "SALOMONENSE",
+    "iso_nac": "SLB"
+  }
+},
+{
+  "model": "gestion_voluntarios.nacionalidad",
+  "pk": 93,
+  "fields": {
+    "pais": "Israel",
+    "gentilicio": "ISRAELÍ",
+    "iso_nac": "ISR"
+  }
+},
+{
+  "model": "gestion_voluntarios.nacionalidad",
+  "pk": 94,
+  "fields": {
+    "pais": "Italia",
+    "gentilicio": "ITALIANA",
+    "iso_nac": "ITA"
+  }
+},
+{
+  "model": "gestion_voluntarios.nacionalidad",
+  "pk": 95,
+  "fields": {
+    "pais": "Jamaica",
+    "gentilicio": "JAMAIQUINA",
+    "iso_nac": "JAM"
+  }
+},
+{
+  "model": "gestion_voluntarios.nacionalidad",
+  "pk": 96,
+  "fields": {
+    "pais": "Japón",
+    "gentilicio": "JAPONÉSA",
+    "iso_nac": "JPN"
+  }
+},
+{
+  "model": "gestion_voluntarios.nacionalidad",
+  "pk": 97,
+  "fields": {
+    "pais": "Jordania",
+    "gentilicio": "JORDANA",
+    "iso_nac": "JOR"
+  }
+},
+{
+  "model": "gestion_voluntarios.nacionalidad",
+  "pk": 98,
+  "fields": {
+    "pais": "Kazajistán",
+    "gentilicio": "KAZAJA",
+    "iso_nac": "KAZ"
+  }
+},
+{
+  "model": "gestion_voluntarios.nacionalidad",
+  "pk": 99,
+  "fields": {
+    "pais": "Kenia",
+    "gentilicio": "KENIATA",
+    "iso_nac": "KEN"
+  }
+},
+{
+  "model": "gestion_voluntarios.nacionalidad",
+  "pk": 100,
+  "fields": {
+    "pais": "Kirguistán",
+    "gentilicio": "KIRGUISA",
+    "iso_nac": "KGZ"
+  }
+},
+{
+  "model": "gestion_voluntarios.nacionalidad",
+  "pk": 101,
+  "fields": {
+    "pais": "Kiribati",
+    "gentilicio": "KIRIBATIANA",
+    "iso_nac": "KIR"
+  }
+},
+{
+  "model": "gestion_voluntarios.nacionalidad",
+  "pk": 102,
+  "fields": {
+    "pais": "Kuwait",
+    "gentilicio": "KUWAITÍ",
+    "iso_nac": "KWT"
+  }
+},
+{
+  "model": "gestion_voluntarios.nacionalidad",
+  "pk": 103,
+  "fields": {
+    "pais": "Laos",
+    "gentilicio": "LAOSIANA",
+    "iso_nac": "LAO"
+  }
+},
+{
+  "model": "gestion_voluntarios.nacionalidad",
+  "pk": 104,
+  "fields": {
+    "pais": "Lesoto",
+    "gentilicio": "LESOTENSE",
+    "iso_nac": "LSO"
+  }
+},
+{
+  "model": "gestion_voluntarios.nacionalidad",
+  "pk": 105,
+  "fields": {
+    "pais": "Letonia",
+    "gentilicio": "LETÓNA",
+    "iso_nac": "LVA"
+  }
+},
+{
+  "model": "gestion_voluntarios.nacionalidad",
+  "pk": 106,
+  "fields": {
+    "pais": "Líbano",
+    "gentilicio": "LIBANÉSA",
+    "iso_nac": "LBN"
+  }
+},
+{
+  "model": "gestion_voluntarios.nacionalidad",
+  "pk": 107,
+  "fields": {
+    "pais": "Liberia",
+    "gentilicio": "LIBERIANA",
+    "iso_nac": "LBR"
+  }
+},
+{
+  "model": "gestion_voluntarios.nacionalidad",
+  "pk": 108,
+  "fields": {
+    "pais": "Libia",
+    "gentilicio": "LIBIA",
+    "iso_nac": "LBY"
+  }
+},
+{
+  "model": "gestion_voluntarios.nacionalidad",
+  "pk": 109,
+  "fields": {
+    "pais": "Liechtenstein",
+    "gentilicio": "LIECHTENSTEINIANA",
+    "iso_nac": "LIE"
+  }
+},
+{
+  "model": "gestion_voluntarios.nacionalidad",
+  "pk": 110,
+  "fields": {
+    "pais": "Lituania",
+    "gentilicio": "LITUANA",
+    "iso_nac": "LTU"
+  }
+},
+{
+  "model": "gestion_voluntarios.nacionalidad",
+  "pk": 111,
+  "fields": {
+    "pais": "Luxemburgo",
+    "gentilicio": "LUXEMBURGUÉSA",
+    "iso_nac": "LUX"
+  }
+},
+{
+  "model": "gestion_voluntarios.nacionalidad",
+  "pk": 112,
+  "fields": {
+    "pais": "Madagascar",
+    "gentilicio": "MALGACHE",
+    "iso_nac": "MDG"
+  }
+},
+{
+  "model": "gestion_voluntarios.nacionalidad",
+  "pk": 113,
+  "fields": {
+    "pais": "Malasia",
+    "gentilicio": "MALASIA",
+    "iso_nac": "MYS"
+  }
+},
+{
+  "model": "gestion_voluntarios.nacionalidad",
+  "pk": 114,
+  "fields": {
+    "pais": "Malaui",
+    "gentilicio": "MALAUÍ",
+    "iso_nac": "MWI"
+  }
+},
+{
+  "model": "gestion_voluntarios.nacionalidad",
+  "pk": 115,
+  "fields": {
+    "pais": "Maldivas",
+    "gentilicio": "MALDIVA",
+    "iso_nac": "MDV"
+  }
+},
+{
+  "model": "gestion_voluntarios.nacionalidad",
+  "pk": 116,
+  "fields": {
+    "pais": "Malí",
+    "gentilicio": "MALIENSE",
+    "iso_nac": "MLI"
+  }
+},
+{
+  "model": "gestion_voluntarios.nacionalidad",
+  "pk": 117,
+  "fields": {
+    "pais": "Malta",
+    "gentilicio": "MALTÉSA",
+    "iso_nac": "MLT"
+  }
+},
+{
+  "model": "gestion_voluntarios.nacionalidad",
+  "pk": 118,
+  "fields": {
+    "pais": "Marruecos",
+    "gentilicio": "MARROQUÍ",
+    "iso_nac": "MAR"
+  }
+},
+{
+  "model": "gestion_voluntarios.nacionalidad",
+  "pk": 119,
+  "fields": {
+    "pais": "Martinica",
+    "gentilicio": "MARTINIQUÉS",
+    "iso_nac": "MTQ"
+  }
+},
+{
+  "model": "gestion_voluntarios.nacionalidad",
+  "pk": 120,
+  "fields": {
+    "pais": "Mauricio",
+    "gentilicio": "MAURICIANA",
+    "iso_nac": "MUS"
+  }
+},
+{
+  "model": "gestion_voluntarios.nacionalidad",
+  "pk": 121,
+  "fields": {
+    "pais": "Mauritania",
+    "gentilicio": "MAURITANA",
+    "iso_nac": "MRT"
+  }
+},
+{
+  "model": "gestion_voluntarios.nacionalidad",
+  "pk": 122,
+  "fields": {
+    "pais": "México",
+    "gentilicio": "MEXICANA",
+    "iso_nac": "MEX"
+  }
+},
+{
+  "model": "gestion_voluntarios.nacionalidad",
+  "pk": 123,
+  "fields": {
+    "pais": "Micronesia",
+    "gentilicio": "MICRONESIA",
+    "iso_nac": "FSM"
+  }
+},
+{
+  "model": "gestion_voluntarios.nacionalidad",
+  "pk": 124,
+  "fields": {
+    "pais": "Moldavia",
+    "gentilicio": "MOLDAVA",
+    "iso_nac": "MDA"
+  }
+},
+{
+  "model": "gestion_voluntarios.nacionalidad",
+  "pk": 125,
+  "fields": {
+    "pais": "Mónaco",
+    "gentilicio": "MONEGASCA",
+    "iso_nac": "MCO"
+  }
+},
+{
+  "model": "gestion_voluntarios.nacionalidad",
+  "pk": 126,
+  "fields": {
+    "pais": "Mongolia",
+    "gentilicio": "MONGOLA",
+    "iso_nac": "MNG"
+  }
+},
+{
+  "model": "gestion_voluntarios.nacionalidad",
+  "pk": 127,
+  "fields": {
+    "pais": "Montenegro",
+    "gentilicio": "MONTENEGRINA",
+    "iso_nac": "MNE"
+  }
+},
+{
+  "model": "gestion_voluntarios.nacionalidad",
+  "pk": 128,
+  "fields": {
+    "pais": "Mozambique",
+    "gentilicio": "MOZAMBIQUEÑA",
+    "iso_nac": "MOZ"
+  }
+},
+{
+  "model": "gestion_voluntarios.nacionalidad",
+  "pk": 129,
+  "fields": {
+    "pais": "Namibia",
+    "gentilicio": "NAMIBIA",
+    "iso_nac": "NAM"
+  }
+},
+{
+  "model": "gestion_voluntarios.nacionalidad",
+  "pk": 130,
+  "fields": {
+    "pais": "Nauru",
+    "gentilicio": "NAURUANA",
+    "iso_nac": "NRU"
+  }
+},
+{
+  "model": "gestion_voluntarios.nacionalidad",
+  "pk": 131,
+  "fields": {
+    "pais": "Nepal",
+    "gentilicio": "NEPALÍ",
+    "iso_nac": "NPL"
+  }
+},
+{
+  "model": "gestion_voluntarios.nacionalidad",
+  "pk": 132,
+  "fields": {
+    "pais": "Nicaragua",
+    "gentilicio": "NICARAGÜENSE",
+    "iso_nac": "NIC"
+  }
+},
+{
+  "model": "gestion_voluntarios.nacionalidad",
+  "pk": 133,
+  "fields": {
+    "pais": "Níger",
+    "gentilicio": "NIGERINA",
+    "iso_nac": "NER"
+  }
+},
+{
+  "model": "gestion_voluntarios.nacionalidad",
+  "pk": 134,
+  "fields": {
+    "pais": "Nigeria",
+    "gentilicio": "NIGERIANA",
+    "iso_nac": "NGA"
+  }
+},
+{
+  "model": "gestion_voluntarios.nacionalidad",
+  "pk": 135,
+  "fields": {
+    "pais": "Noruega",
+    "gentilicio": "NORUEGA",
+    "iso_nac": "NOR"
+  }
+},
+{
+  "model": "gestion_voluntarios.nacionalidad",
+  "pk": 136,
+  "fields": {
+    "pais": "NuevaZelanda",
+    "gentilicio": "NEOZELANDÉSA",
+    "iso_nac": "NZL"
+  }
+},
+{
+  "model": "gestion_voluntarios.nacionalidad",
+  "pk": 137,
+  "fields": {
+    "pais": "Omán",
+    "gentilicio": "OMANÍ",
+    "iso_nac": "OMN"
+  }
+},
+{
+  "model": "gestion_voluntarios.nacionalidad",
+  "pk": 138,
+  "fields": {
+    "pais": "PaísesBajos",
+    "gentilicio": "NEERLANDÉSA",
+    "iso_nac": "NLD"
+  }
+},
+{
+  "model": "gestion_voluntarios.nacionalidad",
+  "pk": 139,
+  "fields": {
+    "pais": "Pakistán",
+    "gentilicio": "PAKISTANÍ",
+    "iso_nac": "PAK"
+  }
+},
+{
+  "model": "gestion_voluntarios.nacionalidad",
+  "pk": 140,
+  "fields": {
+    "pais": "Palaos",
+    "gentilicio": "PALAUANA",
+    "iso_nac": "PLW"
+  }
+},
+{
+  "model": "gestion_voluntarios.nacionalidad",
+  "pk": 141,
+  "fields": {
+    "pais": "Palestina",
+    "gentilicio": "PALESTINA",
+    "iso_nac": "PSE"
+  }
+},
+{
+  "model": "gestion_voluntarios.nacionalidad",
+  "pk": 142,
+  "fields": {
+    "pais": "Panamá",
+    "gentilicio": "PANAMEÑA",
+    "iso_nac": "PAN"
+  }
+},
+{
+  "model": "gestion_voluntarios.nacionalidad",
+  "pk": 143,
+  "fields": {
+    "pais": "PapúaNuevaGuinea",
+    "gentilicio": "PAPÚ",
+    "iso_nac": "PNG"
+  }
+},
+{
+  "model": "gestion_voluntarios.nacionalidad",
+  "pk": 144,
+  "fields": {
+    "pais": "Paraguay",
+    "gentilicio": "PARAGUAYA",
+    "iso_nac": "PRY"
+  }
+},
+{
+  "model": "gestion_voluntarios.nacionalidad",
+  "pk": 145,
+  "fields": {
+    "pais": "Perú",
+    "gentilicio": "PERUANA",
+    "iso_nac": "PER"
+  }
+},
+{
+  "model": "gestion_voluntarios.nacionalidad",
+  "pk": 146,
+  "fields": {
+    "pais": "Polonia",
+    "gentilicio": "POLACA",
+    "iso_nac": "POL"
+  }
+},
+{
+  "model": "gestion_voluntarios.nacionalidad",
+  "pk": 147,
+  "fields": {
+    "pais": "Portugal",
+    "gentilicio": "PORTUGUÉSA",
+    "iso_nac": "PRT"
+  }
+},
+{
+  "model": "gestion_voluntarios.nacionalidad",
+  "pk": 148,
+  "fields": {
+    "pais": "PuertoRico",
+    "gentilicio": "PUERTORRIQUEÑA",
+    "iso_nac": "PRI"
+  }
+},
+{
+  "model": "gestion_voluntarios.nacionalidad",
+  "pk": 149,
+  "fields": {
+    "pais": "ReinoUnido",
+    "gentilicio": "BRITÁNICA",
+    "iso_nac": "GBR"
+  }
+},
+{
+  "model": "gestion_voluntarios.nacionalidad",
+  "pk": 150,
+  "fields": {
+    "pais": "RepúblicaCentroafricana",
+    "gentilicio": "CENTROAFRICANA",
+    "iso_nac": "CAF"
+  }
+},
+{
+  "model": "gestion_voluntarios.nacionalidad",
+  "pk": 151,
+  "fields": {
+    "pais": "RepúblicaCheca",
+    "gentilicio": "CHECA",
+    "iso_nac": "CZE"
+  }
+},
+{
+  "model": "gestion_voluntarios.nacionalidad",
+  "pk": 152,
+  "fields": {
+    "pais": "RepúblicadeMacedonia",
+    "gentilicio": "MACEDONIA",
+    "iso_nac": "MKD"
+  }
+},
+{
+  "model": "gestion_voluntarios.nacionalidad",
+  "pk": 153,
+  "fields": {
+    "pais": "RepúblicadelCongo",
+    "gentilicio": "CONGOLEÑA",
+    "iso_nac": "COG"
+  }
+},
+{
+  "model": "gestion_voluntarios.nacionalidad",
+  "pk": 154,
+  "fields": {
+    "pais": "RepúblicaDemocráticadelCongo",
+    "gentilicio": "CONGOLEÑA",
+    "iso_nac": "COD"
+  }
+},
+{
+  "model": "gestion_voluntarios.nacionalidad",
+  "pk": 155,
+  "fields": {
+    "pais": "RepúblicaDominicana",
+    "gentilicio": "DOMINICANA",
+    "iso_nac": "DOM"
+  }
+},
+{
+  "model": "gestion_voluntarios.nacionalidad",
+  "pk": 156,
+  "fields": {
+    "pais": "RepúblicaSudafricana",
+    "gentilicio": "SUDAFRICANA",
+    "iso_nac": "ZAF"
+  }
+},
+{
+  "model": "gestion_voluntarios.nacionalidad",
+  "pk": 157,
+  "fields": {
+    "pais": "Ruanda",
+    "gentilicio": "RUANDÉSA",
+    "iso_nac": "RWA"
+  }
+},
+{
+  "model": "gestion_voluntarios.nacionalidad",
+  "pk": 158,
+  "fields": {
+    "pais": "Rumanía",
+    "gentilicio": "RUMANA",
+    "iso_nac": "ROU"
+  }
+},
+{
+  "model": "gestion_voluntarios.nacionalidad",
+  "pk": 159,
+  "fields": {
+    "pais": "Rusia",
+    "gentilicio": "RUSA",
+    "iso_nac": "RUS"
+  }
+},
+{
+  "model": "gestion_voluntarios.nacionalidad",
+  "pk": 160,
+  "fields": {
+    "pais": "Samoa",
+    "gentilicio": "SAMOANA",
+    "iso_nac": "WSM"
+  }
+},
+{
+  "model": "gestion_voluntarios.nacionalidad",
+  "pk": 161,
+  "fields": {
+    "pais": "SanCristóbalyNieves",
+    "gentilicio": "CRISTOBALEÑA",
+    "iso_nac": "KNA"
+  }
+},
+{
+  "model": "gestion_voluntarios.nacionalidad",
+  "pk": 162,
+  "fields": {
+    "pais": "SanMarino",
+    "gentilicio": "SANMARINENSE",
+    "iso_nac": "SMR"
+  }
+},
+{
+  "model": "gestion_voluntarios.nacionalidad",
+  "pk": 163,
+  "fields": {
+    "pais": "SanVicenteylasGranadinas",
+    "gentilicio": "SANVICENTINA",
+    "iso_nac": "VCT"
+  }
+},
+{
+  "model": "gestion_voluntarios.nacionalidad",
+  "pk": 164,
+  "fields": {
+    "pais": "SantaLucía",
+    "gentilicio": "SANTALUCENSE",
+    "iso_nac": "LCA"
+  }
+},
+{
+  "model": "gestion_voluntarios.nacionalidad",
+  "pk": 165,
+  "fields": {
+    "pais": "SantoToméyPríncipe",
+    "gentilicio": "SANTOTOMENSE",
+    "iso_nac": "STP"
+  }
+},
+{
+  "model": "gestion_voluntarios.nacionalidad",
+  "pk": 166,
+  "fields": {
+    "pais": "Senegal",
+    "gentilicio": "SENEGALÉSA",
+    "iso_nac": "SEN"
+  }
+},
+{
+  "model": "gestion_voluntarios.nacionalidad",
+  "pk": 167,
+  "fields": {
+    "pais": "Serbia",
+    "gentilicio": "SERBIA",
+    "iso_nac": "SRB"
+  }
+},
+{
+  "model": "gestion_voluntarios.nacionalidad",
+  "pk": 168,
+  "fields": {
+    "pais": "Seychelles",
+    "gentilicio": "SEYCHELLENSE",
+    "iso_nac": "SYC"
+  }
+},
+{
+  "model": "gestion_voluntarios.nacionalidad",
+  "pk": 169,
+  "fields": {
+    "pais": "SierraLeona",
+    "gentilicio": "SIERRALEONÉSA",
+    "iso_nac": "SLE"
+  }
+},
+{
+  "model": "gestion_voluntarios.nacionalidad",
+  "pk": 170,
+  "fields": {
+    "pais": "Singapur",
+    "gentilicio": "SINGAPURENSE",
+    "iso_nac": "SGP"
+  }
+},
+{
+  "model": "gestion_voluntarios.nacionalidad",
+  "pk": 171,
+  "fields": {
+    "pais": "Siria",
+    "gentilicio": "SIRIA",
+    "iso_nac": "SYR"
+  }
+},
+{
+  "model": "gestion_voluntarios.nacionalidad",
+  "pk": 172,
+  "fields": {
+    "pais": "Somalia",
+    "gentilicio": "SOMALÍ",
+    "iso_nac": "SOM"
+  }
+},
+{
+  "model": "gestion_voluntarios.nacionalidad",
+  "pk": 173,
+  "fields": {
+    "pais": "SriLanka",
+    "gentilicio": "CEILANÉSA",
+    "iso_nac": "LKA"
+  }
+},
+{
+  "model": "gestion_voluntarios.nacionalidad",
+  "pk": 174,
+  "fields": {
+    "pais": "Suazilandia",
+    "gentilicio": "SUAZI",
+    "iso_nac": "SWZ"
+  }
+},
+{
+  "model": "gestion_voluntarios.nacionalidad",
+  "pk": 175,
+  "fields": {
+    "pais": "SudándelSur",
+    "gentilicio": "SURSUDANÉSA",
+    "iso_nac": "SSD"
+  }
+},
+{
+  "model": "gestion_voluntarios.nacionalidad",
+  "pk": 176,
+  "fields": {
+    "pais": "Sudán",
+    "gentilicio": "SUDANÉSA",
+    "iso_nac": "SDN"
+  }
+},
+{
+  "model": "gestion_voluntarios.nacionalidad",
+  "pk": 177,
+  "fields": {
+    "pais": "Suecia",
+    "gentilicio": "SUECA",
+    "iso_nac": "SWE"
+  }
+},
+{
+  "model": "gestion_voluntarios.nacionalidad",
+  "pk": 178,
+  "fields": {
+    "pais": "Suiza",
+    "gentilicio": "SUIZA",
+    "iso_nac": "CHE"
+  }
+},
+{
+  "model": "gestion_voluntarios.nacionalidad",
+  "pk": 179,
+  "fields": {
+    "pais": "Surinam",
+    "gentilicio": "SURINAMESA",
+    "iso_nac": "SUR"
+  }
+},
+{
+  "model": "gestion_voluntarios.nacionalidad",
+  "pk": 180,
+  "fields": {
+    "pais": "Tailandia",
+    "gentilicio": "TAILANDÉSA",
+    "iso_nac": "THA"
+  }
+},
+{
+  "model": "gestion_voluntarios.nacionalidad",
+  "pk": 181,
+  "fields": {
+    "pais": "Tanzania",
+    "gentilicio": "TANZANA",
+    "iso_nac": "TZA"
+  }
+},
+{
+  "model": "gestion_voluntarios.nacionalidad",
+  "pk": 182,
+  "fields": {
+    "pais": "Tayikistán",
+    "gentilicio": "TAYIKA",
+    "iso_nac": "TJK"
+  }
+},
+{
+  "model": "gestion_voluntarios.nacionalidad",
+  "pk": 183,
+  "fields": {
+    "pais": "TimorOriental",
+    "gentilicio": "TIMORENSE",
+    "iso_nac": "TLS"
+  }
+},
+{
+  "model": "gestion_voluntarios.nacionalidad",
+  "pk": 184,
+  "fields": {
+    "pais": "Togo",
+    "gentilicio": "TOGOLÉSA",
+    "iso_nac": "TGO"
+  }
+},
+{
+  "model": "gestion_voluntarios.nacionalidad",
+  "pk": 185,
+  "fields": {
+    "pais": "Tonga",
+    "gentilicio": "TONGANA",
+    "iso_nac": "TON"
+  }
+},
+{
+  "model": "gestion_voluntarios.nacionalidad",
+  "pk": 186,
+  "fields": {
+    "pais": "TrinidadyTobago",
+    "gentilicio": "TRINITENSE",
+    "iso_nac": "TTO"
+  }
+},
+{
+  "model": "gestion_voluntarios.nacionalidad",
+  "pk": 187,
+  "fields": {
+    "pais": "Túnez",
+    "gentilicio": "TUNECINA",
+    "iso_nac": "TUN"
+  }
+},
+{
+  "model": "gestion_voluntarios.nacionalidad",
+  "pk": 188,
+  "fields": {
+    "pais": "Turkmenistán",
+    "gentilicio": "TURCOMANA",
+    "iso_nac": "TKM"
+  }
+},
+{
+  "model": "gestion_voluntarios.nacionalidad",
+  "pk": 189,
+  "fields": {
+    "pais": "Turquía",
+    "gentilicio": "TURCA",
+    "iso_nac": "TUR"
+  }
+},
+{
+  "model": "gestion_voluntarios.nacionalidad",
+  "pk": 190,
+  "fields": {
+    "pais": "Tuvalu",
+    "gentilicio": "TUVALUANA",
+    "iso_nac": "TUV"
+  }
+},
+{
+  "model": "gestion_voluntarios.nacionalidad",
+  "pk": 191,
+  "fields": {
+    "pais": "Ucrania",
+    "gentilicio": "UCRANIANA",
+    "iso_nac": "UKR"
+  }
+},
+{
+  "model": "gestion_voluntarios.nacionalidad",
+  "pk": 192,
+  "fields": {
+    "pais": "Uganda",
+    "gentilicio": "UGANDÉSA",
+    "iso_nac": "UGA"
+  }
+},
+{
+  "model": "gestion_voluntarios.nacionalidad",
+  "pk": 193,
+  "fields": {
+    "pais": "Uruguay",
+    "gentilicio": "URUGUAYA",
+    "iso_nac": "URY"
+  }
+},
+{
+  "model": "gestion_voluntarios.nacionalidad",
+  "pk": 194,
+  "fields": {
+    "pais": "Uzbekistán",
+    "gentilicio": "UZBEKA",
+    "iso_nac": "UZB"
+  }
+},
+{
+  "model": "gestion_voluntarios.nacionalidad",
+  "pk": 195,
+  "fields": {
+    "pais": "Vanuatu",
+    "gentilicio": "VANUATUENSE",
+    "iso_nac": "VUT"
+  }
+},
+{
+  "model": "gestion_voluntarios.nacionalidad",
+  "pk": 196,
+  "fields": {
+    "pais": "Venezuela",
+    "gentilicio": "VENEZOLANA",
+    "iso_nac": "VEN"
+  }
+},
+{
+  "model": "gestion_voluntarios.nacionalidad",
+  "pk": 197,
+  "fields": {
+    "pais": "Vietnam",
+    "gentilicio": "VIETNAMITA",
+    "iso_nac": "VNM"
+  }
+},
+{
+  "model": "gestion_voluntarios.nacionalidad",
+  "pk": 198,
+  "fields": {
+    "pais": "Yemen",
+    "gentilicio": "YEMENÍ",
+    "iso_nac": "YEM"
+  }
+},
+{
+  "model": "gestion_voluntarios.nacionalidad",
+  "pk": 199,
+  "fields": {
+    "pais": "Yibuti",
+    "gentilicio": "YIBUTIANA",
+    "iso_nac": "DJI"
+  }
+},
+{
+  "model": "gestion_voluntarios.nacionalidad",
+  "pk": 200,
+  "fields": {
+    "pais": "Zambia",
+    "gentilicio": "ZAMBIANA",
+    "iso_nac": "ZMB"
+  }
+},
+{
+  "model": "gestion_voluntarios.nacionalidad",
+  "pk": 201,
+  "fields": {
+    "pais": "Zimbabue",
+    "gentilicio": "ZIMBABUENSE",
+    "iso_nac": "ZWE"
+  }
+},
+{
+  "model": "gestion_voluntarios.profesion",
+  "pk": 1,
+  "fields": {
+    "nombre": "Ingeniero Civil en Informática"
+  }
+},
+{
+  "model": "gestion_voluntarios.profesion",
+  "pk": 2,
+  "fields": {
+    "nombre": "Enfermero/a"
+  }
+},
+{
+  "model": "gestion_voluntarios.profesion",
+  "pk": 3,
+  "fields": {
+    "nombre": "Médico Cirujano"
+  }
+},
+{
+  "model": "gestion_voluntarios.profesion",
+  "pk": 4,
+  "fields": {
+    "nombre": "Ingeniero Comercial"
+  }
+},
+{
+  "model": "gestion_voluntarios.profesion",
+  "pk": 5,
+  "fields": {
+    "nombre": "Técnico en Enfermería (TENS)"
+  }
+},
+{
+  "model": "gestion_voluntarios.profesion",
+  "pk": 6,
+  "fields": {
+    "nombre": "Psicólogo/a"
+  }
+},
+{
+  "model": "gestion_voluntarios.profesion",
+  "pk": 7,
+  "fields": {
+    "nombre": "Contador Auditor"
+  }
+},
+{
+  "model": "gestion_voluntarios.profesion",
+  "pk": 8,
+  "fields": {
+    "nombre": "Profesor de Educación Básica"
+  }
+},
+{
+  "model": "gestion_voluntarios.profesion",
+  "pk": 9,
+  "fields": {
+    "nombre": "Abogado/a"
+  }
+},
+{
+  "model": "gestion_voluntarios.profesion",
+  "pk": 10,
+  "fields": {
+    "nombre": "Kinesiólogo/a"
+  }
+},
+{
+  "model": "gestion_voluntarios.profesion",
+  "pk": 11,
+  "fields": {
+    "nombre": "Ingeniero Industrial"
+  }
+},
+{
+  "model": "gestion_voluntarios.profesion",
+  "pk": 12,
+  "fields": {
+    "nombre": "Electricista"
+  }
+},
+{
+  "model": "gestion_voluntarios.profesion",
+  "pk": 13,
+  "fields": {
+    "nombre": "Soldador"
+  }
+},
+{
+  "model": "gestion_voluntarios.profesion",
+  "pk": 14,
+  "fields": {
+    "nombre": "Mecánico Automotriz"
+  }
+},
+{
+  "model": "gestion_voluntarios.profesion",
+  "pk": 15,
+  "fields": {
+    "nombre": "Técnico en Administración de Empresas"
+  }
+},
+{
+  "model": "gestion_voluntarios.profesion",
+  "pk": 16,
+  "fields": {
+    "nombre": "Fontanero (Gasfíter)"
+  }
+},
+{
+  "model": "gestion_voluntarios.profesion",
+  "pk": 17,
+  "fields": {
+    "nombre": "Operador de Maquinaria Pesada"
+  }
+},
+{
+  "model": "gestion_voluntarios.profesion",
+  "pk": 18,
+  "fields": {
+    "nombre": "Técnico en Mantenimiento Industrial"
+  }
+},
+{
+  "model": "gestion_voluntarios.profesion",
+  "pk": 19,
+  "fields": {
+    "nombre": "Albañil"
+  }
+},
+{
+  "model": "gestion_voluntarios.profesion",
+  "pk": 20,
+  "fields": {
+    "nombre": "Carpintero"
+  }
+},
+{
+  "model": "gestion_voluntarios.profesion",
+  "pk": 21,
+  "fields": {
+    "nombre": "Técnico en Logística"
+  }
+},
+{
+  "model": "gestion_voluntarios.profesion",
+  "pk": 22,
+  "fields": {
+    "nombre": "Vendedor"
+  }
+},
+{
+  "model": "gestion_voluntarios.profesion",
+  "pk": 23,
+  "fields": {
+    "nombre": "Cajero/a"
+  }
+},
+{
+  "model": "gestion_voluntarios.profesion",
+  "pk": 24,
+  "fields": {
+    "nombre": "Bodeguero"
+  }
+},
+{
+  "model": "gestion_voluntarios.profesion",
+  "pk": 25,
+  "fields": {
+    "nombre": "Asistente Administrativo"
+  }
+},
+{
+  "model": "gestion_voluntarios.profesion",
+  "pk": 26,
+  "fields": {
+    "nombre": "Conductor de Camión"
+  }
+},
+{
+  "model": "gestion_voluntarios.profesion",
+  "pk": 27,
+  "fields": {
+    "nombre": "Guardia de Seguridad"
+  }
+},
+{
+  "model": "gestion_voluntarios.profesion",
+  "pk": 28,
+  "fields": {
+    "nombre": "Personal de Aseo"
+  }
+},
+{
+  "model": "gestion_voluntarios.profesion",
+  "pk": 29,
+  "fields": {
+    "nombre": "Cocinero / Chef"
+  }
+},
+{
+  "model": "gestion_voluntarios.profesion",
+  "pk": 30,
+  "fields": {
+    "nombre": "Educador/a de Párvulos"
+  }
+},
+{
+  "model": "gestion_voluntarios.profesion",
+  "pk": 31,
+  "fields": {
+    "nombre": "Ingeniero en Minas"
+  }
+},
+{
+  "model": "gestion_voluntarios.profesion",
+  "pk": 32,
+  "fields": {
+    "nombre": "Arquitecto"
+  }
+},
+{
+  "model": "gestion_voluntarios.profesion",
+  "pk": 33,
+  "fields": {
+    "nombre": "Constructor Civil"
+  }
+},
+{
+  "model": "gestion_voluntarios.profesion",
+  "pk": 34,
+  "fields": {
+    "nombre": "Analista de Datos"
+  }
+},
+{
+  "model": "gestion_voluntarios.profesion",
+  "pk": 35,
+  "fields": {
+    "nombre": "Especialista en Marketing Digital"
+  }
+},
+{
+  "model": "gestion_voluntarios.profesion",
+  "pk": 36,
+  "fields": {
+    "nombre": "Técnico Agrícola"
+  }
+},
+{
+  "model": "gestion_voluntarios.profesion",
+  "pk": 37,
+  "fields": {
+    "nombre": "Médico Veterinario"
+  }
+},
+{
+  "model": "gestion_voluntarios.profesion",
+  "pk": 38,
+  "fields": {
+    "nombre": "Diseñador Gráfico"
+  }
+},
+{
+  "model": "gestion_voluntarios.profesion",
+  "pk": 39,
+  "fields": {
+    "nombre": "Periodista"
+  }
+},
+{
+  "model": "gestion_voluntarios.profesion",
+  "pk": 40,
+  "fields": {
+    "nombre": "Trabajador Social"
+  }
+},
+{
+  "model": "gestion_voluntarios.profesion",
+  "pk": 41,
+  "fields": {
+    "nombre": "Técnico en Construcción"
+  }
+},
+{
+  "model": "gestion_voluntarios.profesion",
+  "pk": 42,
+  "fields": {
+    "nombre": "Recepcionista"
+  }
+},
+{
+  "model": "gestion_voluntarios.profesion",
+  "pk": 43,
+  "fields": {
+    "nombre": "Garzón / Mesero"
+  }
+},
+{
+  "model": "gestion_voluntarios.profesion",
+  "pk": 44,
+  "fields": {
+    "nombre": "Técnico en Electricidad"
+  }
+},
+{
+  "model": "gestion_voluntarios.profesion",
+  "pk": 45,
+  "fields": {
+    "nombre": "Técnico en Prevención de Riesgos"
+  }
+},
+{
+  "model": "gestion_voluntarios.profesion",
+  "pk": 46,
+  "fields": {
+    "nombre": "Analista Químico"
+  }
+},
+{
+  "model": "gestion_voluntarios.profesion",
+  "pk": 47,
+  "fields": {
+    "nombre": "Geólogo"
+  }
+},
+{
+  "model": "gestion_voluntarios.profesion",
+  "pk": 48,
+  "fields": {
+    "nombre": "Conductor de Transporte Público"
+  }
+},
+{
+  "model": "gestion_voluntarios.profesion",
+  "pk": 49,
+  "fields": {
+    "nombre": "Ingeniero en Biotecnología"
+  }
+},
+{
+  "model": "gestion_voluntarios.profesion",
+  "pk": 50,
+  "fields": {
+    "nombre": "Técnico en Turismo"
+  }
+},
+{
+  "model": "gestion_voluntarios.tipocargo",
+  "pk": 1,
+  "fields": {
+    "nombre": "Operativo"
+  }
+},
+{
+  "model": "gestion_voluntarios.tipocargo",
+  "pk": 2,
+  "fields": {
+    "nombre": "Administrativo"
+  }
+},
+{
+  "model": "gestion_voluntarios.tipocargo",
+  "pk": 3,
+  "fields": {
+    "nombre": "Honorario"
+  }
+},
+{
+  "model": "gestion_voluntarios.cargo",
+  "pk": 1,
+  "fields": {
+    "tipo_cargo": 1,
+    "nombre": "Bombero"
+  }
+},
+{
+  "model": "gestion_voluntarios.cargo",
+  "pk": 2,
+  "fields": {
+    "tipo_cargo": 1,
+    "nombre": "Maquinista"
+  }
+},
+{
+  "model": "gestion_voluntarios.cargo",
+  "pk": 3,
+  "fields": {
+    "tipo_cargo": 1,
+    "nombre": "Teniente 1°"
+  }
+},
+{
+  "model": "gestion_voluntarios.cargo",
+  "pk": 4,
+  "fields": {
+    "tipo_cargo": 1,
+    "nombre": "Teniente 2°"
+  }
+},
+{
+  "model": "gestion_voluntarios.cargo",
+  "pk": 5,
+  "fields": {
+    "tipo_cargo": 1,
+    "nombre": "Teniente 3°"
+  }
+},
+{
+  "model": "gestion_voluntarios.cargo",
+  "pk": 6,
+  "fields": {
+    "tipo_cargo": 1,
+    "nombre": "Teniente 4°"
+  }
+},
+{
+  "model": "gestion_voluntarios.cargo",
+  "pk": 7,
+  "fields": {
+    "tipo_cargo": 1,
+    "nombre": "Teniente Auto"
+  }
+},
+{
+  "model": "gestion_voluntarios.cargo",
+  "pk": 8,
+  "fields": {
+    "tipo_cargo": 1,
+    "nombre": "Teniente maquina"
+  }
+},
+{
+  "model": "gestion_voluntarios.cargo",
+  "pk": 9,
+  "fields": {
+    "tipo_cargo": 1,
+    "nombre": "Capitán"
+  }
+},
+{
+  "model": "gestion_voluntarios.cargo",
+  "pk": 10,
+  "fields": {
+    "tipo_cargo": 2,
+    "nombre": "Cirujano de Compañia"
+  }
+},
+{
+  "model": "gestion_voluntarios.cargo",
+  "pk": 11,
+  "fields": {
+    "tipo_cargo": 2,
+    "nombre": "Ayudante"
+  }
+},
+{
+  "model": "gestion_voluntarios.cargo",
+  "pk": 12,
+  "fields": {
+    "tipo_cargo": 2,
+    "nombre": "Ayudante Compañia"
+  }
+},
+{
+  "model": "gestion_voluntarios.cargo",
+  "pk": 13,
+  "fields": {
+    "tipo_cargo": 2,
+    "nombre": "Tesorero"
+  }
+},
+{
+  "model": "gestion_voluntarios.cargo",
+  "pk": 14,
+  "fields": {
+    "tipo_cargo": 2,
+    "nombre": "Secretario"
+  }
+},
+{
+  "model": "gestion_voluntarios.cargo",
+  "pk": 15,
+  "fields": {
+    "tipo_cargo": 2,
+    "nombre": "Consejero de Disciplina"
+  }
+},
+{
+  "model": "gestion_voluntarios.cargo",
+  "pk": 16,
+  "fields": {
+    "tipo_cargo": 2,
+    "nombre": "Director"
+  }
+},
+{
+  "model": "gestion_voluntarios.cargo",
+  "pk": 17,
+  "fields": {
+    "tipo_cargo": 2,
+    "nombre": "Intendente"
+  }
+},
+{
+  "model": "gestion_voluntarios.cargo",
+  "pk": 18,
+  "fields": {
+    "tipo_cargo": 3,
+    "nombre": "Bombero Honorario"
+  }
+},
+{
+  "model": "gestion_voluntarios.cargo",
+  "pk": 19,
+  "fields": {
+    "tipo_cargo": 3,
+    "nombre": "Director Honorario"
+  }
+},
+{
+  "model": "gestion_voluntarios.tiporeconocimiento",
+  "pk": 1,
+  "fields": {
+    "nombre": "Premio por 5 Años de Servicio"
+  }
+},
+{
+  "model": "gestion_voluntarios.tiporeconocimiento",
+  "pk": 2,
+  "fields": {
+    "nombre": "Premio por 10 Años de Servicio"
+  }
+},
+{
+  "model": "gestion_voluntarios.tiporeconocimiento",
+  "pk": 3,
+  "fields": {
+    "nombre": "Premio por 15 Años de Servicio"
+  }
+},
+{
+  "model": "gestion_voluntarios.tiporeconocimiento",
+  "pk": 4,
+  "fields": {
+    "nombre": "Premio por 20 Años de Servicio"
+  }
+},
+{
+  "model": "gestion_voluntarios.tiporeconocimiento",
+  "pk": 5,
+  "fields": {
+    "nombre": "Premio por 25 Años de Servicio"
+  }
+},
+{
+  "model": "gestion_voluntarios.tiporeconocimiento",
+  "pk": 6,
+  "fields": {
+    "nombre": "Premio por 30 Años de Servicio"
+  }
+},
+{
+  "model": "gestion_voluntarios.tiporeconocimiento",
+  "pk": 7,
+  "fields": {
+    "nombre": "Premio por 35 Años de Servicio"
+  }
+},
+{
+  "model": "gestion_voluntarios.tiporeconocimiento",
+  "pk": 8,
+  "fields": {
+    "nombre": "Premio por 40 Años de Servicio"
+  }
+},
+{
+  "model": "gestion_voluntarios.tiporeconocimiento",
+  "pk": 9,
+  "fields": {
+    "nombre": "Premio por 45 Años de Servicio"
+  }
+},
+{
+  "model": "gestion_voluntarios.tiporeconocimiento",
+  "pk": 10,
+  "fields": {
+    "nombre": "Premio por 50 Años de Servicio (Bombero Insigne)"
+  }
+},
+{
+  "model": "gestion_voluntarios.tiporeconocimiento",
+  "pk": 11,
+  "fields": {
+    "nombre": "Premio por 55 Años de Servicio"
+  }
+},
+{
+  "model": "gestion_voluntarios.tiporeconocimiento",
+  "pk": 12,
+  "fields": {
+    "nombre": "Premio por 60 Años de Servicio"
+  }
+},
+{
+  "model": "gestion_voluntarios.tiporeconocimiento",
+  "pk": 13,
+  "fields": {
+    "nombre": "Premio por 65 Años de Servicio"
+  }
+},
+{
+  "model": "gestion_voluntarios.tiporeconocimiento",
+  "pk": 14,
+  "fields": {
+    "nombre": "Premio por 70 Años de Servicio"
+  }
+},
+{
+  "model": "gestion_voluntarios.tiporeconocimiento",
+  "pk": 15,
+  "fields": {
+    "nombre": "Premio de Asistencia"
+  }
+},
+{
+  "model": "gestion_voluntarios.tiporeconocimiento",
+  "pk": 16,
+  "fields": {
+    "nombre": "Medalla al Mérito"
+  }
+},
+{
+  "model": "gestion_voluntarios.tiporeconocimiento",
+  "pk": 17,
+  "fields": {
+    "nombre": "Acto de Servicio Destacado"
+  }
+},
+{
+  "model": "gestion_voluntarios.tiporeconocimiento",
+  "pk": 18,
+  "fields": {
+    "nombre": "Servicios Distinguidos"
+  }
+},
+{
+  "model": "gestion_voluntarios.tiporeconocimiento",
+  "pk": 19,
+  "fields": {
+    "nombre": "Miembro Honorario"
+  }
+},
+{
+  "model": "gestion_voluntarios.tiporeconocimiento",
+  "pk": 20,
+  "fields": {
+    "nombre": "Director Honorario"
+  }
+},
+{
+  "model": "gestion_voluntarios.tiporeconocimiento",
+  "pk": 21,
+  "fields": {
+    "nombre": "Capitán Honorario"
+  }
+},
+{
+  "model": "gestion_voluntarios.tiporeconocimiento",
+  "pk": 22,
+  "fields": {
+    "nombre": "Medalla por Acto de Servicio (Heridos)"
+  }
+},
+{
+  "model": "gestion_voluntarios.tiporeconocimiento",
+  "pk": 23,
+  "fields": {
+    "nombre": "Medalla Conmemorativa (Evento Específico)"
+  }
+}
+]

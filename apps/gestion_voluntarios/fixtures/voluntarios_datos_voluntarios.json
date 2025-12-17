@@ -1,0 +1,68 @@
+[
+{
+  "model": "gestion_voluntarios.voluntario",
+  "pk": "49e42ff2-3093-4d05-8320-d40750c60f3a",
+  "fields": {
+    "nacionalidad": 39,
+    "profesion": 6,
+    "lugar_nacimiento": "Copiapó",
+    "fecha_nacimiento": "1990-04-18",
+    "genero": "F",
+    "estado_civil": "CAS",
+    "domicilio_comuna": 5,
+    "domicilio_calle": "Avenida Héroes de la Concepción",
+    "domicilio_numero": "3345",
+    "fecha_primer_ingreso": "2017-05-02",
+    "numero_registro_bomberil": null,
+    "telefono": null,
+    "imagen": "voluntarios/imagen/main/59144b31-a30a-4f0e-a5d9-48d9c37d979e.jpg",
+    "imagen_thumb_medium": "voluntarios/imagen/medium/59144b31-a30a-4f0e-a5d9-48d9c37d979e_medium.jpg",
+    "imagen_thumb_small": "voluntarios/imagen/small/59144b31-a30a-4f0e-a5d9-48d9c37d979e_small.jpg",
+    "fecha_creacion": "2025-12-04T09:58:02.793Z"
+  }
+},
+{
+  "model": "gestion_voluntarios.voluntario",
+  "pk": "6df3a8e2-d20c-439f-9be7-09e2deff2afe",
+  "fields": {
+    "nacionalidad": 39,
+    "profesion": 24,
+    "lugar_nacimiento": "Iquique",
+    "fecha_nacimiento": "1982-04-03",
+    "genero": "M",
+    "estado_civil": "SOL",
+    "domicilio_comuna": 6,
+    "domicilio_calle": "Avenida Opazo",
+    "domicilio_numero": "2567",
+    "fecha_primer_ingreso": "2020-01-20",
+    "numero_registro_bomberil": null,
+    "telefono": null,
+    "imagen": "voluntarios/imagen/main/c2077210-8317-4400-8d58-f8121812c767.jpg",
+    "imagen_thumb_medium": "voluntarios/imagen/medium/c2077210-8317-4400-8d58-f8121812c767_medium.jpg",
+    "imagen_thumb_small": "voluntarios/imagen/small/c2077210-8317-4400-8d58-f8121812c767_small.jpg",
+    "fecha_creacion": "2025-12-04T09:58:57.185Z"
+  }
+},
+{
+  "model": "gestion_voluntarios.voluntario",
+  "pk": "f8afd9ef-4995-4f15-8e69-a090c15782f3",
+  "fields": {
+    "nacionalidad": 39,
+    "profesion": 7,
+    "lugar_nacimiento": "Iquique",
+    "fecha_nacimiento": "1980-11-04",
+    "genero": "M",
+    "estado_civil": "SOL",
+    "domicilio_comuna": 5,
+    "domicilio_calle": "calle trece",
+    "domicilio_numero": "7781",
+    "fecha_primer_ingreso": "2007-05-02",
+    "numero_registro_bomberil": null,
+    "telefono": null,
+    "imagen": "voluntarios/imagen/main/8cc1fe67-3c49-499a-97d0-0a1ca995fff7.jpg",
+    "imagen_thumb_medium": "voluntarios/imagen/medium/8cc1fe67-3c49-499a-97d0-0a1ca995fff7_medium.jpg",
+    "imagen_thumb_small": "voluntarios/imagen/small/8cc1fe67-3c49-499a-97d0-0a1ca995fff7_small.jpg",
+    "fecha_creacion": "2025-12-04T09:55:43.755Z"
+  }
+}
+]

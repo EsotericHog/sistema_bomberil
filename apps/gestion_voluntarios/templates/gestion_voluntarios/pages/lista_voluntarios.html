@@ -7,108 +7,129 @@
 <div class="container-fluid mt-4"> 
     <div class="container">
 
-        <div class="toolbar">
-            <div class="search-container">
-                <i class="fas fa-search"></i>
-                {# Input de búsqueda: Tamaño base y peso regular #}
-                <input type="text" id="search-input" class="text-base font-regular" placeholder="Buscar por nombre, RUT o apellido..." value="{{ request.GET.q }}">
-            </div>
-            
-            <div class="filters-container">
-                {# --- ELIMINADO EL SELECTOR DE ESTACIÓN --- #}
-                
-                <div class="filter-group">
-                    {# Etiqueta: Tamaño pequeño y negrita #}
-                    <label for="rango-filter" class="text-sm font-bold">Rango / Cargo</label>
-                    {# Select: Tamaño pequeño y regular #}
-                    <select id="rango-filter" class="filter-select text-sm font-regular">
-                        <option value="global">Todos los rangos</option>
-                        {% for cargo in cargos %}
-                        <option value="{{ cargo.id }}" {% if request.GET.rango == cargo.id|stringformat:"s" %}selected{% endif %}>
-                            {{ cargo.nombre }}
-                        </option>
-                        {% endfor %}
-                    </select>
-                </div>
-            </div>
-        </div>
+        {# === PROTECCIÓN PRINCIPAL: VER VOLUNTARIOS === #}
+        {% if perms.gestion_usuarios.accion_gestion_voluntarios_ver_voluntarios %}
 
-        <div class="volunteer-grid">
-
-            {% for voluntario in voluntarios %}
-
-                {# LÓGICA DE DATOS #}
-                {% with membresia=voluntario.usuario.membresia_activa_list|first cargo_actual=voluntario.cargo_actual_list|first %}
-                
-                <div class="volunteer-card">
-                    <div class="card-header">
-                        <div class="avatar-wrapper">
-                            {# FOTO DEL VOLUNTARIO #}
-                            {% if voluntario.imagen %}
-                                <img src="{{ voluntario.imagen.url }}" alt="{{ voluntario.usuario.get_full_name }}">
-                            {% else %}
-                                {# Placeholder: Texto grande y negrita (iniciales) #}
-                                <div class="avatar-placeholder text-2xl font-bold">
-                                    {{ voluntario.usuario.first_name|slice:":1" }}{{ voluntario.usuario.last_name|slice:":1" }}
-                                </div>
-                            {% endif %}
-
-                            {# INDICADOR DE ESTADO #}
-                            {% if membresia %}
-                                <div class="status-badge active" title="Estado: Activo"></div>
-                            {% else %}
-                                <div class="status-badge inactive" title="Estado: Inactivo"></div>
-                            {% endif %}
-                        </div>
-                    </div>
-                    
-                    <div class="card-body">
-                        {# Nombre: Tamaño XL y Negrita #}
-                        <h3 class="volunteer-name text-xl font-bold">{{ voluntario.usuario.get_full_name }}</h3>
-                        
-                        {# Rol: Tamaño base y peso medio #}
-                        <div class="volunteer-role text-base font-medium">
-                            {% if cargo_actual %}
-                                {{ cargo_actual.cargo.nombre }}
-                            {% else %}
-                                Sin Cargo
-                            {% endif %}
-                        </div>
-                        
-                        {# Estación: Tamaño pequeño y regular #}
-                        <div class="volunteer-station text-sm font-regular">
-                            <i class="fas fa-building"></i>
-                            {% if membresia %}
-                                {{ membresia.estacion.nombre }}
-                            {% else %}
-                                Sin estación asignada
-                            {% endif %}
-                        </div>
-                    </div>
-                    
-                    <div class="card-footer">
-                        {# Botones: Tamaño pequeño y negrita #}
-                        <a href="{% url 'gestion_voluntarios:ruta_ver_voluntario' id=voluntario.usuario.id %}" class="action-btn btn-view text-sm font-bold">
-                            <i class="fas fa-id-card"></i> Hoja de Vida
-                        </a>
-                        <a href="{% url 'gestion_voluntarios:ruta_modificar_voluntario' id=voluntario.usuario.id %}" class="action-btn btn-edit text-sm font-bold">
-                            <i class="fas fa-pen"></i> Editar
-                        </a>
-                    </div>
-                </div>
-                
-                {% endwith %}
-            {% empty %}
-                <div class="empty-state">
+            <div class="toolbar">
+                <div class="search-container">
                     <i class="fas fa-search"></i>
-                    {# Título vacío: Tamaño XL y Negrita #}
-                    <h3 class="text-xl font-bold">No se encontraron resultados</h3>
-                    {# Texto vacío: Tamaño base y regular #}
-                    <p class="text-base font-regular">Intenta ajustar la búsqueda o el filtro de cargo.</p>
+                    {# Input de búsqueda: Tamaño base y peso regular #}
+                    <input type="text" id="search-input" class="text-base font-regular" placeholder="Buscar por nombre, RUT o apellido..." value="{{ request.GET.q }}">
                 </div>
-            {% endfor %}
-            
-        </div>
+                
+                <div class="filters-container">
+                    {# --- ELIMINADO EL SELECTOR DE ESTACIÓN --- #}
+                    
+                    <div class="filter-group">
+                        {# Etiqueta: Tamaño pequeño y negrita #}
+                        <label for="rango-filter" class="text-sm font-bold">Rango / Cargo</label>
+                        {# Select: Tamaño pequeño y regular #}
+                        <select id="rango-filter" class="filter-select text-sm font-regular">
+                            <option value="global">Todos los rangos</option>
+                            {% for cargo in cargos %}
+                            <option value="{{ cargo.id }}" {% if request.GET.rango == cargo.id|stringformat:"s" %}selected{% endif %}>
+                                {{ cargo.nombre }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <div class="volunteer-grid">
+
+                {% for voluntario in voluntarios %}
+
+                    {# LÓGICA DE DATOS #}
+                    {% with membresia=voluntario.usuario.membresia_activa_list|first cargo_actual=voluntario.cargo_actual_list|first %}
+                    
+                    <div class="volunteer-card">
+                        <div class="card-header">
+                            <div class="avatar-wrapper">
+                                {# FOTO DEL VOLUNTARIO #}
+                                {% if voluntario.imagen %}
+                                    <img src="{{ voluntario.imagen.url }}" alt="{{ voluntario.usuario.get_full_name }}">
+                                {% else %}
+                                    {# Placeholder: Texto grande y negrita (iniciales) #}
+                                    <div class="avatar-placeholder text-2xl font-bold">
+                                        {{ voluntario.usuario.first_name|slice:":1" }}{{ voluntario.usuario.last_name|slice:":1" }}
+                                    </div>
+                                {% endif %}
+
+                                {# INDICADOR DE ESTADO #}
+                                {% if membresia %}
+                                    <div class="status-badge active" title="Estado: Activo"></div>
+                                {% else %}
+                                    <div class="status-badge inactive" title="Estado: Inactivo"></div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <div class="card-body">
+                            {# Nombre: Tamaño XL y Negrita #}
+                            <h3 class="volunteer-name text-xl font-bold">{{ voluntario.usuario.get_full_name }}</h3>
+                            
+                            {# Rol: Tamaño base y peso medio #}
+                            <div class="volunteer-role text-base font-medium">
+                                {% if cargo_actual %}
+                                    {{ cargo_actual.cargo.nombre }}
+                                {% else %}
+                                    Sin Cargo
+                                {% endif %}
+                            </div>
+                            
+                            {# Estación: Tamaño pequeño y regular #}
+                            <div class="volunteer-station text-sm font-regular">
+                                <i class="fas fa-building"></i>
+                                {% if membresia %}
+                                    {{ membresia.estacion.nombre }}
+                                {% else %}
+                                    Sin estación asignada
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <div class="card-footer">
+                            {# Botones: Tamaño pequeño y negrita #}
+                            
+                            {# === PROTECCIÓN: BOTÓN HOJA DE VIDA === #}
+                            {% if perms.gestion_usuarios.accion_gestion_voluntarios_generar_hoja_vida %}
+                            <a href="{% url 'gestion_voluntarios:ruta_ver_voluntario' id=voluntario.usuario.id %}" class="action-btn btn-view text-sm font-bold">
+                                <i class="fas fa-id-card"></i> Hoja de Vida
+                            </a>
+                            {% endif %}
+                            
+                            {# === PROTECCIÓN: BOTÓN EDITAR === #}
+                            {% if perms.gestion_usuarios.accion_gestion_voluntarios_gestionar_voluntarios %}
+                            <a href="{% url 'gestion_voluntarios:ruta_modificar_voluntario' id=voluntario.usuario.id %}" class="action-btn btn-edit text-sm font-bold">
+                                <i class="fas fa-pen"></i> Editar
+                            </a>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    {% endwith %}
+                {% empty %}
+                    <div class="empty-state">
+                        <i class="fas fa-search"></i>
+                        {# Título vacío: Tamaño XL y Negrita #}
+                        <h3 class="text-xl font-bold">No se encontraron resultados</h3>
+                        {# Texto vacío: Tamaño base y regular #}
+                        <p class="text-base font-regular">Intenta ajustar la búsqueda o el filtro de cargo.</p>
+                    </div>
+                {% endfor %}
+                
+            </div>
+
+        {% else %}
+            {# Mensaje alternativo si no tiene permisos para ver voluntarios #}
+            <div class="alert alert-danger mt-4 text-center">
+                <h4 class="font-bold">Acceso Restringido</h4>
+                <p>No tienes permisos para visualizar el directorio de voluntarios.</p>
+            </div>
+        {% endif %}
+        {# === FIN PROTECCIÓN PRINCIPAL === #}
+
     </div>    
 </div>    
 {% endblock  %}

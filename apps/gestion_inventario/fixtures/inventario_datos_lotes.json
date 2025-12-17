@@ -1,0 +1,34 @@
+[
+{
+  "model": "gestion_inventario.loteinsumo",
+  "pk": "395856dc-5b35-4c51-8394-a8192b92e7f1",
+  "fields": {
+    "producto": 3,
+    "codigo_lote": "E002-LOT-00001",
+    "estado": 1,
+    "compartimento": "9e4c8696-f5e7-4676-a4f9-e3b37e51ac67",
+    "cantidad": 10,
+    "fecha_expiracion": null,
+    "numero_lote_fabricante": "",
+    "fecha_recepcion": "2025-12-04",
+    "created_at": "2025-12-04T08:24:01.645Z",
+    "updated_at": "2025-12-04T08:24:01.645Z"
+  }
+},
+{
+  "model": "gestion_inventario.loteinsumo",
+  "pk": "cc93baad-127c-4619-bd0d-896690a90002",
+  "fields": {
+    "producto": 5,
+    "codigo_lote": "E002-LOT-00002",
+    "estado": 1,
+    "compartimento": "9e4c8696-f5e7-4676-a4f9-e3b37e51ac67",
+    "cantidad": 20,
+    "fecha_expiracion": null,
+    "numero_lote_fabricante": "",
+    "fecha_recepcion": "2025-12-04",
+    "created_at": "2025-12-04T08:24:30.233Z",
+    "updated_at": "2025-12-04T08:24:30.233Z"
+  }
+}
+]

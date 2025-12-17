@@ -1,0 +1,138 @@
+[
+{
+  "model": "gestion_inventario.producto",
+  "pk": 1,
+  "fields": {
+    "producto_global": 2,
+    "sku": "ERA-SCO-AIRPAK-75i",
+    "es_serializado": true,
+    "proveedor_preferido": null,
+    "costo_compra": null,
+    "estacion": 2,
+    "vida_util_estacion_anos": null,
+    "stock_critico": 0,
+    "es_expirable": false,
+    "created_at": "2025-12-04T07:38:51.032Z",
+    "updated_at": "2025-12-04T07:38:51.032Z"
+  }
+},
+{
+  "model": "gestion_inventario.producto",
+  "pk": 2,
+  "fields": {
+    "producto_global": 1,
+    "sku": "ERA-SCO-45MINU",
+    "es_serializado": true,
+    "proveedor_preferido": null,
+    "costo_compra": null,
+    "estacion": 2,
+    "vida_util_estacion_anos": null,
+    "stock_critico": 0,
+    "es_expirable": false,
+    "created_at": "2025-12-04T07:39:37.111Z",
+    "updated_at": "2025-12-04T07:39:37.111Z"
+  }
+},
+{
+  "model": "gestion_inventario.producto",
+  "pk": 3,
+  "fields": {
+    "producto_global": 7,
+    "sku": "EPP-ROS-BOROSB4",
+    "es_serializado": false,
+    "proveedor_preferido": null,
+    "costo_compra": null,
+    "estacion": 2,
+    "vida_util_estacion_anos": null,
+    "stock_critico": 0,
+    "es_expirable": false,
+    "created_at": "2025-12-04T07:40:21.415Z",
+    "updated_at": "2025-12-04T07:40:21.415Z"
+  }
+},
+{
+  "model": "gestion_inventario.producto",
+  "pk": 4,
+  "fields": {
+    "producto_global": 4,
+    "sku": "INC-HUS-6000GA",
+    "es_serializado": true,
+    "proveedor_preferido": null,
+    "costo_compra": null,
+    "estacion": 2,
+    "vida_util_estacion_anos": null,
+    "stock_critico": 0,
+    "es_expirable": false,
+    "created_at": "2025-12-04T07:41:18.745Z",
+    "updated_at": "2025-12-04T07:41:18.745Z"
+  }
+},
+{
+  "model": "gestion_inventario.producto",
+  "pk": 5,
+  "fields": {
+    "producto_global": 8,
+    "sku": "EPP-ROS-SAFEGR3",
+    "es_serializado": false,
+    "proveedor_preferido": null,
+    "costo_compra": null,
+    "estacion": 2,
+    "vida_util_estacion_anos": null,
+    "stock_critico": 0,
+    "es_expirable": false,
+    "created_at": "2025-12-04T07:41:26.188Z",
+    "updated_at": "2025-12-04T07:41:26.188Z"
+  }
+},
+{
+  "model": "gestion_inventario.producto",
+  "pk": 6,
+  "fields": {
+    "producto_global": 6,
+    "sku": "HER-HAR-3.5LIB",
+    "es_serializado": true,
+    "proveedor_preferido": null,
+    "costo_compra": null,
+    "estacion": 2,
+    "vida_util_estacion_anos": null,
+    "stock_critico": 0,
+    "es_expirable": false,
+    "created_at": "2025-12-04T07:41:53.232Z",
+    "updated_at": "2025-12-04T07:41:53.232Z"
+  }
+},
+{
+  "model": "gestion_inventario.producto",
+  "pk": 7,
+  "fields": {
+    "producto_global": 5,
+    "sku": "INC-PRO-6001",
+    "es_serializado": false,
+    "proveedor_preferido": null,
+    "costo_compra": null,
+    "estacion": 2,
+    "vida_util_estacion_anos": null,
+    "stock_critico": 0,
+    "es_expirable": false,
+    "created_at": "2025-12-04T07:42:04.491Z",
+    "updated_at": "2025-12-04T07:42:04.491Z"
+  }
+},
+{
+  "model": "gestion_inventario.producto",
+  "pk": 8,
+  "fields": {
+    "producto_global": 3,
+    "sku": "HER-STI-4.8X20",
+    "es_serializado": false,
+    "proveedor_preferido": null,
+    "costo_compra": null,
+    "estacion": 2,
+    "vida_util_estacion_anos": null,
+    "stock_critico": 0,
+    "es_expirable": false,
+    "created_at": "2025-12-04T07:42:36.784Z",
+    "updated_at": "2025-12-04T07:42:36.784Z"
+  }
+}
+]

@@ -1,0 +1,731 @@
+[
+{
+  "model": "gestion_usuarios.rol",
+  "pk": 1,
+  "fields": {
+    "nombre": "Administrador",
+    "descripcion": "Acceso total para gestionar todos los módulos dentro de esta estación",
+    "estacion": null,
+    "permisos": [
+      [
+        "acceso_gestion_documental",
+        "gestion_usuarios",
+        "membresia"
+      ],
+      [
+        "acceso_gestion_inventario",
+        "gestion_usuarios",
+        "membresia"
+      ],
+      [
+        "acceso_gestion_mantenimiento",
+        "gestion_usuarios",
+        "membresia"
+      ],
+      [
+        "acceso_gestion_medica",
+        "gestion_usuarios",
+        "membresia"
+      ],
+      [
+        "acceso_gestion_usuarios",
+        "gestion_usuarios",
+        "membresia"
+      ],
+      [
+        "acceso_gestion_voluntarios",
+        "gestion_usuarios",
+        "membresia"
+      ],
+      [
+        "accion_gestion_documental_generar_reportes",
+        "gestion_usuarios",
+        "membresia"
+      ],
+      [
+        "accion_gestion_documental_gestionar_documentos",
+        "gestion_usuarios",
+        "membresia"
+      ],
+      [
+        "accion_gestion_documental_ver_documentos",
+        "gestion_usuarios",
+        "membresia"
+      ],
+      [
+        "accion_gestion_inventario_crear_producto_global",
+        "gestion_usuarios",
+        "membresia"
+      ],
+      [
+        "accion_gestion_inventario_generar_reportes",
+        "gestion_usuarios",
+        "membresia"
+      ],
+      [
+        "accion_gestion_inventario_gestionar_bajas_stock",
+        "gestion_usuarios",
+        "membresia"
+      ],
+      [
+        "accion_gestion_inventario_gestionar_catalogo_local",
+        "gestion_usuarios",
+        "membresia"
+      ],
+      [
+        "accion_gestion_inventario_gestionar_prestamos",
+        "gestion_usuarios",
+        "membresia"
+      ],
+      [
+        "accion_gestion_inventario_gestionar_proveedores",
+        "gestion_usuarios",
+        "membresia"
+      ],
+      [
+        "accion_gestion_inventario_gestionar_stock_interno",
+        "gestion_usuarios",
+        "membresia"
+      ],
+      [
+        "accion_gestion_inventario_gestionar_ubicaciones",
+        "gestion_usuarios",
+        "membresia"
+      ],
+      [
+        "accion_gestion_inventario_imprimir_etiquetas_qr",
+        "gestion_usuarios",
+        "membresia"
+      ],
+      [
+        "accion_gestion_inventario_realizar_conteo_fisico",
+        "gestion_usuarios",
+        "membresia"
+      ],
+      [
+        "accion_gestion_inventario_recepcionar_stock",
+        "gestion_usuarios",
+        "membresia"
+      ],
+      [
+        "accion_gestion_inventario_trasladar_stock_externo",
+        "gestion_usuarios",
+        "membresia"
+      ],
+      [
+        "accion_gestion_inventario_ver_catalogos",
+        "gestion_usuarios",
+        "membresia"
+      ],
+      [
+        "accion_gestion_inventario_ver_historial_movimientos",
+        "gestion_usuarios",
+        "membresia"
+      ],
+      [
+        "accion_gestion_inventario_ver_prestamos",
+        "gestion_usuarios",
+        "membresia"
+      ],
+      [
+        "accion_gestion_inventario_ver_proveedores",
+        "gestion_usuarios",
+        "membresia"
+      ],
+      [
+        "accion_gestion_inventario_ver_stock",
+        "gestion_usuarios",
+        "membresia"
+      ],
+      [
+        "accion_gestion_inventario_ver_ubicaciones",
+        "gestion_usuarios",
+        "membresia"
+      ],
+      [
+        "accion_gestion_mantenimiento_generar_reportes",
+        "gestion_usuarios",
+        "membresia"
+      ],
+      [
+        "accion_gestion_mantenimiento_gestionar_ordenes",
+        "gestion_usuarios",
+        "membresia"
+      ],
+      [
+        "accion_gestion_mantenimiento_gestionar_planes",
+        "gestion_usuarios",
+        "membresia"
+      ],
+      [
+        "accion_gestion_mantenimiento_ver_ordenes",
+        "gestion_usuarios",
+        "membresia"
+      ],
+      [
+        "accion_gestion_medica_generar_reportes",
+        "gestion_usuarios",
+        "membresia"
+      ],
+      [
+        "accion_gestion_medica_gestionar_datos_normalizacion",
+        "gestion_usuarios",
+        "membresia"
+      ],
+      [
+        "accion_gestion_medica_gestionar_fichas_medicas",
+        "gestion_usuarios",
+        "membresia"
+      ],
+      [
+        "accion_gestion_medica_ver_fichas_medicas",
+        "gestion_usuarios",
+        "membresia"
+      ],
+      [
+        "accion_gestion_usuarios_asignar_roles",
+        "gestion_usuarios",
+        "membresia"
+      ],
+      [
+        "accion_gestion_usuarios_crear_usuario",
+        "gestion_usuarios",
+        "membresia"
+      ],
+      [
+        "accion_gestion_usuarios_desactivar_cuenta",
+        "gestion_usuarios",
+        "membresia"
+      ],
+      [
+        "accion_gestion_usuarios_finalizar_membresia",
+        "gestion_usuarios",
+        "membresia"
+      ],
+      [
+        "accion_gestion_usuarios_forzar_logout",
+        "gestion_usuarios",
+        "membresia"
+      ],
+      [
+        "accion_gestion_usuarios_generar_reportes",
+        "gestion_usuarios",
+        "membresia"
+      ],
+      [
+        "accion_gestion_usuarios_gestionar_roles",
+        "gestion_usuarios",
+        "membresia"
+      ],
+      [
+        "accion_gestion_usuarios_modificar_info",
+        "gestion_usuarios",
+        "membresia"
+      ],
+      [
+        "accion_gestion_usuarios_restablecer_pass",
+        "gestion_usuarios",
+        "membresia"
+      ],
+      [
+        "accion_gestion_usuarios_ver_auditoria",
+        "gestion_usuarios",
+        "membresia"
+      ],
+      [
+        "accion_gestion_usuarios_ver_permisos",
+        "gestion_usuarios",
+        "membresia"
+      ],
+      [
+        "accion_gestion_usuarios_ver_roles",
+        "gestion_usuarios",
+        "membresia"
+      ],
+      [
+        "accion_gestion_usuarios_ver_usuarios",
+        "gestion_usuarios",
+        "membresia"
+      ],
+      [
+        "accion_gestion_voluntarios_generar_hoja_vida",
+        "gestion_usuarios",
+        "membresia"
+      ],
+      [
+        "accion_gestion_voluntarios_generar_reportes",
+        "gestion_usuarios",
+        "membresia"
+      ],
+      [
+        "accion_gestion_voluntarios_gestionar_datos_normalizacion",
+        "gestion_usuarios",
+        "membresia"
+      ],
+      [
+        "accion_gestion_voluntarios_gestionar_voluntarios",
+        "gestion_usuarios",
+        "membresia"
+      ],
+      [
+        "accion_gestion_voluntarios_ver_voluntarios",
+        "gestion_usuarios",
+        "membresia"
+      ]
+    ]
+  }
+},
+{
+  "model": "gestion_usuarios.rol",
+  "pk": 2,
+  "fields": {
+    "nombre": "Encargado de Inventario",
+    "descripcion": "Acceso total al módulo de inventario. Control de stock, catálogo local, movimientos, préstamos de activos e insumos, etc.",
+    "estacion": null,
+    "permisos": [
+      [
+        "acceso_gestion_inventario",
+        "gestion_usuarios",
+        "membresia"
+      ],
+      [
+        "accion_gestion_inventario_crear_producto_global",
+        "gestion_usuarios",
+        "membresia"
+      ],
+      [
+        "accion_gestion_inventario_generar_reportes",
+        "gestion_usuarios",
+        "membresia"
+      ],
+      [
+        "accion_gestion_inventario_gestionar_bajas_stock",
+        "gestion_usuarios",
+        "membresia"
+      ],
+      [
+        "accion_gestion_inventario_gestionar_catalogo_local",
+        "gestion_usuarios",
+        "membresia"
+      ],
+      [
+        "accion_gestion_inventario_gestionar_prestamos",
+        "gestion_usuarios",
+        "membresia"
+      ],
+      [
+        "accion_gestion_inventario_gestionar_proveedores",
+        "gestion_usuarios",
+        "membresia"
+      ],
+      [
+        "accion_gestion_inventario_gestionar_stock_interno",
+        "gestion_usuarios",
+        "membresia"
+      ],
+      [
+        "accion_gestion_inventario_gestionar_ubicaciones",
+        "gestion_usuarios",
+        "membresia"
+      ],
+      [
+        "accion_gestion_inventario_imprimir_etiquetas_qr",
+        "gestion_usuarios",
+        "membresia"
+      ],
+      [
+        "accion_gestion_inventario_realizar_conteo_fisico",
+        "gestion_usuarios",
+        "membresia"
+      ],
+      [
+        "accion_gestion_inventario_recepcionar_stock",
+        "gestion_usuarios",
+        "membresia"
+      ],
+      [
+        "accion_gestion_inventario_trasladar_stock_externo",
+        "gestion_usuarios",
+        "membresia"
+      ],
+      [
+        "accion_gestion_inventario_ver_catalogos",
+        "gestion_usuarios",
+        "membresia"
+      ],
+      [
+        "accion_gestion_inventario_ver_historial_movimientos",
+        "gestion_usuarios",
+        "membresia"
+      ],
+      [
+        "accion_gestion_inventario_ver_prestamos",
+        "gestion_usuarios",
+        "membresia"
+      ],
+      [
+        "accion_gestion_inventario_ver_proveedores",
+        "gestion_usuarios",
+        "membresia"
+      ],
+      [
+        "accion_gestion_inventario_ver_stock",
+        "gestion_usuarios",
+        "membresia"
+      ],
+      [
+        "accion_gestion_inventario_ver_ubicaciones",
+        "gestion_usuarios",
+        "membresia"
+      ]
+    ]
+  }
+},
+{
+  "model": "gestion_usuarios.rol",
+  "pk": 3,
+  "fields": {
+    "nombre": "Encargado de Mantenimiento de Herramientas",
+    "descripcion": "Acceso total al módulo de mantenimiento de herramientas. Planificación y registro del mantenimiento preventivo y correctivo de herramientas,  equipos.",
+    "estacion": null,
+    "permisos": [
+      [
+        "acceso_gestion_mantenimiento",
+        "gestion_usuarios",
+        "membresia"
+      ],
+      [
+        "accion_gestion_mantenimiento_generar_reportes",
+        "gestion_usuarios",
+        "membresia"
+      ],
+      [
+        "accion_gestion_mantenimiento_gestionar_ordenes",
+        "gestion_usuarios",
+        "membresia"
+      ],
+      [
+        "accion_gestion_mantenimiento_gestionar_planes",
+        "gestion_usuarios",
+        "membresia"
+      ],
+      [
+        "accion_gestion_mantenimiento_ver_ordenes",
+        "gestion_usuarios",
+        "membresia"
+      ]
+    ]
+  }
+},
+{
+  "model": "gestion_usuarios.rol",
+  "pk": 4,
+  "fields": {
+    "nombre": "Encargado de Usuarios y Permisos",
+    "descripcion": "Acceso total al módulo de usuarios y permisos. Administración técnica de cuentas, control de acceso y asignación de roles y permisos dentro de la estación",
+    "estacion": null,
+    "permisos": [
+      [
+        "acceso_gestion_usuarios",
+        "gestion_usuarios",
+        "membresia"
+      ],
+      [
+        "accion_gestion_usuarios_asignar_roles",
+        "gestion_usuarios",
+        "membresia"
+      ],
+      [
+        "accion_gestion_usuarios_crear_usuario",
+        "gestion_usuarios",
+        "membresia"
+      ],
+      [
+        "accion_gestion_usuarios_desactivar_cuenta",
+        "gestion_usuarios",
+        "membresia"
+      ],
+      [
+        "accion_gestion_usuarios_finalizar_membresia",
+        "gestion_usuarios",
+        "membresia"
+      ],
+      [
+        "accion_gestion_usuarios_forzar_logout",
+        "gestion_usuarios",
+        "membresia"
+      ],
+      [
+        "accion_gestion_usuarios_generar_reportes",
+        "gestion_usuarios",
+        "membresia"
+      ],
+      [
+        "accion_gestion_usuarios_gestionar_roles",
+        "gestion_usuarios",
+        "membresia"
+      ],
+      [
+        "accion_gestion_usuarios_modificar_info",
+        "gestion_usuarios",
+        "membresia"
+      ],
+      [
+        "accion_gestion_usuarios_restablecer_pass",
+        "gestion_usuarios",
+        "membresia"
+      ],
+      [
+        "accion_gestion_usuarios_ver_auditoria",
+        "gestion_usuarios",
+        "membresia"
+      ],
+      [
+        "accion_gestion_usuarios_ver_permisos",
+        "gestion_usuarios",
+        "membresia"
+      ],
+      [
+        "accion_gestion_usuarios_ver_roles",
+        "gestion_usuarios",
+        "membresia"
+      ],
+      [
+        "accion_gestion_usuarios_ver_usuarios",
+        "gestion_usuarios",
+        "membresia"
+      ]
+    ]
+  }
+},
+{
+  "model": "gestion_usuarios.rol",
+  "pk": 5,
+  "fields": {
+    "nombre": "Encargado de Voluntarios",
+    "descripcion": "Acceso total al módulo de voluntarios: hojas de vida, historial de cargos, asistencia, cursos y sanciones del personal.",
+    "estacion": null,
+    "permisos": [
+      [
+        "acceso_gestion_voluntarios",
+        "gestion_usuarios",
+        "membresia"
+      ],
+      [
+        "accion_gestion_voluntarios_generar_hoja_vida",
+        "gestion_usuarios",
+        "membresia"
+      ],
+      [
+        "accion_gestion_voluntarios_generar_reportes",
+        "gestion_usuarios",
+        "membresia"
+      ],
+      [
+        "accion_gestion_voluntarios_gestionar_datos_normalizacion",
+        "gestion_usuarios",
+        "membresia"
+      ],
+      [
+        "accion_gestion_voluntarios_gestionar_voluntarios",
+        "gestion_usuarios",
+        "membresia"
+      ],
+      [
+        "accion_gestion_voluntarios_ver_voluntarios",
+        "gestion_usuarios",
+        "membresia"
+      ]
+    ]
+  }
+},
+{
+  "model": "gestion_usuarios.rol",
+  "pk": 6,
+  "fields": {
+    "nombre": "Encargado de Fichas Médicas",
+    "descripcion": "Acceso total al módulo de gestión médica: Acceso reservado y gestión de antecedentes clínicos, alergias y fichas médicas de los voluntarios.",
+    "estacion": null,
+    "permisos": [
+      [
+        "acceso_gestion_medica",
+        "gestion_usuarios",
+        "membresia"
+      ],
+      [
+        "accion_gestion_medica_generar_reportes",
+        "gestion_usuarios",
+        "membresia"
+      ],
+      [
+        "accion_gestion_medica_gestionar_datos_normalizacion",
+        "gestion_usuarios",
+        "membresia"
+      ],
+      [
+        "accion_gestion_medica_gestionar_fichas_medicas",
+        "gestion_usuarios",
+        "membresia"
+      ],
+      [
+        "accion_gestion_medica_ver_fichas_medicas",
+        "gestion_usuarios",
+        "membresia"
+      ]
+    ]
+  }
+},
+{
+  "model": "gestion_usuarios.rol",
+  "pk": 7,
+  "fields": {
+    "nombre": "Encargado de Documentación",
+    "descripcion": "Acceso total al módulo de gestión documental: Organización, digitalización y resguardo del archivo documental histórico y administrativo de la estación.",
+    "estacion": null,
+    "permisos": [
+      [
+        "acceso_gestion_documental",
+        "gestion_usuarios",
+        "membresia"
+      ],
+      [
+        "accion_gestion_documental_generar_reportes",
+        "gestion_usuarios",
+        "membresia"
+      ],
+      [
+        "accion_gestion_documental_gestionar_documentos",
+        "gestion_usuarios",
+        "membresia"
+      ],
+      [
+        "accion_gestion_documental_ver_documentos",
+        "gestion_usuarios",
+        "membresia"
+      ]
+    ]
+  }
+},
+{
+  "model": "gestion_usuarios.rol",
+  "pk": 8,
+  "fields": {
+    "nombre": "Observador",
+    "descripcion": "Su función se limita a visualizar y navegar por los módulos y la información del sistema (listados, detalles, reportes). No puede crear, editar, eliminar, o ejecutar cualquier acción que modifique los datos o el estado del sistema.",
+    "estacion": null,
+    "permisos": [
+      [
+        "acceso_gestion_documental",
+        "gestion_usuarios",
+        "membresia"
+      ],
+      [
+        "acceso_gestion_inventario",
+        "gestion_usuarios",
+        "membresia"
+      ],
+      [
+        "acceso_gestion_mantenimiento",
+        "gestion_usuarios",
+        "membresia"
+      ],
+      [
+        "acceso_gestion_medica",
+        "gestion_usuarios",
+        "membresia"
+      ],
+      [
+        "acceso_gestion_usuarios",
+        "gestion_usuarios",
+        "membresia"
+      ],
+      [
+        "acceso_gestion_voluntarios",
+        "gestion_usuarios",
+        "membresia"
+      ],
+      [
+        "accion_gestion_documental_ver_documentos",
+        "gestion_usuarios",
+        "membresia"
+      ],
+      [
+        "accion_gestion_inventario_ver_catalogos",
+        "gestion_usuarios",
+        "membresia"
+      ],
+      [
+        "accion_gestion_inventario_ver_historial_movimientos",
+        "gestion_usuarios",
+        "membresia"
+      ],
+      [
+        "accion_gestion_inventario_ver_prestamos",
+        "gestion_usuarios",
+        "membresia"
+      ],
+      [
+        "accion_gestion_inventario_ver_proveedores",
+        "gestion_usuarios",
+        "membresia"
+      ],
+      [
+        "accion_gestion_inventario_ver_ubicaciones",
+        "gestion_usuarios",
+        "membresia"
+      ],
+      [
+        "accion_gestion_mantenimiento_ver_ordenes",
+        "gestion_usuarios",
+        "membresia"
+      ],
+      [
+        "accion_gestion_medica_ver_fichas_medicas",
+        "gestion_usuarios",
+        "membresia"
+      ],
+      [
+        "accion_gestion_usuarios_ver_permisos",
+        "gestion_usuarios",
+        "membresia"
+      ],
+      [
+        "accion_gestion_usuarios_ver_roles",
+        "gestion_usuarios",
+        "membresia"
+      ],
+      [
+        "accion_gestion_usuarios_ver_usuarios",
+        "gestion_usuarios",
+        "membresia"
+      ],
+      [
+        "accion_gestion_voluntarios_ver_voluntarios",
+        "gestion_usuarios",
+        "membresia"
+      ]
+    ]
+  }
+},
+{
+  "model": "gestion_usuarios.rol",
+  "pk": 9,
+  "fields": {
+    "nombre": "Voluntario estándar",
+    "descripcion": "Permite el acceso a la documentación de la Compañía para consulta y capacitación. No tiene permisos de gestión.",
+    "estacion": null,
+    "permisos": [
+      [
+        "acceso_gestion_documental",
+        "gestion_usuarios",
+        "membresia"
+      ],
+      [
+        "accion_gestion_documental_ver_documentos",
+        "gestion_usuarios",
+        "membresia"
+      ]
+    ]
+  }
+}
+]

@@ -4,6 +4,7 @@ from datetime import date, timedelta
 from PIL import Image
 from django import forms
 from django.core.exceptions import PermissionDenied, ImproperlyConfigured
+from django.core.files.images import get_image_dimensions
 from django.contrib.auth.mixins import AccessMixin, LoginRequiredMixin, PermissionRequiredMixin
 from django.apps import apps
 from django.shortcuts import get_object_or_404, redirect
@@ -11,7 +12,7 @@ from django.http import Http404
 from django.contrib import messages
 
 from apps.gestion_inventario.models import Estacion
-from .utils import procesar_imagen_en_memoria, generar_thumbnail_en_memoria
+from .utils import procesar_imagen_en_memoria, generar_thumbnail_en_memoria, MAX_PIXELS, MAX_UPLOAD_SIZE_MB
 from .services import core_registrar_actividad
 
 
@@ -178,8 +179,8 @@ class ObjectInStationRequiredMixin(AccessMixin):
             # Al final, 'related_obj' será la instancia de la Estacion
             object_station = related_obj
             
-            # Comparamos si el ID de la estación del objeto es el correcto
-            if object_station.id != active_station_id:
+            # Comparamos convirtiendo ambos a string para evitar errores de tipo (int vs str)
+            if str(object_station.id) != str(active_station_id):
                 raise Http404
                 
         except AttributeError:
@@ -211,7 +212,7 @@ class ImageProcessingFormMixin:
             return
 
         # 2. Generar nombres base con UUID
-        ext = os.path.splitext(image_file.name)[1].lower() or '.jpg'
+        ext = '.jpg'
         uuid_str = str(uuid.uuid4())
         # Construir el nombre base con el prefijo (si existe)
         if image_prefix:
@@ -410,3 +411,55 @@ class BomberilFormMixin:
                 # Atributos para nuestro JS validator
                 widget.attrs['data-date-min'] = fecha_minima.isoformat()
                 widget.attrs['data-date-max'] = fecha_maxima.isoformat()
+    
+
+    def clean(self):
+        """
+        Sobrescribimos clean para aplicar validaciones de seguridad
+        a TODOS los campos de archivo/imagen automáticamente.
+        """
+        cleaned_data = super().clean()
+        
+        # Iteramos sobre todos los campos del formulario
+        for field_name, field in self.fields.items():
+            
+            # Detectamos si es un campo de Archivo o Imagen
+            if isinstance(field, (forms.FileField, forms.ImageField)):
+                file_obj = cleaned_data.get(field_name)
+                
+                # Si el usuario subió algo, lo validamos
+                if file_obj:
+                    self._validar_seguridad_archivo(field_name, file_obj, field)
+        
+        return cleaned_data
+
+
+    def _validar_seguridad_archivo(self, field_name, file_obj, field_instance):
+        """
+        Helper interno que aplica las reglas de negocio y seguridad.
+        """
+        
+        # 1. VALIDACIÓN DE PESO (Para cualquier archivo: PDF, DOC, JPG...)
+        limit_bytes = MAX_UPLOAD_SIZE_MB * 1024 * 1024
+        if file_obj.size > limit_bytes:
+            # add_error asocia el error al campo específico, no al formulario general
+            self.add_error(
+                field_name, 
+                f"El archivo es muy pesado ({round(file_obj.size/1024/1024, 2)}MB). "
+                f"El límite es de {MAX_UPLOAD_SIZE_MB}MB."
+            )
+            return # Si falla el peso, no gastamos tiempo revisando píxeles
+
+        # 2. VALIDACIÓN ANTI-DoS (Solo para imágenes)
+        # Verificamos si el campo es específicamente un ImageField
+        if isinstance(field_instance, forms.ImageField):
+            # Usamos la utilidad de Django que no carga todo en RAM
+            width, height = get_image_dimensions(file_obj)
+            
+            if width and height:
+                if (width * height) > MAX_PIXELS:
+                    self.add_error(
+                        field_name,
+                        f"La imagen es demasiado grande en resolución ({width}x{height}px). "
+                        "Por favor redúcela antes de subirla."
+                    )

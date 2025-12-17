@@ -1,0 +1,437 @@
+[
+{
+  "model": "gestion_inventario.compartimento",
+  "pk": "04d3780e-59ee-439f-bc23-af552b34707a",
+  "fields": {
+    "nombre": "General",
+    "descripcion": "Compartimento principal o área general de esta ubicación. Usar para ítems que no están en una gaveta o estante específico.",
+    "imagen": "",
+    "imagen_thumb_medium": "",
+    "imagen_thumb_small": "",
+    "ubicacion": "9b50387e-aa75-45e4-b075-21c119c8dc90",
+    "codigo": "E002-U04-C001",
+    "created_at": "2025-12-04T08:33:14.070Z",
+    "updated_at": "2025-12-04T08:33:14.070Z"
+  }
+},
+{
+  "model": "gestion_inventario.compartimento",
+  "pk": "0b0ad2d3-5c7d-46bc-b1d2-66a557f97a08",
+  "fields": {
+    "nombre": "General",
+    "descripcion": "Compartimento principal o área general de esta ubicación. Usar para ítems que no están en una gaveta o estante específico.",
+    "imagen": "",
+    "imagen_thumb_medium": "",
+    "imagen_thumb_small": "",
+    "ubicacion": "b6dbdcef-492c-49e2-9eb9-adf06683628c",
+    "codigo": "E002-U03-C001",
+    "created_at": "2025-12-04T08:33:14.078Z",
+    "updated_at": "2025-12-04T08:33:14.078Z"
+  }
+},
+{
+  "model": "gestion_inventario.compartimento",
+  "pk": "1987123e-a92a-4d48-bef8-bbeb75d4ed14",
+  "fields": {
+    "nombre": "Gaveta N°3",
+    "descripcion": "",
+    "imagen": "",
+    "imagen_thumb_medium": "",
+    "imagen_thumb_small": "",
+    "ubicacion": "33deb9d9-15b4-4b62-b9bb-3323824390b3",
+    "codigo": "E002-U10-C005",
+    "created_at": "2025-12-04T06:03:56.921Z",
+    "updated_at": "2025-12-04T06:03:56.921Z"
+  }
+},
+{
+  "model": "gestion_inventario.compartimento",
+  "pk": "1b72fb8f-9980-4600-aa94-9f9e9427c187",
+  "fields": {
+    "nombre": "General",
+    "descripcion": "Compartimento principal o área general de esta ubicación. Usar para ítems que no están en una gaveta o estante específico.",
+    "imagen": "",
+    "imagen_thumb_medium": "",
+    "imagen_thumb_small": "",
+    "ubicacion": "a9b91b0c-ea2a-4110-8bb6-66ab299ba8e6",
+    "codigo": "E002-U06-C001",
+    "created_at": "2025-12-04T08:33:14.075Z",
+    "updated_at": "2025-12-04T08:33:14.075Z"
+  }
+},
+{
+  "model": "gestion_inventario.compartimento",
+  "pk": "202a4639-ca4b-4806-8194-2f98cbaeac6f",
+  "fields": {
+    "nombre": "Techo",
+    "descripcion": "",
+    "imagen": "",
+    "imagen_thumb_medium": "",
+    "imagen_thumb_small": "",
+    "ubicacion": "f934379f-d0b9-44ec-8b5f-e571d0a19777",
+    "codigo": "E002-U09-C009",
+    "created_at": "2025-12-04T06:09:15.385Z",
+    "updated_at": "2025-12-04T06:09:15.385Z"
+  }
+},
+{
+  "model": "gestion_inventario.compartimento",
+  "pk": "208127af-f65b-4dd1-b540-f0e432745f4a",
+  "fields": {
+    "nombre": "General",
+    "descripcion": "Compartimento principal o área general de esta ubicación. Usar para ítems que no están en una gaveta o estante específico.",
+    "imagen": "",
+    "imagen_thumb_medium": "",
+    "imagen_thumb_small": "",
+    "ubicacion": "192c3ba8-3943-40cd-bd44-3781cef1edcd",
+    "codigo": "E002-U08-C001",
+    "created_at": "2025-12-04T08:33:14.065Z",
+    "updated_at": "2025-12-04T08:33:14.065Z"
+  }
+},
+{
+  "model": "gestion_inventario.compartimento",
+  "pk": "2d938ff3-0f8d-4ae5-9273-e0db81cd509e",
+  "fields": {
+    "nombre": "Gaveta N°5",
+    "descripcion": "",
+    "imagen": "",
+    "imagen_thumb_medium": "",
+    "imagen_thumb_small": "",
+    "ubicacion": "33deb9d9-15b4-4b62-b9bb-3323824390b3",
+    "codigo": "E002-U10-C007",
+    "created_at": "2025-12-04T06:05:18.516Z",
+    "updated_at": "2025-12-04T06:05:18.516Z"
+  }
+},
+{
+  "model": "gestion_inventario.compartimento",
+  "pk": "2fb6aba8-d387-4173-b45b-460b560788fc",
+  "fields": {
+    "nombre": "Gaveta N°4",
+    "descripcion": "",
+    "imagen": "",
+    "imagen_thumb_medium": "",
+    "imagen_thumb_small": "",
+    "ubicacion": "33deb9d9-15b4-4b62-b9bb-3323824390b3",
+    "codigo": "E002-U10-C006",
+    "created_at": "2025-12-04T06:04:11.676Z",
+    "updated_at": "2025-12-04T06:04:11.676Z"
+  }
+},
+{
+  "model": "gestion_inventario.compartimento",
+  "pk": "39b2831f-a61e-4178-8fc2-8edc05c7c4f6",
+  "fields": {
+    "nombre": "General",
+    "descripcion": "Compartimento principal o área general de esta ubicación. Usar para ítems que no están en una gaveta o estante específico.",
+    "imagen": "",
+    "imagen_thumb_medium": "",
+    "imagen_thumb_small": "",
+    "ubicacion": "d8f5e37a-87b3-4fdd-bdab-7819144aac49",
+    "codigo": "E002-U02-C001",
+    "created_at": "2025-12-04T08:33:14.082Z",
+    "updated_at": "2025-12-04T08:33:14.082Z"
+  }
+},
+{
+  "model": "gestion_inventario.compartimento",
+  "pk": "42412750-9dc8-4c8e-a74b-91b3152051fb",
+  "fields": {
+    "nombre": "Estantería",
+    "descripcion": "",
+    "imagen": "",
+    "imagen_thumb_medium": "",
+    "imagen_thumb_small": "",
+    "ubicacion": "b6dbdcef-492c-49e2-9eb9-adf06683628c",
+    "codigo": "E002-U03-C002",
+    "created_at": "2025-12-04T08:23:18.507Z",
+    "updated_at": "2025-12-04T08:23:18.507Z"
+  }
+},
+{
+  "model": "gestion_inventario.compartimento",
+  "pk": "444d4f99-1404-4126-8c82-e88586a6241f",
+  "fields": {
+    "nombre": "General",
+    "descripcion": "Compartimento principal o área general de esta ubicación. Usar para ítems que no están en una gaveta o estante específico.",
+    "imagen": "",
+    "imagen_thumb_medium": "",
+    "imagen_thumb_small": "",
+    "ubicacion": "b8ae2c4a-38d8-428c-bd40-e74d211808e4",
+    "codigo": "E002-U01-C001",
+    "created_at": "2025-12-04T08:33:14.080Z",
+    "updated_at": "2025-12-04T08:33:14.080Z"
+  }
+},
+{
+  "model": "gestion_inventario.compartimento",
+  "pk": "50b0a54b-d9df-4b7a-95fd-666337650fc5",
+  "fields": {
+    "nombre": "General",
+    "descripcion": "Compartimento principal o área general de esta ubicación. Usar para ítems que no están en una gaveta o estante específico.",
+    "imagen": "",
+    "imagen_thumb_medium": "",
+    "imagen_thumb_small": "",
+    "ubicacion": "ffe36172-7c78-4d43-bc5f-d02542dad781",
+    "codigo": "E002-U07-C001",
+    "created_at": "2025-12-04T08:33:14.087Z",
+    "updated_at": "2025-12-04T08:33:14.087Z"
+  }
+},
+{
+  "model": "gestion_inventario.compartimento",
+  "pk": "8712cec9-9b80-459f-ba27-654be42895bb",
+  "fields": {
+    "nombre": "Gaveta N°3",
+    "descripcion": "",
+    "imagen": "",
+    "imagen_thumb_medium": "",
+    "imagen_thumb_small": "",
+    "ubicacion": "f934379f-d0b9-44ec-8b5f-e571d0a19777",
+    "codigo": "E002-U09-C005",
+    "created_at": "2025-12-04T06:07:34.700Z",
+    "updated_at": "2025-12-04T06:07:34.700Z"
+  }
+},
+{
+  "model": "gestion_inventario.compartimento",
+  "pk": "8a2a5c08-7bf9-4621-96be-eae8f18a2a53",
+  "fields": {
+    "nombre": "Gaveta N°6",
+    "descripcion": "",
+    "imagen": "",
+    "imagen_thumb_medium": "",
+    "imagen_thumb_small": "",
+    "ubicacion": "33deb9d9-15b4-4b62-b9bb-3323824390b3",
+    "codigo": "E002-U10-C008",
+    "created_at": "2025-12-04T06:05:29.706Z",
+    "updated_at": "2025-12-04T06:05:29.706Z"
+  }
+},
+{
+  "model": "gestion_inventario.compartimento",
+  "pk": "97e1c1c4-b2c4-43c8-996d-6557c9f7b2ed",
+  "fields": {
+    "nombre": "Cabina",
+    "descripcion": "",
+    "imagen": "",
+    "imagen_thumb_medium": "",
+    "imagen_thumb_small": "",
+    "ubicacion": "f934379f-d0b9-44ec-8b5f-e571d0a19777",
+    "codigo": "E002-U09-C002",
+    "created_at": "2025-12-04T06:07:07.463Z",
+    "updated_at": "2025-12-04T06:07:07.463Z"
+  }
+},
+{
+  "model": "gestion_inventario.compartimento",
+  "pk": "9b02f22c-b07e-4bb5-96a5-da98ba5cde41",
+  "fields": {
+    "nombre": "Gaveta N°6",
+    "descripcion": "",
+    "imagen": "",
+    "imagen_thumb_medium": "",
+    "imagen_thumb_small": "",
+    "ubicacion": "f934379f-d0b9-44ec-8b5f-e571d0a19777",
+    "codigo": "E002-U09-C008",
+    "created_at": "2025-12-04T06:08:35.849Z",
+    "updated_at": "2025-12-04T06:08:35.849Z"
+  }
+},
+{
+  "model": "gestion_inventario.compartimento",
+  "pk": "9e4c8696-f5e7-4676-a4f9-e3b37e51ac67",
+  "fields": {
+    "nombre": "Casillero 1",
+    "descripcion": "",
+    "imagen": "",
+    "imagen_thumb_medium": "",
+    "imagen_thumb_small": "",
+    "ubicacion": "192c3ba8-3943-40cd-bd44-3781cef1edcd",
+    "codigo": "E002-U08-C002",
+    "created_at": "2025-12-04T08:21:48.197Z",
+    "updated_at": "2025-12-04T08:21:48.197Z"
+  }
+},
+{
+  "model": "gestion_inventario.compartimento",
+  "pk": "a4d10c8c-9481-40db-8b5b-0f89e6bcbd24",
+  "fields": {
+    "nombre": "General",
+    "descripcion": "Compartimento principal o área general de esta ubicación. Usar para ítems que no están en una gaveta o estante específico.",
+    "imagen": "",
+    "imagen_thumb_medium": "",
+    "imagen_thumb_small": "",
+    "ubicacion": "33deb9d9-15b4-4b62-b9bb-3323824390b3",
+    "codigo": "E002-U10-C001",
+    "created_at": "2025-12-04T08:33:14.068Z",
+    "updated_at": "2025-12-04T08:33:14.068Z"
+  }
+},
+{
+  "model": "gestion_inventario.compartimento",
+  "pk": "aa782510-9d9a-4be1-88b4-fa55e2f87dc7",
+  "fields": {
+    "nombre": "Cabina",
+    "descripcion": "",
+    "imagen": "",
+    "imagen_thumb_medium": "",
+    "imagen_thumb_small": "",
+    "ubicacion": "33deb9d9-15b4-4b62-b9bb-3323824390b3",
+    "codigo": "E002-U10-C002",
+    "created_at": "2025-12-04T06:03:02.447Z",
+    "updated_at": "2025-12-04T06:03:02.447Z"
+  }
+},
+{
+  "model": "gestion_inventario.compartimento",
+  "pk": "af350252-32dd-4f8a-b0f7-5237b24144c8",
+  "fields": {
+    "nombre": "Gaveta N°2",
+    "descripcion": "",
+    "imagen": "",
+    "imagen_thumb_medium": "",
+    "imagen_thumb_small": "",
+    "ubicacion": "f934379f-d0b9-44ec-8b5f-e571d0a19777",
+    "codigo": "E002-U09-C004",
+    "created_at": "2025-12-04T06:07:29.105Z",
+    "updated_at": "2025-12-04T06:07:29.105Z"
+  }
+},
+{
+  "model": "gestion_inventario.compartimento",
+  "pk": "b3304e9e-109f-4074-894d-40b69827c356",
+  "fields": {
+    "nombre": "Gaveta N°4",
+    "descripcion": "",
+    "imagen": "",
+    "imagen_thumb_medium": "",
+    "imagen_thumb_small": "",
+    "ubicacion": "f934379f-d0b9-44ec-8b5f-e571d0a19777",
+    "codigo": "E002-U09-C006",
+    "created_at": "2025-12-04T06:07:39.654Z",
+    "updated_at": "2025-12-04T06:08:10.505Z"
+  }
+},
+{
+  "model": "gestion_inventario.compartimento",
+  "pk": "b4cbf6ad-1fb5-453e-9912-eb9c67c232d3",
+  "fields": {
+    "nombre": "Gaveta N°5",
+    "descripcion": "",
+    "imagen": "",
+    "imagen_thumb_medium": "",
+    "imagen_thumb_small": "",
+    "ubicacion": "f934379f-d0b9-44ec-8b5f-e571d0a19777",
+    "codigo": "E002-U09-C007",
+    "created_at": "2025-12-04T06:08:23.975Z",
+    "updated_at": "2025-12-04T06:08:23.975Z"
+  }
+},
+{
+  "model": "gestion_inventario.compartimento",
+  "pk": "bf28acae-84e6-4217-8638-f0665d4fd32a",
+  "fields": {
+    "nombre": "Gaveta N°1",
+    "descripcion": "",
+    "imagen": "",
+    "imagen_thumb_medium": "",
+    "imagen_thumb_small": "",
+    "ubicacion": "f934379f-d0b9-44ec-8b5f-e571d0a19777",
+    "codigo": "E002-U09-C003",
+    "created_at": "2025-12-04T06:07:18.015Z",
+    "updated_at": "2025-12-04T06:07:18.015Z"
+  }
+},
+{
+  "model": "gestion_inventario.compartimento",
+  "pk": "d10844a7-eb30-4252-9699-fbcbce5b2f35",
+  "fields": {
+    "nombre": "Gaveta N°1",
+    "descripcion": "",
+    "imagen": "",
+    "imagen_thumb_medium": "",
+    "imagen_thumb_small": "",
+    "ubicacion": "33deb9d9-15b4-4b62-b9bb-3323824390b3",
+    "codigo": "E002-U10-C004",
+    "created_at": "2025-12-04T06:03:45.303Z",
+    "updated_at": "2025-12-04T06:03:45.303Z"
+  }
+},
+{
+  "model": "gestion_inventario.compartimento",
+  "pk": "d46bcc32-f68d-4331-bb17-c68abd2e3641",
+  "fields": {
+    "nombre": "General",
+    "descripcion": "Compartimento principal o área general de esta ubicación. Usar para ítems que no están en una gaveta o estante específico.",
+    "imagen": "",
+    "imagen_thumb_medium": "",
+    "imagen_thumb_small": "",
+    "ubicacion": "f934379f-d0b9-44ec-8b5f-e571d0a19777",
+    "codigo": "E002-U09-C001",
+    "created_at": "2025-12-04T08:33:14.085Z",
+    "updated_at": "2025-12-04T08:33:14.085Z"
+  }
+},
+{
+  "model": "gestion_inventario.compartimento",
+  "pk": "dc30013d-4370-4261-b383-6de9b36c61eb",
+  "fields": {
+    "nombre": "Gaveta N°2",
+    "descripcion": "",
+    "imagen": "",
+    "imagen_thumb_medium": "",
+    "imagen_thumb_small": "",
+    "ubicacion": "33deb9d9-15b4-4b62-b9bb-3323824390b3",
+    "codigo": "E002-U10-C003",
+    "created_at": "2025-12-04T06:03:25.089Z",
+    "updated_at": "2025-12-04T06:03:25.089Z"
+  }
+},
+{
+  "model": "gestion_inventario.compartimento",
+  "pk": "e74c7b9a-728e-4b77-9e4b-689da9a049dd",
+  "fields": {
+    "nombre": "Mueble oscuro",
+    "descripcion": "",
+    "imagen": "",
+    "imagen_thumb_medium": "",
+    "imagen_thumb_small": "",
+    "ubicacion": "9bfc04a3-2279-4936-be83-d354df00b276",
+    "codigo": "E002-U05-C002",
+    "created_at": "2025-12-04T08:22:12.759Z",
+    "updated_at": "2025-12-04T08:22:12.759Z"
+  }
+},
+{
+  "model": "gestion_inventario.compartimento",
+  "pk": "f7baa2b4-d9ee-41ca-bfb5-97163727cfd2",
+  "fields": {
+    "nombre": "Techo",
+    "descripcion": "",
+    "imagen": "",
+    "imagen_thumb_medium": "",
+    "imagen_thumb_small": "",
+    "ubicacion": "33deb9d9-15b4-4b62-b9bb-3323824390b3",
+    "codigo": "E002-U10-C009",
+    "created_at": "2025-12-04T06:05:52.739Z",
+    "updated_at": "2025-12-04T06:05:52.739Z"
+  }
+},
+{
+  "model": "gestion_inventario.compartimento",
+  "pk": "f8401b64-9a61-4c7b-848a-c6465ec071f7",
+  "fields": {
+    "nombre": "General",
+    "descripcion": "Compartimento principal o área general de esta ubicación. Usar para ítems que no están en una gaveta o estante específico.",
+    "imagen": "",
+    "imagen_thumb_medium": "",
+    "imagen_thumb_small": "",
+    "ubicacion": "9bfc04a3-2279-4936-be83-d354df00b276",
+    "codigo": "E002-U05-C001",
+    "created_at": "2025-12-04T08:33:14.073Z",
+    "updated_at": "2025-12-04T08:33:14.073Z"
+  }
+}
+]

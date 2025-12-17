@@ -13,11 +13,11 @@
             <div class="panel catalog-form" style="--catalog-color: #6f42c1; --catalog-text-color: white;">
                 
                 <div class="panel-header">
-                    <i class="fas fa-scalpel-path me-2 text-2xl"></i>
+                    <i class="fas fa-scalpel-path me-2 text-3xl"></i>
                     {% if form.instance.pk %}
-                        <h3 class="text-xl font-bold mb-0">Modificar Cirugía: {{ form.instance.nombre }}</h3>
+                        <h3 class="text-2xl font-bold mb-0">Modificar Cirugía: {{ form.instance.nombre }}</h3>
                     {% else %}
-                        <h3 class="text-xl font-bold mb-0">Crear Nueva Cirugía</h3>
+                        <h3 class="text-2xl font-bold mb-0">Crear Nueva Cirugía</h3>
                     {% endif %}
                 </div>
 
@@ -27,8 +27,8 @@
                         {% csrf_token %}
                         {{ form.non_field_errors }}
 
-                        <div class="form-group mb-3">
-                            <label for="{{ form.nombre.id_for_label }}" class="form-label text-sm font-bold">
+                        <div class="form-group mb-4">
+                            <label for="{{ form.nombre.id_for_label }}" class="form-label text-sm font-bold text-uppercase text-muted">
                                 {{ form.nombre.label }}
                                 <span class="required text-danger">*</span>
                             </label>
@@ -38,20 +38,22 @@
                             </div>
 
                             {% for error in form.nombre.errors %}
-                                <div class="text-danger text-sm font-bold mt-1">{{ error }}</div>
+                                <div class="text-danger text-sm font-bold mt-1 ms-1">{{ error }}</div>
                             {% endfor %}
                         </div>
 
-                        <div class="form-actions text-end mt-4">
+                        <hr class="my-4 border-light">
+
+                        <div class="form-actions text-end">
 
                             <a href="{% url 'gestion_medica:ruta_lista_cirugias' %}"
-                               class="btn btn-outline-secondary btn-lg catalog-btn me-2 text-base font-bold">
+                               class="btn btn-light border text-secondary btn-lg me-2 text-base font-bold hover-elevate">
                                 <i class="fas fa-times me-1"></i> Cancelar
                             </a>
 
                             <button type="submit"
-                                    class="btn btn-lg catalog-btn text-base font-bold"
-                                    style="background-color: #6f42c1; color:white;">
+                                    class="btn btn-lg catalog-btn text-base font-bold shadow-sm hover-elevate"
+                                    style="background-color: #6f42c1; color:white; border-color: #6f42c1;">
                                 <i class="fas fa-save me-1"></i> Guardar Cirugía
                             </button>
 
@@ -66,4 +68,14 @@
         </div>
     </div>
 </div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Asegurar estilos en inputs
+        document.querySelectorAll('input').forEach(el => {
+            el.classList.add('form-control');
+            el.classList.add('text-base');
+        });
+    });
+</script>
 {% endblock contenido %}
