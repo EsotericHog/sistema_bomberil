@@ -9,7 +9,7 @@
         {# --- ACCIONES GENERALES --- #}
         
         {# Ver usuario #}
-        {% if perms.gestion_usuarios.accion_gestion_usuarios_ver_compania %}
+        {% if perms.gestion_usuarios.accion_gestion_usuarios_ver_usuarios %}
         <li>
             <a class="menu-item text-sm font-medium" 
                href="{% url 'gestion_usuarios:ruta_ver_usuario' id=membresia.usuario.id %}">
